@@ -1,0 +1,378 @@
+// =============================================
+// InviteHub - Prisma Schema
+// PostgreSQL 기반 완전한 DB 설계
+// =============================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================
+// 사용자
+// =============================================
+model User {
+  id            String    @id @default(uuid())
+  email         String?   @unique
+  password      String?   // 이메일 로그인 시 bcrypt 해시
+  name          String?
+  phone         String?   @unique
+  profileImage  String?
+  provider      Provider  @default(LOCAL) // LOCAL | KAKAO | NAVER | APPLE
+  providerId    String?   // 소셜 로그인 고유 ID
+  role          Role      @default(USER)
+  isVerified    Boolean   @default(false)
+  refreshToken  String?   // JWT Refresh Token
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime? // 소프트 삭제
+
+  // Relations
+  invitations   Invitation[]
+  payments      Payment[]
+  notifications Notification[]
+
+  @@index([email])
+  @@index([providerId])
+  @@map("users")
+}
+
+enum Provider {
+  LOCAL
+  KAKAO
+  NAVER
+  APPLE
+  GOOGLE
+}
+
+enum Role {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+// =============================================
+// 초대장
+// =============================================
+model Invitation {
+  id           String           @id @default(uuid())
+  userId       String
+  templateId   String
+  title        String
+  slug         String           @unique // 공유 URL용 고유 슬러그
+  category     InvitationCategory
+  status       InvitationStatus @default(DRAFT)
+  isPublished  Boolean          @default(false)
+  publishedAt  DateTime?
+  expiresAt    DateTime?        // 만료일
+  viewCount    Int              @default(0)
+  shareCount   Int              @default(0)
+
+  // 기본 정보
+  eventDate    DateTime?
+  eventTime    String?          // "14:00"
+  venueName    String?
+  venueAddress String?
+  venueDetailAddress String?
+  venueLat     Float?           // 위도
+  venueLng     Float?           // 경도
+  venueMapType MapType          @default(KAKAO)
+  parkingInfo  String?
+  transportInfo String?
+
+  // 신랑/신부 정보 (결혼식)
+  groomName    String?
+  groomFatherName String?
+  groomMotherName String?
+  brideName    String?
+  brideFatherName String?
+  brideMotherName String?
+
+  // 주최자 정보 (돌잔치, 환갑 등)
+  hostName     String?
+  hostPhone    String?
+  honorName    String?          // 주인공 이름 (아이이름, 어르신 이름 등)
+
+  // 메시지
+  mainMessage  String?          @db.Text
+  subMessage   String?          @db.Text
+
+  // BGM
+  bgmUrl       String?
+  bgmAutoPlay  Boolean          @default(false)
+
+  // 계좌/카카오페이
+  bankAccounts BankAccount[]
+
+  // 사진
+  photos       Photo[]
+  thumbnailUrl String?
+
+  // RSVP 설정
+  rsvpEnabled  Boolean          @default(true)
+  rsvpDeadline DateTime?
+  rsvpMessage  String?
+  maxGuests    Int?
+
+  // 커스터마이징 JSON (색상, 폰트 등 템플릿별 설정)
+  customConfig Json?            @db.JsonB
+
+  // QR 코드
+  qrCodeUrl    String?
+
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  deletedAt    DateTime?
+
+  // Relations
+  user         User             @relation(fields: [userId], references: [id])
+  rsvps        Rsvp[]
+  notifications Notification[]
+
+  @@index([userId])
+  @@index([slug])
+  @@index([category])
+  @@index([status])
+  @@map("invitations")
+}
+
+enum InvitationCategory {
+  WEDDING
+  DOL
+  HWANGAP
+  BRIDAL_SHOWER
+  BIRTHDAY
+  HOUSEWARMING
+  BABY_SHOWER
+  GRADUATION
+  BUSINESS
+  OTHER
+}
+
+enum InvitationStatus {
+  DRAFT
+  PUBLISHED
+  EXPIRED
+  DELETED
+}
+
+enum MapType {
+  KAKAO
+  NAVER
+  GOOGLE
+}
+
+// =============================================
+// 사진
+// =============================================
+model Photo {
+  id           String     @id @default(uuid())
+  invitationId String
+  url          String
+  thumbnailUrl String?
+  originalName String?
+  size         Int?
+  width        Int?
+  height       Int?
+  order        Int        @default(0)
+  isMain       Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+
+  invitation   Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@index([invitationId])
+  @@map("photos")
+}
+
+// =============================================
+// 계좌 정보
+// =============================================
+model BankAccount {
+  id           String     @id @default(uuid())
+  invitationId String
+  ownerName    String
+  bankName     String
+  accountNumber String
+  isKakaoPay   Boolean    @default(false)
+  kakaoPayLink String?
+  type         AccountType @default(GROOM) // 신랑/신부/주최자 등
+  order        Int        @default(0)
+  createdAt    DateTime   @default(now())
+
+  invitation   Invitation @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@index([invitationId])
+  @@map("bank_accounts")
+}
+
+enum AccountType {
+  GROOM
+  BRIDE
+  GROOM_FATHER
+  GROOM_MOTHER
+  BRIDE_FATHER
+  BRIDE_MOTHER
+  HOST
+  OTHER
+}
+
+// =============================================
+// RSVP (참석 의사 확인)
+// =============================================
+model Rsvp {
+  id            String      @id @default(uuid())
+  invitationId  String
+  guestName     String
+  guestPhone    String?
+  guestCount    Int         @default(1)  // 동반 인원 포함
+  attendance    Attendance  @default(ATTENDING)
+  mealChoice    String?     // 식사 선택 (뷔페/좌식 등)
+  message       String?     @db.Text
+  side          GuestSide?  // 신랑측/신부측
+  vehicleCount  Int         @default(0)  // 주차 대수
+  isCheckedIn   Boolean     @default(false) // 당일 체크인
+  checkedInAt   DateTime?
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  invitation    Invitation  @relation(fields: [invitationId], references: [id], onDelete: Cascade)
+
+  @@index([invitationId])
+  @@index([guestPhone])
+  @@map("rsvps")
+}
+
+enum Attendance {
+  ATTENDING
+  NOT_ATTENDING
+  UNDECIDED
+}
+
+enum GuestSide {
+  GROOM
+  BRIDE
+  HOST
+  OTHER
+}
+
+// =============================================
+// 결제
+// =============================================
+model Payment {
+  id              String        @id @default(uuid())
+  userId          String
+  invitationId    String?
+  orderId         String        @unique // PG사 주문번호
+  amount          Int           // 원 단위
+  currency        String        @default("KRW")
+  status          PaymentStatus @default(PENDING)
+  plan            PlanType
+  pgProvider      String        @default("toss") // toss | kakaopay | iamport
+  pgTransactionId String?       // PG사 트랜잭션 ID
+  paidAt          DateTime?
+  cancelledAt     DateTime?
+  cancelReason    String?
+  refundAmount    Int?          @default(0)
+  metadata        Json?         @db.JsonB
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user            User          @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([orderId])
+  @@index([status])
+  @@map("payments")
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  CANCELLED
+  REFUNDED
+  FAILED
+}
+
+enum PlanType {
+  FREE
+  STANDARD
+  PREMIUM
+}
+
+// =============================================
+// 알림
+// =============================================
+model Notification {
+  id           String           @id @default(uuid())
+  userId       String
+  invitationId String?
+  type         NotificationType
+  title        String
+  body         String
+  isRead       Boolean          @default(false)
+  readAt       DateTime?
+  metadata     Json?            @db.JsonB
+  createdAt    DateTime         @default(now())
+
+  user         User             @relation(fields: [userId], references: [id])
+  invitation   Invitation?      @relation(fields: [invitationId], references: [id])
+
+  @@index([userId])
+  @@index([isRead])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  RSVP_RECEIVED      // 새 RSVP 등록
+  INVITATION_VIEWED  // 초대장 열람
+  PAYMENT_SUCCESS    // 결제 완료
+  PAYMENT_FAILED     // 결제 실패
+  INVITATION_EXPIRED // 초대장 만료 임박
+  SYSTEM             // 시스템 공지
+}
+
+// =============================================
+// 인증 코드 (이메일/SMS 인증)
+// =============================================
+model VerificationCode {
+  id        String   @id @default(uuid())
+  target    String   // 이메일 또는 전화번호
+  code      String
+  type      VerifyType
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([target, type])
+  @@map("verification_codes")
+}
+
+enum VerifyType {
+  EMAIL
+  PHONE
+  PASSWORD_RESET
+}
+
+// =============================================
+// 방문자 로그
+// =============================================
+model ViewLog {
+  id           String   @id @default(uuid())
+  invitationId String
+  ipAddress    String?
+  userAgent    String?
+  referer      String?
+  country      String?
+  city         String?
+  createdAt    DateTime @default(now())
+
+  @@index([invitationId])
+  @@index([createdAt])
+  @@map("view_logs")
+}
