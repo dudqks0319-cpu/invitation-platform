@@ -21,12 +21,16 @@
 |------|------|
 | 📊 실시간 RSVP | 참석 여부 실시간 확인, 엑셀 내보내기 |
 | 🗺️ 지도 연동 | 카카오맵, 네이버맵 교통편 안내 |
-| 💳 카카오페이 연동 | 수수료 없이 축의금 계좌 안내 |
+| 💳 계좌/카카오페이 | 신랑·신부 계좌 + 카카오페이 송금 링크 연결 |
 | 🎵 BGM 업로드 | 직접 음원 업로드 또는 추천 BGM 선택 |
 | 📸 포토 갤러리 | 최대 40장 사진, 확대 방지 옵션 |
 | 🔔 카카오톡 알림 | 방문자 알림, 공유 현황 실시간 확인 |
 | ✏️ 무제한 수정 | 제작 후 언제든 실시간 수정 가능 |
 | 🔗 개인 도메인 | 나만의 고유 링크 + QR 코드 자동 생성 |
+| 🛠️ 제작 전용 페이지 | `사용하기` 클릭 시 `builder.html`로 이동, 실시간 폰 미리보기 |
+| 📅 날짜/시간 피커 | `datetime-local` 기반 캘린더/시간 선택 |
+| 👨‍👩‍👧‍👦 혼주 상세 입력 | 신랑/신부 + 양가 부모님 성함/연락처 입력 |
+| 🗺️ 네이버 지도 연결 | 주소 기반 네이버 지도 검색 링크 자동 생성 |
 
 ---
 
@@ -74,11 +78,16 @@
 ```
 invitation-platform/
 ├── index.html          # 메인 페이지
+├── builder.html        # 초대장 제작 전용 페이지
 ├── css/
 │   └── main.css        # 전체 스타일 (반응형 포함)
 ├── js/
 │   ├── templates.js    # 템플릿 데이터 (30종+)
-│   └── main.js         # 플랫폼 로직
+│   ├── supabase-client.js # Supabase 클라이언트 초기화 (localStorage 기반)
+│   ├── main.js         # 메인 페이지 로직 (로그인, RSVP, 방명록, 통계)
+│   └── builder.js      # 제작 페이지 로직 (폼, 업로드, 실시간 미리보기)
+├── supabase/
+│   └── schema.sql      # 테이블 + RLS 정책
 └── README.md
 ```
 
@@ -110,11 +119,26 @@ git clone https://github.com/dudqks0319-cpu/invitation-platform.git
 # 2. 폴더 진입
 cd invitation-platform
 
-# 3. index.html을 브라우저에서 열기
-open index.html
+# 3. 로컬 서버 실행 (권장)
+python3 -m http.server 4180
+
+# 4. 브라우저 접속
+open http://127.0.0.1:4180
 ```
 
-> **백엔드 없이도** index.html 하나로 완전 동작합니다!
+---
+
+## 🧪 Supabase 테스트 연동 (키를 GitHub에 안 넣는 방식)
+
+1. Supabase SQL Editor에서 `supabase/schema.sql` 실행
+2. 웹앱 우상단 `Supabase 설정` 클릭
+3. `Supabase URL`, `Anon Key` 입력 후 저장
+4. 로그인 모달에서 이메일 회원가입/로그인 테스트
+
+보안 메모:
+- URL/Anon Key는 코드 파일에 저장하지 않고 **브라우저 localStorage에만 저장**됩니다.
+- 따라서 GitHub에 push해도 키가 같이 올라가지 않습니다.
+- 이미 노출된 키가 있으면 폐기(revoke) 후 새 키를 사용하세요.
 
 ---
 

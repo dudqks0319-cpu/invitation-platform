@@ -21,12 +21,16 @@
     <nav class="main-nav">
       <a href="#categories">카테고리</a>
       <a href="#templates">템플릿</a>
+      <a href="builder.html">초대장 만들기</a>
       <a href="#features">기능</a>
+      <a href="#rsvp">RSVP</a>
+      <a href="#guestbook">방명록</a>
       <a href="#pricing">요금</a>
     </nav>
     <div class="header-actions">
-      <button class="btn-outline" onclick="showModal('loginModal')">로그인</button>
-      <button class="btn-primary" onclick="showModal('loginModal')">무료 시작</button>
+      <span id="authStatusText" class="auth-status">게스트 모드</span>
+      <button class="btn-outline" id="authActionBtn" onclick="showModal('loginModal')">로그인</button>
+      <button class="btn-primary" onclick="showModal('configModal')">Supabase 설정</button>
     </div>
     <button class="hamburger" id="hamburgerBtn" onclick="toggleMobileMenu()">
       <i class="fas fa-bars"></i>
@@ -35,9 +39,13 @@
   <div class="mobile-menu" id="mobileMenu">
     <a href="#categories">카테고리</a>
     <a href="#templates">템플릿</a>
+    <a href="builder.html">초대장 만들기</a>
     <a href="#features">기능</a>
+    <a href="#rsvp">RSVP</a>
+    <a href="#guestbook">방명록</a>
     <a href="#pricing">요금</a>
     <a href="#" onclick="showModal('loginModal')">로그인</a>
+    <a href="#" onclick="showModal('configModal')">Supabase 설정</a>
   </div>
 </header>
 
@@ -50,7 +58,7 @@
     <p class="hero-subtitle">결혼식 · 돌잔치 · 환갑잔치 · 브라이덜샤워<br/>다양한 행사를 위한 감성 모바일 초대장 플랫폼</p>
     <div class="hero-btns">
       <button class="btn-hero-primary" onclick="showSection('templates')">템플릿 둘러보기</button>
-      <button class="btn-hero-outline" onclick="showModal('loginModal')">무료로 만들기</button>
+      <button class="btn-hero-outline" onclick="startInvitationBuilder('wedding-classic')">무료로 만들기</button>
     </div>
     <div class="hero-stats">
       <div class="stat"><strong>50,000+</strong><span>제작 건수</span></div>
@@ -175,6 +183,94 @@
   </div>
 </section>
 
+<!-- ===== OPS STATUS ===== -->
+<section class="ops-section" id="ops">
+  <div class="section-inner">
+    <h2 class="section-title">테스트 연동 상태</h2>
+    <p class="section-sub">키는 GitHub에 저장하지 않고, 현재 브라우저에만 보관됩니다.</p>
+    <div class="ops-grid">
+      <div class="ops-card">
+        <h3>Supabase 연결</h3>
+        <p id="backendConnectionText" class="ops-value">미연결</p>
+        <p class="ops-note">설정값은 localStorage에만 저장됩니다. 저장소 파일에는 포함되지 않습니다.</p>
+        <button class="btn-outline" onclick="showModal('configModal')">연결 정보 입력</button>
+      </div>
+      <div class="ops-card">
+        <h3>방문 통계</h3>
+        <p class="ops-line">총 방문 <strong id="totalVisits">0</strong></p>
+        <p class="ops-line">오늘 방문 <strong id="todayVisits">0</strong></p>
+        <p class="ops-note" id="visitStatsNote">연동 후 자동 집계됩니다.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== RSVP ===== -->
+<section class="rsvp-section" id="rsvp">
+  <div class="section-inner">
+    <h2 class="section-title">실시간 RSVP 테스트</h2>
+    <p class="section-sub">현재 폼은 Supabase 연결 시 DB에 저장되고, 미연결 시 브라우저 임시 저장으로 테스트됩니다.</p>
+    <div class="form-grid">
+      <form id="rsvpForm" class="data-form">
+        <label>이름
+          <input id="rsvpName" type="text" maxlength="40" required />
+        </label>
+        <label>연락처
+          <input id="rsvpPhone" type="text" maxlength="30" placeholder="010-0000-0000" />
+        </label>
+        <label>참석 여부
+          <select id="rsvpAttending">
+            <option value="yes">참석</option>
+            <option value="no">불참</option>
+          </select>
+        </label>
+        <label>동행 인원
+          <input id="rsvpGuests" type="number" min="0" max="20" value="1" />
+        </label>
+        <label>메모
+          <textarea id="rsvpMemo" rows="3" maxlength="300" placeholder="식사/좌석 관련 요청사항"></textarea>
+        </label>
+        <button type="submit" class="btn-primary form-submit">RSVP 제출</button>
+        <p id="rsvpMessage" class="form-message"></p>
+      </form>
+
+      <div class="data-panel">
+        <h3>RSVP 요약</h3>
+        <p class="ops-line">전체 응답 <strong id="rsvpTotal">0</strong></p>
+        <p class="ops-line">참석 <strong id="rsvpYes">0</strong></p>
+        <p class="ops-line">불참 <strong id="rsvpNo">0</strong></p>
+        <button id="downloadRsvpCsvBtn" class="btn-outline panel-btn">CSV 다운로드</button>
+        <p id="rsvpPanelNote" class="ops-note">관리자 로그인이 있으면 서버 데이터, 아니면 로컬 테스트 데이터로 표시됩니다.</p>
+        <ul id="rsvpRecentList" class="list-box"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== GUESTBOOK ===== -->
+<section class="guestbook-section" id="guestbook">
+  <div class="section-inner">
+    <h2 class="section-title">방명록</h2>
+    <p class="section-sub">현재 코드에는 방명록이 없어서 이번에 추가했습니다.</p>
+    <div class="form-grid">
+      <form id="guestbookForm" class="data-form">
+        <label>닉네임
+          <input id="guestbookName" type="text" maxlength="30" required />
+        </label>
+        <label>메시지
+          <textarea id="guestbookMessage" rows="4" maxlength="300" required placeholder="축하 메시지를 남겨주세요"></textarea>
+        </label>
+        <button type="submit" class="btn-primary form-submit">방명록 남기기</button>
+        <p id="guestbookFormMessage" class="form-message"></p>
+      </form>
+      <div class="data-panel">
+        <h3>최근 방명록</h3>
+        <ul id="guestbookList" class="list-box"></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- ===== PRICING ===== -->
 <section class="pricing-section" id="pricing">
   <div class="section-inner">
@@ -252,13 +348,35 @@
   <div class="modal-box" onclick="event.stopPropagation()">
     <button class="modal-close" onclick="closeModal('loginModal')"><i class="fas fa-times"></i></button>
     <div class="modal-logo">💌 InviteHub</div>
-    <h2 class="modal-title">로그인 / 회원가입</h2>
+    <h2 class="modal-title">Supabase 이메일 로그인 테스트</h2>
+    <p class="modal-hint">테스트용 계정 생성/로그인이 가능합니다. 설정 전에는 동작하지 않습니다.</p>
     <button class="btn-kakao"><i class="fas fa-comment"></i> 카카오로 시작하기</button>
     <button class="btn-naver"><span style="font-weight:900;letter-spacing:-1px">N</span> 네이버로 시작하기</button>
     <div class="modal-or"><span>또는</span></div>
-    <input type="email" placeholder="이메일 주소" class="modal-input" />
-    <input type="password" placeholder="비밀번호" class="modal-input" />
-    <button class="btn-primary" style="width:100%;padding:14px;font-size:1rem">이메일로 로그인</button>
+    <input type="email" id="authEmailInput" placeholder="이메일 주소" class="modal-input" />
+    <input type="password" id="authPasswordInput" placeholder="비밀번호 (최소 6자)" class="modal-input" />
+    <div class="auth-mode-actions">
+      <button id="authSignInBtn" class="btn-primary auth-mode-btn">로그인</button>
+      <button id="authSignUpBtn" class="btn-outline auth-mode-btn">회원가입</button>
+    </div>
+    <p id="authMessage" class="form-message"></p>
+  </div>
+</div>
+
+<!-- ===== SUPABASE CONFIG MODAL ===== -->
+<div class="modal-overlay" id="configModal" onclick="closeModal('configModal')">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <button class="modal-close" onclick="closeModal('configModal')"><i class="fas fa-times"></i></button>
+    <div class="modal-logo">⚙️ 연결 설정</div>
+    <h2 class="modal-title">Supabase URL / Anon Key</h2>
+    <p class="modal-hint">저장 시 이 브라우저(localStorage)에만 보관됩니다. GitHub 저장소에는 올라가지 않습니다.</p>
+    <input type="text" id="supabaseUrlInput" placeholder="https://xxxx.supabase.co" class="modal-input" />
+    <input type="password" id="supabaseAnonKeyInput" placeholder="eyJ... (anon key)" class="modal-input" />
+    <div class="auth-mode-actions">
+      <button id="saveSupabaseConfigBtn" class="btn-primary auth-mode-btn">저장</button>
+      <button id="clearSupabaseConfigBtn" class="btn-outline auth-mode-btn">설정 초기화</button>
+    </div>
+    <p id="supabaseConfigMessage" class="form-message"></p>
   </div>
 </div>
 
@@ -269,12 +387,14 @@
     <div id="previewContent"></div>
     <div class="preview-actions">
       <button class="btn-outline" onclick="closeModal('previewModal')">닫기</button>
-      <button class="btn-primary" onclick="closeModal('previewModal');showModal('loginModal')">이 템플릿 사용하기</button>
+      <button class="btn-primary" onclick="usePreviewTemplate()">이 템플릿 사용하기</button>
     </div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.97.0"></script>
 <script src="js/templates.js"></script>
+<script src="js/supabase-client.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

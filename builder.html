@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>초대장 만들기 - InviteHub</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Noto+Sans+KR:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body class="builder-page" id="builderPage">
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo" aria-label="InviteHub 홈으로 이동">
+      <span class="logo-icon">💌</span>
+      <span class="logo-text">InviteHub</span>
+    </a>
+    <nav class="main-nav">
+      <a href="index.html#templates">템플릿</a>
+      <a href="index.html#features">기능</a>
+      <a href="index.html#rsvp">RSVP</a>
+      <a href="index.html#guestbook">방명록</a>
+    </nav>
+    <div class="header-actions">
+      <a href="index.html" class="btn-outline">홈으로</a>
+      <button id="saveBuilderDraftTopBtn" class="btn-primary">초안 저장</button>
+    </div>
+    <button class="hamburger" id="builderHamburgerBtn" type="button" aria-label="메뉴 열기">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+  <div class="mobile-menu" id="builderMobileMenu">
+    <a href="index.html">홈으로</a>
+    <a href="index.html#templates">템플릿</a>
+    <a href="index.html#features">기능</a>
+    <a href="index.html#rsvp">RSVP</a>
+    <a href="index.html#guestbook">방명록</a>
+  </div>
+</header>
+
+<main class="builder-page-main">
+  <section class="builder-hero-strip">
+    <div class="section-inner">
+      <h1>초대장 만들기</h1>
+      <p>클릭 입력만으로 모바일 청첩장 필수 항목을 한 번에 구성하고, 오른쪽 폰에서 실시간으로 확인할 수 있습니다.</p>
+    </div>
+  </section>
+
+  <section class="builder-section builder-section-page">
+    <div class="section-inner">
+      <div class="builder-grid builder-grid-extended">
+        <form id="builderForm" class="data-form builder-form" autocomplete="off">
+          <div class="builder-form-section">
+            <h3>1. 기본 정보</h3>
+            <label>선택 템플릿
+              <select id="builderTemplateSelect"></select>
+            </label>
+            <label>행사 카테고리
+              <input id="builderCategory" type="text" readonly />
+            </label>
+            <label>행사 제목
+              <input id="builderEventTitle" type="text" maxlength="60" placeholder="예: 결혼식 초대장" />
+            </label>
+            <label>행사 일시
+              <div class="inline-input-row">
+                <input id="builderEventDateTime" type="datetime-local" />
+                <button id="openDateTimePickerBtn" class="btn-outline inline-input-btn" type="button">달력 열기</button>
+              </div>
+            </label>
+            <label>예식장/행사장 이름
+              <input id="builderVenueName" type="text" maxlength="80" placeholder="예: 서울 더파인 웨딩홀" />
+            </label>
+            <label>상세 주소
+              <input id="builderVenueAddress" type="text" maxlength="140" placeholder="예: 서울 강남구 테헤란로 123" />
+            </label>
+            <label>초대 메시지
+              <textarea id="builderMessageInput" rows="4" maxlength="320" placeholder="예: 소중한 자리에 함께해 주세요"></textarea>
+            </label>
+          </div>
+
+          <div class="builder-form-section">
+            <h3>2. 신랑 · 신부 / 혼주 정보</h3>
+            <div class="form-two-col">
+              <label>신랑 성함
+                <input id="builderGroomName" type="text" maxlength="30" placeholder="예: 홍길동" />
+              </label>
+              <label>신부 성함
+                <input id="builderBrideName" type="text" maxlength="30" placeholder="예: 김부인" />
+              </label>
+              <label>신랑 연락처
+                <input id="builderGroomPhone" type="tel" maxlength="20" placeholder="010-0000-0000" />
+              </label>
+              <label>신부 연락처
+                <input id="builderBridePhone" type="tel" maxlength="20" placeholder="010-0000-0000" />
+              </label>
+              <label>신랑 아버지 성함
+                <input id="builderGroomFatherName" type="text" maxlength="30" placeholder="예: 홍아버지" />
+              </label>
+              <label>신랑 어머니 성함
+                <input id="builderGroomMotherName" type="text" maxlength="30" placeholder="예: 이어머니" />
+              </label>
+              <label>신부 아버지 성함
+                <input id="builderBrideFatherName" type="text" maxlength="30" placeholder="예: 김아버지" />
+              </label>
+              <label>신부 어머니 성함
+                <input id="builderBrideMotherName" type="text" maxlength="30" placeholder="예: 박어머니" />
+              </label>
+              <label>신랑 아버지 연락처
+                <input id="builderGroomFatherPhone" type="tel" maxlength="20" placeholder="010-0000-0000" />
+              </label>
+              <label>신랑 어머니 연락처
+                <input id="builderGroomMotherPhone" type="tel" maxlength="20" placeholder="010-0000-0000" />
+              </label>
+              <label>신부 아버지 연락처
+                <input id="builderBrideFatherPhone" type="tel" maxlength="20" placeholder="010-0000-0000" />
+              </label>
+              <label>신부 어머니 연락처
+                <input id="builderBrideMotherPhone" type="tel" maxlength="20" placeholder="010-0000-0000" />
+              </label>
+            </div>
+          </div>
+
+          <div class="builder-form-section">
+            <h3>3. 사진 설정</h3>
+            <label>메인 사진 업로드
+              <input id="builderMainPhotoFile" type="file" accept="image/*" />
+            </label>
+            <label>배경 사진 업로드
+              <input id="builderBackgroundPhotoFile" type="file" accept="image/*" />
+            </label>
+            <div class="inline-input-row">
+              <button id="clearMainPhotoBtn" class="btn-outline inline-input-btn" type="button">메인 사진 초기화</button>
+              <button id="clearBackgroundPhotoBtn" class="btn-outline inline-input-btn" type="button">배경 사진 초기화</button>
+            </div>
+            <p class="builder-help">이미지는 즉시 미리보기에 반영됩니다. 큰 이미지는 미리보기 전용으로만 적용되고 초안에는 저장되지 않을 수 있습니다.</p>
+          </div>
+
+          <div class="builder-form-section">
+            <h3>4. 계좌 · 카카오페이</h3>
+            <div class="form-two-col">
+              <label>신랑측 은행
+                <input id="builderGroomBank" type="text" maxlength="30" placeholder="예: 국민은행" />
+              </label>
+              <label>신랑측 예금주
+                <input id="builderGroomBankHolder" type="text" maxlength="30" placeholder="예: 홍길동" />
+              </label>
+              <label class="full-col">신랑측 계좌번호
+                <input id="builderGroomBankAccount" type="text" maxlength="40" placeholder="예: 123-456-789012" />
+              </label>
+              <label>신부측 은행
+                <input id="builderBrideBank" type="text" maxlength="30" placeholder="예: 신한은행" />
+              </label>
+              <label>신부측 예금주
+                <input id="builderBrideBankHolder" type="text" maxlength="30" placeholder="예: 김부인" />
+              </label>
+              <label class="full-col">신부측 계좌번호
+                <input id="builderBrideBankAccount" type="text" maxlength="40" placeholder="예: 987-654-321098" />
+              </label>
+            </div>
+            <label>카카오페이 송금 링크
+              <input id="builderKakaoPayLink" type="url" placeholder="https://... (카카오페이 송금 링크)" />
+            </label>
+            <label>공유용 URL (선택)
+              <input id="builderShareUrl" type="url" placeholder="예: https://내도메인.com/invitation" />
+            </label>
+            <label>카카오 JavaScript 키 (선택)
+              <input id="builderKakaoJsKey" type="text" maxlength="80" placeholder="카카오 개발자 콘솔의 JavaScript 키" />
+            </label>
+            <p class="builder-help">카카오페이 API 직접 결제는 사업자 심사가 필요해서, 테스트 단계에서는 송금 링크 연결 방식을 사용합니다.</p>
+          </div>
+
+          <div class="builder-form-section">
+            <h3>5. 오시는 길 (네이버 지도)</h3>
+            <label>지도에 표시할 주소
+              <input id="builderMapAddress" type="text" maxlength="140" placeholder="예: 서울 강남구 테헤란로 123" />
+            </label>
+            <label>네이버 지도 링크 (선택)
+              <input id="builderNaverMapLink" type="url" placeholder="https://map.naver.com/..." />
+            </label>
+            <label>교통 안내 메모
+              <textarea id="builderTransportNote" rows="3" maxlength="220" placeholder="예: 2호선 강남역 3번 출구 도보 5분"></textarea>
+            </label>
+            <p class="builder-help">네이버 지도 링크를 입력하지 않으면 주소 기준 검색 링크가 자동 생성됩니다.</p>
+          </div>
+
+          <button type="submit" class="btn-primary form-submit">초안 저장</button>
+          <button id="openInvitationPreviewBtn" type="button" class="btn-primary form-submit">다음: 실제 화면 보기</button>
+          <button id="builderResetBtn" type="button" class="btn-outline form-submit">초안 초기화</button>
+          <p id="builderMessage" class="form-message"></p>
+        </form>
+
+        <div class="builder-preview-wrap">
+          <div class="phone-mock builder-phone builder-phone-large">
+            <div class="phone-screen builder-screen" id="builderScreen">
+              <div id="builderTemplatePreview" class="builder-template-preview"></div>
+              <div id="builderBackgroundLayer" class="builder-background-layer"></div>
+              <div class="builder-preview-content">
+                <div class="builder-preview-main-photo-wrap">
+                  <img id="builderMainImagePreview" class="builder-preview-main-photo" alt="메인 사진 미리보기" />
+                </div>
+                <p class="builder-preview-label">WEDDING INVITATION</p>
+                <h2 id="builderPreviewNames" class="builder-preview-names">신랑 홍길동 ♡ 신부 김부인</h2>
+                <p id="builderPreviewDate" class="builder-preview-date">날짜와 시간을 선택하세요</p>
+                <p id="builderPreviewVenue" class="builder-preview-venue">예식장과 주소를 입력해 주세요</p>
+                <p id="builderPreviewMessage" class="builder-preview-message">소중한 자리에 함께해 주세요</p>
+                <p class="builder-preview-note">하단 정보(혼주·연락처·마음 전할 곳·위치·방명록)는 다음 버튼에서 실제 화면으로 확인하세요.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script src="js/templates.js"></script>
+<script src="js/builder.js"></script>
+</body>
+</html>

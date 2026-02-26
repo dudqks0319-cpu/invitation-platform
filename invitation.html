@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>모바일 초대장 보기 - InviteHub</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600&family=Noto+Sans+KR:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.9/kakao.min.js" crossorigin="anonymous"></script>
+</head>
+<body class="invitation-page" id="invitationPage">
+<header class="site-header invitation-header">
+  <div class="header-inner">
+    <a href="builder.html" class="btn-outline">편집으로 돌아가기</a>
+    <div class="logo">
+      <span class="logo-icon">💌</span>
+      <span class="logo-text">InviteHub</span>
+    </div>
+    <button id="kakaoShareHeaderBtn" class="btn-primary">카카오톡 보내기</button>
+  </div>
+</header>
+
+<main class="invitation-main">
+  <section class="invitation-hero" id="invitationHero">
+    <div class="invitation-hero-overlay"></div>
+    <div class="invitation-hero-inner">
+      <div class="invitation-main-image-wrap">
+        <img id="invitationMainImage" alt="초대장 메인 이미지" />
+      </div>
+      <p id="invitationCategory" class="invitation-category">결혼식 INVITATION</p>
+      <h1 id="invitationNames" class="invitation-names">홍길동 ♡ 김부인</h1>
+      <p id="invitationDate" class="invitation-date">2026년 4월 18일 토 오후 2:00</p>
+      <p id="invitationVenue" class="invitation-venue">서울 더파인 웨딩홀 · 서울 강남구 테헤란로 123</p>
+      <p id="invitationMessage" class="invitation-message">저희 두 사람이 하나가 되는 자리에 함께해 주세요.</p>
+    </div>
+  </section>
+
+  <section class="invitation-content">
+    <article class="invitation-card">
+      <h2>혼주 정보</h2>
+      <p id="invitationParents"></p>
+    </article>
+
+    <article class="invitation-card">
+      <h2>연락처</h2>
+      <p id="invitationContacts"></p>
+    </article>
+
+    <article class="invitation-card">
+      <h2>마음 전하실 곳</h2>
+      <p id="invitationAccounts"></p>
+      <div class="invitation-inline-actions">
+        <button id="copyGroomAccountBtn" class="btn-outline invitation-small-btn" type="button">신랑측 계좌 복사</button>
+        <button id="copyBrideAccountBtn" class="btn-outline invitation-small-btn" type="button">신부측 계좌 복사</button>
+      </div>
+      <a id="invitationKakaoPayLink" class="btn-primary invitation-wide-btn" href="#" target="_blank" rel="noopener noreferrer">카카오페이 송금 링크 열기</a>
+    </article>
+
+    <article class="invitation-card">
+      <h2>위치</h2>
+      <p id="invitationMapAddress"></p>
+      <p id="invitationTransport" class="invitation-transport"></p>
+      <a id="invitationMapLink" class="btn-primary invitation-wide-btn" href="#" target="_blank" rel="noopener noreferrer">네이버 지도 열기</a>
+    </article>
+
+    <article class="invitation-card">
+      <h2>카카오톡으로 보내기</h2>
+      <p id="invitationShareHint">카카오 JavaScript 키를 입력하면 카카오톡 공유창을 직접 띄울 수 있습니다.</p>
+      <div class="invitation-inline-actions">
+        <button id="kakaoShareContentBtn" class="btn-primary invitation-small-btn" type="button">카카오톡 보내기</button>
+        <button id="copyInviteLinkBtn" class="btn-outline invitation-small-btn" type="button">링크 복사</button>
+      </div>
+    </article>
+
+    <article class="invitation-card">
+      <h2>방명록</h2>
+      <form id="invitationGuestbookForm" class="invitation-guestbook-form">
+        <label>이름
+          <input id="invitationGuestName" type="text" maxlength="30" required />
+        </label>
+        <label>메시지
+          <textarea id="invitationGuestMessage" rows="3" maxlength="240" required></textarea>
+        </label>
+        <button type="submit" class="btn-primary invitation-wide-btn">방명록 남기기</button>
+        <p id="invitationGuestbookMessage" class="form-message"></p>
+      </form>
+      <ul id="invitationGuestbookList" class="list-box invitation-guestbook-list"></ul>
+    </article>
+  </section>
+</main>
+
+<script src="js/templates.js"></script>
+<script src="js/invitation.js"></script>
+</body>
+</html>
