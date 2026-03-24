@@ -1,0 +1,47 @@
+@import "tailwindcss";
+@import "../css/main.css";
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  font-family: var(--font-body), "Noto Sans KR", sans-serif;
+  background: #fff;
+  color: var(--text-dark);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-serif), "Noto Serif KR", serif;
+}
+
+.font-display {
+  font-family: var(--font-display), "Playfair Display", serif;
+}
+
+.font-serif {
+  font-family: var(--font-serif), "Noto Serif KR", serif;
+}
+
+.font-body {
+  font-family: var(--font-body), "Noto Sans KR", sans-serif;
+}
+
+.app-shell {
+  min-height: 100vh;
+  background: #fff;
+}
+
+.app-page-offset {
+  padding-top: 68px;
+}

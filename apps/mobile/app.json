@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "InviteHub",
+    "slug": "invitehub",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "invitehub",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "bundleIdentifier": "com.invitehub.app.dev",
+      "supportsTablet": false,
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "초대장에 넣을 사진을 촬영하기 위해 카메라 접근이 필요합니다.",
+        "NSPhotoLibraryUsageDescription": "초대장에 넣을 사진을 선택하기 위해 사진 라이브러리 접근이 필요합니다.",
+        "LSApplicationQueriesSchemes": [
+          "kakaokompassauth",
+          "kakaolink"
+        ]
+      }
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e253cb22-fbc1-4f8b-a172-0fdb16ededd3"
+      }
+    },
+    "owner": "jyb1126"
+  }
+}

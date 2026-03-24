@@ -1,0 +1,45 @@
+const DEFAULT_AUTH_DESTINATION = "/dashboard";
+export const TEMP_SINGLE_INVITATION_PRICE_WON = 4900;
+export const TEMP_SINGLE_INVITATION_PRICE_LABEL = "4,900원";
+export const TEMP_SINGLE_INVITATION_PRICE_COPY = "커피 한 잔 가격으로 초대장 완성";
+
+export function normalizeNextPath(value: string | null | undefined, fallback = DEFAULT_AUTH_DESTINATION) {
+  if (!value) {
+    return fallback;
+  }
+
+  const trimmed = value.trim();
+
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//")) {
+    return fallback;
+  }
+
+  return trimmed;
+}
+
+type UserLike = {
+  email?: string | null;
+  user_metadata?: Record<string, unknown> | null;
+};
+
+export function deriveDisplayName(user: UserLike) {
+  const metadata = user.user_metadata ?? {};
+
+  for (const key of ["display_name", "full_name", "name", "nickname", "user_name"]) {
+    const value = metadata[key];
+    if (typeof value === "string" && value.trim()) {
+      return value.trim();
+    }
+  }
+
+  if (typeof user.email === "string" && user.email.includes("@")) {
+    return user.email.split("@")[0];
+  }
+
+  return "InviteHub 사용자";
+}
+
+export const authDestination = {
+  dashboard: DEFAULT_AUTH_DESTINATION,
+  checkout: "/checkout"
+};

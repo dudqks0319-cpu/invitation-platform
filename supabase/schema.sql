@@ -1,102 +1,299 @@
 create extension if not exists pgcrypto;
 
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  display_name text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.invitations (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  slug text not null unique,
+  title text not null,
+  category text not null,
+  template_id text not null,
+  status text not null default 'draft' check (status in ('draft', 'payment_pending', 'paid', 'published', 'refund_pending', 'refunded', 'payment_failed')),
+  payload jsonb not null default '{}'::jsonb,
+  repurchase_required boolean not null default false,
+  paid_payload_snapshot jsonb,
+  published_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.payments (
+  id uuid primary key default gen_random_uuid(),
+  invitation_id uuid not null references public.invitations(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  provider text not null default 'kakaopay' check (provider in ('kakaopay')),
+  status text not null default 'payment_pending' check (status in ('payment_pending', 'paid', 'refund_pending', 'refunded', 'payment_failed')),
+  amount integer not null,
+  currency text not null default 'KRW',
+  buyer_name text not null,
+  buyer_email text not null,
+  buyer_phone text not null,
+  provider_tid text,
+  provider_order_id text not null unique,
+  ready_payload jsonb,
+  approved_at timestamptz,
+  cancelled_at timestamptz,
+  refund_reason text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create table if not exists public.payment_audit_logs (
+  id uuid primary key default gen_random_uuid(),
+  payment_id uuid not null references public.payments(id) on delete cascade,
+  action text not null check (action in ('ready', 'approve', 'cancel', 'fail')),
+  request_payload jsonb,
+  response_payload jsonb,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists public.rsvps (
   id uuid primary key default gen_random_uuid(),
-  created_at timestamptz not null default now(),
-  user_id uuid references auth.users(id) on delete set null,
-  name text not null check (char_length(name) between 1 and 40),
-  phone text,
+  invitation_id uuid not null references public.invitations(id) on delete cascade,
+  guest_name text not null check (char_length(guest_name) between 1 and 40),
+  guest_phone text,
   attending boolean not null default true,
   guests integer not null default 1 check (guests between 0 and 20),
-  memo text check (memo is null or char_length(memo) <= 300)
+  memo text check (memo is null or char_length(memo) <= 300),
+  created_at timestamptz not null default now()
 );
 
 create table if not exists public.guestbook_entries (
   id uuid primary key default gen_random_uuid(),
-  created_at timestamptz not null default now(),
-  user_id uuid references auth.users(id) on delete set null,
+  invitation_id uuid not null references public.invitations(id) on delete cascade,
   nickname text not null check (char_length(nickname) between 1 and 30),
   message text not null check (char_length(message) between 1 and 300),
-  approved boolean not null default true
+  approved boolean not null default false,
+  created_at timestamptz not null default now()
 );
 
-create table if not exists public.visits (
+create table if not exists public.view_logs (
   id bigint generated always as identity primary key,
-  created_at timestamptz not null default now(),
-  page text not null default '/',
+  invitation_id uuid not null references public.invitations(id) on delete cascade,
   user_agent text,
-  user_id uuid references auth.users(id) on delete set null
+  created_at timestamptz not null default now()
 );
 
+create or replace function public.set_timestamp()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_set_timestamp on public.profiles;
+create trigger profiles_set_timestamp
+before update on public.profiles
+for each row
+execute procedure public.set_timestamp();
+
+drop trigger if exists invitations_set_timestamp on public.invitations;
+create trigger invitations_set_timestamp
+before update on public.invitations
+for each row
+execute procedure public.set_timestamp();
+
+alter table public.profiles enable row level security;
+alter table public.invitations enable row level security;
+alter table public.payments enable row level security;
+alter table public.payment_audit_logs enable row level security;
 alter table public.rsvps enable row level security;
 alter table public.guestbook_entries enable row level security;
-alter table public.visits enable row level security;
+alter table public.view_logs enable row level security;
 
-drop policy if exists "Anyone can create RSVP" on public.rsvps;
-create policy "Anyone can create RSVP"
-on public.rsvps
-for insert
-to anon, authenticated
-with check (true);
-
-drop policy if exists "Authenticated can read RSVP dashboard" on public.rsvps;
-create policy "Authenticated can read RSVP dashboard"
-on public.rsvps
-for select
+drop policy if exists "profiles self access" on public.profiles;
+create policy "profiles self access"
+on public.profiles
+for all
 to authenticated
-using (true);
+using (auth.uid() = id)
+with check (auth.uid() = id);
 
-drop policy if exists "Owner can update own RSVP" on public.rsvps;
-create policy "Owner can update own RSVP"
-on public.rsvps
-for update
+drop policy if exists "owners manage invitations" on public.invitations;
+create policy "owners manage invitations"
+on public.invitations
+for all
 to authenticated
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
 
-drop policy if exists "Owner can delete own RSVP" on public.rsvps;
-create policy "Owner can delete own RSVP"
-on public.rsvps
-for delete
+drop policy if exists "public can read published invitations" on public.invitations;
+create policy "public can read published invitations"
+on public.invitations
+for select
+to anon, authenticated
+using (status = 'published');
+
+drop policy if exists "owners can read payments" on public.payments;
+create policy "owners can read payments"
+on public.payments
+for select
 to authenticated
 using (auth.uid() = user_id);
 
-drop policy if exists "Anyone can create guestbook entry" on public.guestbook_entries;
-create policy "Anyone can create guestbook entry"
-on public.guestbook_entries
-for insert
-to anon, authenticated
-with check (approved = true);
+drop policy if exists "owners can read payment audit logs" on public.payment_audit_logs;
+create policy "owners can read payment audit logs"
+on public.payment_audit_logs
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.payments
+    where payments.id = payment_audit_logs.payment_id
+      and payments.user_id = auth.uid()
+  )
+);
 
-drop policy if exists "Anyone can read approved guestbook entries" on public.guestbook_entries;
-create policy "Anyone can read approved guestbook entries"
+drop policy if exists "public can create rsvps for published invitations" on public.rsvps;
+drop policy if exists "service role writes rsvps" on public.rsvps;
+
+drop policy if exists "owners can read rsvps" on public.rsvps;
+create policy "owners can read rsvps"
+on public.rsvps
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.invitations
+    where invitations.id = rsvps.invitation_id
+      and invitations.user_id = auth.uid()
+  )
+);
+
+drop policy if exists "public can create guestbook for published invitations" on public.guestbook_entries;
+drop policy if exists "service role writes guestbook" on public.guestbook_entries;
+
+drop policy if exists "owners can read guestbook entries" on public.guestbook_entries;
+create policy "owners can read guestbook entries"
+on public.guestbook_entries
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.invitations
+    where invitations.id = guestbook_entries.invitation_id
+      and invitations.user_id = auth.uid()
+  )
+);
+
+drop policy if exists "public can read approved guestbook for published invitations" on public.guestbook_entries;
+create policy "public can read approved guestbook for published invitations"
 on public.guestbook_entries
 for select
 to anon, authenticated
-using (approved = true);
+using (
+  approved = true
+  and exists (
+    select 1
+    from public.invitations
+    where invitations.id = guestbook_entries.invitation_id
+      and invitations.status = 'published'
+  )
+);
 
-drop policy if exists "Authenticated can moderate guestbook entries" on public.guestbook_entries;
-create policy "Authenticated can moderate guestbook entries"
+drop policy if exists "owners can moderate guestbook" on public.guestbook_entries;
+create policy "owners can moderate guestbook"
 on public.guestbook_entries
 for update
 to authenticated
-using (true)
-with check (true);
+using (
+  exists (
+    select 1
+    from public.invitations
+    where invitations.id = guestbook_entries.invitation_id
+      and invitations.user_id = auth.uid()
+  )
+)
+with check (
+  exists (
+    select 1
+    from public.invitations
+    where invitations.id = guestbook_entries.invitation_id
+      and invitations.user_id = auth.uid()
+  )
+);
 
-drop policy if exists "Anyone can track visits" on public.visits;
-create policy "Anyone can track visits"
-on public.visits
+drop policy if exists "public can insert view logs for published invitations" on public.view_logs;
+create policy "public can insert view logs for published invitations"
+on public.view_logs
 for insert
 to anon, authenticated
-with check (true);
+with check (
+  exists (
+    select 1
+    from public.invitations
+    where invitations.id = view_logs.invitation_id
+      and invitations.status = 'published'
+  )
+);
 
-drop policy if exists "Authenticated can read visits dashboard" on public.visits;
-create policy "Authenticated can read visits dashboard"
-on public.visits
+drop policy if exists "owners can read view logs" on public.view_logs;
+create policy "owners can read view logs"
+on public.view_logs
 for select
 to authenticated
-using (true);
+using (
+  exists (
+    select 1
+    from public.invitations
+    where invitations.id = view_logs.invitation_id
+      and invitations.user_id = auth.uid()
+  )
+);
 
-create index if not exists idx_rsvps_created_at on public.rsvps (created_at desc);
-create index if not exists idx_guestbook_created_at on public.guestbook_entries (created_at desc);
-create index if not exists idx_visits_created_at on public.visits (created_at desc);
+create index if not exists idx_invitations_user_id on public.invitations(user_id);
+create index if not exists idx_invitations_slug on public.invitations(slug);
+create index if not exists idx_invitations_status on public.invitations(status);
+create index if not exists idx_payments_invitation_id on public.payments(invitation_id);
+create index if not exists idx_payments_user_id on public.payments(user_id);
+create index if not exists idx_payments_status on public.payments(status);
+create index if not exists idx_payment_audit_logs_payment_id on public.payment_audit_logs(payment_id);
+create index if not exists idx_rsvps_invitation_id on public.rsvps(invitation_id);
+create index if not exists idx_guestbook_invitation_id on public.guestbook_entries(invitation_id);
+create index if not exists idx_view_logs_invitation_id on public.view_logs(invitation_id);
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'invitation-assets',
+  'invitation-assets',
+  true,
+  5242880,
+  array['image/jpeg', 'image/png', 'image/webp']
+)
+on conflict (id) do update
+set public = excluded.public,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
+
+drop policy if exists "public can read invitation assets" on storage.objects;
+create policy "public can read invitation assets"
+on storage.objects
+for select
+to public
+using (bucket_id = 'invitation-assets');
+
+drop policy if exists "authenticated users manage own invitation assets" on storage.objects;
+create policy "authenticated users manage own invitation assets"
+on storage.objects
+for all
+to authenticated
+using (
+  bucket_id = 'invitation-assets'
+  and (storage.foldername(name))[1] = auth.uid()::text
+)
+with check (
+  bucket_id = 'invitation-assets'
+  and (storage.foldername(name))[1] = auth.uid()::text
+);

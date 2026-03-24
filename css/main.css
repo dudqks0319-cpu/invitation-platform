@@ -310,6 +310,13 @@ ul { list-style: none; }
   transition: opacity 0.2s;
 }
 .btn-kakao:hover { opacity: 0.9; }
+.btn-google {
+  width: 100%; padding: 14px; border-radius: 12px;
+  background: #fff; color: #1f1f1f; font-size: 0.95rem; font-weight: 700;
+  margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: opacity 0.2s; border: 1.5px solid var(--border);
+}
+.btn-google:hover { opacity: 0.92; }
 .btn-naver {
   width: 100%; padding: 14px; border-radius: 12px;
   background: #03C75A; color: #fff; font-size: 0.95rem; font-weight: 700;
@@ -681,6 +688,30 @@ ul { list-style: none; }
   overflow: hidden;
   background: linear-gradient(180deg, #d8d2c9 0%, #5f4c3d 76%, #3e3026 100%);
   box-shadow: 0 22px 70px rgba(29, 19, 10, 0.26);
+}
+.invitation-template-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+.invitation-template-backdrop > div {
+  height: 100%;
+}
+.invitation-template-backdrop > div > div {
+  height: 100% !important;
+}
+.invitation-template-showcase {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 280px);
+  margin: 0 auto 18px;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 16px 40px rgba(29, 19, 10, 0.22);
+}
+.invitation-template-showcase > div > div {
+  height: 220px !important;
 }
 .invitation-hero-overlay {
   position: absolute;
