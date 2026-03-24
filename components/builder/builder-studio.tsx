@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { authDestination, normalizeNextPath } from "@/lib/auth";
 import { createBrowserClient } from "@/lib/supabase/browser";
 import {
   LOCAL_DRAFT_KEY,
@@ -14,11 +13,16 @@ import {
 } from "@/lib/invitation-payload";
 import { templates } from "@/lib/templates";
 import { TemplateMarkup } from "@/components/landing/template-markup";
+import {
+  callSaveInvitation,
+  getErrorMessage
+} from "@/lib/supabase/save-invitation";
 
 type DraftMeta = {
   id?: string;
   slug?: string;
   status?: InvitationStatus;
+  serverRevision?: number;
 };
 
 type StoredDraft = {
@@ -26,29 +30,25 @@ type StoredDraft = {
   meta: DraftMeta;
 };
 
-function readStoredDraft() {
-  if (typeof window === "undefined") {
-    return null;
-  }
+function readStoredDraft(): StoredDraft | null {
+  if (typeof window === "undefined") return null;
 
   try {
     const raw = window.localStorage.getItem(LOCAL_DRAFT_KEY);
-    if (!raw) {
-      return null;
-    }
+    if (!raw) return null;
 
     const parsed = JSON.parse(raw) as { payload?: unknown; meta?: DraftMeta };
     return {
       payload: normalizeDraft(parsed.payload ?? {}),
       meta: parsed.meta ?? {}
-    } satisfies StoredDraft;
+    };
   } catch {
     return null;
   }
 }
 
-function fileToDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result ?? ""));
     reader.onerror = () => reject(new Error("이미지를 읽는 중 오류가 발생했습니다."));
@@ -56,16 +56,19 @@ function fileToDataUrl(file: File) {
   });
 }
 
-async function dataUrlToFile(dataUrl: string, filename: string) {
+async function dataUrlToFile(dataUrl: string, filename: string): Promise<File> {
   const response = await fetch(dataUrl);
   const blob = await response.blob();
   return new File([blob], filename, { type: blob.type || "image/png" });
 }
 
+function generateId() {
+  return crypto.randomUUID();
+}
+
 export function BuilderStudio({
   initialInvitationId,
-  initialTemplateId,
-  intentCheckout = false
+  initialTemplateId
 }: {
   initialInvitationId?: string;
   initialTemplateId?: string;
@@ -74,24 +77,25 @@ export function BuilderStudio({
   const router = useRouter();
   const supabase = useMemo(() => createBrowserClient(), []);
   const createdUrlsRef = useRef<string[]>([]);
-  const checkoutIntentHandledRef = useRef(false);
   const loadedInvitationIdRef = useRef<string | null>(null);
+
   const [payload, setPayload] = useState<InvitationDraftPayload>(() => {
     const stored = readStoredDraft();
     const base = stored?.payload ?? defaultInvitationDraft;
     const matched = initialTemplateId
-      ? templates.find((template) => template.id === initialTemplateId)
+      ? templates.find((t) => t.id === initialTemplateId)
       : null;
 
     return matched
-      ? normalizeDraft({
-          ...base,
-          templateId: matched.id,
-          category: matched.category
-        })
+      ? normalizeDraft({ ...base, templateId: matched.id, category: matched.category })
       : normalizeDraft(base);
   });
-  const [meta, setMeta] = useState<DraftMeta>(() => readStoredDraft()?.meta ?? {});
+
+  const [meta, setMeta] = useState<DraftMeta>(() => {
+    const stored = readStoredDraft();
+    return stored?.meta ?? {};
+  });
+
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"error" | "success" | "">("");
   const [pending, setPending] = useState(false);
@@ -102,26 +106,20 @@ export function BuilderStudio({
   const [pendingBackgroundImageFile, setPendingBackgroundImageFile] = useState<File | null>(null);
 
   const selectedTemplate = useMemo(
-    () => templates.find((template) => template.id === payload.templateId) ?? templates[0],
+    () => templates.find((t) => t.id === payload.templateId) ?? templates[0],
     [payload.templateId]
   );
-  const paidSnapshotRef = useRef<InvitationDraftPayload | null>(meta.status === "published" ? payload : null);
 
   useEffect(() => {
-    if (!supabase) {
-      return;
-    }
-
+    if (!supabase) return;
     supabase.auth.getUser().then(({ data }) => {
       setUserId(data.user?.id ?? null);
     });
   }, [supabase]);
 
   useEffect(() => {
-    if (!supabase || !userId || !initialInvitationId || loadedInvitationIdRef.current === initialInvitationId) {
-      return;
-    }
-
+    if (!supabase || !userId || !initialInvitationId) return;
+    if (loadedInvitationIdRef.current === initialInvitationId) return;
     loadedInvitationIdRef.current = initialInvitationId;
 
     void (async () => {
@@ -143,18 +141,16 @@ export function BuilderStudio({
       setMeta({
         id: data.id,
         slug: data.slug,
-        status: data.status
+        status: data.status as InvitationStatus,
+        serverRevision: data.revision ?? 1
       });
       setMainImagePreviewUrl(nextPayload.mainImageUrl);
       setBackgroundImagePreviewUrl(nextPayload.backgroundImageUrl);
-      paidSnapshotRef.current = data.paid_payload_snapshot ? normalizeDraft(data.paid_payload_snapshot) : null;
     })();
   }, [initialInvitationId, supabase, userId]);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
+    if (typeof window === "undefined") return;
 
     const storablePayload = normalizeDraft({
       ...payload,
@@ -164,48 +160,21 @@ export function BuilderStudio({
 
     window.localStorage.setItem(
       LOCAL_DRAFT_KEY,
-      JSON.stringify({
-        payload: storablePayload,
-        meta
-      } satisfies StoredDraft)
+      JSON.stringify({ payload: storablePayload, meta } satisfies StoredDraft)
     );
   }, [payload, meta]);
 
   useEffect(() => {
-    const createdUrls = createdUrlsRef.current;
-
+    const urls = createdUrlsRef.current;
     return () => {
-      createdUrls.forEach((url) => URL.revokeObjectURL(url));
+      urls.forEach((url) => URL.revokeObjectURL(url));
     };
   }, []);
 
-  const hasRestrictedPaidChanges =
-    meta.status === "published" &&
-    paidSnapshotRef.current !== null &&
-    (
-      payload.templateId !== paidSnapshotRef.current.templateId ||
-      payload.mainImagePath !== paidSnapshotRef.current.mainImagePath ||
-      payload.backgroundImagePath !== paidSnapshotRef.current.backgroundImagePath ||
-      payload.mainImageUrl !== paidSnapshotRef.current.mainImageUrl ||
-      payload.backgroundImageUrl !== paidSnapshotRef.current.backgroundImageUrl
-    );
-
-  useEffect(() => {
-    if (!intentCheckout || checkoutIntentHandledRef.current || !supabase || !userId) {
-      return;
-    }
-
-    checkoutIntentHandledRef.current = true;
-
-    void (async () => {
-      const saved = meta.id ? meta : await persistDraft("draft");
-      if (saved?.id) {
-        router.replace(`/checkout?invitationId=${saved.id}`);
-      }
-    })();
-  }, [intentCheckout, supabase, userId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  function updateField<Key extends keyof InvitationDraftPayload>(key: Key, value: InvitationDraftPayload[Key]) {
+  function updateField<Key extends keyof InvitationDraftPayload>(
+    key: Key,
+    value: InvitationDraftPayload[Key]
+  ) {
     setPayload((current) => normalizeDraft({ ...current, [key]: value }));
   }
 
@@ -223,14 +192,13 @@ export function BuilderStudio({
         updateField("mainImageUrl", "");
         updateField("mainImagePath", "");
       }
-      return;
-    }
-
-    setPendingBackgroundImageFile(file);
-    setBackgroundImagePreviewUrl(file ? createPreviewUrl(file) : payload.backgroundImageUrl);
-    if (!file) {
-      updateField("backgroundImageUrl", "");
-      updateField("backgroundImagePath", "");
+    } else {
+      setPendingBackgroundImageFile(file);
+      setBackgroundImagePreviewUrl(file ? createPreviewUrl(file) : payload.backgroundImageUrl);
+      if (!file) {
+        updateField("backgroundImageUrl", "");
+        updateField("backgroundImagePath", "");
+      }
     }
   }
 
@@ -239,42 +207,46 @@ export function BuilderStudio({
     formData.append("file", file);
     formData.append("kind", kind);
 
-    const response = await fetch("/api/uploads", {
-      method: "POST",
-      body: formData
-    });
-
-    const result = (await response.json()) as { error?: string; message?: string; publicUrl?: string; path?: string };
+    const response = await fetch("/api/uploads", { method: "POST", body: formData });
+    const result = (await response.json()) as {
+      error?: string;
+      message?: string;
+      publicUrl?: string;
+      path?: string;
+    };
 
     if (!response.ok || !result.publicUrl || !result.path) {
       throw new Error(result.error || result.message || "이미지 업로드에 실패했습니다.");
     }
 
-    return {
-      publicUrl: result.publicUrl,
-      path: result.path
-    };
+    return { publicUrl: result.publicUrl, path: result.path };
   }
 
   async function deleteImage(path: string) {
     const response = await fetch("/api/uploads", {
       method: "DELETE",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ path })
     });
 
     if (!response.ok) {
-      const result = (await response.json().catch(() => ({ message: "이미지 삭제에 실패했습니다." }))) as {
-        message?: string;
-      };
-
-      throw new Error(result.message || "이미지 삭제에 실패했습니다.");
+      const result = await response.json().catch(() => ({}));
+      throw new Error((result as { message?: string }).message || "이미지 삭제에 실패했습니다.");
     }
   }
 
-  async function persistDraft(status: "draft" | "published") {
+  function clearPendingImages(nextPayload: InvitationDraftPayload) {
+    if (pendingMainImageFile) {
+      setPendingMainImageFile(null);
+      setMainImagePreviewUrl(nextPayload.mainImageUrl);
+    }
+    if (pendingBackgroundImageFile) {
+      setPendingBackgroundImageFile(null);
+      setBackgroundImagePreviewUrl(nextPayload.backgroundImageUrl);
+    }
+  }
+
+  async function persistDraft(status: InvitationStatus) {
     setPending(true);
     setMessage("");
     setMessageType("");
@@ -284,31 +256,16 @@ export function BuilderStudio({
     const rollbackPaths: string[] = [];
 
     try {
-      let nextPayload = payload;
-
-      if ((pendingMainImageFile || pendingBackgroundImageFile) && (!supabase || !userId)) {
-        setMessage("데모 모드에서는 이미지가 현재 세션 미리보기로만 반영됩니다.");
-        setMessageType("success");
-      }
+      let nextPayload = { ...payload };
 
       if (pendingMainImageFile && (!supabase || !userId)) {
         const dataUrl = await fileToDataUrl(pendingMainImageFile);
-        nextPayload = normalizeDraft({
-          ...nextPayload,
-          mainImageUrl: dataUrl,
-          mainImagePath: ""
-        });
+        nextPayload = normalizeDraft({ ...nextPayload, mainImageUrl: dataUrl, mainImagePath: "" });
       }
-
       if (pendingBackgroundImageFile && (!supabase || !userId)) {
         const dataUrl = await fileToDataUrl(pendingBackgroundImageFile);
-        nextPayload = normalizeDraft({
-          ...nextPayload,
-          backgroundImageUrl: dataUrl,
-          backgroundImagePath: ""
-        });
+        nextPayload = normalizeDraft({ ...nextPayload, backgroundImageUrl: dataUrl, backgroundImagePath: "" });
       }
-
       if (pendingMainImageFile && supabase && userId) {
         const uploaded = await uploadImage(pendingMainImageFile, "main");
         rollbackPaths.push(uploaded.path);
@@ -318,7 +275,6 @@ export function BuilderStudio({
           mainImagePath: uploaded.path
         });
       }
-
       if (pendingBackgroundImageFile && supabase && userId) {
         const uploaded = await uploadImage(pendingBackgroundImageFile, "background");
         rollbackPaths.push(uploaded.path);
@@ -344,7 +300,6 @@ export function BuilderStudio({
           mainImagePath: uploaded.path
         });
       }
-
       if (
         !pendingBackgroundImageFile &&
         supabase &&
@@ -362,109 +317,95 @@ export function BuilderStudio({
       }
 
       const nextSlug = meta.slug || createInvitationSlug(nextPayload);
-      const nextMeta = { ...meta, slug: nextSlug, status };
+      const invitationId = meta.id || generateId();
 
       if (!supabase || !userId) {
-        setPayload(nextPayload);
+        const nextMeta: DraftMeta = {
+          ...meta,
+          id: invitationId,
+          slug: nextSlug,
+          status,
+          serverRevision: (meta.serverRevision ?? 0) + 1
+        };
+        setPayload(normalizeDraft(nextPayload));
         setMeta(nextMeta);
-        if (pendingMainImageFile) {
-          setPendingMainImageFile(null);
-          setMainImagePreviewUrl(nextPayload.mainImageUrl);
-        }
-        if (pendingBackgroundImageFile) {
-          setPendingBackgroundImageFile(null);
-          setBackgroundImagePreviewUrl(nextPayload.backgroundImageUrl);
-        }
+        clearPendingImages(nextPayload);
         setPending(false);
-        setMessage(status === "published" ? "데모 모드에서 미리보기용 발행 상태로 저장했습니다." : "데모 모드로 초안을 저장했습니다.");
+        setMessage(
+          status === "published"
+            ? "데모 모드에서 미리보기용 발행 상태로 저장했습니다."
+            : "데모 모드로 초안을 저장했습니다."
+        );
         setMessageType("success");
         return nextMeta;
       }
 
-      const invitationInput = {
-        user_id: userId,
-        slug: nextSlug,
-        title: nextPayload.title,
-        category: nextPayload.category,
-        template_id: nextPayload.templateId,
-        status,
-        payload: nextPayload,
-        repurchase_required: hasRestrictedPaidChanges,
-        paid_payload_snapshot: paidSnapshotRef.current,
-        published_at: status === "published" ? new Date().toISOString() : null
+      const payloadWithSlug = {
+        ...nextPayload,
+        slug: nextSlug
       };
 
-      const query = meta.id
-        ? supabase.from("invitations").update(invitationInput).eq("id", meta.id).select().single()
-        : supabase.from("invitations").insert(invitationInput).select().single();
+      const result = await callSaveInvitation(supabase, {
+        id: invitationId,
+        payload: payloadWithSlug as InvitationDraftPayload,
+        expectedRevision: meta.serverRevision ?? 0,
+        status
+      });
 
-      const { data, error } = await query;
-
-      if (error) {
-        throw error;
+      if (!result.success) {
+        if (result.errorCode === "SAVE_REVISION_CONFLICT" && result.serverPayload) {
+          const serverData = normalizeDraft(result.serverPayload);
+          setPayload(serverData);
+          setMeta((prev) => ({ ...prev, serverRevision: result.currentRevision }));
+          setMainImagePreviewUrl(serverData.mainImageUrl);
+          setBackgroundImagePreviewUrl(serverData.backgroundImageUrl);
+        }
+        throw new Error(getErrorMessage(result.errorCode));
       }
 
-      const savedMeta = {
-        id: data.id,
-        slug: data.slug,
-        status: data.status as InvitationStatus
-      } satisfies DraftMeta;
+      const savedMeta: DraftMeta = {
+        id: invitationId,
+        slug: nextSlug,
+        status,
+        serverRevision: result.currentRevision
+      };
 
-      setPayload(nextPayload);
+      setPayload(normalizeDraft(nextPayload));
       setMeta(savedMeta);
-      if (savedMeta.status === "published") {
-        paidSnapshotRef.current = nextPayload;
-      }
-      if (pendingMainImageFile) {
-        setPendingMainImageFile(null);
-        setMainImagePreviewUrl(nextPayload.mainImageUrl);
-      }
-      if (pendingBackgroundImageFile) {
-        setPendingBackgroundImageFile(null);
-        setBackgroundImagePreviewUrl(nextPayload.backgroundImageUrl);
-      }
+      clearPendingImages(nextPayload);
 
-      if (
-        supabase &&
-        userId &&
-        previousMainImagePath &&
-        previousMainImagePath !== nextPayload.mainImagePath
-      ) {
+      if (previousMainImagePath && previousMainImagePath !== nextPayload.mainImagePath) {
         await deleteImage(previousMainImagePath).catch(() => {});
       }
-
-      if (
-        supabase &&
-        userId &&
-        previousBackgroundImagePath &&
-        previousBackgroundImagePath !== nextPayload.backgroundImagePath
-      ) {
+      if (previousBackgroundImagePath && previousBackgroundImagePath !== nextPayload.backgroundImagePath) {
         await deleteImage(previousBackgroundImagePath).catch(() => {});
       }
 
       setPending(false);
-      setMessage(status === "published" ? "초대장을 발행했습니다." : "초안을 저장했습니다.");
+      setMessage(
+        status === "published"
+          ? "초대장을 발행했습니다! 공유 링크를 확인하세요."
+          : status === "archived"
+            ? "초대장을 보관 처리했습니다."
+            : "초안을 저장했습니다."
+      );
       setMessageType("success");
-
       return savedMeta;
-    } catch (error) {
+    } catch (err) {
       if (rollbackPaths.length > 0) {
         await Promise.allSettled(rollbackPaths.map((path) => deleteImage(path)));
       }
       setPending(false);
-      setMessage(error instanceof Error ? error.message : "초안 저장에 실패했습니다.");
+      setMessage(err instanceof Error ? err.message : "초안 저장에 실패했습니다.");
       setMessageType("error");
       return null;
     }
   }
 
   const inputClassName = "modal-input";
-  const publishButtonLabel =
-    meta.status === "published"
-      ? hasRestrictedPaidChanges
-        ? "재결제 후 재발행"
-        : "무료 수정 저장"
-      : "결제 후 발행";
+  const isPublished = meta.status === "published";
+  const isArchived = meta.status === "archived";
+  const shareUrl = meta.slug ? `/i/${meta.slug}` : "";
 
   return (
     <div className="builder-grid builder-grid-extended">
@@ -475,28 +416,31 @@ export function BuilderStudio({
           await persistDraft("draft");
         }}
       >
+        {isArchived && (
+          <div className="form-message error" style={{ marginBottom: 16 }}>
+            이 초대장은 보관 처리되어 수정할 수 없습니다. 새 초대장을 만들어 주세요.
+          </div>
+        )}
+
         <div className="builder-form-section">
           <h3>1. 기본 정보</h3>
           <label>
             선택 템플릿
             <select
               className={inputClassName}
+              disabled={isArchived}
               value={payload.templateId}
-              onChange={(event) => {
-                const template = templates.find((item) => item.id === event.target.value);
+              onChange={(e) => {
+                const template = templates.find((t) => t.id === e.target.value);
                 if (!template) return;
-                setPayload((current) =>
-                  normalizeDraft({
-                    ...current,
-                    templateId: template.id,
-                    category: template.category
-                  })
+                setPayload((cur) =>
+                  normalizeDraft({ ...cur, templateId: template.id, category: template.category })
                 );
               }}
             >
-          {templates.map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.badge} · {template.name}
+              {templates.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.badge} · {t.name}
                 </option>
               ))}
             </select>
@@ -507,23 +451,50 @@ export function BuilderStudio({
           </label>
           <label>
             행사 제목
-            <input className={inputClassName} value={payload.title} onChange={(event) => updateField("title", event.target.value)} />
+            <input
+              className={inputClassName}
+              disabled={isArchived}
+              value={payload.title}
+              onChange={(e) => updateField("title", e.target.value)}
+            />
           </label>
           <label>
             행사 일시
-            <input className={inputClassName} type="datetime-local" value={payload.eventDateTime} onChange={(event) => updateField("eventDateTime", event.target.value)} />
+            <input
+              className={inputClassName}
+              disabled={isArchived}
+              type="datetime-local"
+              value={payload.eventDateTime}
+              onChange={(e) => updateField("eventDateTime", e.target.value)}
+            />
           </label>
           <label>
             행사장 이름
-            <input className={inputClassName} value={payload.venueName} onChange={(event) => updateField("venueName", event.target.value)} />
+            <input
+              className={inputClassName}
+              disabled={isArchived}
+              value={payload.venueName}
+              onChange={(e) => updateField("venueName", e.target.value)}
+            />
           </label>
           <label>
-            행사장 주소
-            <input className={inputClassName} value={payload.venueAddress} onChange={(event) => updateField("venueAddress", event.target.value)} />
+            행사장 주소 (지도 주소 겸용)
+            <input
+              className={inputClassName}
+              disabled={isArchived}
+              value={payload.venueAddress}
+              onChange={(e) => updateField("venueAddress", e.target.value)}
+            />
           </label>
           <label>
             초대 메시지
-            <textarea className={inputClassName} rows={4} value={payload.message} onChange={(event) => updateField("message", event.target.value)} />
+            <textarea
+              className={inputClassName}
+              disabled={isArchived}
+              rows={4}
+              value={payload.message}
+              onChange={(e) => updateField("message", e.target.value)}
+            />
           </label>
         </div>
 
@@ -532,35 +503,75 @@ export function BuilderStudio({
           <div className="form-two-col">
             <label>
               신랑 성함
-              <input className={inputClassName} value={payload.groomName} onChange={(event) => updateField("groomName", event.target.value)} />
+              <input
+                className={inputClassName}
+                disabled={isArchived}
+                value={payload.groomName}
+                onChange={(e) => updateField("groomName", e.target.value)}
+              />
             </label>
             <label>
               신부 성함
-              <input className={inputClassName} value={payload.brideName} onChange={(event) => updateField("brideName", event.target.value)} />
+              <input
+                className={inputClassName}
+                disabled={isArchived}
+                value={payload.brideName}
+                onChange={(e) => updateField("brideName", e.target.value)}
+              />
             </label>
             <label>
               신랑 연락처
-              <input className={inputClassName} value={payload.groomPhone} onChange={(event) => updateField("groomPhone", event.target.value)} />
+              <input
+                className={inputClassName}
+                disabled={isArchived}
+                value={payload.groomPhone}
+                onChange={(e) => updateField("groomPhone", e.target.value)}
+              />
             </label>
             <label>
               신부 연락처
-              <input className={inputClassName} value={payload.bridePhone} onChange={(event) => updateField("bridePhone", event.target.value)} />
+              <input
+                className={inputClassName}
+                disabled={isArchived}
+                value={payload.bridePhone}
+                onChange={(e) => updateField("bridePhone", e.target.value)}
+              />
             </label>
             <label>
               신랑 아버지
-              <input className={inputClassName} value={payload.groomFatherName} onChange={(event) => updateField("groomFatherName", event.target.value)} />
+              <input
+                className={inputClassName}
+                disabled={isArchived}
+                value={payload.groomFatherName}
+                onChange={(e) => updateField("groomFatherName", e.target.value)}
+              />
             </label>
             <label>
               신랑 어머니
-              <input className={inputClassName} value={payload.groomMotherName} onChange={(event) => updateField("groomMotherName", event.target.value)} />
+              <input
+                className={inputClassName}
+                disabled={isArchived}
+                value={payload.groomMotherName}
+                onChange={(e) => updateField("groomMotherName", e.target.value)}
+              />
             </label>
             <label>
               신부 아버지
-              <input className={inputClassName} value={payload.brideFatherName} onChange={(event) => updateField("brideFatherName", event.target.value)} />
+              <input
+                className={inputClassName}
+                disabled={isArchived}
+                value={payload.brideFatherName}
+                onChange={(e) => updateField("brideFatherName", e.target.value)}
+              />
             </label>
             <label>
               신부 어머니
-              <input className={inputClassName} value={payload.brideMotherName} onChange={(event) => updateField("brideMotherName", event.target.value)} />
+              <input
+                className={inputClassName}
+                disabled={isArchived}
+                value={payload.brideMotherName}
+                onChange={(e) => updateField("brideMotherName", e.target.value)}
+              />
             </label>
           </div>
         </div>
@@ -569,39 +580,55 @@ export function BuilderStudio({
           <h3>3. 사진 설정</h3>
           <label>
             메인 사진 업로드
-            <input className={inputClassName} accept="image/*" onChange={(event) => handleImageSelection("main", event.target.files?.[0] ?? null)} type="file" />
+            <input
+              className={inputClassName}
+              disabled={isArchived}
+              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+              onChange={(e) => handleImageSelection("main", e.target.files?.[0] ?? null)}
+              type="file"
+            />
           </label>
           <label>
             배경 사진 업로드
-            <input className={inputClassName} accept="image/*" onChange={(event) => handleImageSelection("background", event.target.files?.[0] ?? null)} type="file" />
+            <input
+              className={inputClassName}
+              disabled={isArchived}
+              accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+              onChange={(e) => handleImageSelection("background", e.target.files?.[0] ?? null)}
+              type="file"
+            />
           </label>
           <div className="header-actions" style={{ marginTop: "12px" }}>
             <button
               className="btn-outline"
+              disabled={isArchived}
+              type="button"
               onClick={() => {
                 setPendingMainImageFile(null);
                 setMainImagePreviewUrl("");
                 updateField("mainImageUrl", "");
                 updateField("mainImagePath", "");
               }}
-              type="button"
             >
               메인 사진 제거
             </button>
             <button
               className="btn-outline"
+              disabled={isArchived}
+              type="button"
               onClick={() => {
                 setPendingBackgroundImageFile(null);
                 setBackgroundImagePreviewUrl("");
                 updateField("backgroundImageUrl", "");
                 updateField("backgroundImagePath", "");
               }}
-              type="button"
             >
               배경 사진 제거
             </button>
           </div>
-          <p className="builder-help">이미지는 저장 시 Storage로 업로드되고, payload에는 URL만 기록됩니다.</p>
+          <p className="builder-help">
+            JPEG, PNG, WebP, HEIC 파일을 업로드할 수 있습니다 (최대 10MB).
+          </p>
         </div>
 
         <div className="builder-form-section">
@@ -609,99 +636,175 @@ export function BuilderStudio({
           <div className="form-two-col">
             <label>
               신랑측 은행
-              <input className={inputClassName} value={payload.groomBank} onChange={(event) => updateField("groomBank", event.target.value)} />
+              <input
+                className={inputClassName}
+                disabled={isArchived}
+                value={payload.groomBank}
+                onChange={(e) => updateField("groomBank", e.target.value)}
+              />
             </label>
             <label>
               신랑측 예금주
-              <input className={inputClassName} value={payload.groomBankHolder} onChange={(event) => updateField("groomBankHolder", event.target.value)} />
+              <input
+                className={inputClassName}
+                disabled={isArchived}
+                value={payload.groomBankHolder}
+                onChange={(e) => updateField("groomBankHolder", e.target.value)}
+              />
             </label>
             <label className="full-col">
               신랑측 계좌번호
-              <input className={inputClassName} value={payload.groomBankAccount} onChange={(event) => updateField("groomBankAccount", event.target.value)} />
+              <input
+                className={inputClassName}
+                disabled={isArchived}
+                value={payload.groomBankAccount}
+                onChange={(e) => updateField("groomBankAccount", e.target.value)}
+              />
             </label>
             <label>
               신부측 은행
-              <input className={inputClassName} value={payload.brideBank} onChange={(event) => updateField("brideBank", event.target.value)} />
+              <input
+                className={inputClassName}
+                disabled={isArchived}
+                value={payload.brideBank}
+                onChange={(e) => updateField("brideBank", e.target.value)}
+              />
             </label>
             <label>
               신부측 예금주
-              <input className={inputClassName} value={payload.brideBankHolder} onChange={(event) => updateField("brideBankHolder", event.target.value)} />
+              <input
+                className={inputClassName}
+                disabled={isArchived}
+                value={payload.brideBankHolder}
+                onChange={(e) => updateField("brideBankHolder", e.target.value)}
+              />
             </label>
             <label className="full-col">
               신부측 계좌번호
-              <input className={inputClassName} value={payload.brideBankAccount} onChange={(event) => updateField("brideBankAccount", event.target.value)} />
+              <input
+                className={inputClassName}
+                disabled={isArchived}
+                value={payload.brideBankAccount}
+                onChange={(e) => updateField("brideBankAccount", e.target.value)}
+              />
             </label>
           </div>
           <label>
-            카카오페이 링크
-            <input className={inputClassName} value={payload.kakaoPayLink} onChange={(event) => updateField("kakaoPayLink", event.target.value)} />
+            카카오페이 송금 링크
+            <input
+              className={inputClassName}
+              disabled={isArchived}
+              value={payload.kakaoPayLink}
+              onChange={(e) => updateField("kakaoPayLink", e.target.value)}
+            />
           </label>
         </div>
 
         <div className="builder-form-section">
           <h3>5. 오시는 길</h3>
-          <label>
-            지도 주소
-            <input className={inputClassName} value={payload.mapAddress} onChange={(event) => updateField("mapAddress", event.target.value)} />
-          </label>
+          <p className="builder-help">
+            위 &quot;행사장 주소&quot;가 지도 검색 주소로 자동 사용됩니다.
+          </p>
           <label>
             네이버 지도 링크
-            <input className={inputClassName} value={payload.naverMapLink} onChange={(event) => updateField("naverMapLink", event.target.value)} />
+            <input
+              className={inputClassName}
+              disabled={isArchived}
+              value={payload.naverMapLink}
+              onChange={(e) => updateField("naverMapLink", e.target.value)}
+            />
           </label>
           <label>
             교통 안내 메모
-            <textarea className={inputClassName} rows={3} value={payload.transportNote} onChange={(event) => updateField("transportNote", event.target.value)} />
+            <textarea
+              className={inputClassName}
+              disabled={isArchived}
+              rows={3}
+              value={payload.transportNote}
+              onChange={(e) => updateField("transportNote", e.target.value)}
+            />
           </label>
         </div>
 
-        <button className="btn-primary form-submit" disabled={pending} type="submit">
+        <button className="btn-primary form-submit" disabled={pending || isArchived} type="submit">
           {pending ? "저장 중..." : "초안 저장"}
         </button>
+
         <button
           className="btn-primary form-submit"
-          disabled={pending}
+          disabled={pending || isArchived}
+          type="button"
           onClick={async () => {
             await persistDraft("draft");
             router.push("/preview");
           }}
-          type="button"
         >
           실제 화면 보기
         </button>
-        <button
-          className="btn-outline form-submit"
-          disabled={pending}
-          onClick={async () => {
-            if (meta.status === "published" && !hasRestrictedPaidChanges) {
+
+        {!isArchived && (
+          <button
+            className="btn-outline form-submit"
+            disabled={pending}
+            type="button"
+            onClick={async () => {
+              if (!supabase || !userId) {
+                await persistDraft("draft");
+                router.push("/sign-in?next=" + encodeURIComponent("/builder"));
+                return;
+              }
               await persistDraft("published");
-              return;
-            }
+            }}
+          >
+            {isPublished ? "수정 저장 (발행 유지)" : "발행하기"}
+          </button>
+        )}
 
-            if (!supabase || !userId) {
-              await persistDraft("draft");
-              router.push(`/sign-in?next=${encodeURIComponent(normalizeNextPath("/builder?intent=checkout", authDestination.checkout))}`);
-              return;
-            }
+        {isPublished && (
+          <button
+            className="btn-outline form-submit"
+            disabled={pending}
+            type="button"
+            style={{ color: "#888" }}
+            onClick={async () => {
+              if (confirm("보관 처리하면 공개 링크가 비활성화됩니다. 계속하시겠습니까?")) {
+                await persistDraft("archived");
+              }
+            }}
+          >
+            보관 처리
+          </button>
+        )}
 
-            const saved = meta.id ? meta : await persistDraft("draft");
-            if (saved?.id) {
-              router.push(`/checkout?invitationId=${saved.id}`);
-            }
-          }}
-          type="button"
-        >
-          {publishButtonLabel}
-        </button>
-        {meta.status === "published" && hasRestrictedPaidChanges ? (
-          <p className="form-message error">
-            템플릿 또는 이미지를 변경하면 재결제가 필요합니다. 체크아웃에서 결제 후 다시 발행됩니다.
-          </p>
-        ) : null}
-        {meta.status && meta.status !== "draft" && meta.status !== "published" ? (
-          <p className="form-message error">
-            현재 결제 상태: {meta.status}. 결제 완료 전까지 공개 링크는 활성화되지 않습니다.
-          </p>
-        ) : null}
+        {isPublished && shareUrl && (
+          <div className="form-message success" style={{ marginTop: 12 }}>
+            공유 링크:{" "}
+            <a
+              href={shareUrl}
+              rel="noopener noreferrer"
+              style={{ textDecoration: "underline" }}
+              target="_blank"
+            >
+              {typeof window !== "undefined" ? window.location.origin : ""}
+              {shareUrl}
+            </a>
+            <button
+              className="btn-outline"
+              style={{ marginLeft: 8, fontSize: "0.8rem" }}
+              type="button"
+              onClick={async () => {
+                await navigator.clipboard.writeText(
+                  (typeof window !== "undefined" ? window.location.origin : "") + shareUrl
+                );
+                setMessage("링크를 복사했습니다!");
+                setMessageType("success");
+              }}
+            >
+              복사
+            </button>
+          </div>
+        )}
+
         <p className={`form-message ${messageType}`}>{message}</p>
       </form>
 
@@ -712,15 +815,28 @@ export function BuilderStudio({
               <TemplateMarkup template={selectedTemplate} />
             </div>
             {backgroundImagePreviewUrl ? (
-              <div className="builder-background-layer has-image" style={{ backgroundImage: `url(${backgroundImagePreviewUrl})` }} />
+              <div
+                className="builder-background-layer has-image"
+                style={{ backgroundImage: `url(${backgroundImagePreviewUrl})` }}
+              />
             ) : (
               <div className="builder-background-layer" />
             )}
             <div className="builder-preview-content">
               <div className="builder-preview-main-photo-wrap">
-                {mainImagePreviewUrl ? <img alt="메인 사진 미리보기" className="builder-preview-main-photo has-image" src={mainImagePreviewUrl} /> : <div className="builder-preview-main-photo" />}
+                {mainImagePreviewUrl ? (
+                  <img
+                    alt="메인 사진 미리보기"
+                    className="builder-preview-main-photo has-image"
+                    src={mainImagePreviewUrl}
+                  />
+                ) : (
+                  <div className="builder-preview-main-photo" />
+                )}
               </div>
-              <p className="builder-preview-label">{selectedTemplate.badge.toUpperCase()} INVITATION</p>
+              <p className="builder-preview-label">
+                {selectedTemplate.badge.toUpperCase()} INVITATION
+              </p>
               <h2 className="builder-preview-names">
                 {(payload.groomName || "신랑") + " ♡ " + (payload.brideName || "신부")}
               </h2>
@@ -740,9 +856,8 @@ export function BuilderStudio({
                   ? [payload.venueName, payload.venueAddress].filter(Boolean).join(" · ")
                   : "예식장과 주소를 입력해 주세요"}
               </p>
-              <p className="builder-preview-message">{payload.message || "소중한 자리에 함께해 주세요"}</p>
-              <p className="builder-preview-note">
-                이미지는 업로드 후 URL로 저장됩니다. 미발행 상태에서도 초안 저장과 owner 대시보드 연결이 유지됩니다.
+              <p className="builder-preview-message">
+                {payload.message || "소중한 자리에 함께해 주세요"}
               </p>
             </div>
           </div>

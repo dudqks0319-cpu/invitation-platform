@@ -1,51 +1,54 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 
-function renderTabIcon(name: keyof typeof Ionicons.glyphMap) {
-  return ({ color, size }: { color: string; size: number }) => (
-    <Ionicons color={color} name={name} size={size} />
-  );
-}
-
-export default function TabsLayout() {
+export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: "#8d5a2b",
-        tabBarInactiveTintColor: "#8c7a68",
+        tabBarActiveTintColor: "#1a1a1a",
+        tabBarInactiveTintColor: "#999",
         tabBarStyle: {
-          backgroundColor: "#fffaf5",
-          borderTopColor: "#e7d5c4",
-          height: 72,
-          paddingBottom: 12,
-          paddingTop: 10
+          borderTopColor: "#e5e5e5",
+          backgroundColor: "#fff"
         },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: "600"
-        }
+        headerStyle: { backgroundColor: "#fff" },
+        headerTitleStyle: { fontWeight: "700", color: "#1a1a1a" }
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "홈",
-          tabBarIcon: renderTabIcon("sparkles")
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons color={color} name="home-outline" size={size} />
+          )
         }}
       />
       <Tabs.Screen
-        name="my-invitations"
+        name="builder"
+        options={{
+          title: "만들기",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons color={color} name="create-outline" size={size} />
+          )
+        }}
+      />
+      <Tabs.Screen
+        name="invitations"
         options={{
           title: "내 초대장",
-          tabBarIcon: renderTabIcon("mail-open")
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons color={color} name="mail-outline" size={size} />
+          )
         }}
       />
       <Tabs.Screen
-        name="mypage"
+        name="settings"
         options={{
-          title: "마이페이지",
-          tabBarIcon: renderTabIcon("person-circle")
+          title: "설정",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons color={color} name="settings-outline" size={size} />
+          )
         }}
       />
     </Tabs>

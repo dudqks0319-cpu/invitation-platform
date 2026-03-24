@@ -1,5 +1,8 @@
 @import "tailwindcss";
 @import "../css/main.css";
+@import "../css/template-enhanced.css";
+@import "../css/invitation.css";
+@import "../css/dashboard.css";
 
 :root {
   color-scheme: light;

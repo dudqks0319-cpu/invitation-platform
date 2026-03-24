@@ -1,5 +1,3 @@
-import { env, isKakaoPayEnabled } from "@/lib/env";
-
 const KAKAOPAY_BASE_URL = "https://open-api.kakaopay.com/online/v1/payment";
 
 type ReadyPayload = {
@@ -28,33 +26,41 @@ type CancelPayload = {
   cancel_reason?: string;
 };
 
-async function kakaoPayFetch<T>(path: string, body: object) {
-  if (!isKakaoPayEnabled()) {
+function getKakaoPayConfig() {
+  const cid = process.env.KAKAOPAY_CID ?? "";
+  const secretKey = process.env.KAKAOPAY_SECRET_KEY ?? "";
+
+  if (!cid || !secretKey) {
     throw new Error("카카오페이 환경 변수가 설정되지 않았습니다.");
   }
 
+  return { cid, secretKey };
+}
+
+async function kakaoPayFetch<T>(path: string, body: object) {
+  const { cid, secretKey } = getKakaoPayConfig();
   const response = await fetch(`${KAKAOPAY_BASE_URL}${path}`, {
     method: "POST",
     headers: {
-      Authorization: `SECRET_KEY ${env.kakaoPaySecretKey}`,
+      Authorization: `SECRET_KEY ${secretKey}`,
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      cid: env.kakaoPayCid,
+      cid,
       ...body
     })
   });
 
-  const json = (await response.json().catch(() => ({}))) as T & { code?: string; msg?: string };
+  const json = (await response.json().catch(() => ({}))) as T & { msg?: string };
 
   if (!response.ok) {
-    throw new Error(json?.msg || "카카오페이 API 호출에 실패했습니다.");
+    throw new Error(json.msg || "카카오페이 API 호출에 실패했습니다.");
   }
 
   return json;
 }
 
-export async function requestKakaoPayReady(payload: ReadyPayload) {
+export function requestKakaoPayReady(payload: ReadyPayload) {
   return kakaoPayFetch<{
     tid: string;
     next_redirect_app_url?: string;
@@ -66,7 +72,7 @@ export async function requestKakaoPayReady(payload: ReadyPayload) {
   }>("/ready", payload);
 }
 
-export async function requestKakaoPayApprove(payload: ApprovePayload) {
+export function requestKakaoPayApprove(payload: ApprovePayload) {
   return kakaoPayFetch<{
     aid?: string;
     tid: string;
@@ -77,7 +83,7 @@ export async function requestKakaoPayApprove(payload: ApprovePayload) {
   }>("/approve", payload);
 }
 
-export async function requestKakaoPayCancel(payload: CancelPayload) {
+export function requestKakaoPayCancel(payload: CancelPayload) {
   return kakaoPayFetch<{
     aid?: string;
     tid: string;

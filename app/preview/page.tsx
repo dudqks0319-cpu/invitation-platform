@@ -41,7 +41,7 @@ export default function PreviewPage() {
         <InvitationView
           mode="preview"
           payload={normalizeDraft(draft.payload)}
-          shareUrl={draft.meta?.slug ? `/invitations/${draft.meta.slug}` : "/preview"}
+          shareUrl={draft.meta?.slug ? `/i/${draft.meta.slug}` : "/preview"}
           slug={draft.meta?.slug}
         />
       </div>

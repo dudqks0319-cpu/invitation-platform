@@ -39,28 +39,28 @@ export function InvitationView({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
-  const selectedTemplate = templates.find((template) => template.id === payload.templateId) ?? templates[0];
+  const selectedTemplate = templates.find((t) => t.id === payload.templateId) ?? templates[0];
 
   async function copyToClipboard(value: string) {
     if (!value) return;
-    await navigator.clipboard.writeText(value);
+    try {
+      await navigator.clipboard.writeText(value);
+      setMessage("복사했습니다!");
+    } catch {
+      setError("복사에 실패했습니다.");
+    }
   }
 
   async function submitPublicForm(endpoint: string, payloadBody: object) {
     const response = await fetch(endpoint, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payloadBody)
     });
-
     const result = (await response.json()) as { error?: string; message?: string };
-
     if (!response.ok) {
       throw new Error(result.error || "요청 처리에 실패했습니다.");
     }
-
     return result;
   }
 
@@ -100,10 +100,9 @@ export function InvitationView({
         window.localStorage.setItem(LOCAL_RSVP_KEY, JSON.stringify([nextEntry, ...current]));
         setMessage("데모 모드에서 RSVP를 저장했습니다.");
       }
-
       setRsvpEntries((current) => [nextEntry, ...current]);
-    } catch (submissionError) {
-      setError(submissionError instanceof Error ? submissionError.message : "RSVP 저장에 실패했습니다.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "RSVP 저장에 실패했습니다.");
     } finally {
       setPending(false);
     }
@@ -140,12 +139,11 @@ export function InvitationView({
         window.localStorage.setItem(LOCAL_GUESTBOOK_KEY, JSON.stringify([nextEntry, ...current]));
         setMessage("데모 모드에서 방명록을 저장했습니다.");
       }
-
       if (nextEntry.approved) {
         setGuestbookEntries((current) => [nextEntry, ...current]);
       }
-    } catch (submissionError) {
-      setError(submissionError instanceof Error ? submissionError.message : "방명록 저장에 실패했습니다.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "방명록 저장에 실패했습니다.");
     } finally {
       setPending(false);
     }
@@ -154,31 +152,35 @@ export function InvitationView({
   const kakaoPayLink = normalizeUrl(payload.kakaoPayLink);
   const mapLink =
     normalizeUrl(payload.naverMapLink) ||
-    `https://map.naver.com/p/search/${encodeURIComponent(payload.mapAddress || payload.venueAddress || payload.venueName)}`;
+    `https://map.naver.com/p/search/${encodeURIComponent(payload.venueAddress || payload.venueName)}`;
 
   return (
     <main className="invitation-main">
       <section
         className="invitation-hero"
-        style={payload.backgroundImageUrl ? { backgroundImage: `url(${payload.backgroundImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+        style={
+          payload.backgroundImageUrl
+            ? { backgroundImage: `url(${payload.backgroundImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+            : undefined
+        }
       >
-        {!payload.backgroundImageUrl ? (
+        {!payload.backgroundImageUrl && (
           <div className="invitation-template-backdrop">
             <TemplateMarkup template={selectedTemplate} />
           </div>
-        ) : null}
+        )}
         <div className="invitation-hero-overlay" />
         <div className="invitation-hero-inner">
-          {!payload.backgroundImageUrl ? (
+          {!payload.backgroundImageUrl && (
             <div className="invitation-template-showcase">
               <TemplateMarkup template={selectedTemplate} />
             </div>
-          ) : null}
-          {payload.mainImageUrl ? (
+          )}
+          {payload.mainImageUrl && (
             <div className="invitation-main-image-wrap">
               <img alt="초대장 메인 이미지" src={payload.mainImageUrl} style={{ display: "block" }} />
             </div>
-          ) : null}
+          )}
           <p className="invitation-category">{payload.category.toUpperCase()} INVITATION</p>
           <h1 className="invitation-names">
             {payload.groomName || "신랑"} ♡ {payload.brideName || "신부"}
@@ -198,7 +200,10 @@ export function InvitationView({
         <article className="invitation-card">
           <h2>연락처</h2>
           <p>
-            {[payload.groomPhone ? `신랑 ${payload.groomPhone}` : "", payload.bridePhone ? `신부 ${payload.bridePhone}` : ""]
+            {[
+              payload.groomPhone ? `신랑 ${payload.groomPhone}` : "",
+              payload.bridePhone ? `신부 ${payload.bridePhone}` : ""
+            ]
               .filter(Boolean)
               .join(" · ") || "연락처를 입력해 주세요."}
           </p>
@@ -208,21 +213,34 @@ export function InvitationView({
           <h2>마음 전하실 곳</h2>
           <p>{formatAccounts(payload)}</p>
           <div className="invitation-inline-actions">
-            <button className="btn-outline invitation-small-btn" onClick={() => copyToClipboard(payload.groomBankAccount)} type="button">
+            <button
+              className="btn-outline invitation-small-btn"
+              type="button"
+              onClick={() => copyToClipboard(payload.groomBankAccount)}
+            >
               신랑측 계좌 복사
             </button>
-            <button className="btn-outline invitation-small-btn" onClick={() => copyToClipboard(payload.brideBankAccount)} type="button">
+            <button
+              className="btn-outline invitation-small-btn"
+              type="button"
+              onClick={() => copyToClipboard(payload.brideBankAccount)}
+            >
               신부측 계좌 복사
             </button>
           </div>
-          <a className={`btn-primary invitation-wide-btn ${kakaoPayLink ? "" : "is-disabled"}`} href={kakaoPayLink || "#"} rel="noreferrer noopener" target="_blank">
+          <a
+            className={`btn-primary invitation-wide-btn ${kakaoPayLink ? "" : "is-disabled"}`}
+            href={kakaoPayLink || "#"}
+            rel="noreferrer noopener"
+            target="_blank"
+          >
             카카오페이 송금 링크 열기
           </a>
         </article>
 
         <article className="invitation-card">
           <h2>위치</h2>
-          <p>{payload.mapAddress || payload.venueAddress || "위치 정보를 입력해 주세요."}</p>
+          <p>{payload.venueAddress || "위치 정보를 입력해 주세요."}</p>
           <p className="invitation-transport">{payload.transportNote}</p>
           <a className="btn-primary invitation-wide-btn" href={mapLink} rel="noreferrer noopener" target="_blank">
             네이버 지도 열기
@@ -232,20 +250,14 @@ export function InvitationView({
         <article className="invitation-card">
           <h2>RSVP</h2>
           <form
-            action={async (formData) => {
-              await handleRsvpSubmit(formData);
+            action={async (fd) => {
+              await handleRsvpSubmit(fd);
             }}
             className="invitation-guestbook-form"
           >
             <input autoComplete="off" name="website" style={{ display: "none" }} tabIndex={-1} type="text" />
-            <label>
-              이름
-              <input name="guestName" required type="text" />
-            </label>
-            <label>
-              연락처
-              <input name="guestPhone" type="text" />
-            </label>
+            <label>이름 <input name="guestName" required type="text" /></label>
+            <label>연락처 <input name="guestPhone" type="text" /></label>
             <label>
               참석 여부
               <select className="modal-input" defaultValue="yes" name="attending">
@@ -253,41 +265,46 @@ export function InvitationView({
                 <option value="no">불참</option>
               </select>
             </label>
-            <label>
-              동행 인원
-              <input defaultValue={1} max={20} min={0} name="guests" type="number" />
-            </label>
-            <label>
-              메모
-              <textarea name="memo" rows={3} />
-            </label>
+            <label>동행 인원 <input defaultValue={1} max={50} min={0} name="guests" type="number" /></label>
+            <label>메모 <textarea name="memo" rows={3} /></label>
             <button className="btn-primary invitation-wide-btn" disabled={pending} type="submit">
               RSVP 보내기
             </button>
           </form>
-          {rsvpEntries.length ? <p>최근 응답 {rsvpEntries.length}건이 이 세션에 기록되었습니다.</p> : null}
+          {rsvpEntries.length > 0 && (
+            <p>최근 응답 {rsvpEntries.length}건이 이 세션에 기록되었습니다.</p>
+          )}
         </article>
 
         <article className="invitation-card">
-          <h2>카카오톡으로 보내기</h2>
-          <p id="invitationShareHint">카카오 SDK 없이도 링크 복사와 기본 공유를 사용할 수 있습니다.</p>
+          <h2>공유하기</h2>
           <div className="invitation-inline-actions">
             <button
               className="btn-primary invitation-small-btn"
+              type="button"
               onClick={async () => {
+                const fullUrl = typeof window !== "undefined"
+                  ? window.location.origin + shareUrl
+                  : shareUrl;
                 if (navigator.share) {
-                  await navigator.share({ title: payload.title, text: payload.message, url: shareUrl });
+                  await navigator.share({ title: payload.title, text: payload.message, url: fullUrl });
                   return;
                 }
-
-                await copyToClipboard(shareUrl);
-                setMessage("링크를 복사했습니다.");
+                await copyToClipboard(fullUrl);
               }}
-              type="button"
             >
               공유하기
             </button>
-            <button className="btn-outline invitation-small-btn" onClick={() => copyToClipboard(shareUrl)} type="button">
+            <button
+              className="btn-outline invitation-small-btn"
+              type="button"
+              onClick={() => {
+                const fullUrl = typeof window !== "undefined"
+                  ? window.location.origin + shareUrl
+                  : shareUrl;
+                void copyToClipboard(fullUrl);
+              }}
+            >
               링크 복사
             </button>
           </div>
@@ -296,31 +313,23 @@ export function InvitationView({
         <article className="invitation-card">
           <h2>방명록</h2>
           <form
-            action={async (formData) => {
-              await handleGuestbookSubmit(formData);
+            action={async (fd) => {
+              await handleGuestbookSubmit(fd);
             }}
             className="invitation-guestbook-form"
           >
             <input autoComplete="off" name="website" style={{ display: "none" }} tabIndex={-1} type="text" />
-            <label>
-              이름
-              <input name="nickname" required type="text" />
-            </label>
-            <label>
-              메시지
-              <textarea name="guestbookMessage" required rows={3} />
-            </label>
+            <label>이름 <input name="nickname" required type="text" /></label>
+            <label>메시지 <textarea name="guestbookMessage" required rows={3} /></label>
             <button className="btn-primary invitation-wide-btn" disabled={pending} type="submit">
               방명록 남기기
             </button>
           </form>
-          {mode === "public" ? (
-            <p className="form-message">방명록은 관리자 승인 후 공개됩니다.</p>
-          ) : null}
-          {message ? <p className="form-message success">{message}</p> : null}
-          {error ? <p className="form-message error">{error}</p> : null}
+          {mode === "public" && <p className="form-message">방명록은 관리자 승인 후 공개됩니다.</p>}
+          {message && <p className="form-message success">{message}</p>}
+          {error && <p className="form-message error">{error}</p>}
           <ul className="list-box invitation-guestbook-list">
-            {guestbookEntries.length ? (
+            {guestbookEntries.length > 0 ? (
               guestbookEntries.map((entry) => (
                 <li key={entry.id}>
                   <div className="meta">

@@ -1,89 +1,149 @@
-import { Link } from "expo-router";
-import { Pressable, Text, View } from "react-native";
-import { Screen } from "@/components/ui/Screen";
-import { Card } from "@/components/ui/Card";
-import { Pill } from "@/components/ui/Pill";
-
-const templates = [
-  {
-    id: "wedding-classic",
-    title: "클래식 로즈",
-    description: "따뜻한 크림 톤의 웨딩 초대장"
-  },
-  {
-    id: "wedding-modern",
-    title: "다크 골드",
-    description: "짙은 배경과 금색 포인트"
-  },
-  {
-    id: "wedding-floral",
-    title: "플로럴 블룸",
-    description: "밝고 화사한 꽃무늬 감성"
-  }
-];
+import { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl
+} from "react-native";
+import { useRouter } from "expo-router";
+import { supabase } from "../../lib/supabase";
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const [userName, setUserName] = useState("");
+  const [stats, setStats] = useState({ invitations: 0, rsvps: 0, visits: 0 });
+  const [refreshing, setRefreshing] = useState(false);
+
+  async function loadData() {
+    if (!supabase) return;
+
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const name =
+      (user.user_metadata?.full_name as string) ||
+      (user.user_metadata?.display_name as string) ||
+      user.email?.split("@")[0] ||
+      "사용자";
+    setUserName(name);
+
+    const { count: invitationCount } = await supabase
+      .from("invitations")
+      .select("*", { count: "exact", head: true });
+
+    setStats((prev) => ({ ...prev, invitations: invitationCount ?? 0 }));
+  }
+
+  useEffect(() => {
+    void loadData();
+  }, []);
+
+  async function onRefresh() {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  }
+
   return (
-    <Screen
-      footer="v1.0은 결혼식 제작 흐름부터 검증합니다."
-      subtitle="앱에서 초대장을 만들고, 손님은 웹 링크로 바로 확인합니다."
-      title="InviteHub"
+    <ScrollView
+      style={styles.container}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      <View style={{ flexDirection: "row", gap: 8, marginBottom: 20 }}>
-        <Pill active label="결혼식" />
-        <Pill label="돌잔치 준비중" />
-        <Pill label="환갑 준비중" />
+      <View style={styles.hero}>
+        <Text style={styles.greeting}>
+          안녕하세요{userName ? `, ${userName}님` : ""} 👋
+        </Text>
+        <Text style={styles.subtitle}>
+          소중한 순간을 특별하게 초대하세요.
+        </Text>
       </View>
 
-      <Card
-        eyebrow="핵심 흐름"
-        title="작성은 앱, 공유는 웹"
+      <TouchableOpacity
+        style={styles.ctaButton}
+        onPress={() => router.push("/(tabs)/builder")}
       >
-        <Text style={{ color: "#5b4a3b", lineHeight: 22 }}>
-          사진과 문구를 앱에서 정리하고, 최종 초대장은 카카오톡 링크로 공유합니다.
-        </Text>
-        <Link asChild href="/login">
-          <Pressable
-            accessibilityLabel="로그인 화면으로 이동"
-            style={{
-              backgroundColor: "#8d5a2b",
-              borderRadius: 16,
-              marginTop: 16,
-              minHeight: 48,
-              alignItems: "center",
-              justifyContent: "center"
-            }}
-          >
-            <Text style={{ color: "#fff", fontWeight: "700" }}>로그인하고 시작하기</Text>
-          </Pressable>
-        </Link>
-        <Link asChild href="/builder/step1-basic">
-          <Pressable
-            accessibilityLabel="초대장 만들기 화면으로 이동"
-            style={{
-              borderRadius: 16,
-              marginTop: 12,
-              minHeight: 48,
-              alignItems: "center",
-              justifyContent: "center",
-              borderWidth: 1,
-              borderColor: "#d2bba6"
-            }}
-          >
-            <Text style={{ color: "#8d5a2b", fontWeight: "700" }}>바로 초대장 만들기</Text>
-          </Pressable>
-        </Link>
-      </Card>
+        <Text style={styles.ctaText}>새 초대장 만들기</Text>
+      </TouchableOpacity>
 
-      {templates.map((template) => (
-        <Card
-          key={template.id}
-          eyebrow="추천 템플릿"
-          title={template.title}
-        >
-          <Text style={{ color: "#6a5645", lineHeight: 22 }}>{template.description}</Text>
-        </Card>
-      ))}
-    </Screen>
+      <View style={styles.statsRow}>
+        <View style={styles.statCard}>
+          <Text style={styles.statNumber}>{stats.invitations}</Text>
+          <Text style={styles.statLabel}>내 초대장</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statNumber}>{stats.rsvps}</Text>
+          <Text style={styles.statLabel}>RSVP 응답</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statNumber}>{stats.visits}</Text>
+          <Text style={styles.statLabel}>총 방문</Text>
+        </View>
+      </View>
+
+      <View style={styles.features}>
+        <Text style={styles.sectionTitle}>주요 기능</Text>
+        {[
+          { icon: "✉️", title: "감성 초대장", desc: "아름다운 템플릿으로 초대장을 만들어요" },
+          { icon: "📊", title: "RSVP 관리", desc: "참석 여부를 한눈에 확인하세요" },
+          { icon: "📖", title: "방명록", desc: "소중한 축하 메시지를 받아보세요" },
+          { icon: "🔗", title: "간편 공유", desc: "카카오톡, 문자로 바로 공유하세요" }
+        ].map((feature) => (
+          <View style={styles.featureItem} key={feature.title}>
+            <Text style={styles.featureIcon}>{feature.icon}</Text>
+            <View style={styles.featureTextWrap}>
+              <Text style={styles.featureTitle}>{feature.title}</Text>
+              <Text style={styles.featureDesc}>{feature.desc}</Text>
+            </View>
+          </View>
+        ))}
+      </View>
+    </ScrollView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#fff" },
+  hero: { padding: 24, paddingTop: 16 },
+  greeting: { fontSize: 22, fontWeight: "700", color: "#1a1a1a" },
+  subtitle: { fontSize: 14, color: "#888", marginTop: 4 },
+  ctaButton: {
+    marginHorizontal: 24,
+    backgroundColor: "#1a1a1a",
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center"
+  },
+  ctaText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  statsRow: {
+    flexDirection: "row",
+    paddingHorizontal: 24,
+    gap: 12,
+    marginTop: 24
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: "#f8f9fa",
+    borderRadius: 12,
+    padding: 16,
+    alignItems: "center"
+  },
+  statNumber: { fontSize: 24, fontWeight: "700", color: "#1a1a1a" },
+  statLabel: { fontSize: 12, color: "#888", marginTop: 4 },
+  features: { padding: 24 },
+  sectionTitle: { fontSize: 18, fontWeight: "700", marginBottom: 16, color: "#1a1a1a" },
+  featureItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0"
+  },
+  featureIcon: { fontSize: 28, marginRight: 12 },
+  featureTextWrap: { flex: 1 },
+  featureTitle: { fontSize: 15, fontWeight: "600", color: "#1a1a1a" },
+  featureDesc: { fontSize: 13, color: "#888", marginTop: 2 }
+});
