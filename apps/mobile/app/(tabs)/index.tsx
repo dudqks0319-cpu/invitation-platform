@@ -8,36 +8,32 @@ import {
   RefreshControl
 } from "react-native";
 import { useRouter } from "expo-router";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "../../lib/supabase";
 
-export default function HomeTab() {
+export default function HomeScreen() {
   const router = useRouter();
-  const [userName, setUserName] = useState<string | null>(null);
+  const [userName, setUserName] = useState("");
   const [stats, setStats] = useState({ invitations: 0, rsvps: 0, visits: 0 });
   const [refreshing, setRefreshing] = useState(false);
 
   async function loadData() {
+    if (!supabase) return;
+
     const {
       data: { user }
     } = await supabase.auth.getUser();
+    if (!user) return;
 
-    if (!user) {
-      setUserName(null);
-      return;
-    }
-
-    const meta = user.user_metadata ?? {};
     const name =
-      (meta.full_name as string) ||
-      (meta.name as string) ||
+      (user.user_metadata?.full_name as string) ||
+      (user.user_metadata?.display_name as string) ||
       user.email?.split("@")[0] ||
       "사용자";
     setUserName(name);
 
     const { count: invitationCount } = await supabase
       .from("invitations")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id);
+      .select("*", { count: "exact", head: true });
 
     setStats((prev) => ({ ...prev, invitations: invitationCount ?? 0 }));
   }
@@ -55,15 +51,13 @@ export default function HomeTab() {
   return (
     <ScrollView
       style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      <View style={styles.greeting}>
-        <Text style={styles.greetingText}>
-          {userName ? `안녕하세요, ${userName}님!` : "InviteHub에 오신 것을 환영합니다"}
+      <View style={styles.hero}>
+        <Text style={styles.greeting}>
+          안녕하세요{userName ? `, ${userName}님` : ""} 👋
         </Text>
-        <Text style={styles.greetingSub}>
+        <Text style={styles.subtitle}>
           소중한 순간을 특별하게 초대하세요.
         </Text>
       </View>
@@ -71,54 +65,39 @@ export default function HomeTab() {
       <TouchableOpacity
         style={styles.ctaButton}
         onPress={() => router.push("/(tabs)/builder")}
-        activeOpacity={0.8}
       >
-        <Text style={styles.ctaEmoji}>✨</Text>
         <Text style={styles.ctaText}>새 초대장 만들기</Text>
-        <Text style={styles.ctaSub}>템플릿 선택 → 정보 입력 → 발행</Text>
       </TouchableOpacity>
 
-      {!userName && (
-        <TouchableOpacity
-          style={styles.loginPrompt}
-          onPress={() => router.push("/login")}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.loginText}>
-            로그인하면 초대장을 저장하고 관리할 수 있습니다
-          </Text>
-          <Text style={styles.loginLink}>Apple로 로그인 →</Text>
-        </TouchableOpacity>
-      )}
-
-      {userName && (
-        <View style={styles.statsRow}>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{stats.invitations}</Text>
-            <Text style={styles.statLabel}>내 초대장</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{stats.rsvps}</Text>
-            <Text style={styles.statLabel}>RSVP 응답</Text>
-          </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statNumber}>{stats.visits}</Text>
-            <Text style={styles.statLabel}>방문</Text>
-          </View>
+      <View style={styles.statsRow}>
+        <View style={styles.statCard}>
+          <Text style={styles.statNumber}>{stats.invitations}</Text>
+          <Text style={styles.statLabel}>내 초대장</Text>
         </View>
-      )}
+        <View style={styles.statCard}>
+          <Text style={styles.statNumber}>{stats.rsvps}</Text>
+          <Text style={styles.statLabel}>RSVP 응답</Text>
+        </View>
+        <View style={styles.statCard}>
+          <Text style={styles.statNumber}>{stats.visits}</Text>
+          <Text style={styles.statLabel}>총 방문</Text>
+        </View>
+      </View>
 
       <View style={styles.features}>
-        <Text style={styles.sectionTitle}>InviteHub 특징</Text>
+        <Text style={styles.sectionTitle}>주요 기능</Text>
         {[
-          { emoji: "💍", text: "한국 결혼 문화에 특화 (양가 정보, 축의금 계좌)" },
-          { emoji: "📊", text: "실시간 RSVP 관리 + 엑셀 다운로드" },
-          { emoji: "🗺️", text: "네이버 지도 연동 + 교통 안내" },
-          { emoji: "📱", text: "카카오톡, SNS에서 예쁜 미리보기" }
-        ].map((item) => (
-          <View style={styles.featureRow} key={item.text}>
-            <Text style={styles.featureEmoji}>{item.emoji}</Text>
-            <Text style={styles.featureText}>{item.text}</Text>
+          { icon: "✉️", title: "감성 초대장", desc: "아름다운 템플릿으로 초대장을 만들어요" },
+          { icon: "📊", title: "RSVP 관리", desc: "참석 여부를 한눈에 확인하세요" },
+          { icon: "📖", title: "방명록", desc: "소중한 축하 메시지를 받아보세요" },
+          { icon: "🔗", title: "간편 공유", desc: "카카오톡, 문자로 바로 공유하세요" }
+        ].map((feature) => (
+          <View style={styles.featureItem} key={feature.title}>
+            <Text style={styles.featureIcon}>{feature.icon}</Text>
+            <View style={styles.featureTextWrap}>
+              <Text style={styles.featureTitle}>{feature.title}</Text>
+              <Text style={styles.featureDesc}>{feature.desc}</Text>
+            </View>
           </View>
         ))}
       </View>
@@ -127,51 +106,44 @@ export default function HomeTab() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFF" },
-  greeting: { padding: 24, paddingBottom: 8 },
-  greetingText: { fontSize: 22, fontWeight: "800", color: "#222" },
-  greetingSub: { fontSize: 14, color: "#888", marginTop: 4 },
+  container: { flex: 1, backgroundColor: "#fff" },
+  hero: { padding: 24, paddingTop: 16 },
+  greeting: { fontSize: 22, fontWeight: "700", color: "#1a1a1a" },
+  subtitle: { fontSize: 14, color: "#888", marginTop: 4 },
   ctaButton: {
-    margin: 16,
-    padding: 24,
-    backgroundColor: "#4A90D9",
-    borderRadius: 16,
+    marginHorizontal: 24,
+    backgroundColor: "#1a1a1a",
+    borderRadius: 12,
+    padding: 16,
     alignItems: "center"
   },
-  ctaEmoji: { fontSize: 32, marginBottom: 8 },
-  ctaText: { fontSize: 18, fontWeight: "700", color: "#FFF" },
-  ctaSub: { fontSize: 13, color: "rgba(255,255,255,0.8)", marginTop: 4 },
-  loginPrompt: {
-    margin: 16,
-    marginTop: 0,
-    padding: 20,
-    backgroundColor: "#F9F9FB",
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E8E8E8"
-  },
-  loginText: { fontSize: 14, color: "#666", marginBottom: 8 },
-  loginLink: { fontSize: 14, fontWeight: "600", color: "#4A90D9" },
+  ctaText: { color: "#fff", fontSize: 16, fontWeight: "600" },
   statsRow: {
     flexDirection: "row",
-    paddingHorizontal: 16,
-    gap: 10,
-    marginBottom: 16
+    paddingHorizontal: 24,
+    gap: 12,
+    marginTop: 24
   },
   statCard: {
     flex: 1,
-    backgroundColor: "#F9F9FB",
+    backgroundColor: "#f8f9fa",
     borderRadius: 12,
     padding: 16,
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#E8E8E8"
+    alignItems: "center"
   },
-  statNumber: { fontSize: 24, fontWeight: "800", color: "#333" },
-  statLabel: { fontSize: 11, color: "#888", marginTop: 4 },
-  features: { padding: 16 },
-  sectionTitle: { fontSize: 16, fontWeight: "700", marginBottom: 12, color: "#333" },
-  featureRow: { flexDirection: "row", alignItems: "center", marginBottom: 12 },
-  featureEmoji: { fontSize: 20, marginRight: 12, width: 28, textAlign: "center" },
-  featureText: { fontSize: 14, color: "#555", flex: 1, lineHeight: 20 }
+  statNumber: { fontSize: 24, fontWeight: "700", color: "#1a1a1a" },
+  statLabel: { fontSize: 12, color: "#888", marginTop: 4 },
+  features: { padding: 24 },
+  sectionTitle: { fontSize: 18, fontWeight: "700", marginBottom: 16, color: "#1a1a1a" },
+  featureItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0"
+  },
+  featureIcon: { fontSize: 28, marginRight: 12 },
+  featureTextWrap: { flex: 1 },
+  featureTitle: { fontSize: 15, fontWeight: "600", color: "#1a1a1a" },
+  featureDesc: { fontSize: 13, color: "#888", marginTop: 2 }
 });

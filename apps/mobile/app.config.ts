@@ -1,34 +1,21 @@
 import type { ExpoConfig, ConfigContext } from "expo/config";
 
-const IS_DEV = process.env.APP_ENV === "development";
-const IS_STAGING = process.env.APP_ENV === "staging";
+const IS_PROD = process.env.APP_ENV === "production";
 
-const getScheme = () => {
-  if (IS_DEV) return "invitehub-dev";
-  if (IS_STAGING) return "invitehub-staging";
-  return "invitehub";
-};
+const bundleId = IS_PROD
+  ? "kr.co.invitehub.app"
+  : "kr.co.invitehub.app.dev";
 
-const getBundleId = () => {
-  if (IS_DEV) return "kr.co.invitehub.app.dev";
-  if (IS_STAGING) return "kr.co.invitehub.app.staging";
-  return "kr.co.invitehub.app";
-};
+const scheme = IS_PROD ? "invitehub" : "invitehub-dev";
 
-const getAppName = () => {
-  if (IS_DEV) return "InviteHub (Dev)";
-  if (IS_STAGING) return "InviteHub (Staging)";
-  return "InviteHub";
-};
-
-export default ({ config }: ConfigContext): ExpoConfig => ({
-  ...config,
-  name: getAppName(),
+const config = ({ config: baseConfig }: ConfigContext): ExpoConfig => ({
+  ...baseConfig,
+  name: IS_PROD ? "InviteHub" : "InviteHub Dev",
   slug: "invitehub",
   version: "1.0.0",
   orientation: "portrait",
-  scheme: getScheme(),
-  userInterfaceStyle: "automatic",
+  scheme,
+  userInterfaceStyle: "light",
   icon: "./assets/icon.png",
   splash: {
     image: "./assets/splash.png",
@@ -36,56 +23,38 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     backgroundColor: "#FFFFFF"
   },
   ios: {
-    bundleIdentifier: getBundleId(),
     supportsTablet: false,
+    bundleIdentifier: bundleId,
     usesAppleSignIn: true,
+    config: {
+      usesNonExemptEncryption: false
+    },
     infoPlist: {
-      NSCameraUsageDescription:
-        "초대장에 넣을 사진을 촬영하기 위해 카메라 접근이 필요합니다.",
-      NSPhotoLibraryUsageDescription:
-        "초대장에 넣을 사진을 선택하기 위해 사진 라이브러리 접근이 필요합니다.",
       CFBundleURLTypes: [
         {
-          CFBundleURLSchemes: [getScheme()]
-        },
-        ...(process.env.EXPO_PUBLIC_KAKAO_NATIVE_KEY
-          ? [
-              {
-                CFBundleURLSchemes: [
-                  `kakao${process.env.EXPO_PUBLIC_KAKAO_NATIVE_KEY}`
-                ]
-              }
-            ]
-          : [])
-      ]
+          CFBundleURLSchemes: [scheme]
+        }
+      ],
+      NSPhotoLibraryUsageDescription: "초대장에 사진을 추가하려면 사진 접근 권한이 필요합니다.",
+      NSCameraUsageDescription: "초대장에 사진을 촬영하려면 카메라 접근 권한이 필요합니다."
     },
     associatedDomains: [
-      "applinks:invitehub.co.kr",
-      "webcredentials:invitehub.co.kr"
-    ],
-    entitlements: {
-      "com.apple.developer.applesignin": ["Default"]
-    }
-  },
-  android: {
-    package: getBundleId().replace(/\.app/, ".app"),
-    adaptiveIcon: {
-      foregroundImage: "./assets/adaptive-icon.png",
-      backgroundColor: "#FFFFFF"
-    }
+      `applinks:${IS_PROD ? "invitehub.co.kr" : "dev.invitehub.co.kr"}`
+    ]
   },
   plugins: [
     "expo-router",
-    "expo-apple-authentication",
-    "expo-image-picker",
-    "expo-secure-store"
+    "expo-secure-store",
+    "expo-apple-authentication"
   ],
   extra: {
+    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ?? "",
+    supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "",
+    siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "https://invitehub.co.kr",
     eas: {
       projectId: process.env.EAS_PROJECT_ID ?? ""
-    },
-    supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL ?? "",
-    supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? "",
-    siteUrl: process.env.EXPO_PUBLIC_SITE_URL ?? "https://invitehub.co.kr"
+    }
   }
 });
+
+export default config;

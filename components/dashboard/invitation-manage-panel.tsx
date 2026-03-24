@@ -131,34 +131,27 @@ export function InvitationManagePanel({
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      if (tab === "rsvp") {
-        void loadRsvps();
-      }
-      if (tab === "guestbook") {
-        void loadGuestbook();
-      }
-      if (tab === "stats") {
-        void loadStats();
-      }
-      if (tab === "blocked") {
-        void loadBlocked();
-      }
+      if (tab === "rsvp") void loadRsvps();
+      if (tab === "guestbook") void loadGuestbook();
+      if (tab === "stats") void loadStats();
+      if (tab === "blocked") void loadBlocked();
     }, 0);
 
     return () => window.clearTimeout(timer);
-  }, [loadBlocked, loadGuestbook, loadRsvps, loadStats, tab]);
+  }, [tab, loadBlocked, loadGuestbook, loadRsvps, loadStats]);
 
   async function deleteRsvp(id: string) {
     if (!supabase) return;
     if (!confirm("이 RSVP를 삭제하시겠습니까?")) return;
+
     const { error } = await supabase.from("rsvps").delete().eq("id", id);
     if (!error) {
-      setRsvps((prev) => prev.filter((row) => row.id !== id));
+      setRsvps((prev) => prev.filter((rsvp) => rsvp.id !== id));
       setMessage("RSVP를 삭제했습니다.");
     }
   }
 
-  function downloadRsvpExcel() {
+  function downloadRsvpCsv() {
     const bom = "\uFEFF";
     const header = "이름,연락처,참석여부,동행인원,메모,응답일시";
     const rows = rsvps.map((rsvp) =>
@@ -167,7 +160,7 @@ export function InvitationManagePanel({
         `"${rsvp.phone || ""}"`,
         rsvp.attending ? "참석" : "불참",
         rsvp.guest_count,
-        `"${(rsvp.memo || "").replace(/"/g, "\"\"")}"`,
+        `"${(rsvp.memo || "").replace(/"/g, '""')}"`,
         new Date(rsvp.created_at).toLocaleString("ko-KR")
       ].join(",")
     );
@@ -175,31 +168,34 @@ export function InvitationManagePanel({
     const csv = bom + header + "\n" + rows.join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `rsvp-${invitation.slug || invitation.id}.csv`;
-    anchor.click();
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `rsvp-${invitation.slug || invitation.id}.csv`;
+    link.click();
     URL.revokeObjectURL(url);
-    setMessage("CSV 파일을 다운로드했습니다. 엑셀에서 열 수 있습니다.");
+    setMessage("CSV 파일을 다운로드했습니다.");
   }
 
   async function approveGuestbook(id: string, approve: boolean) {
     if (!supabase) return;
+
     const { error } = await supabase
       .from("guestbook_entries")
       .update({ is_approved: approve })
       .eq("id", id);
+
     if (!error) {
       setGuestbook((prev) =>
         prev.map((entry) => (entry.id === id ? { ...entry, is_approved: approve } : entry))
       );
-      setMessage(approve ? "방명록을 승인했습니다." : "방명록을 비공개로 변경했습니다.");
+      setMessage(approve ? "승인했습니다." : "숨김 처리했습니다.");
     }
   }
 
   async function deleteGuestbook(id: string) {
     if (!supabase) return;
     if (!confirm("이 방명록을 삭제하시겠습니까?")) return;
+
     const { error } = await supabase.from("guestbook_entries").delete().eq("id", id);
     if (!error) {
       setGuestbook((prev) => prev.filter((entry) => entry.id !== id));
@@ -209,7 +205,7 @@ export function InvitationManagePanel({
 
   async function blockFromGuestbook(entry: GuestbookRow) {
     if (!supabase) return;
-    const reason = prompt("차단 사유를 입력해 주세요 (선택):");
+    const reason = prompt("차단 사유를 입력하세요 (선택):");
 
     const { error } = await supabase.from("blocked_users").insert({
       invitation_id: invitation.id,
@@ -219,7 +215,7 @@ export function InvitationManagePanel({
     });
 
     if (!error) {
-      setMessage(`${entry.nickname}님을 차단했습니다. 이후 글이 자동 차단됩니다.`);
+      setMessage(`${entry.nickname}님을 차단했습니다.`);
       void loadBlocked();
     }
   }
@@ -227,49 +223,51 @@ export function InvitationManagePanel({
   async function unblock(id: string) {
     if (!supabase) return;
     if (!confirm("차단을 해제하시겠습니까?")) return;
+
     const { error } = await supabase.from("blocked_users").delete().eq("id", id);
     if (!error) {
-      setBlocked((prev) => prev.filter((entry) => entry.id !== id));
+      setBlocked((prev) => prev.filter((blockedItem) => blockedItem.id !== id));
       setMessage("차단을 해제했습니다.");
     }
   }
 
   const rsvpStats = useMemo(() => {
-    const attending = rsvps.filter((row) => row.attending);
-    const notAttending = rsvps.filter((row) => !row.attending);
-    const totalGuests = attending.reduce((sum, row) => sum + row.guest_count, 0);
+    const attending = rsvps.filter((rsvp) => rsvp.attending);
+    const notAttending = rsvps.filter((rsvp) => !rsvp.attending);
 
     return {
       total: rsvps.length,
       attending: attending.length,
       notAttending: notAttending.length,
-      totalGuests
+      totalGuests: attending.reduce((sum, rsvp) => sum + rsvp.guest_count, 0)
     };
   }, [rsvps]);
 
   return (
     <div className="manage-panel">
       <div className="manage-header">
-        <div className="dashboard-card-actions" style={{ marginBottom: 12 }}>
-          <button className="btn-outline" onClick={onBack} type="button">
-            ← 목록으로
-          </button>
-        </div>
+        <button className="btn-outline" onClick={onBack} type="button">
+          ← 목록으로
+        </button>
         <h2>{invitation.title}</h2>
         <p style={{ color: "#888", fontSize: "0.9rem" }}>
           {invitation.status === "published" && invitation.slug
             ? `공개 주소: /i/${invitation.slug}`
-            : `상태: ${invitation.status}`}
+            : `상태: ${invitation.status === "draft"
+              ? "초안"
+              : invitation.status === "archived"
+                ? "보관됨"
+                : invitation.status}`}
         </p>
       </div>
 
       <div className="manage-tabs">
         {([
-          { key: "rsvp", label: "RSVP" },
-          { key: "guestbook", label: "방명록" },
-          { key: "stats", label: "통계" },
-          { key: "blocked", label: "차단 관리" }
-        ] as { key: Tab; label: string }[]).map((nextTab) => (
+          { key: "rsvp" as Tab, label: "RSVP" },
+          { key: "guestbook" as Tab, label: "방명록" },
+          { key: "stats" as Tab, label: "통계" },
+          { key: "blocked" as Tab, label: "차단 관리" }
+        ]).map((nextTab) => (
           <button
             key={nextTab.key}
             className={`manage-tab ${tab === nextTab.key ? "active" : ""}`}
@@ -295,7 +293,7 @@ export function InvitationManagePanel({
           <div className="stats-row">
             <div className="stat-card">
               <div className="stat-number">{rsvpStats.total}</div>
-              <div className="stat-label">총 응답</div>
+              <div className="stat-label">전체 응답</div>
             </div>
             <div className="stat-card">
               <div className="stat-number" style={{ color: "#27ae60" }}>{rsvpStats.attending}</div>
@@ -312,7 +310,7 @@ export function InvitationManagePanel({
           </div>
 
           <div style={{ margin: "16px 0" }}>
-            <button className="btn-outline" disabled={rsvps.length === 0} onClick={downloadRsvpExcel} type="button">
+            <button className="btn-outline" disabled={rsvps.length === 0} onClick={downloadRsvpCsv} type="button">
               CSV 다운로드 (엑셀)
             </button>
             <button className="btn-outline" onClick={() => void loadRsvps()} style={{ marginLeft: 8 }} type="button">
@@ -334,7 +332,7 @@ export function InvitationManagePanel({
                     <th>참석</th>
                     <th>인원</th>
                     <th>메모</th>
-                    <th>일시</th>
+                    <th>날짜</th>
                     <th>관리</th>
                   </tr>
                 </thead>
@@ -367,49 +365,34 @@ export function InvitationManagePanel({
 
       {tab === "guestbook" ? (
         <div className="manage-content">
-          <div style={{ margin: "0 0 16px" }}>
-            <button className="btn-outline" onClick={() => void loadGuestbook()} type="button">
-              새로고침
-            </button>
-          </div>
+          <button className="btn-outline" onClick={() => void loadGuestbook()} style={{ marginBottom: 16 }} type="button">
+            새로고침
+          </button>
 
           {gbLoading ? (
             <p style={{ color: "#888" }}>불러오는 중...</p>
           ) : guestbook.length === 0 ? (
-            <p style={{ color: "#888" }}>아직 방명록이 없습니다.</p>
+            <p style={{ color: "#888" }}>방명록이 없습니다.</p>
           ) : (
             <div className="guestbook-manage-list">
               {guestbook.map((entry) => (
-                <div
-                  key={entry.id}
-                  className={`guestbook-manage-item ${entry.is_approved ? "" : "pending"}`}
-                >
+                <div key={entry.id} className={`guestbook-manage-item ${entry.is_approved ? "" : "pending"}`}>
                   <div className="gb-header">
                     <span className="gb-nickname">{entry.nickname}</span>
                     <span className={`gb-status ${entry.is_approved ? "approved" : "waiting"}`}>
-                      {entry.is_approved ? "승인됨" : "대기중"}
+                      {entry.is_approved ? "공개" : "대기"}
                     </span>
-                    <span className="gb-date">
-                      {new Date(entry.created_at).toLocaleDateString("ko-KR")}
-                    </span>
+                    <span className="gb-date">{new Date(entry.created_at).toLocaleDateString("ko-KR")}</span>
                   </div>
                   <p className="gb-message">{entry.message}</p>
                   <div className="gb-actions">
                     {!entry.is_approved ? (
-                      <button
-                        className="btn-sm-primary"
-                        onClick={() => void approveGuestbook(entry.id, true)}
-                        type="button"
-                      >
+                      <button className="btn-sm-primary" onClick={() => void approveGuestbook(entry.id, true)} type="button">
                         승인
                       </button>
                     ) : (
-                      <button
-                        className="btn-sm-outline"
-                        onClick={() => void approveGuestbook(entry.id, false)}
-                        type="button"
-                      >
-                        비공개
+                      <button className="btn-sm-outline" onClick={() => void approveGuestbook(entry.id, false)} type="button">
+                        숨기기
                       </button>
                     )}
                     <button className="btn-sm-outline" onClick={() => void blockFromGuestbook(entry)} type="button">
@@ -435,7 +418,7 @@ export function InvitationManagePanel({
               <div className="stats-row">
                 <div className="stat-card stat-card-large">
                   <div className="stat-number">{visitStats.total}</div>
-                  <div className="stat-label">총 방문</div>
+                  <div className="stat-label">총 방문수</div>
                 </div>
                 <div className="stat-card stat-card-large">
                   <div className="stat-number">{visitStats.today}</div>
@@ -450,27 +433,12 @@ export function InvitationManagePanel({
                   <div className="stat-label">예상 참석 인원</div>
                 </div>
               </div>
-
               <div className="stats-detail" style={{ marginTop: 24 }}>
-                <h3>RSVP 상세</h3>
+                <h3>RSVP 참석 현황</h3>
                 <div className="stats-bar-wrap">
                   <div className="stats-bar">
-                    <div
-                      className="stats-bar-fill attending"
-                      style={{
-                        width: rsvpStats.total > 0
-                          ? `${(rsvpStats.attending / rsvpStats.total) * 100}%`
-                          : "0%"
-                      }}
-                    />
-                    <div
-                      className="stats-bar-fill not-attending"
-                      style={{
-                        width: rsvpStats.total > 0
-                          ? `${(rsvpStats.notAttending / rsvpStats.total) * 100}%`
-                          : "0%"
-                      }}
-                    />
+                    <div className="stats-bar-fill attending" style={{ width: rsvpStats.total > 0 ? `${(rsvpStats.attending / rsvpStats.total) * 100}%` : "0%" }} />
+                    <div className="stats-bar-fill not-attending" style={{ width: rsvpStats.total > 0 ? `${(rsvpStats.notAttending / rsvpStats.total) * 100}%` : "0%" }} />
                   </div>
                   <div className="stats-bar-legend">
                     <span className="legend-attending">참석 {rsvpStats.attending}명</span>
@@ -478,12 +446,9 @@ export function InvitationManagePanel({
                   </div>
                 </div>
               </div>
-
-              <div style={{ marginTop: 16 }}>
-                <button className="btn-outline" onClick={() => void loadStats()} type="button">
-                  새로고침
-                </button>
-              </div>
+              <button className="btn-outline" onClick={() => void loadStats()} style={{ marginTop: 16 }} type="button">
+                새로고침
+              </button>
             </>
           )}
         </div>
@@ -492,9 +457,8 @@ export function InvitationManagePanel({
       {tab === "blocked" ? (
         <div className="manage-content">
           <p className="builder-help" style={{ marginBottom: 16 }}>
-            차단된 사용자의 방명록은 자동으로 거부됩니다. 본인에게는 저장된 것처럼 보이지만 실제로는 저장되지 않습니다.
+            차단된 사용자는 방명록과 RSVP를 작성할 수 없습니다.
           </p>
-
           <button className="btn-outline" onClick={() => void loadBlocked()} style={{ marginBottom: 16 }} type="button">
             새로고침
           </button>
@@ -511,21 +475,19 @@ export function InvitationManagePanel({
                     <th>IP (해시)</th>
                     <th>익명 ID</th>
                     <th>사유</th>
-                    <th>차단일</th>
+                    <th>날짜</th>
                     <th>관리</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {blocked.map((entry) => (
-                    <tr key={entry.id}>
-                      <td className="mono">{entry.ip_hash || "-"}</td>
-                      <td className="mono">{entry.anonymous_id?.slice(0, 8) || "-"}</td>
-                      <td>{entry.reason || "-"}</td>
-                      <td className="date-cell">
-                        {new Date(entry.created_at).toLocaleDateString("ko-KR")}
-                      </td>
+                  {blocked.map((blockedItem) => (
+                    <tr key={blockedItem.id}>
+                      <td className="mono">{blockedItem.ip_hash || "-"}</td>
+                      <td className="mono">{blockedItem.anonymous_id?.slice(0, 8) || "-"}</td>
+                      <td>{blockedItem.reason || "-"}</td>
+                      <td className="date-cell">{new Date(blockedItem.created_at).toLocaleDateString("ko-KR")}</td>
                       <td>
-                        <button className="btn-sm-outline" onClick={() => void unblock(entry.id)} type="button">
+                        <button className="btn-sm-outline" onClick={() => void unblock(blockedItem.id)} type="button">
                           해제
                         </button>
                       </td>

@@ -1,17 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createBrowserClient } from "@/lib/supabase/browser";
-import { normalizeDraft, type InvitationStatus } from "@/lib/invitation-payload";
 import { InvitationManagePanel } from "@/components/dashboard/invitation-manage-panel";
 
 type InvitationRow = {
   id: string;
   slug: string | null;
   title: string;
+  status: string;
   template_id: string;
-  status: InvitationStatus;
   event_type: string;
   revision: number;
   payload: unknown;
@@ -20,101 +19,75 @@ type InvitationRow = {
   updated_at: string;
 };
 
+const STATUS_LABELS: Record<string, { label: string; className: string }> = {
+  published: { label: "발행됨", className: "badge-published" },
+  draft: { label: "초안", className: "badge-draft" },
+  archived: { label: "보관됨", className: "badge-archived" }
+};
+
 export function DashboardShell() {
   const router = useRouter();
   const supabase = useMemo(() => createBrowserClient(), []);
   const [invitations, setInvitations] = useState<InvitationRow[]>([]);
   const [loading, setLoading] = useState(Boolean(supabase));
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selected, setSelected] = useState<InvitationRow | null>(null);
+  const [message, setMessage] = useState("");
 
-  useEffect(() => {
+  const loadInvitations = useCallback(async () => {
     if (!supabase) {
+      setLoading(false);
       return;
     }
 
-    void (async () => {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("invitations")
+      .select("*")
+      .order("updated_at", { ascending: false });
 
-      if (!user) {
-        setLoading(false);
-        return;
-      }
+    if (error) {
+      setMessage("초대장 목록을 불러오지 못했습니다.");
+    }
 
-      const { data, error } = await supabase
-        .from("invitations")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("updated_at", { ascending: false });
-
-      if (!error && data) {
-        setInvitations(data as InvitationRow[]);
-      }
-
-      setLoading(false);
-    })();
+    setInvitations((data as InvitationRow[]) ?? []);
+    setLoading(false);
   }, [supabase]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      void loadInvitations();
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [loadInvitations]);
 
   async function handleDelete(id: string) {
     if (!supabase) return;
-    if (!confirm("정말 삭제하시겠습니까? 되돌릴 수 없습니다.")) return;
+    if (!confirm("이 초대장을 삭제하시겠습니까? 되돌릴 수 없습니다.")) return;
 
     const { error } = await supabase.from("invitations").delete().eq("id", id);
 
-    if (!error) {
-      setInvitations((prev) => prev.filter((invitation) => invitation.id !== id));
-      if (selectedId === id) {
-        setSelectedId(null);
-      }
+    if (error) {
+      setMessage("삭제에 실패했습니다.");
+      return;
+    }
+
+    setInvitations((prev) => prev.filter((invitation) => invitation.id !== id));
+    setMessage("초대장을 삭제했습니다.");
+    if (selected?.id === id) {
+      setSelected(null);
     }
   }
 
-  if (!supabase) {
+  if (selected) {
     return (
-      <div className="dashboard-container">
-        <div className="dashboard-header">
-          <h1>내 초대장</h1>
-          <p className="builder-help">데모 모드입니다. 로그인하면 실제 데이터를 볼 수 있습니다.</p>
-        </div>
-        <div className="dashboard-empty">
-          <p>Supabase 환경변수를 설정하고 로그인하면 초대장을 관리할 수 있습니다.</p>
-          <button className="btn-primary" onClick={() => router.push("/builder")} type="button">
-            초대장 만들기
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="dashboard-container">
-        <div className="dashboard-header">
-          <h1>내 초대장</h1>
-        </div>
-        <p style={{ textAlign: "center", padding: "40px 0", color: "#888" }}>불러오는 중...</p>
-      </div>
-    );
-  }
-
-  const selected = selectedId
-    ? invitations.find((invitation) => invitation.id === selectedId) ?? null
-    : null;
-
-  if (selectedId && selected) {
-    return (
-      <div className="dashboard-container">
-        <button
-          className="btn-outline"
-          onClick={() => setSelectedId(null)}
-          style={{ marginBottom: 16 }}
-          type="button"
-        >
-          ← 목록으로 돌아가기
-        </button>
-        <InvitationManagePanel invitation={selected} onBack={() => setSelectedId(null)} />
-      </div>
+      <InvitationManagePanel
+        invitation={selected}
+        onBack={() => {
+          setSelected(null);
+          void loadInvitations();
+        }}
+      />
     );
   }
 
@@ -122,54 +95,69 @@ export function DashboardShell() {
     <div className="dashboard-container">
       <div className="dashboard-header">
         <h1>내 초대장</h1>
-        <button className="btn-primary" onClick={() => router.push("/builder")} type="button">
+        <button
+          className="btn-primary"
+          onClick={() => router.push("/builder")}
+          type="button"
+        >
           새 초대장 만들기
         </button>
       </div>
 
-      {invitations.length === 0 ? (
+      {!supabase ? (
+        <>
+          <p className="builder-help">데모 모드입니다. 로그인하면 실제 데이터를 볼 수 있습니다.</p>
+          <p className="builder-help">Supabase 환경변수를 설정하고 로그인하면 초대장을 관리할 수 있습니다.</p>
+        </>
+      ) : null}
+
+      {message ? (
+        <p className="form-message success" style={{ margin: "12px 0" }}>
+          {message}
+        </p>
+      ) : null}
+
+      {loading ? (
+        <div className="dashboard-loading">
+          <p>불러오는 중...</p>
+        </div>
+      ) : invitations.length === 0 ? (
         <div className="dashboard-empty">
           <p>아직 만든 초대장이 없습니다.</p>
-          <button className="btn-primary" onClick={() => router.push("/builder")} type="button">
+          <button
+            className="btn-primary"
+            onClick={() => router.push("/builder")}
+            type="button"
+          >
             첫 초대장 만들기
           </button>
         </div>
       ) : (
         <div className="dashboard-grid">
           {invitations.map((invitation) => {
-            const payload = normalizeDraft(invitation.payload);
-            const statusLabel = invitation.status === "published"
-              ? "발행됨"
-              : invitation.status === "archived"
-                ? "보관됨"
-                : "초안";
-            const statusClass = invitation.status === "published"
-              ? "status-published"
-              : invitation.status === "archived"
-                ? "status-archived"
-                : "status-draft";
+            const statusInfo = STATUS_LABELS[invitation.status] ?? STATUS_LABELS.draft;
 
             return (
-              <article className="dashboard-card" key={invitation.id}>
+              <div className="dashboard-card" key={invitation.id}>
                 <div className="dashboard-card-header">
-                  <h3>{invitation.title}</h3>
-                  <span className={`dashboard-status ${statusClass}`}>{statusLabel}</span>
+                  <h3>{invitation.title || "제목 없음"}</h3>
+                  <span className={`dashboard-badge ${statusInfo.className}`}>
+                    {statusInfo.label}
+                  </span>
                 </div>
-                <div className="dashboard-card-body">
-                  <p>
-                    {payload.groomName || "신랑"} ♡ {payload.brideName || "신부"}
-                  </p>
-                  <p style={{ fontSize: "0.85rem", color: "#888" }}>
-                    {invitation.updated_at
-                      ? `마지막 수정: ${new Date(invitation.updated_at).toLocaleDateString("ko-KR")}`
-                      : ""}
-                  </p>
-                  {invitation.status === "published" && invitation.slug ? (
-                    <p style={{ fontSize: "0.85rem", color: "#4A90D9" }}>/i/{invitation.slug}</p>
-                  ) : null}
-                </div>
+                <p className="dashboard-card-meta">
+                  {invitation.event_type === "wedding" ? "결혼식" : invitation.event_type}
+                  {invitation.slug ? ` · /i/${invitation.slug}` : ""}
+                </p>
+                <p className="dashboard-card-date">
+                  수정: {new Date(invitation.updated_at).toLocaleDateString("ko-KR")}
+                </p>
                 <div className="dashboard-card-actions">
-                  <button className="btn-outline" onClick={() => setSelectedId(invitation.id)} type="button">
+                  <button
+                    className="btn-outline"
+                    onClick={() => setSelected(invitation)}
+                    type="button"
+                  >
                     관리
                   </button>
                   <button
@@ -177,7 +165,7 @@ export function DashboardShell() {
                     onClick={() => router.push(`/builder?invitationId=${invitation.id}`)}
                     type="button"
                   >
-                    편집
+                    수정
                   </button>
                   {invitation.status === "published" && invitation.slug ? (
                     <button
@@ -189,15 +177,14 @@ export function DashboardShell() {
                     </button>
                   ) : null}
                   <button
-                    className="btn-outline"
-                    onClick={() => handleDelete(invitation.id)}
-                    style={{ color: "#e74c3c" }}
+                    className="btn-sm-danger"
+                    onClick={() => void handleDelete(invitation.id)}
                     type="button"
                   >
                     삭제
                   </button>
                 </div>
-              </article>
+              </div>
             );
           })}
         </div>

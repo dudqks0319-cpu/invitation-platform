@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,41 +8,38 @@ import {
   RefreshControl,
   Alert
 } from "react-native";
-import { useRouter } from "expo-router";
-import { supabase } from "@/lib/supabase";
-import { shareInvitation, copyLink } from "@/lib/share";
+import { supabase } from "../../lib/supabase";
+import { shareInvitation, copyInvitationLink } from "../../lib/share";
 
 type InvitationItem = {
   id: string;
-  title: string;
   slug: string | null;
+  title: string;
   status: string;
+  event_type: string;
   updated_at: string;
 };
 
-export default function InvitationsTab() {
-  const router = useRouter();
+const STATUS_MAP: Record<string, { label: string; color: string; bg: string }> = {
+  published: { label: "발행됨", color: "#2e7d32", bg: "#e8f5e9" },
+  draft: { label: "초안", color: "#e65100", bg: "#fff3e0" },
+  archived: { label: "보관됨", color: "#757575", bg: "#f5f5f5" }
+};
+
+export default function InvitationsScreen() {
   const [invitations, setInvitations] = useState<InvitationItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   const loadInvitations = useCallback(async () => {
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      setUserId(null);
+    if (!supabase) {
       setLoading(false);
       return;
     }
 
-    setUserId(user.id);
-
     const { data } = await supabase
       .from("invitations")
-      .select("id, title, slug, status, updated_at")
-      .eq("user_id", user.id)
+      .select("id, slug, title, status, event_type, updated_at")
       .order("updated_at", { ascending: false });
 
     setInvitations((data as InvitationItem[]) ?? []);
@@ -53,70 +50,77 @@ export default function InvitationsTab() {
     void loadInvitations();
   }, [loadInvitations]);
 
-  if (!loading && !userId) {
-    return (
-      <View style={styles.emptyContainer}>
-        <Text style={styles.emptyEmoji}>💌</Text>
-        <Text style={styles.emptyText}>로그인하면 초대장을 관리할 수 있습니다</Text>
-        <TouchableOpacity
-          style={styles.loginButton}
-          onPress={() => router.push("/login")}
-        >
-          <Text style={styles.loginButtonText}>로그인</Text>
-        </TouchableOpacity>
-      </View>
-    );
+  async function onRefresh() {
+    setRefreshing(true);
+    await loadInvitations();
+    setRefreshing(false);
+  }
+
+  function handleShare(item: InvitationItem) {
+    if (!item.slug) {
+      Alert.alert("알림", "발행된 초대장만 공유할 수 있습니다.");
+      return;
+    }
+    void shareInvitation(item.slug, item.title);
+  }
+
+  function handleCopy(item: InvitationItem) {
+    if (!item.slug) {
+      Alert.alert("알림", "발행된 초대장만 링크를 복사할 수 있습니다.");
+      return;
+    }
+    void copyInvitationLink(item.slug);
   }
 
   function renderItem({ item }: { item: InvitationItem }) {
-    const statusLabel =
-      item.status === "published" ? "발행됨"
-        : item.status === "archived" ? "보관됨"
-        : "초안";
-
-    const statusColor =
-      item.status === "published" ? "#27ae60"
-        : item.status === "archived" ? "#888"
-        : "#e67e22";
+    const statusInfo = STATUS_MAP[item.status] ?? STATUS_MAP.draft;
 
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text numberOfLines={1} style={styles.cardTitle}>
-            {item.title}
+            {item.title || "제목 없음"}
           </Text>
-          <View style={[styles.badge, { backgroundColor: statusColor + "20" }]}>
-            <Text style={[styles.badgeText, { color: statusColor }]}>
-              {statusLabel}
+          <View style={[styles.badge, { backgroundColor: statusInfo.bg }]}>
+            <Text style={[styles.badgeText, { color: statusInfo.color }]}>
+              {statusInfo.label}
             </Text>
           </View>
         </View>
 
-        <Text style={styles.cardDate}>
-          {new Date(item.updated_at).toLocaleDateString("ko-KR")}
+        <Text style={styles.cardMeta}>
+          {item.event_type === "wedding" ? "결혼식" : item.event_type}
+          {item.slug ? ` · /i/${item.slug}` : ""}
         </Text>
 
-        <View style={styles.cardActions}>
-          {item.status === "published" && item.slug ? (
-            <>
-              <TouchableOpacity
-                style={styles.actionBtn}
-                onPress={() => void shareInvitation(item.slug!, item.title)}
-              >
-                <Text style={styles.actionBtnText}>공유</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.actionBtn}
-                onPress={() => {
-                  void copyLink(item.slug!);
-                  Alert.alert("복사 완료", "링크가 클립보드에 복사되었습니다.");
-                }}
-              >
-                <Text style={styles.actionBtnText}>링크 복사</Text>
-              </TouchableOpacity>
-            </>
-          ) : null}
-        </View>
+        <Text style={styles.cardDate}>
+          수정: {new Date(item.updated_at).toLocaleDateString("ko-KR")}
+        </Text>
+
+        {item.status === "published" && item.slug ? (
+          <View style={styles.cardActions}>
+            <TouchableOpacity
+              style={styles.actionBtn}
+              onPress={() => handleShare(item)}
+            >
+              <Text style={styles.actionText}>공유</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.actionBtnOutline}
+              onPress={() => handleCopy(item)}
+            >
+              <Text style={styles.actionTextOutline}>링크 복사</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+      </View>
+    );
+  }
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.emptyText}>불러오는 중...</Text>
       </View>
     );
   }
@@ -128,64 +132,56 @@ export default function InvitationsTab() {
       keyExtractor={(item) => item.id}
       renderItem={renderItem}
       refreshControl={
-        <RefreshControl refreshing={loading} onRefresh={loadInvitations} />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
       ListEmptyComponent={
-        loading ? null : (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyEmoji}>📭</Text>
-            <Text style={styles.emptyText}>아직 만든 초대장이 없습니다</Text>
-          </View>
-        )
+        <View style={styles.center}>
+          <Text style={styles.emptyText}>아직 만든 초대장이 없습니다.</Text>
+        </View>
       }
-      contentContainerStyle={invitations.length === 0 ? { flex: 1 } : undefined}
+      contentContainerStyle={invitations.length === 0 ? styles.emptyContainer : undefined}
     />
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#FFF" },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 32
-  },
-  emptyEmoji: { fontSize: 48, marginBottom: 16 },
-  emptyText: { fontSize: 15, color: "#888", textAlign: "center", marginBottom: 16 },
-  loginButton: {
-    backgroundColor: "#4A90D9",
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 10
-  },
-  loginButtonText: { color: "#FFF", fontWeight: "700", fontSize: 15 },
+  container: { flex: 1, backgroundColor: "#fff" },
+  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24 },
+  emptyContainer: { flexGrow: 1 },
+  emptyText: { color: "#888", fontSize: 14 },
   card: {
     marginHorizontal: 16,
     marginTop: 12,
-    padding: 16,
-    backgroundColor: "#FFF",
-    borderRadius: 12,
+    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: "#E8E8E8"
+    borderColor: "#e5e5e5",
+    borderRadius: 12,
+    padding: 16
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8
+    alignItems: "flex-start"
   },
-  cardTitle: { fontSize: 16, fontWeight: "700", color: "#222", flex: 1, marginRight: 8 },
-  badge: { paddingHorizontal: 10, paddingVertical: 3, borderRadius: 10 },
-  badgeText: { fontSize: 11, fontWeight: "700" },
-  cardDate: { fontSize: 12, color: "#999", marginBottom: 12 },
-  cardActions: { flexDirection: "row", gap: 8 },
+  cardTitle: { fontSize: 16, fontWeight: "600", color: "#1a1a1a", flex: 1 },
+  badge: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 9999, marginLeft: 8 },
+  badgeText: { fontSize: 11, fontWeight: "500" },
+  cardMeta: { fontSize: 13, color: "#666", marginTop: 6 },
+  cardDate: { fontSize: 12, color: "#999", marginTop: 4 },
+  cardActions: { flexDirection: "row", gap: 8, marginTop: 12 },
   actionBtn: {
-    paddingVertical: 6,
-    paddingHorizontal: 14,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#DDD"
+    backgroundColor: "#1a1a1a",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8
   },
-  actionBtnText: { fontSize: 13, color: "#555", fontWeight: "600" }
+  actionText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+  actionBtnOutline: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8
+  },
+  actionTextOutline: { color: "#555", fontSize: 13 }
 });

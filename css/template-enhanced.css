@@ -1,0 +1,147 @@
+/* css/template-enhanced.css — 템플릿 썸네일 고급화 */
+
+[class^="tmpl-"] {
+  font-family: "Noto Sans KR", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.tmpl-wedding-classic {
+  background: linear-gradient(
+    180deg,
+    #FDF8F2 0%,
+    #F9ECDC 40%,
+    #F5E4CE 100%
+  );
+  position: relative;
+}
+
+.tmpl-wedding-classic::before {
+  content: "";
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 80%;
+  border: 1px solid rgba(201, 147, 90, 0.15);
+  border-radius: 50%;
+}
+
+.tmpl-wedding-classic .flower {
+  font-size: 3rem;
+  filter: drop-shadow(0 4px 8px rgba(201, 147, 90, 0.2));
+  animation: gentlePulse 3s ease-in-out infinite;
+}
+
+.tmpl-wedding-classic .names {
+  font-family: "Playfair Display", serif;
+  font-size: 2rem;
+  background: linear-gradient(135deg, #8B6B4A, #C9935A);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.tmpl-wedding-classic .msg {
+  max-width: 240px;
+  font-size: 0.82rem;
+  color: #8a7a6a;
+}
+
+.tmpl-wedding-modern {
+  background: linear-gradient(135deg, #1a1a1e 0%, #2c2c32 100%);
+}
+
+.tmpl-wedding-modern .gold-line {
+  width: 64px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #C9935A, transparent);
+}
+
+.tmpl-wedding-modern .names {
+  font-size: 2.2rem;
+  letter-spacing: 4px;
+  text-shadow: 0 2px 12px rgba(201, 147, 90, 0.3);
+}
+
+.tmpl-wedding-floral {
+  background: linear-gradient(
+    135deg,
+    #FFF2F6 0%,
+    #FFE8F0 30%,
+    #FFDCE8 60%,
+    #FFD0E0 100%
+  );
+}
+
+.tmpl-wedding-floral .names {
+  font-size: 1.6rem;
+  text-shadow: 0 2px 8px rgba(158, 74, 107, 0.15);
+}
+
+.tmpl-dol-cute {
+  position: relative;
+  overflow: hidden;
+}
+
+.tmpl-dol-cute::after {
+  content: "⭐ ⭐ ⭐";
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 0.6rem;
+  opacity: 0.4;
+  letter-spacing: 4px;
+}
+
+.tmpl-dol-cute .baby {
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+}
+
+.tmpl-hwangap-classic {
+  position: relative;
+}
+
+.tmpl-hwangap-classic::before {
+  content: "";
+  position: absolute;
+  inset: 16px;
+  border: 1px solid rgba(139, 69, 19, 0.12);
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+.tmpl-hwangap-classic .crane {
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.1));
+}
+
+.tmpl-business {
+  position: relative;
+}
+
+.tmpl-business::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #1565C0, #42A5F5, #1565C0);
+}
+
+@keyframes gentlePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.template-card:hover .template-thumb [class^="tmpl-"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.05) 100%
+  );
+  pointer-events: none;
+}

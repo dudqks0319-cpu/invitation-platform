@@ -15,9 +15,7 @@ export default async function BuilderPage({
         <section className="builder-hero-strip">
           <div className="section-inner">
             <h1>초대장 만들기</h1>
-            <p>
-              템플릿을 선택하고, 정보를 입력하고, 발행하세요. 무료입니다.
-            </p>
+            <p>템플릿을 선택하고, 정보를 입력하고, 발행하세요. 무료입니다.</p>
           </div>
         </section>
         <section className="builder-section builder-section-page">

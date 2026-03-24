@@ -1,11 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createEmptyInvitationPayload, type InvitationPayload } from "@invitehub/shared";
+import {
+  defaultInvitationDraft,
+  type InvitationDraftPayload
+} from "../../../lib/invitation-payload";
 
 export type DraftSyncStatus = "synced" | "pending" | "offline" | "conflict";
 
 export type MobileInvitationDraft = {
   localId: string;
-  payload: InvitationPayload;
+  payload: InvitationDraftPayload;
   localUpdatedAt: string;
   serverId?: string;
   serverRevision?: number;
@@ -17,7 +20,7 @@ const DRAFT_STORAGE_KEY = "invitehub:mobile:draft";
 export function createLocalDraft(ownerId: string): MobileInvitationDraft {
   return {
     localId: `draft-${Date.now()}`,
-    payload: createEmptyInvitationPayload(ownerId),
+    payload: defaultInvitationDraft,
     localUpdatedAt: new Date().toISOString(),
     syncStatus: "offline"
   };

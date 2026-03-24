@@ -1,92 +1,63 @@
-# InviteHub Web Rebuild
+# InviteHub — 감성 초대장 플랫폼
 
-기존 `invitation-platform` 정적 데모를 `Next.js + TypeScript + Supabase` 기반 웹 앱 구조로 재구성한 작업본입니다.
-
-## 현재 범위
-
-- 디자인 언어 유지
-  - 기존 `css/main.css`의 컬러, 타이포, 간격, 카드/버튼 스타일 유지
-- 웹 MVP 구조
-  - 랜딩 페이지
-  - 초대장 빌더
-  - 미리보기 페이지
-  - 공개 초대장 페이지
-  - 대시보드
-  - 이메일 로그인 화면
-- 데이터 저장 경로
-  - 환경 변수가 없으면 로컬 데모 모드
-  - Supabase 환경 변수가 있으면 실제 저장/발행/RSVP/방명록 사용 가능
+소중한 순간을 위한 온라인 초대장 서비스입니다.
 
 ## 기술 스택
 
-- Next.js 16
-- React 19
-- TypeScript
-- Tailwind CSS v4
-- Supabase SSR / supabase-js
-- Vitest
+- **웹**: Next.js 16 · React 19 · TypeScript · Tailwind CSS v4
+- **모바일**: Expo SDK 52 · React Native
+- **백엔드**: Supabase (DB, Auth, Storage)
+- **보안**: Upstash Redis (Rate Limiting) · IP Hash · RLS
 
-## 실행 방법
+## 시작하기
 
 ```bash
+# 1. 클론
+git clone https://github.com/dudqks0319-cpu/invitation-platform.git
+cd invitation-platform
+
+# 2. 환경변수
+cp .env.example .env.local
+# .env.local에 Supabase 키 입력
+
+# 3. 의존성 설치 & 실행
 npm install
 npm run dev
 ```
 
-브라우저에서 `http://localhost:3000`으로 접속합니다.
+## Supabase 설정
 
-## Supabase 연결
+1. [supabase.com](https://supabase.com)에서 프로젝트 생성
+2. SQL Editor에서 `supabase/schema.sql` 실행
+3. Authentication → Providers에서 Apple 활성화
+4. `.env.local`에 URL, Anon Key, Service Role Key 입력
 
-루트의 `.env.example`를 참고해서 아래 환경 변수를 설정합니다.
-
-```bash
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-NEXT_PUBLIC_SITE_URL=
-KAKAOPAY_CID=
-KAKAOPAY_SECRET_KEY=
-```
-
-그리고 `supabase/schema.sql`을 SQL Editor에서 실행합니다.
-
-## 검증 명령
+## 모바일 앱
 
 ```bash
-npm run typecheck
-npm run lint
-npm test
-npm run build
+cd apps/mobile
+npm install
+npx expo start
 ```
 
-## 구조
+## 프로젝트 구조
 
 ```txt
-app/
-  page.tsx
-  builder/page.tsx
-  preview/page.tsx
-  dashboard/page.tsx
-  invitations/[slug]/page.tsx
-components/
-  landing/
-  builder/
-  invitations/
-  dashboard/
-  shared/
-lib/
-  invitation-payload.ts
-  demo-data.ts
-  templates.ts
-  supabase/
-supabase/schema.sql
-css/main.css
+app/                    # Next.js 페이지
+  i/[slug]/             # 공개 초대장 (/i/{slug})
+  api/public/[slug]/    # 공개 API (RSVP, 방명록, 방문)
+  api/og/[slug]/        # OG 이미지 생성
+  privacy/              # 개인정보처리방침
+  terms/                # 이용약관
+components/             # React 컴포넌트
+  builder/              # 초대장 빌더
+  dashboard/            # 대시보드 (RSVP, 방명록, 통계)
+  invitations/          # 초대장 뷰
+lib/                    # 유틸리티
+  supabase/             # Supabase 클라이언트
+  rate-limit.ts         # Rate Limiting
+  hash-ip.ts            # IP 해시
+apps/mobile/            # Expo 모바일 앱
+supabase/schema.sql     # DB 스키마
+docs/                   # 문서
 ```
-
-## 남은 확장 포인트
-
-- 이미지 업로드를 Supabase Storage로 전환
-- 카카오/네이버 OAuth
-- 결제
-- 운영용 guestbook moderation UI
-- 공개 초대장 조회 통계 고도화

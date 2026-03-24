@@ -1,56 +1,54 @@
 import { Tabs } from "expo-router";
-import { Text } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
-function TabIcon({ label, focused }: { label: string; focused: boolean }) {
-  return (
-    <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.4 }}>{label}</Text>
-  );
-}
-
-export default function TabsLayout() {
+export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: true,
-        headerStyle: { backgroundColor: "#FFFFFF" },
-        headerTitleStyle: { fontWeight: "700", fontSize: 18 },
-        tabBarStyle: {
-          backgroundColor: "#FFFFFF",
-          borderTopColor: "#F0F0F0",
-          paddingBottom: 4,
-          height: 56
-        },
-        tabBarActiveTintColor: "#4A90D9",
+        tabBarActiveTintColor: "#1a1a1a",
         tabBarInactiveTintColor: "#999",
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "600" }
+        tabBarStyle: {
+          borderTopColor: "#e5e5e5",
+          backgroundColor: "#fff"
+        },
+        headerStyle: { backgroundColor: "#fff" },
+        headerTitleStyle: { fontWeight: "700", color: "#1a1a1a" }
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "홈",
-          tabBarIcon: ({ focused }) => <TabIcon focused={focused} label="🏠" />
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons color={color} name="home-outline" size={size} />
+          )
         }}
       />
       <Tabs.Screen
         name="builder"
         options={{
           title: "만들기",
-          tabBarIcon: ({ focused }) => <TabIcon focused={focused} label="✏️" />
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons color={color} name="create-outline" size={size} />
+          )
         }}
       />
       <Tabs.Screen
         name="invitations"
         options={{
           title: "내 초대장",
-          tabBarIcon: ({ focused }) => <TabIcon focused={focused} label="💌" />
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons color={color} name="mail-outline" size={size} />
+          )
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: "설정",
-          tabBarIcon: ({ focused }) => <TabIcon focused={focused} label="⚙️" />
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons color={color} name="settings-outline" size={size} />
+          )
         }}
       />
     </Tabs>

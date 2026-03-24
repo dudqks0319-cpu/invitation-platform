@@ -2,39 +2,34 @@ import { Share, Alert, Platform } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import Constants from "expo-constants";
 
-const BASE_URL =
-  Constants.expoConfig?.extra?.siteUrl ?? "https://invitehub.co.kr";
+const siteUrl = Constants.expoConfig?.extra?.siteUrl ?? "https://invitehub.co.kr";
 
-export async function shareInvitation(
-  slug: string,
-  title: string
-): Promise<{ shared: boolean; method?: string }> {
-  const url = `${BASE_URL}/i/${slug}`;
+export function getInvitationUrl(slug: string): string {
+  return `${siteUrl}/i/${slug}`;
+}
+
+export async function shareInvitation(slug: string, title?: string): Promise<void> {
+  const url = getInvitationUrl(slug);
+  const message = title
+    ? `${title} - 초대장을 확인해 주세요!`
+    : "초대장을 확인해 주세요!";
 
   try {
-    const result = await Share.share(
+    await Share.share(
       Platform.OS === "ios"
-        ? { url, message: title }
-        : { message: `${title}\n${url}` }
+        ? { url, message }
+        : { message: `${message}\n${url}` }
     );
-
-    if (result.action === Share.sharedAction) {
-      return { shared: true, method: result.activityType ?? "share" };
+  } catch (error) {
+    if ((error as Error).message !== "User did not share") {
+      Alert.alert("공유 실패", "링크를 클립보드에 복사합니다.");
+      await copyInvitationLink(slug);
     }
-
-    return { shared: false };
-  } catch {
-    await copyLink(slug);
-    Alert.alert("링크 복사 완료", "초대장 링크가 클립보드에 복사되었습니다.");
-    return { shared: true, method: "clipboard" };
   }
 }
 
-export async function copyLink(slug: string): Promise<void> {
-  const url = `${BASE_URL}/i/${slug}`;
+export async function copyInvitationLink(slug: string): Promise<void> {
+  const url = getInvitationUrl(slug);
   await Clipboard.setStringAsync(url);
-}
-
-export function getInvitationUrl(slug: string): string {
-  return `${BASE_URL}/i/${slug}`;
+  Alert.alert("복사 완료", "초대장 링크가 클립보드에 복사되었습니다.");
 }
