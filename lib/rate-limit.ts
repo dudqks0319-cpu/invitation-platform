@@ -1,54 +1,96 @@
-type RateLimitEntry = {
-  count: number;
-  resetAt: number;
+import { env, isUpstashEnabled } from "@/lib/env";
+
+type RateLimitResult = {
+  allowed: boolean;
+  remaining: number;
 };
 
-const buckets = new Map<string, RateLimitEntry>();
+async function upstashRateLimit(
+  key: string,
+  maxRequests: number,
+  windowMs: number
+): Promise<RateLimitResult> {
+  const redisKey = `ratelimit:${key}`;
+  const now = Date.now();
+  const windowStart = now - windowMs;
+  const headers = {
+    Authorization: `Bearer ${env.upstashRedisRestToken}`,
+    "Content-Type": "application/json"
+  };
+  const pipeline = [
+    ["ZREMRANGEBYSCORE", redisKey, "0", String(windowStart)],
+    ["ZADD", redisKey, String(now), `${now}-${Math.random()}`],
+    ["ZCARD", redisKey],
+    ["PEXPIRE", redisKey, String(windowMs)]
+  ];
 
-function now() {
-  return Date.now();
+  try {
+    const response = await fetch(`${env.upstashRedisRestUrl}/pipeline`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(pipeline)
+    });
+
+    if (!response.ok) {
+      return { allowed: true, remaining: maxRequests };
+    }
+
+    const results = (await response.json()) as Array<{ result?: number }>;
+    const count = results[2]?.result ?? 0;
+    return {
+      allowed: count <= maxRequests,
+      remaining: Math.max(0, maxRequests - count)
+    };
+  } catch {
+    return { allowed: true, remaining: maxRequests };
+  }
 }
 
-export function consumeRateLimit(key: string, limit: number, windowMs: number) {
-  const timestamp = now();
-  const current = buckets.get(key);
+const memoryStore = new Map<string, { count: number; resetAt: number }>();
 
-  if (!current || current.resetAt <= timestamp) {
-    const nextEntry = {
-      count: 1,
-      resetAt: timestamp + windowMs
-    };
-    buckets.set(key, nextEntry);
-    return {
-      allowed: true,
-      remaining: limit - 1,
-      resetAt: nextEntry.resetAt
-    };
+function memoryRateLimit(
+  key: string,
+  maxRequests: number,
+  windowMs: number
+): RateLimitResult {
+  const now = Date.now();
+  const entry = memoryStore.get(key);
+
+  if (!entry || now > entry.resetAt) {
+    memoryStore.set(key, { count: 1, resetAt: now + windowMs });
+    return { allowed: true, remaining: maxRequests - 1 };
   }
 
-  if (current.count >= limit) {
-    return {
-      allowed: false,
-      remaining: 0,
-      resetAt: current.resetAt
-    };
-  }
-
-  current.count += 1;
-  buckets.set(key, current);
+  entry.count += 1;
 
   return {
-    allowed: true,
-    remaining: Math.max(limit - current.count, 0),
-    resetAt: current.resetAt
+    allowed: entry.count <= maxRequests,
+    remaining: Math.max(0, maxRequests - entry.count)
   };
 }
 
-export function getClientIdentifier(request: Request) {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    request.headers.get("cf-connecting-ip") ||
-    "anonymous"
-  );
+export async function checkRateLimit(
+  key: string,
+  maxRequests: number,
+  windowMs: number
+): Promise<RateLimitResult> {
+  if (isUpstashEnabled()) {
+    return upstashRateLimit(key, maxRequests, windowMs);
+  }
+
+  return memoryRateLimit(key, maxRequests, windowMs);
+}
+
+const TEN_MINUTES = 10 * 60 * 1000;
+
+export function checkRsvpLimit(invitationId: string, ip: string) {
+  return checkRateLimit(`rsvp:${invitationId}:${ip}`, 5, TEN_MINUTES);
+}
+
+export function checkGuestbookLimit(invitationId: string, ip: string) {
+  return checkRateLimit(`guestbook:${invitationId}:${ip}`, 10, TEN_MINUTES);
+}
+
+export function checkVisitLimit(invitationId: string, ip: string) {
+  return checkRateLimit(`visit:${invitationId}:${ip}`, 30, TEN_MINUTES);
 }

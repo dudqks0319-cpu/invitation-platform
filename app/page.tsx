@@ -10,24 +10,21 @@ const features = [
   { icon: "✏️", title: "초안 저장과 발행", description: "작성 중인 초안과 발행된 링크를 분리해 운영합니다." }
 ];
 
-const pricing = [
+const steps = [
   {
-    badge: "START",
-    title: "체험",
-    price: "₩0",
-    items: ["템플릿 탐색", "비회원 빌더", "미리보기 체험"]
+    badge: "STEP 1",
+    title: "템플릿 선택",
+    items: ["결혼식, 돌잔치, 환갑 등 30+ 템플릿", "카테고리별 탐색"]
   },
   {
-    badge: "NOW",
-    title: "초대장 발행",
-    price: "₩4,900",
-    items: ["커피 한 잔 가격으로 완성", "결제 후 자동 발행", "공개 링크 + RSVP + 방명록"]
+    badge: "STEP 2",
+    title: "내용 작성",
+    items: ["5단계 빌더로 쉽게 작성", "사진 업로드, 계좌, 지도 설정"]
   },
   {
-    badge: "NEXT",
-    title: "확장 단계",
-    price: "추가 예정",
-    items: ["결제", "카카오 알림", "모바일 앱"]
+    badge: "STEP 3",
+    title: "발행 & 공유",
+    items: ["공개 링크 생성", "카카오톡, SNS로 바로 공유"]
   }
 ];
 
@@ -37,19 +34,19 @@ export default function HomePage() {
       <SiteHeader />
       <section className="hero">
         <div className="hero-content">
-          <p className="hero-badge">✨ 초대장의 감성은 그대로, 구조는 다시</p>
+          <p className="hero-badge">✨ 한국 결혼 문화에 맞춘 초대장 플랫폼</p>
           <h1 className="hero-title">
             소중한 순간을
             <br />
             특별하게 초대하세요
           </h1>
           <p className="hero-subtitle">
-            기존 InviteHub 디자인 언어를 유지한 채,
+            양가 정보, 축의금 계좌, 네이버 지도, RSVP, 방명록까지
             <br />
-            저장, 발행, RSVP, 방명록까지 이어지는 실제 웹 앱으로 재구성했습니다.
+            한국 결혼식에 필요한 모든 것을 담았습니다.
           </p>
           <p className="hero-badge" style={{ marginTop: "6px" }}>
-            커피 한 잔 가격으로 초대장 완성. 지금은 4,900원에 초대장을 보내세요.
+            무료로 초대장을 만들고 바로 공유하세요.
           </p>
           <div className="hero-btns">
             <Link className="btn-hero-primary" href="/builder">
@@ -66,13 +63,13 @@ export default function HomePage() {
             </div>
             <div className="stat-divider" />
             <div className="stat">
-              <strong>1</strong>
-              <span>빌더 경험</span>
+              <strong>무료</strong>
+              <span>MVP</span>
             </div>
             <div className="stat-divider" />
             <div className="stat">
-              <strong>MVP</strong>
-              <span>웹 앱 기반</span>
+              <strong>RSVP</strong>
+              <span>실시간 관리</span>
             </div>
           </div>
         </div>
@@ -95,7 +92,7 @@ export default function HomePage() {
       <section className="features-section" id="features">
         <div className="section-inner">
           <h2 className="section-title">왜 InviteHub인가요?</h2>
-          <p className="section-sub">디자인 감성은 유지하고, 운영 가능한 구조로 바꿨습니다.</p>
+          <p className="section-sub">한국 결혼 문화에 특화된 디지털 초대장 플랫폼입니다.</p>
           <div className="features-grid">
             {features.map((feature) => (
               <article className="feature-card" key={feature.title}>
@@ -108,46 +105,24 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="ops-section" id="ops">
-        <div className="section-inner">
-          <h2 className="section-title">현재 빌드 방향</h2>
-          <p className="section-sub">디자인은 유지하고, 저장/공개/응답 플로우를 실제 앱 기준으로 정렬했습니다.</p>
-          <div className="ops-grid">
-            <article className="ops-card">
-              <h3>데모 모드</h3>
-              <p className="ops-value">즉시 사용 가능</p>
-              <p className="ops-note">환경 변수가 없어도 빌더와 미리보기, 디자인 검토가 가능합니다.</p>
-            </article>
-            <article className="ops-card">
-              <h3>Supabase 모드</h3>
-              <p className="ops-value">실제 저장/발행</p>
-              <p className="ops-note">환경 변수를 넣으면 로그인, 초안 저장, 공개 링크, RSVP, 방명록이 실제 데이터로 동작합니다.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
       <section className="pricing-section" id="pricing">
         <div className="section-inner">
-          <h2 className="section-title">실행 단계</h2>
-          <p className="section-sub">현재 저장소 재구축은 웹 MVP 완성에 집중합니다.</p>
+          <h2 className="section-title">간단한 3단계</h2>
+          <p className="section-sub">템플릿 선택 → 내용 작성 → 발행. 그게 끝입니다.</p>
           <div className="pricing-grid">
-            {pricing.map((plan) => (
-              <article className={`price-card ${plan.title === "웹 MVP" ? "popular" : ""}`} key={plan.title}>
-                <div className={`price-badge ${plan.badge === "FREE" ? "free" : plan.badge === "MVP" ? "popular-badge" : "premium"}`}>
-                  {plan.badge}
-                </div>
-                <h3>{plan.title}</h3>
-                <div className="price">{plan.price}</div>
+            {steps.map((step) => (
+              <article className="price-card" key={step.title}>
+                <div className="price-badge">{step.badge}</div>
+                <h3>{step.title}</h3>
                 <ul>
-                  {plan.items.map((item) => (
+                  {step.items.map((item) => (
                     <li key={item}>
                       <span>•</span>
                       {item}
                     </li>
                   ))}
                 </ul>
-                <Link className={`btn-price ${plan.title === "웹 MVP" ? "btn-primary" : ""}`} href="/builder">
+                <Link className="btn-price" href="/builder">
                   시작하기
                 </Link>
               </article>

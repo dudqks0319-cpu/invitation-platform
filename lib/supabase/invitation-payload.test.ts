@@ -18,4 +18,14 @@ describe("invitation payload normalization", () => {
     expect(payload.templateId).toBe("wedding-classic");
     expect(payload.title).toBe("결혼식 초대장");
   });
+
+  it("maps legacy mapAddress into venueAddress", () => {
+    const payload = normalizeInvitationPayload({
+      mapAddress: "서울 중구 세종대로 1"
+    });
+
+    expect(payload.venueAddress).toBe("서울 중구 세종대로 1");
+    expect("mapAddress" in payload).toBe(false);
+    expect("kakaoJsKey" in payload).toBe(false);
+  });
 });

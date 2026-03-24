@@ -1,7 +1,7 @@
 const DEFAULT_AUTH_DESTINATION = "/dashboard";
-export const TEMP_SINGLE_INVITATION_PRICE_WON = 4900;
-export const TEMP_SINGLE_INVITATION_PRICE_LABEL = "4,900원";
-export const TEMP_SINGLE_INVITATION_PRICE_COPY = "커피 한 잔 가격으로 초대장 완성";
+export const TEMP_SINGLE_INVITATION_PRICE_WON = 0;
+export const TEMP_SINGLE_INVITATION_PRICE_LABEL = "무료";
+export const TEMP_SINGLE_INVITATION_PRICE_COPY = "v1.0은 결제 없이 초대장 발행에 집중합니다";
 
 export function normalizeNextPath(value: string | null | undefined, fallback = DEFAULT_AUTH_DESTINATION) {
   if (!value) {

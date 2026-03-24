@@ -12,6 +12,7 @@ export const demoInvitation: InvitationRecord = {
   category: "wedding",
   templateId: "wedding-classic",
   status: "published",
+  revision: 1,
   payload: {
     ...defaultInvitationDraft,
     title: "김 & 이 결혼식 초대장",
@@ -33,6 +34,7 @@ export const demoDashboardInvitations: InvitationRecord[] = [
     templateId: "dol-cute",
     category: "dol",
     status: "draft",
+    revision: 1,
     publishedAt: null,
     payload: {
       ...defaultInvitationDraft,

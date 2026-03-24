@@ -4,7 +4,7 @@ import type { Database } from "@/lib/supabase/types";
 export const LOCAL_DRAFT_KEY = "invitehub_builder_draft_v3";
 export const LOCAL_GUESTBOOK_KEY = "invitehub_local_guestbook_preview";
 export const LOCAL_RSVP_KEY = "invitehub_local_rsvp_preview";
-export const INVITATION_PAYLOAD_SCHEMA_VERSION = 1;
+export const INVITATION_PAYLOAD_SCHEMA_VERSION = 2;
 
 export type InvitationStatus = Database["public"]["Tables"]["invitations"]["Row"]["status"];
 
@@ -71,7 +71,10 @@ export const invitationDraftPayloadSchema = legacyInvitationPayloadSchema.transf
   title: raw.title || "결혼식 초대장",
   eventDateTime: raw.eventDateTime || "2026-04-12T14:00",
   venueName: raw.venueName || "서울 더파인 웨딩홀",
-  venueAddress: raw.venueAddress || "서울 강남구 테헤란로 123",
+  venueAddress:
+    (typeof raw.venueAddress === "string" && raw.venueAddress) ||
+    (typeof raw.mapAddress === "string" && raw.mapAddress) ||
+    "서울 강남구 테헤란로 123",
   message: raw.message || "저희 두 사람이 하나가 되는 자리에 함께해 주세요.",
   groomName: raw.groomName || "홍길동",
   brideName: raw.brideName || "김부인",
@@ -93,8 +96,6 @@ export const invitationDraftPayloadSchema = legacyInvitationPayloadSchema.transf
   brideBankAccount: raw.brideBankAccount || "",
   kakaoPayLink: raw.kakaoPayLink || "",
   shareUrl: raw.shareUrl || "",
-  kakaoJsKey: raw.kakaoJsKey || "",
-  mapAddress: raw.mapAddress || raw.venueAddress || "서울 강남구 테헤란로 123",
   naverMapLink: raw.naverMapLink || "",
   transportNote: raw.transportNote || "",
   mainImageUrl: raw.mainImageUrl || raw.mainImageData || "",
@@ -113,6 +114,7 @@ export type InvitationRecord = {
   templateId: string;
   status: InvitationStatus;
   payload: InvitationDraftPayload;
+  revision: number;
   createdAt: string;
   publishedAt: string | null;
 };
@@ -167,7 +169,7 @@ export function toInvitationInsert(
     user_id: userId,
     slug,
     title: payload.title,
-    category: payload.category,
+    event_type: payload.category,
     template_id: payload.templateId,
     status,
     payload,

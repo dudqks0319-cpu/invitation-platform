@@ -1,9 +1,9 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { Text } from "react-native";
 
-function renderTabIcon(name: keyof typeof Ionicons.glyphMap) {
-  return ({ color, size }: { color: string; size: number }) => (
-    <Ionicons color={color} name={name} size={size} />
+function TabIcon({ label, focused }: { label: string; focused: boolean }) {
+  return (
+    <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.4 }}>{label}</Text>
   );
 }
 
@@ -11,41 +11,46 @@ export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: "#8d5a2b",
-        tabBarInactiveTintColor: "#8c7a68",
+        headerShown: true,
+        headerStyle: { backgroundColor: "#FFFFFF" },
+        headerTitleStyle: { fontWeight: "700", fontSize: 18 },
         tabBarStyle: {
-          backgroundColor: "#fffaf5",
-          borderTopColor: "#e7d5c4",
-          height: 72,
-          paddingBottom: 12,
-          paddingTop: 10
+          backgroundColor: "#FFFFFF",
+          borderTopColor: "#F0F0F0",
+          paddingBottom: 4,
+          height: 56
         },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: "600"
-        }
+        tabBarActiveTintColor: "#4A90D9",
+        tabBarInactiveTintColor: "#999",
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "600" }
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "홈",
-          tabBarIcon: renderTabIcon("sparkles")
+          tabBarIcon: ({ focused }) => <TabIcon focused={focused} label="🏠" />
         }}
       />
       <Tabs.Screen
-        name="my-invitations"
+        name="builder"
+        options={{
+          title: "만들기",
+          tabBarIcon: ({ focused }) => <TabIcon focused={focused} label="✏️" />
+        }}
+      />
+      <Tabs.Screen
+        name="invitations"
         options={{
           title: "내 초대장",
-          tabBarIcon: renderTabIcon("mail-open")
+          tabBarIcon: ({ focused }) => <TabIcon focused={focused} label="💌" />
         }}
       />
       <Tabs.Screen
-        name="mypage"
+        name="settings"
         options={{
-          title: "마이페이지",
-          tabBarIcon: renderTabIcon("person-circle")
+          title: "설정",
+          tabBarIcon: ({ focused }) => <TabIcon focused={focused} label="⚙️" />
         }}
       />
     </Tabs>

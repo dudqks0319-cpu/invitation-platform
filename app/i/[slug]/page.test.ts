@@ -1,8 +1,16 @@
-import publicInvitationPage from "@/app/invitations/[slug]/page";
-import aliasInvitationPage from "@/app/i/[slug]/page";
+import { redirect } from "next/navigation";
+import legacyInvitationPage from "@/app/invitations/[slug]/page";
 
-describe("/i/[slug] public invitation alias", () => {
-  it("reuses the existing public invitation page export", () => {
-    expect(aliasInvitationPage).toBe(publicInvitationPage);
+vi.mock("next/navigation", () => ({
+  redirect: vi.fn()
+}));
+
+describe("/invitations/[slug] legacy redirect", () => {
+  it("redirects to the short /i/[slug] route", async () => {
+    await legacyInvitationPage({
+      params: Promise.resolve({ slug: "sample-slug" })
+    });
+
+    expect(redirect).toHaveBeenCalledWith("/i/sample-slug");
   });
 });

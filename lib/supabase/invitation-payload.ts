@@ -29,8 +29,6 @@ const payloadSchema = z.object({
   brideBankAccount: z.string().default(""),
   kakaoPayLink: z.string().default(""),
   shareUrl: z.string().default(""),
-  kakaoJsKey: z.string().default(""),
-  mapAddress: z.string().default(""),
   naverMapLink: z.string().default(""),
   transportNote: z.string().default(""),
   mainImageUrl: z.string().default(""),
@@ -47,6 +45,12 @@ export function normalizeInvitationPayload(input: unknown) {
 
   return payloadSchema.parse({
     ...raw,
+    venueAddress:
+      typeof raw.venueAddress === "string" && raw.venueAddress
+        ? raw.venueAddress
+        : typeof raw.mapAddress === "string"
+          ? raw.mapAddress
+          : "",
     mainImageUrl: typeof raw.mainImageUrl === "string" && raw.mainImageUrl
       ? raw.mainImageUrl
       : typeof raw.mainImageData === "string"

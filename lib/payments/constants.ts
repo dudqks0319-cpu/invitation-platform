@@ -10,7 +10,6 @@ export const FREE_EDIT_FIELDS = [
   "venueAddress",
   "groomPhone",
   "bridePhone",
-  "mapAddress",
   "naverMapLink",
   "transportNote"
 ] as const;

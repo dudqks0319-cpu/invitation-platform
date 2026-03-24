@@ -18,8 +18,17 @@ const displayFont = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "InviteHub",
-  description: "소중한 순간을 위한 감성 초대장 플랫폼"
+  title: {
+    default: "InviteHub — 한국 결혼 초대장 플랫폼",
+    template: "%s | InviteHub"
+  },
+  description: "양가 정보, 축의금 계좌, 네이버 지도, RSVP, 방명록까지. 한국 결혼식에 맞춘 디지털 초대장.",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://invitehub.co.kr"),
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    siteName: "InviteHub"
+  }
 };
 
 export default function RootLayout({
