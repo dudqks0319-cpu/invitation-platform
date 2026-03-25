@@ -1,8 +1,10 @@
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { Screen } from "@/components/ui/Screen";
 import { Card } from "@/components/ui/Card";
 import { Pill } from "@/components/ui/Pill";
+import { createAndPersistDraft } from "@/lib/drafts";
+import { useAuth } from "@/hooks/useAuth";
 
 const templates = [
   {
@@ -23,6 +25,10 @@ const templates = [
 ];
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const { status, user } = useAuth();
+  const draftOwnerId = status === "authenticated" && user?.id ? user.id : "local-preview-owner";
+
   return (
     <Screen
       footer="v1.0은 결혼식 제작 흐름부터 검증합니다."
@@ -57,22 +63,24 @@ export default function HomeScreen() {
             <Text style={{ color: "#fff", fontWeight: "700" }}>로그인하고 시작하기</Text>
           </Pressable>
         </Link>
-        <Link asChild href="/builder/step1-basic">
-          <Pressable
-            accessibilityLabel="초대장 만들기 화면으로 이동"
-            style={{
-              borderRadius: 16,
-              marginTop: 12,
-              minHeight: 48,
-              alignItems: "center",
-              justifyContent: "center",
-              borderWidth: 1,
-              borderColor: "#d2bba6"
-            }}
-          >
-            <Text style={{ color: "#8d5a2b", fontWeight: "700" }}>바로 초대장 만들기</Text>
-          </Pressable>
-        </Link>
+        <Pressable
+          accessibilityLabel="새 초대장 만들기"
+          onPress={async () => {
+            const draft = await createAndPersistDraft(draftOwnerId);
+            router.push({ pathname: "/builder/step1-basic", params: { localId: draft.localId } });
+          }}
+          style={{
+            borderRadius: 16,
+            marginTop: 12,
+            minHeight: 48,
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1,
+            borderColor: "#d2bba6"
+          }}
+        >
+          <Text style={{ color: "#8d5a2b", fontWeight: "700" }}>바로 초대장 만들기</Text>
+        </Pressable>
       </Card>
 
       {templates.map((template) => (

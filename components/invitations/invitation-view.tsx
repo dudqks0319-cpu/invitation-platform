@@ -229,6 +229,37 @@ export function InvitationView({
           </a>
         </article>
 
+        {payload.galleryImages.length ? (
+          <article className="invitation-card">
+            <h2>갤러리</h2>
+            <div
+              style={{
+                display: "grid",
+                gap: 12,
+                gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))"
+              }}
+            >
+              {payload.galleryImages.map((imageUrl, index) => (
+                <div
+                  key={`${imageUrl}-${index}`}
+                  style={{
+                    borderRadius: 18,
+                    overflow: "hidden",
+                    minHeight: 140,
+                    background: "#f5efe8"
+                  }}
+                >
+                  <img
+                    alt={`초대장 갤러리 이미지 ${index + 1}`}
+                    src={imageUrl}
+                    style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                </div>
+              ))}
+            </div>
+          </article>
+        ) : null}
+
         <article className="invitation-card">
           <h2>RSVP</h2>
           <form

@@ -59,6 +59,7 @@ const legacyInvitationPayloadSchema = z
     mainImagePath: z.string().trim().optional(),
     backgroundImageUrl: imageReferenceSchema.optional(),
     backgroundImagePath: z.string().trim().optional(),
+    galleryImages: z.array(imageReferenceSchema).optional(),
     mainImageData: imageReferenceSchema.optional(),
     backgroundImageData: imageReferenceSchema.optional()
   })
@@ -100,7 +101,10 @@ export const invitationDraftPayloadSchema = legacyInvitationPayloadSchema.transf
   mainImageUrl: raw.mainImageUrl || raw.mainImageData || "",
   mainImagePath: raw.mainImagePath || "",
   backgroundImageUrl: raw.backgroundImageUrl || raw.backgroundImageData || "",
-  backgroundImagePath: raw.backgroundImagePath || ""
+  backgroundImagePath: raw.backgroundImagePath || "",
+  galleryImages: Array.isArray(raw.galleryImages)
+    ? raw.galleryImages.filter((item): item is string => typeof item === "string")
+    : []
 }));
 
 export type InvitationDraftPayload = z.infer<typeof invitationDraftPayloadSchema>;

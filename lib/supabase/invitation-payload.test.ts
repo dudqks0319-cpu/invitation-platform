@@ -18,4 +18,15 @@ describe("invitation payload normalization", () => {
     expect(payload.templateId).toBe("wedding-classic");
     expect(payload.title).toBe("결혼식 초대장");
   });
+
+  it("preserves gallery images when present", () => {
+    const payload = normalizeInvitationPayload({
+      galleryImages: ["https://example.com/1.jpg", "https://example.com/2.jpg"]
+    });
+
+    expect(payload.galleryImages).toEqual([
+      "https://example.com/1.jpg",
+      "https://example.com/2.jpg"
+    ]);
+  });
 });

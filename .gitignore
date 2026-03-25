@@ -16,5 +16,7 @@ backend/.env.*
 .env.*.local
 tsconfig.tsbuildinfo
 .omx
+output/
+test-results/
 public
 src
