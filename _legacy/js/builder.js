@@ -1,3 +1,4 @@
+/* eslint-disable */
 const BUILDER_DRAFT_KEY = 'invitehub_builder_draft';
 const MAX_PERSISTABLE_IMAGE_BYTES = 900 * 1024;
 

@@ -10,7 +10,9 @@ export function SiteFooter() {
           <Link href="/builder">초대장 만들기</Link>
           <Link href="/dashboard">대시보드</Link>
           <Link href="/preview">미리보기</Link>
-          <Link href="/sign-in">로그인</Link>
+          <Link href="/privacy">개인정보처리방침</Link>
+          <Link href="/terms">이용약관</Link>
+          <a href="mailto:support@invitehub.kr">문의하기</a>
         </div>
         <p className="footer-copy">© 2026 InviteHub. All rights reserved.</p>
       </div>

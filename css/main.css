@@ -1152,6 +1152,117 @@ ul { list-style: none; }
 }
 
 /* ===== TEMPLATE DESIGNS ===== */
+.tmpl-with-artwork {
+  justify-content: flex-start !important;
+  gap: 0 !important;
+  padding: 14px !important;
+}
+
+.tmpl-with-artwork::before,
+.tmpl-with-artwork::after {
+  content: none !important;
+}
+
+.tmpl-artwork {
+  width: 100%;
+  height: 96px;
+  margin-bottom: 14px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 14px 28px rgba(51, 38, 24, 0.16);
+}
+
+.tmpl-artwork-image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.tmpl-copy {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.template-markup-enhanced {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.tmpl-bg-texture {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.18;
+  z-index: 0;
+}
+
+.tmpl-top-decor {
+  position: relative;
+  z-index: 1;
+  width: 84%;
+  max-height: 120px;
+  object-fit: cover;
+  border-radius: 18px;
+  margin-bottom: 10px;
+  box-shadow: 0 12px 32px rgba(42, 30, 18, 0.14);
+}
+
+.tmpl-frame {
+  position: absolute;
+  inset: 8px;
+  z-index: 1;
+  width: calc(100% - 16px);
+  height: calc(100% - 16px);
+  object-fit: cover;
+  opacity: 0.12;
+  pointer-events: none;
+  border-radius: 20px;
+}
+
+.tmpl-text-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+}
+
+.template-markup-enhanced .tmpl-text-content > div {
+  background: transparent !important;
+}
+
+.tmpl-divider {
+  position: relative;
+  z-index: 1;
+  width: 56%;
+  max-height: 46px;
+  object-fit: cover;
+  border-radius: 999px;
+  opacity: 0.68;
+  margin: 10px 0 0;
+}
+
+.tmpl-bottom-decor {
+  position: relative;
+  z-index: 1;
+  width: 84%;
+  max-height: 72px;
+  object-fit: cover;
+  border-radius: 16px;
+  opacity: 0.72;
+  margin-top: 10px;
+}
+
 /* Wedding Classic */
 .tmpl-wedding-classic {
   height: 380px;
@@ -1159,7 +1270,6 @@ ul { list-style: none; }
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 24px; text-align: center; gap: 8px;
 }
-.tmpl-wedding-classic .flower { font-size: 2.5rem; }
 .tmpl-wedding-classic .date { font-size: 0.75rem; letter-spacing: 3px; color: #B8946A; font-weight: 600; }
 .tmpl-wedding-classic .names { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-style: italic; color: #8B6B4A; }
 .tmpl-wedding-classic .and { font-size: 1.2rem; color: #C9935A; }
@@ -1228,7 +1338,6 @@ ul { list-style: none; }
   position: relative; overflow: hidden;
 }
 .tmpl-dol-cute::before { content: '⭐'; font-size: 5rem; position: absolute; top: 10px; right: 15px; opacity: 0.2; }
-.tmpl-dol-cute .baby { font-size: 3rem; }
 .tmpl-dol-cute .title { font-family: 'Noto Serif KR', serif; font-size: 1.4rem; color: #E65100; font-weight: 700; }
 .tmpl-dol-cute .name { font-size: 1.6rem; font-weight: 800; color: #BF360C; }
 .tmpl-dol-cute .date { font-size: 0.82rem; color: #E64A19; }
@@ -1281,7 +1390,6 @@ ul { list-style: none; }
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 24px; text-align: center; gap: 10px;
 }
-.tmpl-hwangap-classic .crane { font-size: 2.5rem; }
 .tmpl-hwangap-classic .title { font-family: 'Noto Serif KR', serif; font-size: 1.4rem; color: #8B6914; font-weight: 700; }
 .tmpl-hwangap-classic .name { font-size: 1.5rem; font-weight: 800; color: #6B4F00; }
 .tmpl-hwangap-classic .subtitle { font-size: 0.8rem; color: #A0802A; }
@@ -1321,7 +1429,6 @@ ul { list-style: none; }
   padding: 24px; text-align: center; gap: 8px; position: relative; overflow: hidden;
 }
 .tmpl-bridal-pink::before { content: '💎'; font-size: 4rem; position: absolute; top: 15px; right: 20px; opacity: 0.3; }
-.tmpl-bridal-pink .crown { font-size: 2.5rem; }
 .tmpl-bridal-pink .subtitle { font-size: 0.7rem; letter-spacing: 4px; color: #AD1457; font-weight: 700; }
 .tmpl-bridal-pink .name { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-style: italic; color: #880E4F; }
 .tmpl-bridal-pink .date { font-size: 0.85rem; color: #E91E63; }
@@ -1361,7 +1468,6 @@ ul { list-style: none; }
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 24px; text-align: center; gap: 8px;
 }
-.tmpl-birthday-fun .icons { font-size: 1.6rem; letter-spacing: 6px; }
 .tmpl-birthday-fun .title { font-size: 1.2rem; font-weight: 800; color: #7B1FA2; }
 .tmpl-birthday-fun .name { font-size: 1.6rem; font-weight: 900; color: #6A1B9A; }
 .tmpl-birthday-fun .date { font-size: 0.85rem; color: #9C27B0; }
@@ -1387,7 +1493,6 @@ ul { list-style: none; }
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 24px; text-align: center; gap: 8px;
 }
-.tmpl-house-warm .house { font-size: 3rem; }
 .tmpl-house-warm .title { font-family: 'Noto Serif KR', serif; font-size: 1.3rem; color: #1B5E20; }
 .tmpl-house-warm .address { font-size: 0.8rem; color: #388E3C; }
 .tmpl-house-warm .date { font-size: 0.85rem; color: #2E7D32; letter-spacing: 1px; }
@@ -1400,7 +1505,6 @@ ul { list-style: none; }
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 24px; text-align: center; gap: 8px;
 }
-.tmpl-baby-shower .stars { font-size: 1.2rem; letter-spacing: 6px; }
 .tmpl-baby-shower .title { font-size: 0.75rem; letter-spacing: 3px; color: #1565C0; font-weight: 700; }
 .tmpl-baby-shower .name { font-family: 'Noto Serif KR', serif; font-size: 1.5rem; color: #0D47A1; }
 .tmpl-baby-shower .date { font-size: 0.85rem; color: #1976D2; }
@@ -1414,7 +1518,6 @@ ul { list-style: none; }
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   padding: 24px; text-align: center; gap: 10px;
 }
-.tmpl-graduation .cap { font-size: 2.5rem; }
 .tmpl-graduation .title { font-size: 0.7rem; letter-spacing: 4px; color: #FDD835; font-weight: 700; }
 .tmpl-graduation .name { font-family: 'Playfair Display', serif; font-size: 1.6rem; color: #FFF9C4; }
 .tmpl-graduation .sub { font-size: 0.85rem; color: #FDD835; }
@@ -1428,7 +1531,6 @@ ul { list-style: none; }
   padding: 32px; text-align: center; gap: 12px;
   border-top: 4px solid #1565C0;
 }
-.tmpl-business .icon { font-size: 2.2rem; }
 .tmpl-business .company { font-size: 0.7rem; letter-spacing: 4px; color: #1565C0; font-weight: 700; }
 .tmpl-business .title { font-size: 1.2rem; font-weight: 800; color: #1A237E; }
 .tmpl-business .date { font-size: 0.85rem; color: #1976D2; }
@@ -1468,6 +1570,9 @@ ul { list-style: none; }
   .form-two-col {
     grid-template-columns: 1fr;
   }
+  .template-markup-enhanced .tmpl-top-decor {
+    max-height: 88px;
+  }
 }
 @media (max-width: 600px) {
   .templates-grid { grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -1481,6 +1586,14 @@ ul { list-style: none; }
   .tmpl-hwangap-classic, .tmpl-hwangap-modern, .tmpl-hwangap-red, .tmpl-bridal-pink,
   .tmpl-bridal-boho, .tmpl-bridal-modern, .tmpl-birthday-fun, .tmpl-birthday-elegant,
   .tmpl-house-warm, .tmpl-baby-shower, .tmpl-graduation, .tmpl-business { height: 220px; }
+  .template-markup-enhanced .tmpl-top-decor {
+    width: 88%;
+    max-height: 70px;
+  }
+  .template-markup-enhanced .tmpl-divider,
+  .template-markup-enhanced .tmpl-bottom-decor {
+    max-height: 40px;
+  }
   .pricing-grid { grid-template-columns: 1fr; }
   .features-grid { grid-template-columns: 1fr 1fr; }
   .builder-grid { grid-template-columns: 1fr; }

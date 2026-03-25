@@ -2,16 +2,26 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
 import { requestKakaoPayApprove } from "@/lib/payments/kakaopay";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { isNonceExpired, isValidNonceFormat } from "@/lib/payments/nonce";
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const paymentId = requestUrl.searchParams.get("paymentId");
   const pgToken = requestUrl.searchParams.get("pg_token");
+  const nonce = requestUrl.searchParams.get("nonce");
   const admin = createSupabaseAdminClient();
+  const supabase = await createServerSupabaseClient();
 
-  if (!admin || !paymentId || !pgToken) {
+  if (!admin || !paymentId || !pgToken || !nonce || !isValidNonceFormat(nonce)) {
     return NextResponse.redirect(new URL("/checkout?payment=failed", requestUrl.origin));
   }
+
+  const {
+    data: { user }
+  } = supabase
+    ? await supabase.auth.getUser()
+    : { data: { user: null } };
 
   const { data: payment, error: paymentError } = await admin
     .from("payments")
@@ -19,7 +29,27 @@ export async function GET(request: Request) {
     .eq("id", paymentId)
     .maybeSingle();
 
-  if (paymentError || !payment) {
+  if (
+    paymentError ||
+    !payment ||
+    payment.status !== "payment_pending" ||
+    !payment.provider_tid ||
+    !payment.provider_order_id ||
+    payment.approve_nonce !== nonce ||
+    payment.nonce_used_at ||
+    isNonceExpired(payment.created_at)
+  ) {
+    return NextResponse.redirect(new URL("/checkout?payment=failed", requestUrl.origin));
+  }
+
+  if (user && payment.user_id !== user.id) {
+    await admin.from("payment_audit_logs").insert({
+      payment_id: payment.id,
+      action: "fail",
+      request_payload: { paymentId, nonce, reason: "user_mismatch" },
+      response_payload: null
+    });
+
     return NextResponse.redirect(new URL("/checkout?payment=failed", requestUrl.origin));
   }
 
@@ -29,9 +59,13 @@ export async function GET(request: Request) {
     .eq("id", payment.invitation_id)
     .maybeSingle();
 
-  if (!invitation) {
+  if (!invitation || invitation.user_id !== payment.user_id) {
     return NextResponse.redirect(new URL("/checkout?payment=failed", requestUrl.origin));
   }
+
+  await admin.from("payments").update({
+    nonce_used_at: new Date().toISOString()
+  }).eq("id", payment.id);
 
   try {
     const approveResult = await requestKakaoPayApprove({
@@ -51,7 +85,7 @@ export async function GET(request: Request) {
     await admin.from("payment_audit_logs").insert({
       payment_id: payment.id,
       action: "approve",
-      request_payload: { paymentId, pgToken },
+      request_payload: { paymentId, pgToken, nonce },
       response_payload: approveResult
     });
 

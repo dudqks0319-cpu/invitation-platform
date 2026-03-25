@@ -19,3 +19,5 @@ tsconfig.tsbuildinfo
 output/
 test-results/
 src
+!packages/shared/src/
+!packages/shared/src/**

@@ -1,3 +1,4 @@
+/* eslint-disable */
 const LOCAL_STORE_KEYS = {
   rsvps: 'invitehub_local_rsvps',
   guestbook: 'invitehub_local_guestbook',

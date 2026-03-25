@@ -6,6 +6,12 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@invitehub/shared": [
+        "../../packages/shared/src/index.ts"
+      ],
+      "@invitehub/shared/*": [
+        "../../packages/shared/src/*"
       ]
     }
   },

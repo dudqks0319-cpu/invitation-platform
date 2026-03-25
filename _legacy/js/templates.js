@@ -1,3 +1,4 @@
+/* eslint-disable */
 // ===== TEMPLATES DATA =====
 const TEMPLATES = [
   // ===== WEDDING (5+) =====

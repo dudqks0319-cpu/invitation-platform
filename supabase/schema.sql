@@ -44,6 +44,14 @@ create table if not exists public.payments (
   updated_at timestamptz not null default now()
 );
 
+alter table public.payments
+  add column if not exists approve_nonce text,
+  add column if not exists nonce_used_at timestamptz;
+
+create unique index if not exists idx_payments_approve_nonce
+  on public.payments(approve_nonce)
+  where approve_nonce is not null;
+
 create table if not exists public.payment_audit_logs (
   id uuid primary key default gen_random_uuid(),
   payment_id uuid not null references public.payments(id) on delete cascade,
@@ -259,6 +267,9 @@ create index if not exists idx_invitations_status on public.invitations(status);
 create index if not exists idx_payments_invitation_id on public.payments(invitation_id);
 create index if not exists idx_payments_user_id on public.payments(user_id);
 create index if not exists idx_payments_status on public.payments(status);
+create unique index if not exists idx_payments_approve_nonce
+  on public.payments(approve_nonce)
+  where approve_nonce is not null;
 create index if not exists idx_payment_audit_logs_payment_id on public.payment_audit_logs(payment_id);
 create index if not exists idx_rsvps_invitation_id on public.rsvps(invitation_id);
 create index if not exists idx_guestbook_invitation_id on public.guestbook_entries(invitation_id);

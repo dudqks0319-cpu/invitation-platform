@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { authDestination } from "@/lib/auth";
 import { getCheckoutPrice, requestKakaoPayReady } from "@/lib/payments/kakaopay";
+import { generateApproveNonce } from "@/lib/payments/nonce";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type ReadyRequest = {
@@ -46,6 +46,7 @@ export async function POST(request: Request) {
 
   const price = getCheckoutPrice();
   const paymentOrderId = crypto.randomUUID();
+  const approveNonce = generateApproveNonce();
   const siteOrigin = request.headers.get("origin") || process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
 
   const { data: payment, error: paymentError } = await admin
@@ -60,7 +61,8 @@ export async function POST(request: Request) {
       buyer_name: body.buyerName,
       buyer_email: body.buyerEmail,
       buyer_phone: body.buyerPhone,
-      provider_order_id: paymentOrderId
+      provider_order_id: paymentOrderId,
+      approve_nonce: approveNonce
     })
     .select()
     .single();
@@ -72,7 +74,7 @@ export async function POST(request: Request) {
   try {
     const approvalUrl = new URL("/api/payments/kakaopay/approve", siteOrigin);
     approvalUrl.searchParams.set("paymentId", payment.id);
-    approvalUrl.searchParams.set("next", authDestination.dashboard);
+    approvalUrl.searchParams.set("nonce", approveNonce);
 
     const cancelUrl = new URL("/checkout", siteOrigin);
     cancelUrl.searchParams.set("invitationId", invitation.id);
@@ -99,7 +101,10 @@ export async function POST(request: Request) {
     await admin.from("payment_audit_logs").insert({
       payment_id: payment.id,
       action: "ready",
-      request_payload: body,
+      request_payload: {
+        ...body,
+        paymentOrderId
+      },
       response_payload: readyResult
     });
 

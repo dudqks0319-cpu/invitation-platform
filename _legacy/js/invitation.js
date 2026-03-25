@@ -1,3 +1,4 @@
+/* eslint-disable */
 const BUILDER_DRAFT_KEY = 'invitehub_builder_draft';
 const INVITATION_GUESTBOOK_KEY = 'invitehub_invitation_guestbook';
 

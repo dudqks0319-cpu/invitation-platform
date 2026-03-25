@@ -8,6 +8,15 @@ export type TemplatePreset = {
   html: string;
 };
 
+function withArtwork(className: string, src: string, content: string) {
+  return `<div class="${className} tmpl-with-artwork">
+    <div class="tmpl-artwork">
+      <img class="tmpl-artwork-image" src="${src}" alt="" loading="lazy" decoding="async" />
+    </div>
+    <div class="tmpl-copy">${content}</div>
+  </div>`;
+}
+
 export const templates: TemplatePreset[] = [
   // ===== WEDDING (5+) =====
   {
@@ -17,13 +26,12 @@ export const templates: TemplatePreset[] = [
     badge: '결혼식',
     desc: '따뜻한 크림 톤의 클래식한 결혼 초대장. 우아한 플로럴 감성.',
     tags: ['#클래식', '#크림톤', '#플로럴'],
-    html: `<div class="tmpl-wedding-classic">
-      <div class="flower">🌸</div>
+    html: withArtwork('tmpl-wedding-classic', '/images/genspark/cncrue0H.jpg', `
       <div class="date">2026. 04. 12</div>
       <div class="names">Kim &amp; Lee</div>
       <div class="and">♡</div>
       <div class="msg">저희 두 사람이 하나가 됩니다<br/>소중한 자리에 함께해 주세요</div>
-    </div>`
+    `)
   },
   {
     id: 'wedding-modern',
@@ -93,13 +101,12 @@ export const templates: TemplatePreset[] = [
     badge: '돌잔치',
     desc: '따뜻한 노란빛의 아기자기하고 귀여운 돌잔치 초대장.',
     tags: ['#귀여운', '#옐로우', '#아기자기'],
-    html: `<div class="tmpl-dol-cute">
-      <div class="baby">👶</div>
+    html: withArtwork('tmpl-dol-cute', '/images/genspark/V0JrpVLM.jpg', `
       <div class="title">우리 아이 첫 번째 생일</div>
       <div class="name">김하늘</div>
       <div class="date">2026.03.22 (토) 오후 1시</div>
       <div class="msg">소중한 발걸음으로 함께해 주세요</div>
-    </div>`
+    `)
   },
   {
     id: 'dol-pastel',
@@ -170,13 +177,12 @@ export const templates: TemplatePreset[] = [
     badge: '환갑잔치',
     desc: '전통적인 황금빛 크림 톤의 격조 있는 환갑잔치 초대장.',
     tags: ['#전통', '#황금', '#격조'],
-    html: `<div class="tmpl-hwangap-classic">
-      <div class="crane">🕊️</div>
+    html: withArtwork('tmpl-hwangap-classic', '/images/genspark/TWE0rC56.jpg', `
       <div class="title">환갑을 축하드립니다</div>
       <div class="name">김 철수</div>
       <div class="subtitle">회갑연 초대장</div>
       <div class="date">2026.05.03 일요일 오후 12시</div>
-    </div>`
+    `)
   },
   {
     id: 'hwangap-modern',
@@ -247,13 +253,12 @@ export const templates: TemplatePreset[] = [
     badge: '브라이덜샤워',
     desc: '핑크빛 로맨틱 감성의 브라이덜샤워 파티 초대장.',
     tags: ['#핑크', '#로맨틱', '#파티'],
-    html: `<div class="tmpl-bridal-pink">
-      <div class="crown">👑</div>
+    html: withArtwork('tmpl-bridal-pink', '/images/genspark/qUefKi23.jpg', `
       <div class="subtitle">BRIDAL SHOWER</div>
       <div class="name">Soon-to-be Mrs. Kim</div>
       <div class="date">2026.03.29 SAT 3PM</div>
       <div class="msg">결혼을 앞둔 소중한 친구를<br/>함께 축하해요!</div>
-    </div>`
+    `)
   },
   {
     id: 'bridal-boho',
@@ -325,13 +330,12 @@ export const templates: TemplatePreset[] = [
     badge: '생일파티',
     desc: '다채로운 색상의 신나는 생일파티 초대장.',
     tags: ['#컬러풀', '#파티', '#신나는'],
-    html: `<div class="tmpl-birthday-fun">
-      <div class="icons">🎉🎂🎈</div>
+    html: withArtwork('tmpl-birthday-fun', '/images/genspark/68eF2xjM.jpg', `
       <div class="title">BIRTHDAY PARTY!</div>
       <div class="name">Kim Ji-ho</div>
       <div class="date">2026.04.11 (SAT) 6PM</div>
       <div class="msg">특별한 파티에 초대합니다<br/>함께 신나게 놀아요!</div>
-    </div>`
+    `)
   },
   {
     id: 'birthday-elegant',
@@ -372,13 +376,12 @@ export const templates: TemplatePreset[] = [
     badge: '집들이',
     desc: '새 보금자리를 알리는 따뜻한 그린 집들이 초대장.',
     tags: ['#집들이', '#그린', '#따뜻한'],
-    html: `<div class="tmpl-house-warm">
-      <div class="house">🏡</div>
+    html: withArtwork('tmpl-house-warm', '/images/genspark/6XcxVcVH.jpg', `
       <div class="title">집들이에 초대합니다</div>
       <div class="address">서울시 마포구 합정동 123-45</div>
       <div class="date">2026.04.19 (토) 오후 4시</div>
       <div class="msg">새 집에서 함께 따뜻한 시간<br/>보내요!</div>
-    </div>`
+    `)
   },
   {
     id: 'house-modern',
@@ -404,13 +407,12 @@ export const templates: TemplatePreset[] = [
     badge: '베이비샤워',
     desc: '하늘빛 파란색의 포근한 베이비샤워 초대장.',
     tags: ['#베이비', '#블루', '#포근'],
-    html: `<div class="tmpl-baby-shower">
-      <div class="stars">⭐💫⭐</div>
+    html: withArtwork('tmpl-baby-shower', '/images/genspark/zIB8bEWC.jpg', `
       <div class="title">BABY SHOWER</div>
       <div class="name">Yoon Ji-hyun의 Baby</div>
       <div class="date">2026.03.08 (SUN) 2PM</div>
       <div class="msg">새 생명의 탄생을<br/>함께 축하해 주세요</div>
-    </div>`
+    `)
   },
   {
     id: 'baby-pink',
@@ -436,13 +438,12 @@ export const templates: TemplatePreset[] = [
     badge: '졸업파티',
     desc: '네이비 블루의 격조 있는 졸업 파티 초대장.',
     tags: ['#졸업', '#네이비', '#격식'],
-    html: `<div class="tmpl-graduation">
-      <div class="cap">🎓</div>
+    html: withArtwork('tmpl-graduation', '/images/genspark/Xdz6nHcL.jpg', `
       <div class="title">GRADUATION PARTY</div>
       <div class="name">Lim Jae-won</div>
       <div class="sub">서울대학교 경영학과</div>
       <div class="date">2026.02.28 (SAT) 7PM</div>
-    </div>`
+    `)
   },
   {
     id: 'graduation-warm',
@@ -468,13 +469,12 @@ export const templates: TemplatePreset[] = [
     badge: '비즈니스',
     desc: '신뢰와 전문성을 담은 비즈니스 행사 초대장.',
     tags: ['#비즈니스', '#전문', '#행사'],
-    html: `<div class="tmpl-business">
-      <div class="icon">📋</div>
+    html: withArtwork('tmpl-business', '/images/genspark/xpx0zLPW.jpg', `
       <div class="company">INVITEHUB CONFERENCE 2026</div>
       <div class="title">연간 비즈니스 컨퍼런스</div>
       <div class="date">2026.05.22 (FRI) 10AM</div>
       <div class="venue">코엑스 그랜드볼룸 A홀</div>
-    </div>`
+    `)
   },
   {
     id: 'business-dark',
