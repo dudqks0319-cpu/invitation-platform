@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { useLocalSearchParams } from "expo-router";
 import { Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorView } from "@/components/ui/ErrorView";
 import { Loading } from "@/components/ui/Loading";
 import { Screen } from "@/components/ui/Screen";
+import { theme } from "@/components/ui/theme";
 import type { MobileInvitationDraft } from "@/lib/drafts";
 import { loadDraft } from "@/lib/drafts";
 import {
@@ -96,7 +98,7 @@ export default function InvitationGuestbookScreen() {
   }
 
   return (
-    <Screen subtitle="승인 대기와 공개 중인 메시지를 분리해 관리합니다." title="방명록 관리">
+    <Screen subtitle="축하 메시지를 따뜻한 피드처럼 검토하고 공개 여부를 전환합니다." title="방명록">
       {loading ? <Loading label="초대장 정보를 불러오는 중..." /> : null}
       {error ? <ErrorView description={error} title="방명록 불러오기 실패" /> : null}
       {message ? (
@@ -118,9 +120,49 @@ export default function InvitationGuestbookScreen() {
         <EmptyState body="아직 수신된 방명록이 없습니다." title="새 방명록이 오면 여기서 검토합니다" />
       ) : (
         entries.slice(0, 10).map((entry) => (
-          <Card key={entry.id} eyebrow={entry.approved ? "공개" : "대기"} title={entry.nickname}>
-            <Text style={{ color: "#6a5645", lineHeight: 22 }}>{entry.message}</Text>
-            <View style={{ gap: 8, marginTop: 12 }}>
+          <View
+            key={entry.id}
+            style={{
+              backgroundColor: theme.colors.surface,
+              borderRadius: 28,
+              borderWidth: 1,
+              borderColor: theme.colors.border,
+              padding: 18,
+              shadowColor: theme.shadow.card.shadowColor,
+              shadowOffset: { width: 0, height: 14 },
+              shadowOpacity: 0.9,
+              shadowRadius: 24,
+              elevation: 5,
+              gap: 12
+            }}
+          >
+            <View style={{ flexDirection: "row", alignItems: "flex-start", gap: 14 }}>
+              <View
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 999,
+                  backgroundColor: entry.approved ? "#ead8d8" : "#eceae5",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+              >
+                <Text style={{ color: theme.colors.muted, fontSize: 16, fontWeight: "700" }}>
+                  {entry.nickname.slice(0, 2)}
+                </Text>
+              </View>
+              <View style={{ flex: 1, gap: 4 }}>
+                <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+                  <Text style={{ color: theme.colors.text, fontSize: 17, fontWeight: "700" }}>{entry.nickname}</Text>
+                  <Text style={{ color: theme.colors.muted, fontSize: 12 }}>{entry.approved ? "공개" : "승인 대기"}</Text>
+                </View>
+                <Text style={{ color: theme.colors.text, fontSize: 18, lineHeight: 27 }}>{entry.message}</Text>
+                <Text style={{ color: "#9d9187", fontSize: 13 }}>
+                  {entry.createdAt ? new Date(entry.createdAt).toLocaleString("ko-KR") : "방금 전"}
+                </Text>
+              </View>
+            </View>
+            <View style={{ gap: 8 }}>
               <Button
                 accessibilityLabel={entry.approved ? "비공개로 전환" : "공개로 승인"}
                 onPress={() => {
@@ -151,9 +193,30 @@ export default function InvitationGuestbookScreen() {
                 {pendingId === entry.id ? "처리 중..." : entry.approved ? "비공개로 전환" : "공개로 승인"}
               </Button>
             </View>
-          </Card>
+          </View>
         ))
       )}
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          right: 18,
+          bottom: 22,
+          width: 64,
+          height: 64,
+          borderRadius: 24,
+          backgroundColor: "#f2b7bc",
+          alignItems: "center",
+          justifyContent: "center",
+          shadowColor: theme.shadow.card.shadowColor,
+          shadowOffset: { width: 0, height: 12 },
+          shadowOpacity: 0.9,
+          shadowRadius: 22,
+          elevation: 6
+        }}
+      >
+        <Ionicons color="#fff" name="create-outline" size={26} />
+      </View>
     </Screen>
   );
 }

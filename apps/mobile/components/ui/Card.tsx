@@ -16,15 +16,28 @@ export function Card({ children, eyebrow, title }: CardProps) {
         borderWidth: 1,
         borderColor: theme.colors.border,
         padding: theme.spacing.lg,
-        gap: theme.spacing.sm
+        gap: theme.spacing.sm,
+        shadowColor: theme.shadow.card.shadowColor,
+        shadowOffset: theme.shadow.card.shadowOffset,
+        shadowOpacity: theme.shadow.card.shadowOpacity,
+        shadowRadius: theme.shadow.card.shadowRadius,
+        elevation: theme.shadow.card.elevation
       }}
     >
       {eyebrow ? (
-        <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700", textTransform: "uppercase" }}>
+        <Text
+          style={{
+            color: theme.colors.accent,
+            fontSize: 12,
+            fontWeight: "700",
+            letterSpacing: 0.8,
+            textTransform: "uppercase"
+          }}
+        >
           {eyebrow}
         </Text>
       ) : null}
-      <Text style={{ color: theme.colors.text, fontSize: 20, fontWeight: "700" }}>{title}</Text>
+      <Text style={{ color: theme.colors.text, fontSize: 20, fontWeight: "700", lineHeight: 28 }}>{title}</Text>
       {children}
     </View>
   );

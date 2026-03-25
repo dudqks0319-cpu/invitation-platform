@@ -86,19 +86,53 @@ export default function BuilderPreviewScreen() {
           <Text style={{ color: "#6a5645", lineHeight: 22 }}>{message}</Text>
         </Card>
       ) : null}
-      <Card eyebrow="현재 초안" title={draft?.payload.title || "제목을 입력해 주세요"}>
-        <Text style={{ color: "#8d5a2b", fontSize: 20, fontWeight: "700" }}>{names}</Text>
-        <Text style={{ color: "#6a5645", lineHeight: 22, marginTop: 8 }}>
-          {draft?.payload.eventDateTime || "행사 일시를 입력해 주세요."}
+      <View
+        style={{
+          backgroundColor: "#fffdf9",
+          borderRadius: 28,
+          borderWidth: 1,
+          borderColor: "#e6d8c6",
+          padding: 22,
+          gap: 12,
+          shadowColor: "rgba(102, 82, 63, 0.16)",
+          shadowOffset: { width: 0, height: 16 },
+          shadowOpacity: 1,
+          shadowRadius: 30,
+          elevation: 6
+        }}
+      >
+        <Text style={{ color: "#a07a52", fontSize: 12, fontWeight: "700", letterSpacing: 1.4, textAlign: "center" }}>
+          WEDDING INVITATION
         </Text>
-        <Text style={{ color: "#6a5645", lineHeight: 22, marginTop: 4 }}>
-          {[draft?.payload.venueName, draft?.payload.venueAddress].filter(Boolean).join(" · ") ||
-            "예식장 정보를 입력해 주세요."}
+        <Text style={{ color: "#3a3028", fontSize: 30, fontWeight: "700", lineHeight: 38, textAlign: "center" }}>
+          {names}
         </Text>
-        <Text style={{ color: "#5b4a3b", lineHeight: 24, marginTop: 16 }}>
-          {draft?.payload.message || "초대 메시지를 입력하면 이곳에 반영됩니다."}
-        </Text>
-      </Card>
+        <View style={{ alignItems: "center", gap: 6 }}>
+          <Text style={{ color: "#9b6832", fontSize: 16, fontWeight: "600" }}>날짜 및 시간</Text>
+          <Text style={{ color: "#5b4a3b", fontSize: 18, lineHeight: 26, textAlign: "center" }}>
+            {draft?.payload.eventDateTime || "행사 일시를 입력해 주세요."}
+          </Text>
+        </View>
+        <View style={{ alignItems: "center", gap: 6 }}>
+          <Text style={{ color: "#9b6832", fontSize: 16, fontWeight: "600" }}>장소</Text>
+          <Text style={{ color: "#5b4a3b", fontSize: 18, lineHeight: 26, textAlign: "center" }}>
+            {[draft?.payload.venueName, draft?.payload.venueAddress].filter(Boolean).join(" · ") ||
+              "예식장 정보를 입력해 주세요."}
+          </Text>
+        </View>
+        <View
+          style={{
+            borderTopWidth: 1,
+            borderTopColor: "#efe2d2",
+            marginTop: 8,
+            paddingTop: 16
+          }}
+        >
+          <Text style={{ color: "#5b4a3b", fontSize: 16, lineHeight: 28, textAlign: "center" }}>
+            {draft?.payload.message || "초대 메시지를 입력하면 이곳에 반영됩니다."}
+          </Text>
+        </View>
+      </View>
       <Card eyebrow="공유 정보" title="계좌 · 위치">
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
           계좌: {draft?.payload.accounts.primary?.holder || "미입력"} / {draft?.payload.accounts.secondary?.holder || "미입력"}
