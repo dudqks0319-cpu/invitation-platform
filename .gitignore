@@ -18,5 +18,4 @@ tsconfig.tsbuildinfo
 .omx
 output/
 test-results/
-public
 src

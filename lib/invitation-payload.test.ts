@@ -1,4 +1,10 @@
-import { createInvitationSlug, defaultInvitationDraft, normalizeDraft } from "@/lib/invitation-payload";
+import {
+  createInvitationSlug,
+  defaultInvitationDraft,
+  formatEventDateTime,
+  formatTimestampLabel,
+  normalizeDraft
+} from "@/lib/invitation-payload";
 
 describe("invitation payload helpers", () => {
   it("fills missing fields with defaults", () => {
@@ -18,5 +24,13 @@ describe("invitation payload helpers", () => {
 
     expect(slug).toContain("우리의-결혼식");
     expect(slug.length).toBeGreaterThan(8);
+  });
+
+  it("formats event dates in a deterministic 24-hour Korean label", () => {
+    expect(formatEventDateTime("2026-04-12T14:00")).toBe("2026년 4월 12일 일 14:00");
+  });
+
+  it("formats timestamps without client/server locale drift", () => {
+    expect(formatTimestampLabel("2026-04-12T14:00:00.000Z")).toBe("2026년 4월 12일 23:00");
   });
 });

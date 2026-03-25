@@ -3,11 +3,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authDestination, normalizeNextPath } from "@/lib/auth";
+import {
+  applyCategoryTemplateDefaults,
+  getInvitationCategoryMeta,
+  getInvitationHeroSubtitle,
+  getInvitationHeroTitle
+} from "@/lib/invitation-presentation";
 import { createBrowserClient } from "@/lib/supabase/browser";
 import {
   LOCAL_DRAFT_KEY,
   createInvitationSlug,
   defaultInvitationDraft,
+  formatEventDateTime,
   normalizeDraft,
   type InvitationStatus,
   type InvitationDraftPayload
@@ -84,11 +91,7 @@ export function BuilderStudio({
       : null;
 
     return matched
-      ? normalizeDraft({
-          ...base,
-          templateId: matched.id,
-          category: matched.category
-        })
+      ? normalizeDraft(applyCategoryTemplateDefaults(base, matched.category, matched.id))
       : normalizeDraft(base);
   });
   const [meta, setMeta] = useState<DraftMeta>(() => readStoredDraft()?.meta ?? {});
@@ -105,6 +108,9 @@ export function BuilderStudio({
     () => templates.find((template) => template.id === payload.templateId) ?? templates[0],
     [payload.templateId]
   );
+  const categoryMeta = useMemo(() => getInvitationCategoryMeta(payload), [payload]);
+  const previewTitle = useMemo(() => getInvitationHeroTitle(payload), [payload]);
+  const previewSubtitle = useMemo(() => getInvitationHeroSubtitle(payload), [payload]);
   const paidSnapshotRef = useRef<InvitationDraftPayload | null>(meta.status === "published" ? payload : null);
 
   useEffect(() => {
@@ -486,11 +492,7 @@ export function BuilderStudio({
                 const template = templates.find((item) => item.id === event.target.value);
                 if (!template) return;
                 setPayload((current) =>
-                  normalizeDraft({
-                    ...current,
-                    templateId: template.id,
-                    category: template.category
-                  })
+                  normalizeDraft(applyCategoryTemplateDefaults(current, template.category, template.id))
                 );
               }}
             >
@@ -528,38 +530,38 @@ export function BuilderStudio({
         </div>
 
         <div className="builder-form-section">
-          <h3>2. 신랑 · 신부 / 혼주 정보</h3>
+          <h3>2. {categoryMeta.personSectionTitle}</h3>
           <div className="form-two-col">
             <label>
-              신랑 성함
+              {categoryMeta.primaryNameLabel}
               <input className={inputClassName} value={payload.groomName} onChange={(event) => updateField("groomName", event.target.value)} />
             </label>
             <label>
-              신부 성함
+              {categoryMeta.secondaryNameLabel}
               <input className={inputClassName} value={payload.brideName} onChange={(event) => updateField("brideName", event.target.value)} />
             </label>
             <label>
-              신랑 연락처
+              {categoryMeta.primaryPhoneLabel}
               <input className={inputClassName} value={payload.groomPhone} onChange={(event) => updateField("groomPhone", event.target.value)} />
             </label>
             <label>
-              신부 연락처
+              {categoryMeta.secondaryPhoneLabel}
               <input className={inputClassName} value={payload.bridePhone} onChange={(event) => updateField("bridePhone", event.target.value)} />
             </label>
             <label>
-              신랑 아버지
+              {categoryMeta.guardianLabels[0]}
               <input className={inputClassName} value={payload.groomFatherName} onChange={(event) => updateField("groomFatherName", event.target.value)} />
             </label>
             <label>
-              신랑 어머니
+              {categoryMeta.guardianLabels[1]}
               <input className={inputClassName} value={payload.groomMotherName} onChange={(event) => updateField("groomMotherName", event.target.value)} />
             </label>
             <label>
-              신부 아버지
+              {categoryMeta.guardianLabels[2]}
               <input className={inputClassName} value={payload.brideFatherName} onChange={(event) => updateField("brideFatherName", event.target.value)} />
             </label>
             <label>
-              신부 어머니
+              {categoryMeta.guardianLabels[3]}
               <input className={inputClassName} value={payload.brideMotherName} onChange={(event) => updateField("brideMotherName", event.target.value)} />
             </label>
           </div>
@@ -605,30 +607,30 @@ export function BuilderStudio({
         </div>
 
         <div className="builder-form-section">
-          <h3>4. 계좌 · 카카오페이</h3>
+          <h3>4. {categoryMeta.accountTitle} · 카카오페이</h3>
           <div className="form-two-col">
             <label>
-              신랑측 은행
+              {categoryMeta.primaryAccountPrefix} 은행
               <input className={inputClassName} value={payload.groomBank} onChange={(event) => updateField("groomBank", event.target.value)} />
             </label>
             <label>
-              신랑측 예금주
+              {categoryMeta.primaryAccountPrefix} 예금주
               <input className={inputClassName} value={payload.groomBankHolder} onChange={(event) => updateField("groomBankHolder", event.target.value)} />
             </label>
             <label className="full-col">
-              신랑측 계좌번호
+              {categoryMeta.primaryAccountPrefix} 계좌번호
               <input className={inputClassName} value={payload.groomBankAccount} onChange={(event) => updateField("groomBankAccount", event.target.value)} />
             </label>
             <label>
-              신부측 은행
+              {categoryMeta.secondaryAccountPrefix} 은행
               <input className={inputClassName} value={payload.brideBank} onChange={(event) => updateField("brideBank", event.target.value)} />
             </label>
             <label>
-              신부측 예금주
+              {categoryMeta.secondaryAccountPrefix} 예금주
               <input className={inputClassName} value={payload.brideBankHolder} onChange={(event) => updateField("brideBankHolder", event.target.value)} />
             </label>
             <label className="full-col">
-              신부측 계좌번호
+              {categoryMeta.secondaryAccountPrefix} 계좌번호
               <input className={inputClassName} value={payload.brideBankAccount} onChange={(event) => updateField("brideBankAccount", event.target.value)} />
             </label>
           </div>
@@ -720,19 +722,12 @@ export function BuilderStudio({
               <div className="builder-preview-main-photo-wrap">
                 {mainImagePreviewUrl ? <img alt="메인 사진 미리보기" className="builder-preview-main-photo has-image" src={mainImagePreviewUrl} /> : <div className="builder-preview-main-photo" />}
               </div>
-              <p className="builder-preview-label">{selectedTemplate.badge.toUpperCase()} INVITATION</p>
-              <h2 className="builder-preview-names">
-                {(payload.groomName || "신랑") + " ♡ " + (payload.brideName || "신부")}
-              </h2>
+              <p className="builder-preview-label">{categoryMeta.badgeText}</p>
+              <h2 className="builder-preview-names">{previewTitle}</h2>
+              {previewSubtitle ? <p className="builder-preview-venue">{previewSubtitle}</p> : null}
               <p className="builder-preview-date">
                 {payload.eventDateTime
-                  ? new Date(payload.eventDateTime).toLocaleString("ko-KR", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "numeric",
-                      minute: "2-digit"
-                    })
+                  ? formatEventDateTime(payload.eventDateTime)
                   : "날짜와 시간을 선택하세요"}
               </p>
               <p className="builder-preview-venue">

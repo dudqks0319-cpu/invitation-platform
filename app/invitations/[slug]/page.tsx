@@ -1,7 +1,9 @@
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { InvitationView } from "@/components/invitations/invitation-view";
 import { SiteHeader } from "@/components/shared/site-header";
 import { findDemoInvitationBySlug } from "@/lib/demo-data";
+import { getPublicShareUrl } from "@/lib/invitation-presentation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -13,6 +15,11 @@ export default async function PublicInvitationPage({
 }) {
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug);
+  const headerList = await headers();
+  const forwardedHost = headerList.get("x-forwarded-host");
+  const host = forwardedHost || headerList.get("host") || "localhost:3000";
+  const protocol = headerList.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
+  const origin = `${protocol}://${host}`;
   const admin = createSupabaseAdminClient();
   const supabase = admin ?? (await createServerSupabaseClient());
 
@@ -47,7 +54,7 @@ export default async function PublicInvitationPage({
               }))}
               mode="public"
               payload={normalizeInvitationPayload(invitation.payload)}
-              shareUrl={`/invitations/${invitation.slug}`}
+              shareUrl={getPublicShareUrl(`/invitations/${invitation.slug}`, origin)}
               slug={invitation.slug}
             />
           </div>
@@ -66,7 +73,12 @@ export default async function PublicInvitationPage({
     <>
       <SiteHeader />
       <div className="app-page-offset">
-        <InvitationView mode="public" payload={demoInvitation.payload} shareUrl={`/invitations/${demoInvitation.slug}`} slug={demoInvitation.slug} />
+        <InvitationView
+          mode="public"
+          payload={demoInvitation.payload}
+          shareUrl={getPublicShareUrl(`/invitations/${demoInvitation.slug}`, origin)}
+          slug={demoInvitation.slug}
+        />
       </div>
     </>
   );

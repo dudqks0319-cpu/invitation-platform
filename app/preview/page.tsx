@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { InvitationView } from "@/components/invitations/invitation-view";
 import { SiteHeader } from "@/components/shared/site-header";
 import { LOCAL_DRAFT_KEY, defaultInvitationDraft, normalizeDraft, type InvitationDraftPayload } from "@/lib/invitation-payload";
+import { getPublicShareUrl } from "@/lib/invitation-presentation";
 
 type StoredDraft = {
   payload: InvitationDraftPayload;
@@ -33,6 +34,12 @@ export default function PreviewPage() {
       return { payload: defaultInvitationDraft };
     }
   });
+  const shareUrl = useMemo(() => {
+    const nextPath = draft.meta?.slug ? `/invitations/${draft.meta.slug}` : "/preview";
+    const origin = typeof window === "undefined" ? process.env.NEXT_PUBLIC_SITE_URL : window.location.origin;
+
+    return getPublicShareUrl(nextPath, origin);
+  }, [draft.meta?.slug]);
 
   return (
     <>
@@ -41,7 +48,7 @@ export default function PreviewPage() {
         <InvitationView
           mode="preview"
           payload={normalizeDraft(draft.payload)}
-          shareUrl={draft.meta?.slug ? `/invitations/${draft.meta.slug}` : "/preview"}
+          shareUrl={shareUrl}
           slug={draft.meta?.slug}
         />
       </div>

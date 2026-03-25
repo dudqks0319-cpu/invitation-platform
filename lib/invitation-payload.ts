@@ -190,14 +190,34 @@ export function formatEventDateTime(value: string) {
     return "날짜 형식을 다시 확인해 주세요.";
   }
 
-  return date.toLocaleString("ko-KR", {
+  return new Intl.DateTimeFormat("ko-KR", {
     year: "numeric",
     month: "long",
     day: "numeric",
     weekday: "short",
     hour: "numeric",
-    minute: "2-digit"
-  });
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Seoul"
+  }).format(date);
+}
+
+export function formatTimestampLabel(value: string) {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("ko-KR", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Seoul"
+  }).format(date);
 }
 
 export function formatVenue(payload: InvitationDraftPayload) {

@@ -5,14 +5,22 @@ import { TemplateMarkup } from "@/components/landing/template-markup";
 import {
   LOCAL_GUESTBOOK_KEY,
   LOCAL_RSVP_KEY,
-  formatAccounts,
   formatEventDateTime,
-  formatParents,
+  formatTimestampLabel,
   formatVenue,
   type GuestbookEntry,
   type InvitationDraftPayload,
   type RsvpEntry
 } from "@/lib/invitation-payload";
+import {
+  getInvitationAccountEntries,
+  getInvitationCategoryMeta,
+  getInvitationContactLines,
+  getInvitationHeroSubtitle,
+  getInvitationHeroTitle,
+  getInvitationPersonLines,
+  getPublicShareUrl
+} from "@/lib/invitation-presentation";
 import { templates } from "@/lib/templates";
 
 type InvitationViewProps = {
@@ -40,6 +48,16 @@ export function InvitationView({
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const selectedTemplate = templates.find((template) => template.id === payload.templateId) ?? templates[0];
+  const categoryMeta = getInvitationCategoryMeta(payload);
+  const personLines = getInvitationPersonLines(payload);
+  const contactLines = getInvitationContactLines(payload);
+  const accountEntries = getInvitationAccountEntries(payload);
+  const heroTitle = getInvitationHeroTitle(payload);
+  const heroSubtitle = getInvitationHeroSubtitle(payload);
+  const resolvedShareUrl = getPublicShareUrl(
+    shareUrl,
+    typeof window === "undefined" ? process.env.NEXT_PUBLIC_SITE_URL : window.location.origin
+  );
 
   async function copyToClipboard(value: string) {
     if (!value) return;
@@ -179,10 +197,9 @@ export function InvitationView({
               <img alt="초대장 메인 이미지" src={payload.mainImageUrl} style={{ display: "block" }} />
             </div>
           ) : null}
-          <p className="invitation-category">{payload.category.toUpperCase()} INVITATION</p>
-          <h1 className="invitation-names">
-            {payload.groomName || "신랑"} ♡ {payload.brideName || "신부"}
-          </h1>
+          <p className="invitation-category">{categoryMeta.badgeText}</p>
+          <h1 className="invitation-names">{heroTitle}</h1>
+          {heroSubtitle ? <p style={{ marginTop: "10px", fontSize: "0.95rem", color: "#5f5549" }}>{heroSubtitle}</p> : null}
           <p className="invitation-date">{formatEventDateTime(payload.eventDateTime)}</p>
           <p className="invitation-venue">{formatVenue(payload)}</p>
           <p className="invitation-message">{payload.message}</p>
@@ -191,30 +208,38 @@ export function InvitationView({
 
       <section className="invitation-content">
         <article className="invitation-card">
-          <h2>혼주 정보</h2>
-          <p>{formatParents(payload)}</p>
-        </article>
-
-        <article className="invitation-card">
-          <h2>연락처</h2>
-          <p>
-            {[payload.groomPhone ? `신랑 ${payload.groomPhone}` : "", payload.bridePhone ? `신부 ${payload.bridePhone}` : ""]
-              .filter(Boolean)
-              .join(" · ") || "연락처를 입력해 주세요."}
+          <h2>{categoryMeta.personSectionTitle}</h2>
+          <p style={{ whiteSpace: "pre-line" }}>
+            {personLines.length ? personLines.join("\n") : "행사 정보를 입력해 주세요."}
           </p>
         </article>
 
         <article className="invitation-card">
-          <h2>마음 전하실 곳</h2>
-          <p>{formatAccounts(payload)}</p>
-          <div className="invitation-inline-actions">
-            <button className="btn-outline invitation-small-btn" onClick={() => copyToClipboard(payload.groomBankAccount)} type="button">
-              신랑측 계좌 복사
-            </button>
-            <button className="btn-outline invitation-small-btn" onClick={() => copyToClipboard(payload.brideBankAccount)} type="button">
-              신부측 계좌 복사
-            </button>
-          </div>
+          <h2>{categoryMeta.contactTitle}</h2>
+          <p style={{ whiteSpace: "pre-line" }}>
+            {contactLines.length ? contactLines.join("\n") : "연락처를 입력해 주세요."}
+          </p>
+        </article>
+
+        <article className="invitation-card">
+          <h2>{categoryMeta.accountTitle}</h2>
+          <p style={{ whiteSpace: "pre-line" }}>
+            {accountEntries.length ? accountEntries.map((entry) => entry.value).join("\n") : "계좌 정보를 입력해 주세요."}
+          </p>
+          {accountEntries.length ? (
+            <div className="invitation-inline-actions">
+              {accountEntries.map((entry) => (
+                <button
+                  className="btn-outline invitation-small-btn"
+                  key={entry.copyLabel}
+                  onClick={() => copyToClipboard(entry.copyValue)}
+                  type="button"
+                >
+                  {entry.copyLabel}
+                </button>
+              ))}
+            </div>
+          ) : null}
           <a className={`btn-primary invitation-wide-btn ${kakaoPayLink ? "" : "is-disabled"}`} href={kakaoPayLink || "#"} rel="noreferrer noopener" target="_blank">
             카카오페이 송금 링크 열기
           </a>
@@ -307,18 +332,18 @@ export function InvitationView({
               className="btn-primary invitation-small-btn"
               onClick={async () => {
                 if (navigator.share) {
-                  await navigator.share({ title: payload.title, text: payload.message, url: shareUrl });
+                  await navigator.share({ title: payload.title, text: payload.message, url: resolvedShareUrl });
                   return;
                 }
 
-                await copyToClipboard(shareUrl);
+                await copyToClipboard(resolvedShareUrl);
                 setMessage("링크를 복사했습니다.");
               }}
               type="button"
             >
               공유하기
             </button>
-            <button className="btn-outline invitation-small-btn" onClick={() => copyToClipboard(shareUrl)} type="button">
+            <button className="btn-outline invitation-small-btn" onClick={() => copyToClipboard(resolvedShareUrl)} type="button">
               링크 복사
             </button>
           </div>
@@ -355,7 +380,7 @@ export function InvitationView({
               guestbookEntries.map((entry) => (
                 <li key={entry.id}>
                   <div className="meta">
-                    {new Date(entry.createdAt).toLocaleString("ko-KR")} · {entry.nickname}
+                    {formatTimestampLabel(entry.createdAt)} · {entry.nickname}
                   </div>
                   <div className="value">{entry.message}</div>
                 </li>
