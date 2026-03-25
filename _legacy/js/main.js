@@ -19,6 +19,10 @@ const submitGuards = {
   guestbook: 0,
 };
 
+function userFacingErrorMessage(fallback) {
+  return fallback || '요청을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.';
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   if (document.getElementById('templatesGrid')) {
     renderTemplates(TEMPLATES);
@@ -199,6 +203,10 @@ async function saveSupabaseConfig() {
     setMessage('supabaseConfigMessage', 'Supabase URL은 https://로 시작해야 합니다.', 'error');
     return;
   }
+  if (anonKey.startsWith('sb_secret_') || anonKey.includes('service_role')) {
+    setMessage('supabaseConfigMessage', 'Service Role Key는 입력할 수 없습니다. 공개 Anon Key만 사용하세요.', 'error');
+    return;
+  }
   if (anonKey.length < 20) {
     setMessage('supabaseConfigMessage', 'Anon Key가 너무 짧습니다. 키를 다시 확인하세요.', 'error');
     return;
@@ -240,7 +248,7 @@ async function handleEmailAuth(mode) {
   if (mode === 'signup') {
     const { error } = await appState.client.auth.signUp({ email, password });
     if (error) {
-      setMessage('authMessage', error.message, 'error');
+      setMessage('authMessage', userFacingErrorMessage('회원가입에 실패했습니다. 입력값을 확인해 주세요.'), 'error');
       return;
     }
     setMessage('authMessage', '회원가입 요청 완료. 이메일 인증이 설정된 경우 메일을 확인하세요.', 'success');
@@ -249,7 +257,7 @@ async function handleEmailAuth(mode) {
 
   const { error } = await appState.client.auth.signInWithPassword({ email, password });
   if (error) {
-    setMessage('authMessage', error.message, 'error');
+    setMessage('authMessage', userFacingErrorMessage('로그인에 실패했습니다. 이메일과 비밀번호를 확인해 주세요.'), 'error');
     return;
   }
   setMessage('authMessage', '로그인 성공.', 'success');
@@ -260,7 +268,7 @@ async function signOut() {
   if (!appState.client) return;
   const { error } = await appState.client.auth.signOut();
   if (error) {
-    setMessage('authMessage', error.message, 'error');
+    setMessage('authMessage', userFacingErrorMessage('로그아웃에 실패했습니다. 다시 시도해 주세요.'), 'error');
     return;
   }
   appState.currentUser = null;
@@ -308,7 +316,7 @@ async function submitRsvp() {
     const payload = { ...row, user_id: appState.currentUser?.id || null };
     const { error } = await appState.client.from('rsvps').insert(payload);
     if (error) {
-      setMessage('rsvpMessage', `저장 실패: ${error.message}`, 'error');
+      setMessage('rsvpMessage', userFacingErrorMessage('RSVP 저장에 실패했습니다. 다시 시도해 주세요.'), 'error');
       return;
     }
     setMessage('rsvpMessage', 'Supabase에 RSVP 저장 완료.', 'success');
@@ -429,7 +437,7 @@ async function submitGuestbookEntry() {
     const payload = { ...row, user_id: appState.currentUser?.id || null };
     const { error } = await appState.client.from('guestbook_entries').insert(payload);
     if (error) {
-      setMessage('guestbookFormMessage', `저장 실패: ${error.message}`, 'error');
+      setMessage('guestbookFormMessage', userFacingErrorMessage('방명록 저장에 실패했습니다. 다시 시도해 주세요.'), 'error');
       return;
     }
     setMessage('guestbookFormMessage', '방명록이 저장되었습니다.', 'success');

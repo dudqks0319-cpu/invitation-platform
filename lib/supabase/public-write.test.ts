@@ -1,4 +1,4 @@
-import { publicGuestbookSchema, publicRsvpSchema } from "@/lib/supabase/public-write";
+import { ensureJsonRequest, publicGuestbookSchema, publicRsvpSchema, readJsonBody } from "@/lib/supabase/public-write";
 
 describe("public write validation", () => {
   it("rejects honeypot-filled RSVP payloads", () => {
@@ -19,5 +19,31 @@ describe("public write validation", () => {
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it("detects json requests from content-type", () => {
+    const request = new Request("https://example.com", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json; charset=utf-8"
+      }
+    });
+
+    expect(ensureJsonRequest(request)).toBe(true);
+  });
+
+  it("returns a friendly message for malformed json bodies", async () => {
+    const request = new Request("https://example.com", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json"
+      },
+      body: "{invalid"
+    });
+
+    await expect(readJsonBody(request)).resolves.toEqual({
+      ok: false,
+      message: "요청 본문을 읽지 못했습니다. 다시 시도해 주세요."
+    });
   });
 });

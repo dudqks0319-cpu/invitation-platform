@@ -22,3 +22,17 @@ export function ensureJsonRequest(request: Request) {
   const contentType = request.headers.get("content-type") ?? "";
   return contentType.includes("application/json");
 }
+
+export async function readJsonBody(request: Request) {
+  try {
+    return {
+      ok: true as const,
+      body: await request.json()
+    };
+  } catch {
+    return {
+      ok: false as const,
+      message: "요청 본문을 읽지 못했습니다. 다시 시도해 주세요."
+    };
+  }
+}

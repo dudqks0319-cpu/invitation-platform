@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authDestination, normalizeNextPath } from "@/lib/auth";
@@ -32,6 +34,8 @@ type StoredDraft = {
   payload: InvitationDraftPayload;
   meta: DraftMeta;
 };
+
+const MAX_DEMO_IMAGE_BYTES = 5 * 1024 * 1024;
 
 function readStoredDraft() {
   if (typeof window === "undefined") {
@@ -223,6 +227,12 @@ export function BuilderStudio({
   }
 
   function handleImageSelection(kind: "main" | "background", file: File | null) {
+    if (file && file.size > MAX_DEMO_IMAGE_BYTES) {
+      setMessage("이미지는 5MB 이하 파일만 업로드할 수 있습니다.");
+      setMessageType("error");
+      return;
+    }
+
     if (kind === "main") {
       setPendingMainImageFile(file);
       setMainImagePreviewUrl(file ? createPreviewUrl(file) : payload.mainImageUrl);
