@@ -17,68 +17,89 @@ import type {
   InvitationPayload
 } from "./types/invitation";
 
+export const SUPPORTED_V1_EVENT_TYPES = [DEFAULT_EVENT_TYPE] as const;
+
 function createLocalId() {
   return `draft-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-export function createEmptyInvitationDraft(ownerId: string): InvitationDraft {
+export function isSupportedV1EventType(value: string) {
+  return value === DEFAULT_EVENT_TYPE;
+}
+
+export function createEmptyInvitationPayload(ownerId: string): InvitationPayload {
   return {
-    localId: createLocalId(),
-    payload: {
-      schemaVersion: INVITATION_SCHEMA_VERSION,
-      eventType: DEFAULT_EVENT_TYPE,
-      templateId: "wedding-classic",
-      title: "결혼식 초대장",
-      eventDateTime: "",
-      venueName: "",
-      venueAddress: "",
-      message: "",
-      eventData: {
-        type: DEFAULT_EVENT_TYPE,
-        groom: {
-          name: "",
-          phone: ""
-        },
-        bride: {
-          name: "",
-          phone: ""
-        },
-        groomParents: {},
-        brideParents: {}
+    schemaVersion: INVITATION_SCHEMA_VERSION,
+    eventType: DEFAULT_EVENT_TYPE,
+    templateId: "wedding-classic",
+    title: "",
+    eventDateTime: "",
+    venueName: "",
+    venueAddress: "",
+    message: "",
+    eventData: {
+      type: DEFAULT_EVENT_TYPE,
+      groom: {
+        name: "",
+        phone: ""
       },
-      photos: {
-        mainUri: "",
-        backgroundUri: "",
-        gallery: []
+      bride: {
+        name: "",
+        phone: ""
       },
-      accounts: {
-        primary: {
-          bank: "",
-          holder: "",
-          account: ""
-        },
-        secondary: {
-          bank: "",
-          holder: "",
-          account: ""
-        },
-        kakaoPayLink: ""
-      },
-      location: {
-        naverMapUrl: "",
-        transportNote: ""
-      },
-      share: {
-        slug: ""
-      },
-      ownerId,
-      planTier: "free",
-      isPublished: false
+      groomParents: {},
+      brideParents: {}
     },
+    photos: {
+      mainUri: "",
+      backgroundUri: "",
+      gallery: []
+    },
+    accounts: {
+      primary: {
+        bank: "",
+        holder: "",
+        account: ""
+      },
+      secondary: {
+        bank: "",
+        holder: "",
+        account: ""
+      },
+      kakaoPayLink: ""
+    },
+    location: {
+      naverMapUrl: "",
+      transportNote: ""
+    },
+    share: {
+      slug: ""
+    },
+    ownerId,
+    planTier: "free",
+    isPublished: false
+  };
+}
+
+export function createEmptyInvitationDraft(
+  ownerId: string,
+  options?: {
+    localId?: string;
+    now?: string;
+  }
+): InvitationDraft {
+  const payload = {
+    ...createEmptyInvitationPayload(ownerId),
+    title: "결혼식 초대장"
+  };
+
+  return {
+    localId: options?.localId ?? createLocalId(),
+    payload,
     pendingPhotos: [],
     syncStatus: "pending",
-    localUpdatedAt: new Date().toISOString(),
-    isDirty: false
+    localUpdatedAt: options?.now ?? new Date().toISOString(),
+    isDirty: true
   };
 }
 

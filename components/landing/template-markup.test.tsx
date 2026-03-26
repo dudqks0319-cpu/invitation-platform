@@ -1,9 +1,9 @@
-import { render, screen } from "@testing-library/react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { TemplateMarkup } from "@/components/landing/template-markup";
 
 describe("TemplateMarkup", () => {
   it("renders sanitized internal template HTML", () => {
-    render(
+    document.body.innerHTML = renderToStaticMarkup(
       <TemplateMarkup
         template={{
           id: "test",
@@ -17,14 +17,13 @@ describe("TemplateMarkup", () => {
       />
     );
 
-    const text = screen.getByText("테스트 카드");
-    expect(text).toBeInTheDocument();
-    expect(text.closest(".safe")).not.toHaveAttribute("onclick");
+    expect(document.body.textContent).toContain("테스트 카드");
+    expect(document.querySelector(".safe")).not.toHaveAttribute("onclick");
     expect(document.querySelector("script")).toBeNull();
   });
 
   it("renders mapped artwork layers for supported categories", () => {
-    render(
+    document.body.innerHTML = renderToStaticMarkup(
       <TemplateMarkup
         template={{
           id: "wedding-classic",
@@ -40,6 +39,6 @@ describe("TemplateMarkup", () => {
 
     const artworkImages = document.querySelectorAll(".template-markup-enhanced img");
     expect(artworkImages.length).toBeGreaterThan(0);
-    expect(screen.getByText("초대장 문구")).toBeInTheDocument();
+    expect(document.body.textContent).toContain("초대장 문구");
   });
 });

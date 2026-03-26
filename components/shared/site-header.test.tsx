@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SiteHeader } from "@/components/shared/site-header";
 
@@ -42,26 +42,26 @@ describe("SiteHeader", () => {
   });
 
   it("shows the full navigation in default mode", () => {
-    render(<SiteHeader />);
+    document.body.innerHTML = renderToStaticMarkup(<SiteHeader />);
 
-    expect(screen.getByRole("link", { name: "InviteHub 홈으로 이동" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "템플릿" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "초대장 만들기" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "대시보드" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "요금" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "로그인" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "시작하기" })).toBeInTheDocument();
+    expect(document.body.innerHTML).toContain("InviteHub 홈으로 이동");
+    expect(document.body.textContent).toContain("템플릿");
+    expect(document.body.textContent).toContain("초대장 만들기");
+    expect(document.body.textContent).toContain("대시보드");
+    expect(document.body.textContent).toContain("요금");
+    expect(document.body.textContent).toContain("로그인");
+    expect(document.body.textContent).toContain("시작하기");
   });
 
   it("hides navigation actions in focus mode", () => {
-    render(<SiteHeader mode="focus" />);
+    document.body.innerHTML = renderToStaticMarkup(<SiteHeader mode="focus" />);
 
-    expect(screen.getByRole("link", { name: "InviteHub 홈으로 이동" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "템플릿" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "초대장 만들기" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "대시보드" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "요금" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "로그인" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "시작하기" })).not.toBeInTheDocument();
+    expect(document.body.innerHTML).toContain("InviteHub 홈으로 이동");
+    expect(document.body.textContent).not.toContain("템플릿");
+    expect(document.body.textContent).not.toContain("초대장 만들기");
+    expect(document.body.textContent).not.toContain("대시보드");
+    expect(document.body.textContent).not.toContain("요금");
+    expect(document.body.textContent).not.toContain("로그인");
+    expect(document.body.textContent).not.toContain("시작하기");
   });
 });

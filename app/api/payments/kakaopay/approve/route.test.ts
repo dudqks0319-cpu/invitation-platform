@@ -27,7 +27,7 @@ import { GET } from "@/app/api/payments/kakaopay/approve/route";
 type PaymentStatus = "payment_pending" | "paid" | "payment_failed" | "refund_pending" | "refunded";
 
 function createRequest() {
-  return new Request("https://invitehub.test/api/payments/kakaopay/approve?paymentId=payment-1&pg_token=pg-token");
+  return new Request(`https://invitehub.test/api/payments/kakaopay/approve?paymentId=payment-1&pg_token=pg-token&nonce=${"a".repeat(64)}`);
 }
 
 function createAuthClient(userId: string | null) {
@@ -50,12 +50,18 @@ function createAdminDouble(options?: {
   paymentStatus?: PaymentStatus;
   providerTid?: string | null;
   providerOrderId?: string | null;
+  approveNonce?: string | null;
+  nonceUsedAt?: string | null;
+  createdAt?: string;
 }) {
   const paymentStatus = options?.paymentStatus ?? "payment_pending";
   const paymentUserId = options?.paymentUserId ?? "user-1";
   const invitationUserId = options?.invitationUserId ?? paymentUserId;
   const providerTid = options && "providerTid" in options ? options.providerTid : "tid-1";
   const providerOrderId = options && "providerOrderId" in options ? options.providerOrderId : "order-1";
+  const approveNonce = options?.approveNonce ?? "a".repeat(64);
+  const nonceUsedAt = options?.nonceUsedAt ?? null;
+  const createdAt = options?.createdAt ?? new Date().toISOString();
 
   return {
     client: {
@@ -76,7 +82,10 @@ function createAdminDouble(options?: {
                   user_id: paymentUserId,
                   provider_order_id: providerOrderId,
                   provider_tid: providerTid,
-                  status: paymentStatus
+                  status: paymentStatus,
+                  approve_nonce: approveNonce,
+                  nonce_used_at: nonceUsedAt,
+                  created_at: createdAt
                 },
                 error: null
               };

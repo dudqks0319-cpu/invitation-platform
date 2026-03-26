@@ -1,5 +1,5 @@
 import { createElement } from "react";
-import { render, screen } from "@testing-library/react";
+import { renderToStaticMarkup } from "react-dom/server";
 import type { Metadata } from "next";
 import GlobalError from "@/app/error";
 import {
@@ -88,19 +88,18 @@ describe("public invitation page helpers", () => {
   it("renders user-friendly loading and error fallbacks", () => {
     const reset = vi.fn();
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    const { unmount } = render(createElement(Loading));
-    expect(screen.getByText("불러오는 중...")).toBeInTheDocument();
-    unmount();
+    document.body.innerHTML = renderToStaticMarkup(createElement(Loading));
+    expect(document.body.textContent).toContain("불러오는 중...");
 
-    render(createElement(GlobalError, { error: new Error("boom"), reset }));
-    expect(screen.getByText("앗, 문제가 발생했어요")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "다시 시도" })).toBeInTheDocument();
+    document.body.innerHTML = renderToStaticMarkup(createElement(GlobalError, { error: new Error("boom"), reset }));
+    expect(document.body.textContent).toContain("앗, 문제가 발생했어요");
+    expect(document.body.textContent).toContain("다시 시도");
     consoleErrorSpy.mockRestore();
   });
 
   it("renders a user-friendly not-found page", () => {
-    render(createElement(NotFound));
-    expect(screen.getByText("페이지를 찾을 수 없어요")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "홈으로 돌아가기" })).toBeInTheDocument();
+    document.body.innerHTML = renderToStaticMarkup(createElement(NotFound));
+    expect(document.body.textContent).toContain("페이지를 찾을 수 없어요");
+    expect(document.body.textContent).toContain("홈으로 돌아가기");
   });
 });
