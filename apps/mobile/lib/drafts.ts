@@ -3,7 +3,7 @@ import {
   createEmptyInvitationDraft,
   type InvitationDraft,
   type PendingPhotoUpload
-} from "@invitehub/shared";
+} from "@/lib/invitation-shared";
 
 export type MobileInvitationDraft = InvitationDraft & {
   sourcePayload?: Record<string, unknown>;

@@ -5,7 +5,7 @@ import {
   updateInvitationBasics,
   updateWeddingNames,
   type PendingPhotoUpload
-} from "@invitehub/shared";
+} from "@/lib/invitation-shared";
 import { getPublishReadiness, saveDraftToSupabase } from "@/lib/invitations";
 import { getPublicInvitationUrl } from "@/lib/share";
 

@@ -1,4 +1,4 @@
-import type { InvitationPayload, PendingPhotoUpload } from "@invitehub/shared";
+import type { InvitationPayload, PendingPhotoUpload } from "@/lib/invitation-shared";
 import { supabase } from "@/lib/supabase";
 import type { MobileInvitationDraft } from "@/lib/drafts";
 import { getPublicInvitationUrl } from "@/lib/share";
