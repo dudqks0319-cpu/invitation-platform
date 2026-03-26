@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     .single();
 
   if (paymentError || !payment) {
-    return NextResponse.json({ success: false, message: paymentError?.message || "결제 생성에 실패했습니다." }, { status: 500 });
+    return NextResponse.json({ success: false, message: "결제를 준비하지 못했습니다. 잠시 후 다시 시도해 주세요." }, { status: 500 });
   }
 
   try {
@@ -139,7 +139,7 @@ export async function POST(request: Request) {
     }).eq("id", invitation.id);
 
     return NextResponse.json(
-      { success: false, message: error instanceof Error ? error.message : "결제 준비에 실패했습니다." },
+      { success: false, message: "결제 준비에 실패했습니다. 잠시 후 다시 시도해 주세요." },
       { status: 500 }
     );
   }

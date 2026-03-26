@@ -5,24 +5,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authDestination, normalizeNextPath } from "@/lib/auth";
-import {
-  applyCategoryTemplateDefaults,
-  getInvitationCategoryMeta,
-  getInvitationHeroSubtitle,
-  getInvitationHeroTitle
-} from "@/lib/invitation-presentation";
 import { createBrowserClient } from "@/lib/supabase/browser";
 import {
   LOCAL_DRAFT_KEY,
   createInvitationSlug,
   defaultInvitationDraft,
-  formatEventDateTime,
   normalizeDraft,
   type InvitationStatus,
   type InvitationDraftPayload
 } from "@/lib/invitation-payload";
-import { BuilderLivePreview } from "@/components/builder/builder-live-preview";
 import { templates } from "@/lib/templates";
+import { TemplateMarkup } from "@/components/landing/template-markup";
+import { BUILDER_STEPS, clampBuilderStep, getBuilderStep } from "@/components/builder/builder-steps";
+import {
+  getAggregateUploadPercent,
+  getUploadProgressLabel,
+  type UploadProgressState
+} from "@/components/builder/upload-progress";
 
 type DraftMeta = {
   id?: string;
@@ -95,7 +94,11 @@ export function BuilderStudio({
       : null;
 
     return matched
-      ? normalizeDraft(applyCategoryTemplateDefaults(base, matched.category, matched.id))
+      ? normalizeDraft({
+          ...base,
+          templateId: matched.id,
+          category: matched.category
+        })
       : normalizeDraft(base);
   });
   const [meta, setMeta] = useState<DraftMeta>(() => readStoredDraft()?.meta ?? {});
@@ -103,19 +106,17 @@ export function BuilderStudio({
   const [messageType, setMessageType] = useState<"error" | "success" | "">("");
   const [pending, setPending] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [uploadProgress, setUploadProgress] = useState<UploadProgressState | null>(null);
   const [mainImagePreviewUrl, setMainImagePreviewUrl] = useState<string>(payload.mainImageUrl);
   const [backgroundImagePreviewUrl, setBackgroundImagePreviewUrl] = useState<string>(payload.backgroundImageUrl);
   const [pendingMainImageFile, setPendingMainImageFile] = useState<File | null>(null);
   const [pendingBackgroundImageFile, setPendingBackgroundImageFile] = useState<File | null>(null);
-  const [pendingGalleryFiles, setPendingGalleryFiles] = useState<File[]>([]);
 
   const selectedTemplate = useMemo(
     () => templates.find((template) => template.id === payload.templateId) ?? templates[0],
     [payload.templateId]
   );
-  const categoryMeta = useMemo(() => getInvitationCategoryMeta(payload), [payload]);
-  const previewTitle = useMemo(() => getInvitationHeroTitle(payload), [payload]);
-  const previewSubtitle = useMemo(() => getInvitationHeroSubtitle(payload), [payload]);
   const paidSnapshotRef = useRef<InvitationDraftPayload | null>(meta.status === "published" ? payload : null);
 
   useEffect(() => {
@@ -144,7 +145,7 @@ export function BuilderStudio({
         .maybeSingle();
 
       if (error || !data) {
-        setMessage(error?.message || "초대장을 불러오지 못했습니다.");
+        setMessage("초대장 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
         setMessageType("error");
         return;
       }
@@ -251,30 +252,50 @@ export function BuilderStudio({
     }
   }
 
-  function handleGallerySelection(fileList: FileList | null) {
-    setPendingGalleryFiles(fileList ? Array.from(fileList) : []);
-  }
-
-  async function uploadImage(file: File, kind: "main" | "background" | "gallery") {
+  async function uploadImage(
+    file: File,
+    kind: "main" | "background",
+    onProgress?: (percent: number) => void
+  ) {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("kind", kind);
 
-    const response = await fetch("/api/uploads", {
-      method: "POST",
-      body: formData
+    return new Promise<{ publicUrl: string; path: string }>((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "/api/uploads");
+      xhr.responseType = "json";
+
+      xhr.upload.onprogress = (event) => {
+        if (!event.lengthComputable) {
+          return;
+        }
+
+        onProgress?.((event.loaded / event.total) * 100);
+      };
+
+      xhr.onload = () => {
+        const result = (xhr.response ??
+          JSON.parse(xhr.responseText || "{}")) as { error?: string; message?: string; publicUrl?: string; path?: string };
+
+        if (xhr.status < 200 || xhr.status >= 300 || !result.publicUrl || !result.path) {
+          reject(new Error(result.error || result.message || "이미지 업로드에 실패했습니다."));
+          return;
+        }
+
+        onProgress?.(100);
+        resolve({
+          publicUrl: result.publicUrl,
+          path: result.path
+        });
+      };
+
+      xhr.onerror = () => {
+        reject(new Error("이미지 업로드에 실패했습니다."));
+      };
+
+      xhr.send(formData);
     });
-
-    const result = (await response.json()) as { error?: string; message?: string; publicUrl?: string; path?: string };
-
-    if (!response.ok || !result.publicUrl || !result.path) {
-      throw new Error(result.error || result.message || "이미지 업로드에 실패했습니다.");
-    }
-
-    return {
-      publicUrl: result.publicUrl,
-      path: result.path
-    };
   }
 
   async function deleteImage(path: string) {
@@ -299,16 +320,33 @@ export function BuilderStudio({
     setPending(true);
     setMessage("");
     setMessageType("");
+    setUploadProgress(null);
 
     const previousMainImagePath = payload.mainImagePath;
     const previousBackgroundImagePath = payload.backgroundImagePath;
-    const previousGalleryImagePaths = payload.galleryImagePaths;
     const rollbackPaths: string[] = [];
 
     try {
       let nextPayload = payload;
+      const shouldUploadMain = Boolean(
+        supabase &&
+        userId &&
+        (
+          pendingMainImageFile ||
+          (!pendingMainImageFile && nextPayload.mainImageUrl.startsWith("data:") && !nextPayload.mainImagePath)
+        )
+      );
+      const shouldUploadBackground = Boolean(
+        supabase &&
+        userId &&
+        (
+          pendingBackgroundImageFile ||
+          (!pendingBackgroundImageFile && nextPayload.backgroundImageUrl.startsWith("data:") && !nextPayload.backgroundImagePath)
+        )
+      );
+      const totalUploads = [shouldUploadMain, shouldUploadBackground].filter(Boolean).length;
 
-      if ((pendingMainImageFile || pendingBackgroundImageFile || pendingGalleryFiles.length) && (!supabase || !userId)) {
+      if ((pendingMainImageFile || pendingBackgroundImageFile) && (!supabase || !userId)) {
         setMessage("데모 모드에서는 이미지가 현재 세션 미리보기로만 반영됩니다.");
         setMessageType("success");
       }
@@ -331,16 +369,21 @@ export function BuilderStudio({
         });
       }
 
-      if (pendingGalleryFiles.length && (!supabase || !userId)) {
-        const dataUrls = await Promise.all(pendingGalleryFiles.map((file) => fileToDataUrl(file)));
-        nextPayload = normalizeDraft({
-          ...nextPayload,
-          galleryImages: [...nextPayload.galleryImages, ...dataUrls]
-        });
-      }
-
       if (pendingMainImageFile && supabase && userId) {
-        const uploaded = await uploadImage(pendingMainImageFile, "main");
+        setUploadProgress({
+          completedFiles: 0,
+          totalFiles: totalUploads,
+          currentFilePercent: 0,
+          currentFileLabel: "메인 사진"
+        });
+        const uploaded = await uploadImage(pendingMainImageFile, "main", (percent) => {
+          setUploadProgress((current) => ({
+            completedFiles: 0,
+            totalFiles: current?.totalFiles ?? totalUploads,
+            currentFilePercent: percent,
+            currentFileLabel: "메인 사진"
+          }));
+        });
         rollbackPaths.push(uploaded.path);
         nextPayload = normalizeDraft({
           ...nextPayload,
@@ -350,24 +393,26 @@ export function BuilderStudio({
       }
 
       if (pendingBackgroundImageFile && supabase && userId) {
-        const uploaded = await uploadImage(pendingBackgroundImageFile, "background");
+        const completedFiles = pendingMainImageFile ? 1 : 0;
+        setUploadProgress({
+          completedFiles,
+          totalFiles: totalUploads,
+          currentFilePercent: 0,
+          currentFileLabel: "배경 사진"
+        });
+        const uploaded = await uploadImage(pendingBackgroundImageFile, "background", (percent) => {
+          setUploadProgress((current) => ({
+            completedFiles,
+            totalFiles: current?.totalFiles ?? totalUploads,
+            currentFilePercent: percent,
+            currentFileLabel: "배경 사진"
+          }));
+        });
         rollbackPaths.push(uploaded.path);
         nextPayload = normalizeDraft({
           ...nextPayload,
           backgroundImageUrl: uploaded.publicUrl,
           backgroundImagePath: uploaded.path
-        });
-      }
-
-      if (pendingGalleryFiles.length && supabase && userId) {
-        const uploadedGallery = await Promise.all(
-          pendingGalleryFiles.map((file) => uploadImage(file, "gallery"))
-        );
-        rollbackPaths.push(...uploadedGallery.map((item) => item.path));
-        nextPayload = normalizeDraft({
-          ...nextPayload,
-          galleryImages: [...nextPayload.galleryImages, ...uploadedGallery.map((item) => item.publicUrl)],
-          galleryImagePaths: [...nextPayload.galleryImagePaths, ...uploadedGallery.map((item) => item.path)]
         });
       }
 
@@ -378,7 +423,24 @@ export function BuilderStudio({
         nextPayload.mainImageUrl.startsWith("data:") &&
         !nextPayload.mainImagePath
       ) {
-        const uploaded = await uploadImage(await dataUrlToFile(nextPayload.mainImageUrl, "main-image.png"), "main");
+        setUploadProgress({
+          completedFiles: 0,
+          totalFiles: totalUploads,
+          currentFilePercent: 0,
+          currentFileLabel: "메인 사진"
+        });
+        const uploaded = await uploadImage(
+          await dataUrlToFile(nextPayload.mainImageUrl, "main-image.png"),
+          "main",
+          (percent) => {
+            setUploadProgress((current) => ({
+              completedFiles: 0,
+              totalFiles: current?.totalFiles ?? totalUploads,
+              currentFilePercent: percent,
+              currentFileLabel: "메인 사진"
+            }));
+          }
+        );
         rollbackPaths.push(uploaded.path);
         nextPayload = normalizeDraft({
           ...nextPayload,
@@ -394,7 +456,25 @@ export function BuilderStudio({
         nextPayload.backgroundImageUrl.startsWith("data:") &&
         !nextPayload.backgroundImagePath
       ) {
-        const uploaded = await uploadImage(await dataUrlToFile(nextPayload.backgroundImageUrl, "background-image.png"), "background");
+        const completedFiles = shouldUploadMain ? 1 : 0;
+        setUploadProgress({
+          completedFiles,
+          totalFiles: totalUploads,
+          currentFilePercent: 0,
+          currentFileLabel: "배경 사진"
+        });
+        const uploaded = await uploadImage(
+          await dataUrlToFile(nextPayload.backgroundImageUrl, "background-image.png"),
+          "background",
+          (percent) => {
+            setUploadProgress((current) => ({
+              completedFiles,
+              totalFiles: current?.totalFiles ?? totalUploads,
+              currentFilePercent: percent,
+              currentFileLabel: "배경 사진"
+            }));
+          }
+        );
         rollbackPaths.push(uploaded.path);
         nextPayload = normalizeDraft({
           ...nextPayload,
@@ -416,9 +496,6 @@ export function BuilderStudio({
         if (pendingBackgroundImageFile) {
           setPendingBackgroundImageFile(null);
           setBackgroundImagePreviewUrl(nextPayload.backgroundImageUrl);
-        }
-        if (pendingGalleryFiles.length) {
-          setPendingGalleryFiles([]);
         }
         setPending(false);
         setMessage(status === "published" ? "데모 모드에서 미리보기용 발행 상태로 저장했습니다." : "데모 모드로 초안을 저장했습니다.");
@@ -446,7 +523,7 @@ export function BuilderStudio({
       const { data, error } = await query;
 
       if (error) {
-        throw error;
+        throw new Error("초대장을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.");
       }
 
       const savedMeta = {
@@ -468,9 +545,6 @@ export function BuilderStudio({
         setPendingBackgroundImageFile(null);
         setBackgroundImagePreviewUrl(nextPayload.backgroundImageUrl);
       }
-      if (pendingGalleryFiles.length) {
-        setPendingGalleryFiles([]);
-      }
 
       if (
         supabase &&
@@ -490,17 +564,8 @@ export function BuilderStudio({
         await deleteImage(previousBackgroundImagePath).catch(() => {});
       }
 
-      if (supabase && userId && previousGalleryImagePaths.length) {
-        const removedGalleryPaths = previousGalleryImagePaths.filter(
-          (path) => !nextPayload.galleryImagePaths.includes(path)
-        );
-
-        if (removedGalleryPaths.length) {
-          await Promise.allSettled(removedGalleryPaths.map((path) => deleteImage(path)));
-        }
-      }
-
       setPending(false);
+      setUploadProgress(null);
       setMessage(status === "published" ? "초대장을 발행했습니다." : "초안을 저장했습니다.");
       setMessageType("success");
 
@@ -509,6 +574,7 @@ export function BuilderStudio({
       if (rollbackPaths.length > 0) {
         await Promise.allSettled(rollbackPaths.map((path) => deleteImage(path)));
       }
+      setUploadProgress(null);
       setPending(false);
       setMessage(error instanceof Error ? error.message : "초안 저장에 실패했습니다.");
       setMessageType("error");
@@ -517,21 +583,18 @@ export function BuilderStudio({
   }
 
   const inputClassName = "modal-input";
+  const currentStepMeta = getBuilderStep(currentStep);
+  const lastStepIndex = BUILDER_STEPS.length - 1;
   const publishButtonLabel =
     meta.status === "published"
       ? hasRestrictedPaidChanges
         ? "재결제 후 재발행"
         : "무료 수정 저장"
       : "결제 후 발행";
-  const previewDateText = payload.eventDateTime
-    ? formatEventDateTime(payload.eventDateTime)
-    : "날짜와 시간을 선택하세요";
-  const previewVenueText =
-    payload.venueName || payload.venueAddress
-      ? [payload.venueName, payload.venueAddress].filter(Boolean).join(" · ")
-      : "예식장과 주소를 입력해 주세요";
-  const previewMessage = payload.message || "소중한 자리에 함께해 주세요";
-  const previewTemplateLabel = `선택한 디자인 · ${selectedTemplate.name}`;
+
+  function moveStep(delta: number) {
+    setCurrentStep((step) => clampBuilderStep(step + delta));
+  }
 
   return (
     <div className="builder-grid builder-grid-extended">
@@ -542,7 +605,51 @@ export function BuilderStudio({
           await persistDraft("draft");
         }}
       >
-        <div className="builder-form-section">
+        <div className="builder-step-header" role="group" aria-label="빌더 단계">
+          <div className="builder-step-copy">
+            <p className="builder-step-kicker">빌더 진행</p>
+            <h3>{`STEP ${currentStepMeta.index + 1}. ${currentStepMeta.title}`}</h3>
+            <p className="builder-help">모바일 앱과 같은 5단계 흐름으로 나눠서 작성할 수 있습니다.</p>
+          </div>
+          <div className="builder-step-progress" aria-hidden="true">
+            <div className="builder-step-progress-bar">
+              <span
+                className="builder-step-progress-fill"
+                style={{ width: `${((currentStepMeta.index + 1) / BUILDER_STEPS.length) * 100}%` }}
+              />
+            </div>
+            <div className="builder-step-pills">
+              {BUILDER_STEPS.map((step) => (
+                <button
+                  key={step.id}
+                  className={`builder-step-pill ${step.index === currentStepMeta.index ? "is-active" : ""}`}
+                  disabled={pending}
+                  onClick={() => setCurrentStep(step.index)}
+                  type="button"
+                >
+                  {step.shortLabel}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        {uploadProgress ? (
+          <div className="builder-upload-progress" role="status" aria-live="polite">
+            <div className="builder-upload-progress-head">
+              <strong>{getUploadProgressLabel(uploadProgress)}</strong>
+              <span>{getAggregateUploadPercent(uploadProgress)}%</span>
+            </div>
+            <div className="builder-upload-progress-bar">
+              <span
+                className="builder-upload-progress-fill"
+                style={{ width: `${getAggregateUploadPercent(uploadProgress)}%` }}
+              />
+            </div>
+            <p className="builder-help">이미지를 저장하는 동안 잠시만 기다려 주세요.</p>
+          </div>
+        ) : null}
+
+        <div className="builder-form-section" hidden={currentStep !== 0}>
           <h3>1. 기본 정보</h3>
           <label>
             선택 템플릿
@@ -553,7 +660,11 @@ export function BuilderStudio({
                 const template = templates.find((item) => item.id === event.target.value);
                 if (!template) return;
                 setPayload((current) =>
-                  normalizeDraft(applyCategoryTemplateDefaults(current, template.category, template.id))
+                  normalizeDraft({
+                    ...current,
+                    templateId: template.id,
+                    category: template.category
+                  })
                 );
               }}
             >
@@ -564,9 +675,10 @@ export function BuilderStudio({
               ))}
             </select>
           </label>
+          <p className="builder-help">발행 후 템플릿을 바꾸면 재결제가 필요합니다. 텍스트와 연락처 수정은 무료로 유지됩니다.</p>
           <label>
             행사 카테고리
-            <input className={inputClassName} readOnly value={selectedTemplate.badge} />
+            <input className={inputClassName} readOnly value={payload.category} />
           </label>
           <label>
             행사 제목
@@ -590,46 +702,47 @@ export function BuilderStudio({
           </label>
         </div>
 
-        <div className="builder-form-section">
-          <h3>2. {categoryMeta.personSectionTitle}</h3>
+        <div className="builder-form-section" hidden={currentStep !== 1}>
+          <h3>2. 신랑 · 신부 / 혼주 정보</h3>
           <div className="form-two-col">
             <label>
-              {categoryMeta.primaryNameLabel}
+              신랑 성함
               <input className={inputClassName} value={payload.groomName} onChange={(event) => updateField("groomName", event.target.value)} />
             </label>
             <label>
-              {categoryMeta.secondaryNameLabel}
+              신부 성함
               <input className={inputClassName} value={payload.brideName} onChange={(event) => updateField("brideName", event.target.value)} />
             </label>
             <label>
-              {categoryMeta.primaryPhoneLabel}
+              신랑 연락처
               <input className={inputClassName} value={payload.groomPhone} onChange={(event) => updateField("groomPhone", event.target.value)} />
             </label>
             <label>
-              {categoryMeta.secondaryPhoneLabel}
+              신부 연락처
               <input className={inputClassName} value={payload.bridePhone} onChange={(event) => updateField("bridePhone", event.target.value)} />
             </label>
             <label>
-              {categoryMeta.guardianLabels[0]}
+              신랑 아버지
               <input className={inputClassName} value={payload.groomFatherName} onChange={(event) => updateField("groomFatherName", event.target.value)} />
             </label>
             <label>
-              {categoryMeta.guardianLabels[1]}
+              신랑 어머니
               <input className={inputClassName} value={payload.groomMotherName} onChange={(event) => updateField("groomMotherName", event.target.value)} />
             </label>
             <label>
-              {categoryMeta.guardianLabels[2]}
+              신부 아버지
               <input className={inputClassName} value={payload.brideFatherName} onChange={(event) => updateField("brideFatherName", event.target.value)} />
             </label>
             <label>
-              {categoryMeta.guardianLabels[3]}
+              신부 어머니
               <input className={inputClassName} value={payload.brideMotherName} onChange={(event) => updateField("brideMotherName", event.target.value)} />
             </label>
           </div>
         </div>
 
-        <div className="builder-form-section">
+        <div className="builder-form-section" hidden={currentStep !== 2}>
           <h3>3. 사진 설정</h3>
+          <p className="builder-help">메인 사진과 배경 이미지는 발행 후 교체 시 재결제가 필요합니다. 업로드 전 최종 이미지를 먼저 골라 두는 편이 안전합니다.</p>
           <label>
             메인 사진 업로드
             <input className={inputClassName} accept="image/*" onChange={(event) => handleImageSelection("main", event.target.files?.[0] ?? null)} type="file" />
@@ -638,14 +751,6 @@ export function BuilderStudio({
             배경 사진 업로드
             <input className={inputClassName} accept="image/*" onChange={(event) => handleImageSelection("background", event.target.files?.[0] ?? null)} type="file" />
           </label>
-          <label>
-            갤러리 사진 업로드
-            <input className={inputClassName} accept="image/*" multiple onChange={(event) => handleGallerySelection(event.target.files)} type="file" />
-          </label>
-          <p className="builder-help">
-            현재 갤러리 {payload.galleryImages.length}장
-            {pendingGalleryFiles.length ? ` · 저장 대기 ${pendingGalleryFiles.length}장` : ""}
-          </p>
           <div className="header-actions" style={{ marginTop: "12px" }}>
             <button
               className="btn-outline"
@@ -671,46 +776,35 @@ export function BuilderStudio({
             >
               배경 사진 제거
             </button>
-            <button
-              className="btn-outline"
-              onClick={() => {
-                setPendingGalleryFiles([]);
-                updateField("galleryImages", []);
-                updateField("galleryImagePaths", []);
-              }}
-              type="button"
-            >
-              갤러리 비우기
-            </button>
           </div>
           <p className="builder-help">이미지는 저장 시 Storage로 업로드되고, payload에는 URL만 기록됩니다.</p>
         </div>
 
-        <div className="builder-form-section">
-          <h3>4. {categoryMeta.accountTitle} · 카카오페이</h3>
+        <div className="builder-form-section" hidden={currentStep !== 3}>
+          <h3>4. 계좌 · 카카오페이</h3>
           <div className="form-two-col">
             <label>
-              {categoryMeta.primaryAccountPrefix} 은행
+              신랑측 은행
               <input className={inputClassName} value={payload.groomBank} onChange={(event) => updateField("groomBank", event.target.value)} />
             </label>
             <label>
-              {categoryMeta.primaryAccountPrefix} 예금주
+              신랑측 예금주
               <input className={inputClassName} value={payload.groomBankHolder} onChange={(event) => updateField("groomBankHolder", event.target.value)} />
             </label>
             <label className="full-col">
-              {categoryMeta.primaryAccountPrefix} 계좌번호
+              신랑측 계좌번호
               <input className={inputClassName} value={payload.groomBankAccount} onChange={(event) => updateField("groomBankAccount", event.target.value)} />
             </label>
             <label>
-              {categoryMeta.secondaryAccountPrefix} 은행
+              신부측 은행
               <input className={inputClassName} value={payload.brideBank} onChange={(event) => updateField("brideBank", event.target.value)} />
             </label>
             <label>
-              {categoryMeta.secondaryAccountPrefix} 예금주
+              신부측 예금주
               <input className={inputClassName} value={payload.brideBankHolder} onChange={(event) => updateField("brideBankHolder", event.target.value)} />
             </label>
             <label className="full-col">
-              {categoryMeta.secondaryAccountPrefix} 계좌번호
+              신부측 계좌번호
               <input className={inputClassName} value={payload.brideBankAccount} onChange={(event) => updateField("brideBankAccount", event.target.value)} />
             </label>
           </div>
@@ -720,7 +814,7 @@ export function BuilderStudio({
           </label>
         </div>
 
-        <div className="builder-form-section">
+        <div className="builder-form-section" hidden={currentStep !== 4}>
           <h3>5. 오시는 길</h3>
           <label>
             지도 주소
@@ -736,73 +830,77 @@ export function BuilderStudio({
           </label>
         </div>
 
-        <div className="builder-form-section">
-          <h3>6. 추가 꾸미기</h3>
-          <label>
-            식전영상 링크
-            <input className={inputClassName} placeholder="https://..." value={payload.videoUrl} onChange={(event) => updateField("videoUrl", event.target.value)} />
-          </label>
-          <label>
-            배경음악 링크
-            <input className={inputClassName} placeholder="https://.../music.mp3" value={payload.backgroundMusicUrl} onChange={(event) => updateField("backgroundMusicUrl", event.target.value)} />
-          </label>
-          <label>
-            카카오 JavaScript 키
-            <input className={inputClassName} placeholder="카카오 개발자 콘솔의 JavaScript 키" value={payload.kakaoJsKey} onChange={(event) => updateField("kakaoJsKey", event.target.value)} />
-          </label>
-          <label>
-            감사 메시지
-            <textarea className={inputClassName} rows={3} value={payload.thankYouMessage} onChange={(event) => updateField("thankYouMessage", event.target.value)} />
-          </label>
-          <p className="builder-help">배경음악은 모바일에서 자동 재생되지 않을 수 있어, 게스트가 직접 재생하는 방식으로 제공됩니다. 카카오 공유를 쓰려면 카카오 개발자 콘솔에 현재 도메인을 등록해야 합니다.</p>
+        <div className="builder-step-actions">
+          <button
+            className="btn-outline"
+            disabled={pending || currentStep === 0}
+            onClick={() => moveStep(-1)}
+            type="button"
+          >
+            이전 단계
+          </button>
+          <button
+            className="btn-primary"
+            disabled={pending || currentStep === lastStepIndex}
+            onClick={() => moveStep(1)}
+            type="button"
+          >
+            다음 단계
+          </button>
         </div>
 
         <button className="btn-primary form-submit" disabled={pending} type="submit">
           {pending ? "저장 중..." : "초안 저장"}
         </button>
-        <button
-          className="btn-primary form-submit"
-          disabled={pending}
-          onClick={async () => {
-            await persistDraft("draft");
-            router.push("/preview");
-          }}
-          type="button"
-        >
-          실제 화면 보기
-        </button>
-        <button
-          className="btn-outline form-submit"
-          disabled={pending}
-          onClick={async () => {
-            if (meta.status === "published" && !hasRestrictedPaidChanges) {
-              await persistDraft("published");
-              return;
-            }
+        {currentStep === lastStepIndex ? (
+          <>
+            <button
+              className="btn-primary form-submit"
+              disabled={pending}
+              onClick={async () => {
+                await persistDraft("draft");
+                router.push("/preview");
+              }}
+              type="button"
+            >
+              실제 화면 보기
+            </button>
+            <button
+              className="btn-outline form-submit"
+              disabled={pending}
+              onClick={async () => {
+                if (meta.status === "published" && !hasRestrictedPaidChanges) {
+                  await persistDraft("published");
+                  return;
+                }
 
-            if (!supabase || !userId) {
-              await persistDraft("draft");
-              router.push(`/sign-in?next=${encodeURIComponent(normalizeNextPath("/builder?intent=checkout", authDestination.checkout))}`);
-              return;
-            }
+                if (!supabase || !userId) {
+                  await persistDraft("draft");
+                  router.push(`/sign-in?next=${encodeURIComponent(normalizeNextPath("/builder?intent=checkout", authDestination.checkout))}`);
+                  return;
+                }
 
-            const saved = meta.id ? meta : await persistDraft("draft");
-            if (saved?.id) {
-              router.push(`/checkout?invitationId=${saved.id}`);
-            }
-          }}
-          type="button"
-        >
-          {publishButtonLabel}
-        </button>
+                const saved = meta.id ? meta : await persistDraft("draft");
+                if (saved?.id) {
+                  router.push(`/checkout?invitationId=${saved.id}`);
+                }
+              }}
+              type="button"
+            >
+              {publishButtonLabel}
+            </button>
+          </>
+        ) : (
+          <p className="builder-help">마지막 단계에서 실제 화면 보기와 결제/발행을 진행할 수 있습니다.</p>
+        )}
         {meta.status === "published" && hasRestrictedPaidChanges ? (
           <p className="form-message error">
-            템플릿이나 이미지를 바꾸면 다시 결제가 필요합니다. 결제 화면에서 완료하시면 새 내용으로 다시 공개됩니다.
+            템플릿 또는 이미지를 변경하면 재결제가 필요합니다. 체크아웃에서 결제 후 다시 발행됩니다.
           </p>
         ) : null}
         {meta.status && meta.status !== "draft" && meta.status !== "published" ? (
           <p className="form-message error">
-            결제가 완료되면 공개 링크가 자동으로 활성화됩니다. 잠시만 기다려 주세요.
+            현재 결제 상태: {meta.status}. 결제 완료 전까지 공개 링크는 활성화되지 않습니다.
           </p>
         ) : null}
         <p className={`form-message ${messageType}`}>{message}</p>
@@ -811,17 +909,43 @@ export function BuilderStudio({
       <div className="builder-preview-wrap">
         <div className="phone-mock builder-phone builder-phone-large">
           <div className="phone-screen builder-screen">
-            <BuilderLivePreview
-              backgroundImagePreviewUrl={backgroundImagePreviewUrl}
-              mainImagePreviewUrl={mainImagePreviewUrl}
-              badgeText={categoryMeta.badgeText}
-              templateLabel={previewTemplateLabel}
-              title={previewTitle}
-              subtitle={previewSubtitle}
-              dateText={previewDateText}
-              venueText={previewVenueText}
-              message={previewMessage}
-            />
+            <div className="builder-template-preview">
+              <TemplateMarkup template={selectedTemplate} />
+            </div>
+            {backgroundImagePreviewUrl ? (
+              <div className="builder-background-layer has-image" style={{ backgroundImage: `url(${backgroundImagePreviewUrl})` }} />
+            ) : (
+              <div className="builder-background-layer" />
+            )}
+            <div className="builder-preview-content">
+              <div className="builder-preview-main-photo-wrap">
+                {mainImagePreviewUrl ? <img alt="메인 사진 미리보기" className="builder-preview-main-photo has-image" src={mainImagePreviewUrl} /> : <div className="builder-preview-main-photo" />}
+              </div>
+              <p className="builder-preview-label">{selectedTemplate.badge.toUpperCase()} INVITATION</p>
+              <h2 className="builder-preview-names">
+                {(payload.groomName || "신랑") + " ♡ " + (payload.brideName || "신부")}
+              </h2>
+              <p className="builder-preview-date">
+                {payload.eventDateTime
+                  ? new Date(payload.eventDateTime).toLocaleString("ko-KR", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit"
+                    })
+                  : "날짜와 시간을 선택하세요"}
+              </p>
+              <p className="builder-preview-venue">
+                {payload.venueName || payload.venueAddress
+                  ? [payload.venueName, payload.venueAddress].filter(Boolean).join(" · ")
+                  : "예식장과 주소를 입력해 주세요"}
+              </p>
+              <p className="builder-preview-message">{payload.message || "소중한 자리에 함께해 주세요"}</p>
+              <p className="builder-preview-note">
+                이미지는 업로드 후 URL로 저장됩니다. 미발행 상태에서도 초안 저장과 owner 대시보드 연결이 유지됩니다.
+              </p>
+            </div>
           </div>
         </div>
       </div>

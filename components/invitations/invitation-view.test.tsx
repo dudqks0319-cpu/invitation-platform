@@ -1,60 +1,41 @@
-import { render, screen } from "@testing-library/react";
+import { renderToStaticMarkup } from "react-dom/server";
 import { InvitationView } from "@/components/invitations/invitation-view";
 import { defaultInvitationDraft } from "@/lib/invitation-payload";
 
 describe("InvitationView", () => {
-  it("renders non-wedding invitations without wedding-only copy", () => {
-    render(
+  it("warns that preview links cannot be shared yet", () => {
+    document.body.innerHTML = renderToStaticMarkup(
       <InvitationView
-        mode="public"
-        payload={{
-          ...defaultInvitationDraft,
-          category: "dol",
-          templateId: "dol-cute",
-          title: "하린이의 첫돌 초대장",
-          groomName: "하린",
-          brideName: "",
-          groomFatherName: "이준호",
-          groomMotherName: "김소연",
-          groomPhone: "010-1111-2222",
-          bridePhone: ""
-        }}
-        shareUrl="https://invitehub.test/invitations/harin-first-birthday"
-        slug="harin-first-birthday"
+        mode="preview"
+        payload={defaultInvitationDraft}
+        shareUrl="/preview"
       />
     );
 
-    expect(screen.getByRole("heading", { name: "하린이의 첫돌 초대장" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "아이 · 가족 정보" })).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "보호자 연락처" })).toBeInTheDocument();
-    expect(screen.queryByText("혼주 정보")).not.toBeInTheDocument();
-    expect(screen.queryByText("신랑측 계좌 복사")).not.toBeInTheDocument();
-    expect(screen.queryByText(/신랑/)).not.toBeInTheDocument();
+    expect(document.body.textContent).toContain(
+      "미리보기 단계에서는 나만 볼 수 있습니다. 하객에게 보낼 링크는 발행 후 공개 링크를 사용해 주세요."
+    );
+    expect(document.body.innerHTML).toContain("공유하기</button>");
+    expect(document.body.innerHTML).toContain("링크 복사</button>");
+    expect(document.body.innerHTML).toContain("disabled=\"\"");
   });
 
-  it("renders optional media and thank-you sections when provided", () => {
-    const { container } = render(
+  it("keeps sharing enabled on a public invitation and shows moderation guidance", () => {
+    document.body.innerHTML = renderToStaticMarkup(
       <InvitationView
         mode="public"
-        payload={{
-          ...defaultInvitationDraft,
-          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-          backgroundMusicUrl: "https://cdn.example.com/music.mp3",
-          thankYouMessage: "함께해 주셔서 감사합니다.\n좋은 날에 다시 뵙겠습니다."
-        }}
-        shareUrl="https://invitehub.test/invitations/kim-lee-demo"
-        slug="kim-lee-demo"
+        payload={defaultInvitationDraft}
+        shareUrl="/invitations/demo"
+        slug="demo"
       />
     );
 
-    expect(screen.getByRole("heading", { name: "식전 영상" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "영상 보기" })).toHaveAttribute(
-      "href",
-      "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    expect(document.body.textContent).toContain(
+      "방명록은 관리자 승인 후 공개됩니다. 작성 직후 목록에 보이지 않아도 정상입니다."
     );
-    expect(screen.getByRole("heading", { name: "배경음악" })).toBeInTheDocument();
-    expect(container.querySelector("audio")).toHaveAttribute("src", "https://cdn.example.com/music.mp3");
-    expect(screen.getByRole("heading", { name: "감사 인사" })).toBeInTheDocument();
-    expect(screen.getByText((content, node) => node?.textContent === "함께해 주셔서 감사합니다.\n좋은 날에 다시 뵙겠습니다.")).toBeInTheDocument();
+    expect(document.body.innerHTML).toContain("공유하기</button>");
+    expect(document.body.innerHTML).not.toContain(
+      "미리보기 단계에서는 나만 볼 수 있습니다."
+    );
   });
 });

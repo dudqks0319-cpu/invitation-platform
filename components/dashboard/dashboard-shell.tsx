@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { createBrowserClient } from "@/lib/supabase/browser";
 import { demoDashboardInvitations, demoRsvps } from "@/lib/demo-data";
+import { canDeleteInvitation, getDeletePolicyNote } from "@/components/dashboard/dashboard-delete-policy";
 import {
   LOCAL_DRAFT_KEY,
   normalizeDraft,
@@ -95,7 +96,7 @@ export function DashboardShell() {
         .order("created_at", { ascending: false });
 
       if (error) {
-        setMessage(error.message);
+        setMessage("대시보드를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
         return;
       }
 
@@ -223,7 +224,7 @@ export function DashboardShell() {
       .eq("id", entryId);
 
     if (error) {
-      setMessage(error.message);
+      setMessage("방명록 상태를 업데이트하지 못했습니다. 잠시 후 다시 시도해 주세요.");
       return;
     }
 
@@ -253,7 +254,7 @@ export function DashboardShell() {
       .maybeSingle();
 
     if (paymentError || !payment) {
-      setMessage(paymentError?.message || "환불 가능한 결제를 찾지 못했습니다.");
+      setMessage("환불 가능한 결제를 찾지 못했습니다.");
       return;
     }
 
@@ -297,6 +298,52 @@ export function DashboardShell() {
     const publicUrl = `${window.location.origin}/invitations/${item.slug}`;
     await navigator.clipboard.writeText(publicUrl);
     setMessage("공개 링크를 복사했습니다.");
+  }
+
+  async function deleteInvitation(item: DashboardItem) {
+    const isLocalDraft = item.id === "local-draft";
+    const isDeletable = isLocalDraft || canDeleteInvitation(item.status);
+
+    if (!isDeletable) {
+      setMessage(getDeletePolicyNote(item.status));
+      return;
+    }
+
+    const confirmed = window.confirm(`"${item.title}" 초대장을 삭제할까요? 이 작업은 되돌릴 수 없습니다.`);
+    if (!confirmed) {
+      return;
+    }
+
+    if (!supabase || isLocalDraft) {
+      if (typeof window !== "undefined") {
+        window.localStorage.removeItem(LOCAL_DRAFT_KEY);
+      }
+
+      setItems((current) => {
+        const nextItems = current.filter((entry) => entry.id !== item.id);
+        setSelectedInvitationId(nextItems[0]?.id ?? "");
+        return nextItems;
+      });
+      setMessage("로컬 초안을 삭제했습니다.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("invitations")
+      .delete()
+      .eq("id", item.id);
+
+    if (error) {
+      setMessage("초대장을 삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      return;
+    }
+
+    setItems((current) => {
+      const nextItems = current.filter((entry) => entry.id !== item.id);
+      setSelectedInvitationId(nextItems[0]?.id ?? "");
+      return nextItems;
+    });
+    setMessage("초대장을 삭제했습니다.");
   }
 
   const selectedInvitation = items.find((item) => item.id === selectedInvitationId);
@@ -359,6 +406,11 @@ export function DashboardShell() {
         <div className="ops-grid">
           {items.map((item) => (
             <article className="ops-card" key={item.id}>
+              {(() => {
+                const isLocalDraft = item.id === "local-draft";
+                const deleteNote = isLocalDraft ? "" : getDeletePolicyNote(item.status);
+                return deleteNote ? <p className="ops-note">{deleteNote}</p> : null;
+              })()}
               <h3>{item.title}</h3>
               <p className="ops-value">{getStatusLabel(item.status)}</p>
               <p className="ops-line">카테고리 <strong>{item.category}</strong></p>
@@ -398,6 +450,11 @@ export function DashboardShell() {
                 {item.status === "published" || item.status === "paid" ? (
                   <button className="btn-outline" onClick={() => requestRefund(item)} type="button">
                     전액 환불
+                  </button>
+                ) : null}
+                {(item.id === "local-draft" || canDeleteInvitation(item.status)) ? (
+                  <button className="btn-outline" onClick={() => void deleteInvitation(item)} type="button">
+                    삭제
                   </button>
                 ) : null}
               </div>

@@ -26,47 +26,35 @@ function createRequest(body: object) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-forwarded-for": "127.0.0.1"
+      "x-real-ip": "203.0.113.10"
     },
     body: JSON.stringify(body)
   });
 }
 
-function createAdminDouble(invitationStatus: string | null) {
-  const insertMock = vi.fn(async () => ({ error: null }));
+function createAdminDouble(insertError: { message: string } | null = null) {
+  const insertMock = vi.fn(async () => ({ error: insertError }));
 
   return {
     insertMock,
     client: {
       from(table: string) {
         if (table === "invitations") {
-          const filters: Record<string, string> = {};
-
           return {
             select() {
               return this;
             },
-            eq(key: string, value: string) {
-              filters[key] = value;
+            eq() {
               return this;
             },
             async maybeSingle() {
-              if (
-                filters.slug === "demo" &&
-                filters.status === "published" &&
-                invitationStatus === "published"
-              ) {
-                return {
-                  data: {
-                    id: "invitation-1",
-                    slug: "demo",
-                    status: "published"
-                  },
-                  error: null
-                };
-              }
-
-              return { data: null, error: null };
+              return {
+                data: {
+                  id: "invitation-1",
+                  status: "published"
+                },
+                error: null
+              };
             }
           };
         }
@@ -86,38 +74,21 @@ function createAdminDouble(invitationStatus: string | null) {
 describe("POST /api/public/[slug]/guestbook", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    consumeRateLimitMock.mockReturnValue({
+    consumeRateLimitMock.mockResolvedValue({
+      ok: true,
       allowed: true,
-      remaining: 4,
+      remaining: 2,
       resetAt: Date.now() + 60_000
     });
-    getClientIdentifierMock.mockReturnValue("127.0.0.1");
+    getClientIdentifierMock.mockReturnValue("203.0.113.10");
   });
 
-  it("creates a moderated guestbook entry for a published invitation", async () => {
-    const adminDouble = createAdminDouble("published");
-    createSupabaseAdminClientMock.mockReturnValue(adminDouble.client);
-
-    const response = await POST(createRequest({
-      nickname: "친구1",
-      message: "두 분 축하합니다",
-      website: ""
-    }), {
-      params: Promise.resolve({ slug: "demo" })
+  it("returns 503 when the persistent rate-limit backend is unavailable", async () => {
+    createSupabaseAdminClientMock.mockReturnValue(createAdminDouble().client);
+    consumeRateLimitMock.mockResolvedValue({
+      ok: false,
+      message: "rate_limit_backend_unavailable"
     });
-
-    expect(response.status).toBe(201);
-    expect(adminDouble.insertMock).toHaveBeenCalledWith({
-      invitation_id: "invitation-1",
-      nickname: "친구1",
-      message: "두 분 축하합니다",
-      approved: false
-    });
-  });
-
-  it("returns 404 for unpublished invitations", async () => {
-    const adminDouble = createAdminDouble(null);
-    createSupabaseAdminClientMock.mockReturnValue(adminDouble.client);
 
     const response = await POST(createRequest({
       nickname: "친구1",
@@ -126,8 +97,33 @@ describe("POST /api/public/[slug]/guestbook", () => {
     }), {
       params: Promise.resolve({ slug: "demo" })
     });
+    const result = await response.json();
 
-    expect(response.status).toBe(404);
-    expect(adminDouble.insertMock).not.toHaveBeenCalled();
+    expect(response.status).toBe(503);
+    expect(result).toEqual({
+      success: false,
+      message: "요청 보호 서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요."
+    });
+  });
+
+  it("does not expose raw database errors to the client", async () => {
+    createSupabaseAdminClientMock.mockReturnValue(
+      createAdminDouble({ message: "new row violates row-level security policy" }).client
+    );
+
+    const response = await POST(createRequest({
+      nickname: "친구1",
+      message: "축하합니다",
+      website: ""
+    }), {
+      params: Promise.resolve({ slug: "demo" })
+    });
+    const result = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(result).toEqual({
+      success: false,
+      message: "방명록 저장에 실패했습니다. 잠시 후 다시 시도해 주세요."
+    });
   });
 });

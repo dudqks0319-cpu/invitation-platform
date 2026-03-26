@@ -143,7 +143,7 @@ export function CheckoutFlow({
       const { data, error } = await query;
 
       if (error || !data) {
-        setError(error?.message || "초대장 초안을 결제 대상으로 준비하지 못했습니다.");
+        setError("초대장 초안을 결제 대상으로 준비하지 못했습니다. 잠시 후 다시 시도해 주세요.");
         return;
       }
 

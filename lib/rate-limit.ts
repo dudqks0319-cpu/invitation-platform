@@ -1,54 +1,97 @@
-type RateLimitEntry = {
-  count: number;
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/lib/supabase/types";
+
+type RateLimitRow = {
+  allowed: boolean;
+  remaining: number;
+  reset_at: string;
+};
+
+type ConsumeRateLimitArgs = {
+  admin: SupabaseClient<Database>;
+  key: string;
+  limit: number;
+  windowMs: number;
+};
+
+type ConsumeRateLimitSuccess = {
+  ok: true;
+  allowed: boolean;
+  remaining: number;
   resetAt: number;
 };
 
-const buckets = new Map<string, RateLimitEntry>();
+type ConsumeRateLimitFailure = {
+  ok: false;
+  message: string;
+};
 
-function now() {
-  return Date.now();
-}
+export type ConsumeRateLimitResult = ConsumeRateLimitSuccess | ConsumeRateLimitFailure;
 
-export function consumeRateLimit(key: string, limit: number, windowMs: number) {
-  const timestamp = now();
-  const current = buckets.get(key);
+function normalizeRateLimitRow(data: unknown): RateLimitRow | null {
+  const row = Array.isArray(data) ? data[0] : data;
 
-  if (!current || current.resetAt <= timestamp) {
-    const nextEntry = {
-      count: 1,
-      resetAt: timestamp + windowMs
-    };
-    buckets.set(key, nextEntry);
-    return {
-      allowed: true,
-      remaining: limit - 1,
-      resetAt: nextEntry.resetAt
-    };
+  if (!row || typeof row !== "object") {
+    return null;
   }
 
-  if (current.count >= limit) {
-    return {
-      allowed: false,
-      remaining: 0,
-      resetAt: current.resetAt
-    };
-  }
+  const candidate = row as Partial<RateLimitRow>;
 
-  current.count += 1;
-  buckets.set(key, current);
+  if (
+    typeof candidate.allowed !== "boolean" ||
+    typeof candidate.remaining !== "number" ||
+    typeof candidate.reset_at !== "string"
+  ) {
+    return null;
+  }
 
   return {
-    allowed: true,
-    remaining: Math.max(limit - current.count, 0),
-    resetAt: current.resetAt
+    allowed: candidate.allowed,
+    remaining: candidate.remaining,
+    reset_at: candidate.reset_at
+  };
+}
+
+export async function consumeRateLimit({
+  admin,
+  key,
+  limit,
+  windowMs
+}: ConsumeRateLimitArgs): Promise<ConsumeRateLimitResult> {
+  const { data, error } = await admin.rpc("consume_rate_limit", {
+    bucket_key: key,
+    max_hits: limit,
+    window_seconds: Math.ceil(windowMs / 1000)
+  });
+
+  if (error) {
+    return {
+      ok: false,
+      message: "rate_limit_backend_unavailable"
+    };
+  }
+
+  const row = normalizeRateLimitRow(data);
+  if (!row) {
+    return {
+      ok: false,
+      message: "rate_limit_backend_invalid_payload"
+    };
+  }
+
+  return {
+    ok: true,
+    allowed: row.allowed,
+    remaining: row.remaining,
+    resetAt: Date.parse(row.reset_at)
   };
 }
 
 export function getClientIdentifier(request: Request) {
   return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     request.headers.get("x-real-ip") ||
     request.headers.get("cf-connecting-ip") ||
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     "anonymous"
   );
 }

@@ -41,6 +41,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: "결제 정보를 찾을 수 없습니다." }, { status: 404 });
   }
 
+  if (payment.status !== "paid" || !payment.provider_tid) {
+    return NextResponse.json(
+      { success: false, message: "환불 가능한 결제 상태가 아닙니다." },
+      { status: 409 }
+    );
+  }
+
   try {
     await admin.from("payments").update({
       status: "refund_pending",
@@ -86,7 +93,7 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(
-      { success: false, message: error instanceof Error ? error.message : "환불 처리에 실패했습니다." },
+      { success: false, message: "환불 처리에 실패했습니다. 잠시 후 다시 시도해 주세요." },
       { status: 500 }
     );
   }

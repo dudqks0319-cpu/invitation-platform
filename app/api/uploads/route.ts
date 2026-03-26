@@ -37,7 +37,7 @@ export async function POST(request: Request) {
 
   if (!supabase || !admin) {
     return NextResponse.json(
-      { success: false, message: "Supabase server configuration is incomplete." },
+      { success: false, message: "현재 업로드 서비스를 준비 중입니다. 잠시 후 다시 시도해 주세요." },
       { status: 503 }
     );
   }
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
 
   if (error || !data) {
     return NextResponse.json(
-      { success: false, message: error?.message ?? "업로드에 실패했습니다." },
+      { success: false, message: "이미지를 업로드하지 못했습니다. 잠시 후 다시 시도해 주세요." },
       { status: 500 }
     );
   }
@@ -103,7 +103,7 @@ export async function DELETE(request: Request) {
 
   if (!supabase || !admin) {
     return NextResponse.json(
-      { success: false, message: "Supabase server configuration is incomplete." },
+      { success: false, message: "현재 업로드 서비스를 준비 중입니다. 잠시 후 다시 시도해 주세요." },
       { status: 503 }
     );
   }
@@ -136,7 +136,7 @@ export async function DELETE(request: Request) {
 
   if (error) {
     return NextResponse.json(
-      { success: false, message: error.message },
+      { success: false, message: "이미지를 삭제하지 못했습니다. 잠시 후 다시 시도해 주세요." },
       { status: 500 }
     );
   }

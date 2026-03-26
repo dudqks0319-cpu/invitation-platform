@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { consumeRateLimit, getClientIdentifier } from "@/lib/rate-limit";
-import { ensureJsonRequest, publicGuestbookSchema } from "@/lib/supabase/public-write";
+import { ensureJsonRequest, publicGuestbookSchema, readJsonBody } from "@/lib/supabase/public-write";
 
-const GUESTBOOK_LIMIT = 3;
-const GUESTBOOK_WINDOW_MS = 10 * 60 * 1000;
+const WINDOW_MS = 60 * 1000;
+const LIMIT = 3;
 
 export async function POST(
   request: Request,
@@ -20,47 +20,69 @@ export async function POST(
   const admin = createSupabaseAdminClient();
   if (!admin) {
     return NextResponse.json(
-      { success: false, message: "Supabase server configuration is incomplete." },
+      { success: false, message: "서버 설정이 완료되지 않았습니다. 잠시 후 다시 시도해 주세요." },
       { status: 503 }
     );
   }
 
   const { slug } = await context.params;
-  const rateLimit = consumeRateLimit(`guestbook:${slug}:${getClientIdentifier(request)}`, GUESTBOOK_LIMIT, GUESTBOOK_WINDOW_MS);
-  if (!rateLimit.allowed) {
+  const limitResult = await consumeRateLimit({
+    admin,
+    key: `guestbook:${slug}:${getClientIdentifier(request)}`,
+    limit: LIMIT,
+    windowMs: WINDOW_MS
+  });
+
+  if (!limitResult.ok) {
     return NextResponse.json(
-      {
-        success: false,
-        message: "방명록을 너무 빠르게 작성하고 있습니다. 잠시 후 다시 시도해 주세요."
-      },
+      { success: false, message: "요청 보호 서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요." },
+      { status: 503 }
+    );
+  }
+
+  if (!limitResult.allowed) {
+    return NextResponse.json(
+      { success: false, message: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요." },
       {
         status: 429,
         headers: {
-          "x-ratelimit-reset": String(rateLimit.resetAt)
+          "Retry-After": String(Math.ceil((limitResult.resetAt - Date.now()) / 1000))
         }
       }
     );
   }
 
-  const body = await request.json().catch(() => null);
-  const parsed = publicGuestbookSchema.safeParse(body);
-  if (!parsed.success) {
+  const bodyResult = await readJsonBody(request);
+  if (!bodyResult.ok) {
     return NextResponse.json(
-      { success: false, message: "입력값을 다시 확인해 주세요." },
+      { success: false, message: bodyResult.message },
       { status: 400 }
     );
   }
 
+  const parsed = publicGuestbookSchema.safeParse(bodyResult.body);
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { success: false, message: "입력값이 올바르지 않습니다.", issues: parsed.error.flatten() },
+      { status: 400 }
+    );
+  }
+
+  if (parsed.data.website) {
+    return NextResponse.json({ success: true, message: "방명록이 접수되었습니다." });
+  }
+
   const { data: invitation, error: invitationError } = await admin
     .from("invitations")
-    .select("id, slug, status")
+    .select("id, status")
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
 
   if (invitationError || !invitation) {
     return NextResponse.json(
-      { success: false, message: "공개된 초대장을 찾을 수 없습니다." },
+      { success: false, message: "유효하지 않은 초대장입니다." },
       { status: 404 }
     );
   }
@@ -74,13 +96,13 @@ export async function POST(
 
   if (error) {
     return NextResponse.json(
-      { success: false, message: error.message || "방명록 저장에 실패했습니다." },
+      { success: false, message: "방명록 저장에 실패했습니다. 잠시 후 다시 시도해 주세요." },
       { status: 500 }
     );
   }
 
-  return NextResponse.json(
-    { success: true, message: "방명록이 접수되었습니다." },
-    { status: 201 }
-  );
+  return NextResponse.json({
+    success: true,
+    message: "방명록이 접수되었습니다. 확인 후 공개됩니다."
+  });
 }

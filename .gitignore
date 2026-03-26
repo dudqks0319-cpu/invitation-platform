@@ -18,3 +18,7 @@ tsconfig.tsbuildinfo
 .omx
 output/
 test-results/
+public
+!app/api/public/
+!app/api/public/**
+src

@@ -88,6 +88,14 @@ create table if not exists public.view_logs (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.rate_limits (
+  bucket_key text primary key,
+  count integer not null,
+  reset_at timestamptz not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create or replace function public.set_timestamp()
 returns trigger
 language plpgsql
@@ -95,6 +103,60 @@ as $$
 begin
   new.updated_at = now();
   return new;
+end;
+$$;
+
+create or replace function public.consume_rate_limit(
+  bucket_key text,
+  max_hits integer,
+  window_seconds integer
+)
+returns table (
+  allowed boolean,
+  remaining integer,
+  reset_at timestamptz
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  current_limit public.rate_limits%rowtype;
+  next_reset timestamptz := now() + make_interval(secs => window_seconds);
+begin
+  select *
+  into current_limit
+  from public.rate_limits
+  where rate_limits.bucket_key = consume_rate_limit.bucket_key
+  for update;
+
+  if not found or current_limit.reset_at <= now() then
+    insert into public.rate_limits (bucket_key, count, reset_at, updated_at)
+    values (consume_rate_limit.bucket_key, 1, next_reset, now())
+    on conflict (bucket_key)
+    do update
+      set count = 1,
+          reset_at = excluded.reset_at,
+          updated_at = now();
+
+    return query
+    select true, greatest(max_hits - 1, 0), next_reset;
+    return;
+  end if;
+
+  if current_limit.count >= max_hits then
+    return query
+    select false, 0, current_limit.reset_at;
+    return;
+  end if;
+
+  update public.rate_limits
+  set count = current_limit.count + 1,
+      updated_at = now()
+  where rate_limits.bucket_key = consume_rate_limit.bucket_key;
+
+  return query
+  select true, greatest(max_hits - (current_limit.count + 1), 0), current_limit.reset_at;
 end;
 $$;
 
@@ -117,6 +179,7 @@ alter table public.payment_audit_logs enable row level security;
 alter table public.rsvps enable row level security;
 alter table public.guestbook_entries enable row level security;
 alter table public.view_logs enable row level security;
+alter table public.rate_limits enable row level security;
 
 drop policy if exists "profiles self access" on public.profiles;
 create policy "profiles self access"

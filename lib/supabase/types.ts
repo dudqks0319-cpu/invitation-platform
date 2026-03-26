@@ -151,6 +151,24 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["guestbook_entries"]["Insert"]>;
         Relationships: [];
       };
+      rate_limits: {
+        Row: {
+          bucket_key: string;
+          count: number;
+          reset_at: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          bucket_key: string;
+          count: number;
+          reset_at: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["rate_limits"]["Insert"]>;
+        Relationships: [];
+      };
       view_logs: {
         Row: {
           id: number;
@@ -169,7 +187,20 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      consume_rate_limit: {
+        Args: {
+          bucket_key: string;
+          max_hits: number;
+          window_seconds: number;
+        };
+        Returns: {
+          allowed: boolean;
+          remaining: number;
+          reset_at: string;
+        }[];
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

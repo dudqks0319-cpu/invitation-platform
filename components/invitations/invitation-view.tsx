@@ -108,8 +108,11 @@ export function InvitationView({
 }: InvitationViewProps) {
   const [rsvpEntries, setRsvpEntries] = useState<RsvpEntry[]>([]);
   const [guestbookEntries, setGuestbookEntries] = useState<GuestbookEntry[]>(initialGuestbookEntries);
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
+  const [rsvpMessage, setRsvpMessage] = useState("");
+  const [rsvpError, setRsvpError] = useState("");
+  const [guestbookMessage, setGuestbookMessage] = useState("");
+  const [guestbookError, setGuestbookError] = useState("");
+  const [shareMessage, setShareMessage] = useState("");
   const [pending, setPending] = useState(false);
   const selectedTemplate = templates.find((template) => template.id === payload.templateId) ?? templates[0];
   const categoryMeta = getInvitationCategoryMeta(payload);
@@ -123,6 +126,7 @@ export function InvitationView({
     shareUrl,
     typeof window === "undefined" ? process.env.NEXT_PUBLIC_SITE_URL : window.location.origin
   );
+  const shareDisabled = mode === "preview";
 
   async function copyToClipboard(value: string) {
     if (!value) return;
@@ -141,7 +145,7 @@ export function InvitationView({
     const result = (await response.json()) as { error?: string; message?: string };
 
     if (!response.ok) {
-      throw new Error(result.error || "요청 처리에 실패했습니다.");
+      throw new Error(result.message || result.error || "요청 처리에 실패했습니다.");
     }
 
     return result;
@@ -159,17 +163,17 @@ export function InvitationView({
     };
 
     if (!nextEntry.guestName) {
-      setError("이름을 입력해 주세요.");
+      setRsvpError("이름을 입력해 주세요.");
       return;
     }
 
     setPending(true);
-    setError("");
-    setMessage("");
+    setRsvpError("");
+    setRsvpMessage("");
 
     try {
       if (mode === "public" && slug) {
-        const result = await submitPublicForm(`/api/public/${slug}/rsvp`, {
+        await submitPublicForm(`/api/public/${slug}/rsvp`, {
           guestName: nextEntry.guestName,
           guestPhone: nextEntry.guestPhone,
           attending: nextEntry.attending ? "yes" : "no",
@@ -177,16 +181,16 @@ export function InvitationView({
           memo: nextEntry.memo,
           website: String(formData.get("website") || "")
         });
-        setMessage(result.message || "RSVP가 저장되었습니다.");
+        setRsvpMessage("참석 응답이 접수되었습니다. 변경이 필요하면 호스트에게 바로 알려 주세요.");
       } else {
         const current = JSON.parse(window.localStorage.getItem(LOCAL_RSVP_KEY) || "[]") as RsvpEntry[];
         window.localStorage.setItem(LOCAL_RSVP_KEY, JSON.stringify([nextEntry, ...current]));
-        setMessage("데모 모드에서 RSVP를 저장했습니다.");
+        setRsvpMessage("데모 모드에서 RSVP를 저장했습니다.");
       }
 
       setRsvpEntries((current) => [nextEntry, ...current]);
     } catch (submissionError) {
-      setError(submissionError instanceof Error ? submissionError.message : "RSVP 저장에 실패했습니다.");
+      setRsvpError(submissionError instanceof Error ? submissionError.message : "RSVP 저장에 실패했습니다.");
     } finally {
       setPending(false);
     }
@@ -202,33 +206,33 @@ export function InvitationView({
     };
 
     if (!nextEntry.nickname || !nextEntry.message) {
-      setError("이름과 메시지를 모두 입력해 주세요.");
+      setGuestbookError("이름과 메시지를 모두 입력해 주세요.");
       return;
     }
 
     setPending(true);
-    setError("");
-    setMessage("");
+    setGuestbookError("");
+    setGuestbookMessage("");
 
     try {
       if (mode === "public" && slug) {
-        const result = await submitPublicForm(`/api/public/${slug}/guestbook`, {
+        await submitPublicForm(`/api/public/${slug}/guestbook`, {
           nickname: nextEntry.nickname,
           message: nextEntry.message,
           website: String(formData.get("website") || "")
         });
-        setMessage(result.message || "방명록을 남겼습니다.");
+        setGuestbookMessage("방명록이 접수되었습니다. 호스트 확인 후 공개되며, 승인 전에는 목록에 보이지 않습니다.");
       } else {
         const current = JSON.parse(window.localStorage.getItem(LOCAL_GUESTBOOK_KEY) || "[]") as GuestbookEntry[];
         window.localStorage.setItem(LOCAL_GUESTBOOK_KEY, JSON.stringify([nextEntry, ...current]));
-        setMessage("데모 모드에서 방명록을 저장했습니다.");
+        setGuestbookMessage("데모 모드에서 방명록을 저장했습니다.");
       }
 
       if (nextEntry.approved) {
         setGuestbookEntries((current) => [nextEntry, ...current]);
       }
     } catch (submissionError) {
-      setError(submissionError instanceof Error ? submissionError.message : "방명록 저장에 실패했습니다.");
+      setGuestbookError(submissionError instanceof Error ? submissionError.message : "방명록 저장에 실패했습니다.");
     } finally {
       setPending(false);
     }
@@ -403,15 +407,24 @@ export function InvitationView({
               RSVP 보내기
             </button>
           </form>
+          {rsvpMessage ? <p className="form-message success">{rsvpMessage}</p> : null}
+          {rsvpError ? <p className="form-message error">{rsvpError}</p> : null}
           {rsvpEntries.length ? <p>최근 응답 {rsvpEntries.length}건이 이 세션에 기록되었습니다.</p> : null}
         </article>
 
         <article className="invitation-card">
           <h2>카카오톡으로 보내기</h2>
-          <p id="invitationShareHint">카카오 JavaScript 키를 입력하면 카카오톡 공유창으로 바로 보낼 수 있습니다.</p>
+          {shareDisabled ? (
+            <p className="form-message error" id="invitationShareHint">
+              미리보기 단계에서는 나만 볼 수 있습니다. 하객에게 보낼 링크는 발행 후 공개 링크를 사용해 주세요.
+            </p>
+          ) : (
+            <p id="invitationShareHint">카카오 JavaScript 키를 입력하면 카카오톡 공유창으로 바로 보낼 수 있습니다.</p>
+          )}
           <div className="invitation-inline-actions">
             <button
               className="btn-primary invitation-small-btn"
+              disabled={shareDisabled}
               onClick={async () => {
                 try {
                   const kakao = await ensureKakaoSdk(kakaoJsKey);
@@ -426,7 +439,7 @@ export function InvitationView({
                       },
                       buttonTitle: "초대장 보기"
                     });
-                    setMessage("카카오톡 공유창을 열었습니다.");
+                    setShareMessage("카카오톡 공유창을 열었습니다.");
                     return;
                   }
                 } catch {
@@ -439,7 +452,7 @@ export function InvitationView({
                 }
 
                 await copyToClipboard(resolvedShareUrl);
-                setMessage("카카오 공유 설정이 없어 링크를 복사했습니다.");
+                setShareMessage("공유 링크를 복사했습니다. 카카오톡 대화창에 붙여넣어 보내 주세요.");
               }}
               type="button"
             >
@@ -447,6 +460,7 @@ export function InvitationView({
             </button>
             <button
               className="btn-outline invitation-small-btn"
+              disabled={shareDisabled}
               onClick={async () => {
                 if (navigator.share) {
                   await navigator.share({ title: payload.title, text: payload.message, url: resolvedShareUrl });
@@ -454,16 +468,25 @@ export function InvitationView({
                 }
 
                 await copyToClipboard(resolvedShareUrl);
-                setMessage("링크를 복사했습니다.");
+                setShareMessage("공유 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요.");
               }}
               type="button"
             >
               기본 공유
             </button>
-            <button className="btn-outline invitation-small-btn" onClick={() => copyToClipboard(resolvedShareUrl)} type="button">
+            <button
+              className="btn-outline invitation-small-btn"
+              disabled={shareDisabled}
+              onClick={async () => {
+                await copyToClipboard(resolvedShareUrl);
+                setShareMessage("공유 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요.");
+              }}
+              type="button"
+            >
               링크 복사
             </button>
           </div>
+          {shareMessage ? <p className="form-message success">{shareMessage}</p> : null}
         </article>
 
         <article className="invitation-card">
@@ -488,10 +511,10 @@ export function InvitationView({
             </button>
           </form>
           {mode === "public" ? (
-            <p className="form-message">방명록은 관리자 승인 후 공개됩니다.</p>
+            <p className="form-message">방명록은 관리자 승인 후 공개됩니다. 작성 직후 목록에 보이지 않아도 정상입니다.</p>
           ) : null}
-          {message ? <p className="form-message success">{message}</p> : null}
-          {error ? <p className="form-message error">{error}</p> : null}
+          {guestbookMessage ? <p className="form-message success">{guestbookMessage}</p> : null}
+          {guestbookError ? <p className="form-message error">{guestbookError}</p> : null}
           <ul className="list-box invitation-guestbook-list">
             {guestbookEntries.length ? (
               guestbookEntries.map((entry) => (

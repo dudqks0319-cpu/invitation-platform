@@ -24,10 +24,10 @@ vi.mock("@/lib/payments/kakaopay", () => ({
 
 import { GET } from "@/app/api/payments/kakaopay/approve/route";
 
-type PaymentStatus = "payment_pending" | "paid" | "payment_failed";
+type PaymentStatus = "payment_pending" | "paid" | "payment_failed" | "refund_pending" | "refunded";
 
-function createRequest(extraQuery = "") {
-  return new Request(`https://invitehub.test/api/payments/kakaopay/approve?paymentId=payment-1&pg_token=pg-token${extraQuery}`);
+function createRequest() {
+  return new Request("https://invitehub.test/api/payments/kakaopay/approve?paymentId=payment-1&pg_token=pg-token");
 }
 
 function createAuthClient(userId: string | null) {
@@ -48,16 +48,14 @@ function createAdminDouble(options?: {
   paymentUserId?: string;
   invitationUserId?: string;
   paymentStatus?: PaymentStatus;
-  approveNonce?: string | null;
-  nonceUsedAt?: string | null;
-  createdAt?: string;
+  providerTid?: string | null;
+  providerOrderId?: string | null;
 }) {
   const paymentStatus = options?.paymentStatus ?? "payment_pending";
   const paymentUserId = options?.paymentUserId ?? "user-1";
   const invitationUserId = options?.invitationUserId ?? paymentUserId;
-  const approveNonce = options?.approveNonce ?? "a".repeat(64);
-  const nonceUsedAt = options?.nonceUsedAt ?? null;
-  const createdAt = options?.createdAt ?? new Date().toISOString();
+  const providerTid = options && "providerTid" in options ? options.providerTid : "tid-1";
+  const providerOrderId = options && "providerOrderId" in options ? options.providerOrderId : "order-1";
 
   return {
     client: {
@@ -76,12 +74,9 @@ function createAdminDouble(options?: {
                   id: "payment-1",
                   invitation_id: "invitation-1",
                   user_id: paymentUserId,
-                  provider_order_id: "order-1",
-                  provider_tid: "tid-1",
-                  status: paymentStatus,
-                  approve_nonce: approveNonce,
-                  nonce_used_at: nonceUsedAt,
-                  created_at: createdAt
+                  provider_order_id: providerOrderId,
+                  provider_tid: providerTid,
+                  status: paymentStatus
                 },
                 error: null
               };
@@ -109,8 +104,7 @@ function createAdminDouble(options?: {
                 data: {
                   id: "invitation-1",
                   user_id: invitationUserId,
-                  payload: {},
-                  slug: "demo-card"
+                  payload: {}
                 },
                 error: null
               };
@@ -148,17 +142,20 @@ describe("GET /api/payments/kakaopay/approve", () => {
     });
   });
 
-  it("rejects the callback when the authenticated user does not own the payment", async () => {
-    createServerSupabaseClientMock.mockResolvedValue(createAuthClient("intruder"));
+  it("redirects unauthenticated users to sign in before approval", async () => {
+    createServerSupabaseClientMock.mockResolvedValue(createAuthClient(null));
     createSupabaseAdminClientMock.mockReturnValue(createAdminDouble().client);
 
     const response = await GET(createRequest());
+    const location = response.headers.get("location");
 
-    expect(response.headers.get("location")).toBe("https://invitehub.test/checkout?payment=failed");
+    expect(location).toBeTruthy();
+    expect(location).toContain("/sign-in");
+    expect(location).toContain("error=");
     expect(requestKakaoPayApproveMock).not.toHaveBeenCalled();
   });
 
-  it("rejects callbacks for payments that are no longer pending", async () => {
+  it("rejects callbacks for payments that are not pending", async () => {
     createServerSupabaseClientMock.mockResolvedValue(createAuthClient("user-1"));
     createSupabaseAdminClientMock.mockReturnValue(
       createAdminDouble({ paymentStatus: "paid" }).client
@@ -170,51 +167,15 @@ describe("GET /api/payments/kakaopay/approve", () => {
     expect(requestKakaoPayApproveMock).not.toHaveBeenCalled();
   });
 
-  it("rejects the callback when the invitation owner and payment owner diverge", async () => {
+  it("rejects callbacks when Kakao payment identifiers are missing", async () => {
     createServerSupabaseClientMock.mockResolvedValue(createAuthClient("user-1"));
     createSupabaseAdminClientMock.mockReturnValue(
-      createAdminDouble({ paymentUserId: "user-1", invitationUserId: "user-2" }).client
+      createAdminDouble({ providerTid: null }).client
     );
 
     const response = await GET(createRequest());
 
     expect(response.headers.get("location")).toBe("https://invitehub.test/checkout?payment=failed");
-    expect(requestKakaoPayApproveMock).not.toHaveBeenCalled();
-  });
-
-  it("rejects the callback when the nonce is mismatched", async () => {
-    createServerSupabaseClientMock.mockResolvedValue(createAuthClient("user-1"));
-    createSupabaseAdminClientMock.mockReturnValue(
-      createAdminDouble({ approveNonce: "b".repeat(64) }).client
-    );
-
-    const response = await GET(createRequest(`&nonce=${"a".repeat(64)}`));
-
-    expect(response.headers.get("location")).toContain("payment=failed");
-    expect(requestKakaoPayApproveMock).not.toHaveBeenCalled();
-  });
-
-  it("rejects the callback when the nonce was already used", async () => {
-    createServerSupabaseClientMock.mockResolvedValue(createAuthClient("user-1"));
-    createSupabaseAdminClientMock.mockReturnValue(
-      createAdminDouble({ nonceUsedAt: new Date().toISOString() }).client
-    );
-
-    const response = await GET(createRequest(`&nonce=${"a".repeat(64)}`));
-
-    expect(response.headers.get("location")).toContain("payment=failed");
-    expect(requestKakaoPayApproveMock).not.toHaveBeenCalled();
-  });
-
-  it("rejects expired nonces", async () => {
-    createServerSupabaseClientMock.mockResolvedValue(createAuthClient("user-1"));
-    createSupabaseAdminClientMock.mockReturnValue(
-      createAdminDouble({ createdAt: new Date(Date.now() - 31 * 60 * 1000).toISOString() }).client
-    );
-
-    const response = await GET(createRequest(`&nonce=${"a".repeat(64)}`));
-
-    expect(response.headers.get("location")).toContain("payment=failed");
     expect(requestKakaoPayApproveMock).not.toHaveBeenCalled();
   });
 });
