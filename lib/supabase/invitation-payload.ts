@@ -41,7 +41,8 @@ const payloadSchema = z.object({
   backgroundImageUrl: z.string().default("")
   ,
   backgroundImagePath: z.string().default(""),
-  galleryImages: z.array(z.string()).default([])
+  galleryImages: z.array(z.string()).default([]),
+  galleryImagePaths: z.array(z.string()).default([])
 });
 
 export type SafeInvitationPayload = z.infer<typeof payloadSchema>;
@@ -65,6 +66,9 @@ export function normalizeInvitationPayload(input: unknown) {
     backgroundImagePath: typeof raw.backgroundImagePath === "string" ? raw.backgroundImagePath : "",
     galleryImages: Array.isArray(raw.galleryImages)
       ? raw.galleryImages.filter((item): item is string => typeof item === "string")
+      : [],
+    galleryImagePaths: Array.isArray(raw.galleryImagePaths)
+      ? raw.galleryImagePaths.filter((item): item is string => typeof item === "string")
       : []
   });
 }

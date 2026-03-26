@@ -257,6 +257,16 @@ export function DashboardShell() {
     setMessage("환불이 처리되었습니다.");
   }
 
+  async function copyPublicLink(item: DashboardItem) {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const publicUrl = `${window.location.origin}/invitations/${item.slug}`;
+    await navigator.clipboard.writeText(publicUrl);
+    setMessage("공개 링크를 복사했습니다.");
+  }
+
   const selectedInvitation = items.find((item) => item.id === selectedInvitationId);
   const rsvpSummary = useMemo(() => {
     const attending = rsvpEntries.filter((entry) => entry.attending);
@@ -277,6 +287,13 @@ export function DashboardShell() {
           <h1 className="section-title">초대장 대시보드</h1>
           <p className="section-sub">{message}</p>
         </div>
+        <div className="ops-grid" style={{ marginBottom: "24px" }}>
+          <article className="ops-card" style={{ gridColumn: "1 / -1" }}>
+            <h3>보관 및 운영 안내</h3>
+            <p className="ops-note">발행한 초대장은 대시보드에서 계속 수정할 수 있고, 영상·배경음악·감사 메시지도 이후에 추가할 수 있습니다.</p>
+            <p className="ops-note">환불이 완료되면 공개 링크는 비활성화되므로, 다시 공개하려면 재발행이 필요합니다.</p>
+          </article>
+        </div>
         <div className="ops-grid">
           {items.map((item) => (
             <article className="ops-card" key={item.id}>
@@ -291,15 +308,22 @@ export function DashboardShell() {
                 생성일 {new Date(item.createdAt).toLocaleDateString("ko-KR")}
                 <br />
                 공개 링크 {item.slug}
+                <br />
+                {item.publishedAt ? `발행일 ${new Date(item.publishedAt).toLocaleDateString("ko-KR")}` : "아직 발행 전입니다."}
               </p>
               <div className="header-actions" style={{ marginTop: "16px" }}>
                 <Link className="btn-outline" href={`/builder?invitationId=${item.id}`}>
                   편집하기
                 </Link>
                 {item.status === "published" ? (
-                  <Link className="btn-primary" href={`/invitations/${item.slug}`}>
-                    보기
-                  </Link>
+                  <>
+                    <Link className="btn-primary" href={`/invitations/${item.slug}`}>
+                      보기
+                    </Link>
+                    <button className="btn-outline" onClick={() => copyPublicLink(item)} type="button">
+                      링크 복사
+                    </button>
+                  </>
                 ) : (
                   <Link className="btn-primary" href={`/checkout?invitationId=${item.id}`}>
                     결제/발행

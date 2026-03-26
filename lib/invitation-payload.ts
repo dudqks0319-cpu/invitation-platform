@@ -63,6 +63,7 @@ const legacyInvitationPayloadSchema = z
     backgroundImageUrl: imageReferenceSchema.optional(),
     backgroundImagePath: z.string().trim().optional(),
     galleryImages: z.array(imageReferenceSchema).optional(),
+    galleryImagePaths: z.array(z.string().trim()).optional(),
     mainImageData: imageReferenceSchema.optional(),
     backgroundImageData: imageReferenceSchema.optional()
   })
@@ -110,6 +111,9 @@ export const invitationDraftPayloadSchema = legacyInvitationPayloadSchema.transf
   backgroundImagePath: raw.backgroundImagePath || "",
   galleryImages: Array.isArray(raw.galleryImages)
     ? raw.galleryImages.filter((item): item is string => typeof item === "string")
+    : [],
+  galleryImagePaths: Array.isArray(raw.galleryImagePaths)
+    ? raw.galleryImagePaths.filter((item): item is string => typeof item === "string")
     : []
 }));
 

@@ -23,6 +23,28 @@ import {
 } from "@/lib/invitation-presentation";
 import { templates } from "@/lib/templates";
 
+type KakaoShareApi = {
+  isInitialized(): boolean;
+  init(key: string): void;
+  Share: {
+    sendDefault(payload: {
+      objectType: "text";
+      text: string;
+      link: {
+        mobileWebUrl: string;
+        webUrl: string;
+      };
+      buttonTitle: string;
+    }): void;
+  };
+};
+
+declare global {
+  interface Window {
+    Kakao?: KakaoShareApi;
+  }
+}
+
 type InvitationViewProps = {
   slug?: string;
   payload: InvitationDraftPayload;
@@ -33,6 +55,46 @@ type InvitationViewProps = {
 
 function normalizeUrl(value: string) {
   return /^https?:\/\//i.test(value) ? value : "";
+}
+
+let kakaoScriptPromise: Promise<KakaoShareApi | null> | null = null;
+
+async function ensureKakaoSdk(jsKey: string) {
+  if (!jsKey || typeof window === "undefined") {
+    return null;
+  }
+
+  if (window.Kakao) {
+    return window.Kakao;
+  }
+
+  if (!kakaoScriptPromise) {
+    kakaoScriptPromise = new Promise<KakaoShareApi | null>((resolve, reject) => {
+      const existing = document.getElementById("kakao-js-sdk");
+      if (existing) {
+        existing.addEventListener("load", () => resolve(window.Kakao ?? null), { once: true });
+        existing.addEventListener("error", () => reject(new Error("카카오 SDK를 불러오지 못했습니다.")), { once: true });
+        return;
+      }
+
+      const script = document.createElement("script");
+      script.id = "kakao-js-sdk";
+      script.src = "https://t1.kakaocdn.net/kakao_js_sdk/2.7.9/kakao.min.js";
+      script.async = true;
+      script.crossOrigin = "anonymous";
+      script.onload = () => resolve(window.Kakao ?? null);
+      script.onerror = () => reject(new Error("카카오 SDK를 불러오지 못했습니다."));
+      document.head.appendChild(script);
+    });
+  }
+
+  const kakao = await kakaoScriptPromise;
+
+  if (kakao && !kakao.isInitialized()) {
+    kakao.init(jsKey);
+  }
+
+  return kakao;
 }
 
 export function InvitationView({
@@ -54,6 +116,7 @@ export function InvitationView({
   const accountEntries = getInvitationAccountEntries(payload);
   const heroTitle = getInvitationHeroTitle(payload);
   const heroSubtitle = getInvitationHeroSubtitle(payload);
+  const kakaoJsKey = payload.kakaoJsKey.trim();
   const resolvedShareUrl = getPublicShareUrl(
     shareUrl,
     typeof window === "undefined" ? process.env.NEXT_PUBLIC_SITE_URL : window.location.origin
@@ -343,10 +406,45 @@ export function InvitationView({
 
         <article className="invitation-card">
           <h2>카카오톡으로 보내기</h2>
-          <p id="invitationShareHint">카카오 SDK 없이도 링크 복사와 기본 공유를 사용할 수 있습니다.</p>
+          <p id="invitationShareHint">카카오 JavaScript 키를 입력하면 카카오톡 공유창으로 바로 보낼 수 있습니다.</p>
           <div className="invitation-inline-actions">
             <button
               className="btn-primary invitation-small-btn"
+              onClick={async () => {
+                try {
+                  const kakao = await ensureKakaoSdk(kakaoJsKey);
+
+                  if (kakao) {
+                    kakao.Share.sendDefault({
+                      objectType: "text",
+                      text: `${payload.title}\n${payload.message}`,
+                      link: {
+                        mobileWebUrl: resolvedShareUrl,
+                        webUrl: resolvedShareUrl
+                      },
+                      buttonTitle: "초대장 보기"
+                    });
+                    setMessage("카카오톡 공유창을 열었습니다.");
+                    return;
+                  }
+                } catch {
+                  // fallback below
+                }
+
+                if (navigator.share) {
+                  await navigator.share({ title: payload.title, text: payload.message, url: resolvedShareUrl });
+                  return;
+                }
+
+                await copyToClipboard(resolvedShareUrl);
+                setMessage("카카오 공유 설정이 없어 링크를 복사했습니다.");
+              }}
+              type="button"
+            >
+              카카오톡 공유
+            </button>
+            <button
+              className="btn-outline invitation-small-btn"
               onClick={async () => {
                 if (navigator.share) {
                   await navigator.share({ title: payload.title, text: payload.message, url: resolvedShareUrl });
@@ -358,7 +456,7 @@ export function InvitationView({
               }}
               type="button"
             >
-              공유하기
+              기본 공유
             </button>
             <button className="btn-outline invitation-small-btn" onClick={() => copyToClipboard(resolvedShareUrl)} type="button">
               링크 복사

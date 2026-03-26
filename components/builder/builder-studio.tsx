@@ -103,6 +103,7 @@ export function BuilderStudio({
   const [backgroundImagePreviewUrl, setBackgroundImagePreviewUrl] = useState<string>(payload.backgroundImageUrl);
   const [pendingMainImageFile, setPendingMainImageFile] = useState<File | null>(null);
   const [pendingBackgroundImageFile, setPendingBackgroundImageFile] = useState<File | null>(null);
+  const [pendingGalleryFiles, setPendingGalleryFiles] = useState<File[]>([]);
 
   const selectedTemplate = useMemo(
     () => templates.find((template) => template.id === payload.templateId) ?? templates[0],
@@ -240,7 +241,11 @@ export function BuilderStudio({
     }
   }
 
-  async function uploadImage(file: File, kind: "main" | "background") {
+  function handleGallerySelection(fileList: FileList | null) {
+    setPendingGalleryFiles(fileList ? Array.from(fileList) : []);
+  }
+
+  async function uploadImage(file: File, kind: "main" | "background" | "gallery") {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("kind", kind);
@@ -287,12 +292,13 @@ export function BuilderStudio({
 
     const previousMainImagePath = payload.mainImagePath;
     const previousBackgroundImagePath = payload.backgroundImagePath;
+    const previousGalleryImagePaths = payload.galleryImagePaths;
     const rollbackPaths: string[] = [];
 
     try {
       let nextPayload = payload;
 
-      if ((pendingMainImageFile || pendingBackgroundImageFile) && (!supabase || !userId)) {
+      if ((pendingMainImageFile || pendingBackgroundImageFile || pendingGalleryFiles.length) && (!supabase || !userId)) {
         setMessage("데모 모드에서는 이미지가 현재 세션 미리보기로만 반영됩니다.");
         setMessageType("success");
       }
@@ -315,6 +321,14 @@ export function BuilderStudio({
         });
       }
 
+      if (pendingGalleryFiles.length && (!supabase || !userId)) {
+        const dataUrls = await Promise.all(pendingGalleryFiles.map((file) => fileToDataUrl(file)));
+        nextPayload = normalizeDraft({
+          ...nextPayload,
+          galleryImages: [...nextPayload.galleryImages, ...dataUrls]
+        });
+      }
+
       if (pendingMainImageFile && supabase && userId) {
         const uploaded = await uploadImage(pendingMainImageFile, "main");
         rollbackPaths.push(uploaded.path);
@@ -332,6 +346,18 @@ export function BuilderStudio({
           ...nextPayload,
           backgroundImageUrl: uploaded.publicUrl,
           backgroundImagePath: uploaded.path
+        });
+      }
+
+      if (pendingGalleryFiles.length && supabase && userId) {
+        const uploadedGallery = await Promise.all(
+          pendingGalleryFiles.map((file) => uploadImage(file, "gallery"))
+        );
+        rollbackPaths.push(...uploadedGallery.map((item) => item.path));
+        nextPayload = normalizeDraft({
+          ...nextPayload,
+          galleryImages: [...nextPayload.galleryImages, ...uploadedGallery.map((item) => item.publicUrl)],
+          galleryImagePaths: [...nextPayload.galleryImagePaths, ...uploadedGallery.map((item) => item.path)]
         });
       }
 
@@ -381,6 +407,9 @@ export function BuilderStudio({
           setPendingBackgroundImageFile(null);
           setBackgroundImagePreviewUrl(nextPayload.backgroundImageUrl);
         }
+        if (pendingGalleryFiles.length) {
+          setPendingGalleryFiles([]);
+        }
         setPending(false);
         setMessage(status === "published" ? "데모 모드에서 미리보기용 발행 상태로 저장했습니다." : "데모 모드로 초안을 저장했습니다.");
         setMessageType("success");
@@ -429,6 +458,9 @@ export function BuilderStudio({
         setPendingBackgroundImageFile(null);
         setBackgroundImagePreviewUrl(nextPayload.backgroundImageUrl);
       }
+      if (pendingGalleryFiles.length) {
+        setPendingGalleryFiles([]);
+      }
 
       if (
         supabase &&
@@ -446,6 +478,16 @@ export function BuilderStudio({
         previousBackgroundImagePath !== nextPayload.backgroundImagePath
       ) {
         await deleteImage(previousBackgroundImagePath).catch(() => {});
+      }
+
+      if (supabase && userId && previousGalleryImagePaths.length) {
+        const removedGalleryPaths = previousGalleryImagePaths.filter(
+          (path) => !nextPayload.galleryImagePaths.includes(path)
+        );
+
+        if (removedGalleryPaths.length) {
+          await Promise.allSettled(removedGalleryPaths.map((path) => deleteImage(path)));
+        }
       }
 
       setPending(false);
@@ -586,6 +628,14 @@ export function BuilderStudio({
             배경 사진 업로드
             <input className={inputClassName} accept="image/*" onChange={(event) => handleImageSelection("background", event.target.files?.[0] ?? null)} type="file" />
           </label>
+          <label>
+            갤러리 사진 업로드
+            <input className={inputClassName} accept="image/*" multiple onChange={(event) => handleGallerySelection(event.target.files)} type="file" />
+          </label>
+          <p className="builder-help">
+            현재 갤러리 {payload.galleryImages.length}장
+            {pendingGalleryFiles.length ? ` · 저장 대기 ${pendingGalleryFiles.length}장` : ""}
+          </p>
           <div className="header-actions" style={{ marginTop: "12px" }}>
             <button
               className="btn-outline"
@@ -610,6 +660,17 @@ export function BuilderStudio({
               type="button"
             >
               배경 사진 제거
+            </button>
+            <button
+              className="btn-outline"
+              onClick={() => {
+                setPendingGalleryFiles([]);
+                updateField("galleryImages", []);
+                updateField("galleryImagePaths", []);
+              }}
+              type="button"
+            >
+              갤러리 비우기
             </button>
           </div>
           <p className="builder-help">이미지는 저장 시 Storage로 업로드되고, payload에는 URL만 기록됩니다.</p>
@@ -676,10 +737,14 @@ export function BuilderStudio({
             <input className={inputClassName} placeholder="https://.../music.mp3" value={payload.backgroundMusicUrl} onChange={(event) => updateField("backgroundMusicUrl", event.target.value)} />
           </label>
           <label>
+            카카오 JavaScript 키
+            <input className={inputClassName} placeholder="카카오 개발자 콘솔의 JavaScript 키" value={payload.kakaoJsKey} onChange={(event) => updateField("kakaoJsKey", event.target.value)} />
+          </label>
+          <label>
             감사 메시지
             <textarea className={inputClassName} rows={3} value={payload.thankYouMessage} onChange={(event) => updateField("thankYouMessage", event.target.value)} />
           </label>
-          <p className="builder-help">배경음악은 모바일에서 자동 재생되지 않을 수 있어, 게스트가 직접 재생하는 방식으로 제공됩니다.</p>
+          <p className="builder-help">배경음악은 모바일에서 자동 재생되지 않을 수 있어, 게스트가 직접 재생하는 방식으로 제공됩니다. 카카오 공유를 쓰려면 카카오 개발자 콘솔에 현재 도메인을 등록해야 합니다.</p>
         </div>
 
         <button className="btn-primary form-submit" disabled={pending} type="submit">
