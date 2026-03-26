@@ -202,7 +202,7 @@ export default async function PublicInvitationPage({
 
     return (
       <>
-        <SiteHeader />
+        <SiteHeader mode="focus" />
         <div className="app-page-offset">
           <InvitationView
             initialGuestbookEntries={(guestbookEntries ?? []).map((entry) => ({
@@ -230,7 +230,7 @@ export default async function PublicInvitationPage({
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader mode="focus" />
       <div className="app-page-offset">
         <InvitationView
           mode="public"

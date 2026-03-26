@@ -19,8 +19,8 @@ import {
   type InvitationStatus,
   type InvitationDraftPayload
 } from "@/lib/invitation-payload";
+import { BuilderLivePreview } from "@/components/builder/builder-live-preview";
 import { templates } from "@/lib/templates";
-import { TemplateMarkup } from "@/components/landing/template-markup";
 
 type DraftMeta = {
   id?: string;
@@ -471,6 +471,15 @@ export function BuilderStudio({
         ? "재결제 후 재발행"
         : "무료 수정 저장"
       : "결제 후 발행";
+  const previewDateText = payload.eventDateTime
+    ? formatEventDateTime(payload.eventDateTime)
+    : "날짜와 시간을 선택하세요";
+  const previewVenueText =
+    payload.venueName || payload.venueAddress
+      ? [payload.venueName, payload.venueAddress].filter(Boolean).join(" · ")
+      : "예식장과 주소를 입력해 주세요";
+  const previewMessage = payload.message || "소중한 자리에 함께해 주세요";
+  const previewTemplateLabel = `선택한 디자인 · ${selectedTemplate.name}`;
 
   return (
     <div className="builder-grid builder-grid-extended">
@@ -505,7 +514,7 @@ export function BuilderStudio({
           </label>
           <label>
             행사 카테고리
-            <input className={inputClassName} readOnly value={payload.category} />
+            <input className={inputClassName} readOnly value={selectedTemplate.badge} />
           </label>
           <label>
             행사 제목
@@ -696,12 +705,12 @@ export function BuilderStudio({
         </button>
         {meta.status === "published" && hasRestrictedPaidChanges ? (
           <p className="form-message error">
-            템플릿 또는 이미지를 변경하면 재결제가 필요합니다. 체크아웃에서 결제 후 다시 발행됩니다.
+            템플릿이나 이미지를 바꾸면 다시 결제가 필요합니다. 결제 화면에서 완료하시면 새 내용으로 다시 공개됩니다.
           </p>
         ) : null}
         {meta.status && meta.status !== "draft" && meta.status !== "published" ? (
           <p className="form-message error">
-            현재 결제 상태: {meta.status}. 결제 완료 전까지 공개 링크는 활성화되지 않습니다.
+            결제가 완료되면 공개 링크가 자동으로 활성화됩니다. 잠시만 기다려 주세요.
           </p>
         ) : null}
         <p className={`form-message ${messageType}`}>{message}</p>
@@ -710,36 +719,17 @@ export function BuilderStudio({
       <div className="builder-preview-wrap">
         <div className="phone-mock builder-phone builder-phone-large">
           <div className="phone-screen builder-screen">
-            <div className="builder-template-preview">
-              <TemplateMarkup template={selectedTemplate} />
-            </div>
-            {backgroundImagePreviewUrl ? (
-              <div className="builder-background-layer has-image" style={{ backgroundImage: `url(${backgroundImagePreviewUrl})` }} />
-            ) : (
-              <div className="builder-background-layer" />
-            )}
-            <div className="builder-preview-content">
-              <div className="builder-preview-main-photo-wrap">
-                {mainImagePreviewUrl ? <img alt="메인 사진 미리보기" className="builder-preview-main-photo has-image" src={mainImagePreviewUrl} /> : <div className="builder-preview-main-photo" />}
-              </div>
-              <p className="builder-preview-label">{categoryMeta.badgeText}</p>
-              <h2 className="builder-preview-names">{previewTitle}</h2>
-              {previewSubtitle ? <p className="builder-preview-venue">{previewSubtitle}</p> : null}
-              <p className="builder-preview-date">
-                {payload.eventDateTime
-                  ? formatEventDateTime(payload.eventDateTime)
-                  : "날짜와 시간을 선택하세요"}
-              </p>
-              <p className="builder-preview-venue">
-                {payload.venueName || payload.venueAddress
-                  ? [payload.venueName, payload.venueAddress].filter(Boolean).join(" · ")
-                  : "예식장과 주소를 입력해 주세요"}
-              </p>
-              <p className="builder-preview-message">{payload.message || "소중한 자리에 함께해 주세요"}</p>
-              <p className="builder-preview-note">
-                이미지는 업로드 후 URL로 저장됩니다. 미발행 상태에서도 초안 저장과 owner 대시보드 연결이 유지됩니다.
-              </p>
-            </div>
+            <BuilderLivePreview
+              backgroundImagePreviewUrl={backgroundImagePreviewUrl}
+              mainImagePreviewUrl={mainImagePreviewUrl}
+              badgeText={categoryMeta.badgeText}
+              templateLabel={previewTemplateLabel}
+              title={previewTitle}
+              subtitle={previewSubtitle}
+              dateText={previewDateText}
+              venueText={previewVenueText}
+              message={previewMessage}
+            />
           </div>
         </div>
       </div>

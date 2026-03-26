@@ -13,7 +13,11 @@ const navLinks = [
   { href: "/#pricing", label: "요금" }
 ];
 
-export function SiteHeader() {
+type SiteHeaderProps = {
+  mode?: "default" | "focus";
+};
+
+export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = useMemo(() => createBrowserClient(), []);
@@ -60,38 +64,42 @@ export function SiteHeader() {
   }
 
   return (
-    <header className="site-header">
+    <header className={mode === "focus" ? "site-header site-header-focus" : "site-header"}>
       <div className="header-inner">
         <Link aria-label="InviteHub 홈으로 이동" className="logo" href="/">
           <span className="logo-icon">💌</span>
           <span className="logo-text">InviteHub</span>
         </Link>
-        <nav className="main-nav">
-          {navLinks.map((link) => (
-            <Link href={link.href} key={link.href}>
-              {link.label}
-            </Link>
-          ))}
-        </nav>
-        <div className="header-actions">
-          {pathname === "/sign-in" ? null : isAuthenticated ? (
-            <>
-              <Link className="btn-outline" href="/dashboard">
-                내 대시보드
+        {mode === "focus" ? null : (
+          <>
+            <nav className="main-nav">
+              {navLinks.map((link) => (
+                <Link href={link.href} key={link.href}>
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+            <div className="header-actions">
+              {pathname === "/sign-in" ? null : isAuthenticated ? (
+                <>
+                  <Link className="btn-outline" href="/dashboard">
+                    내 대시보드
+                  </Link>
+                  <button className="btn-outline" onClick={handleSignOut} type="button">
+                    로그아웃
+                  </button>
+                </>
+              ) : (
+                <Link className="btn-outline" href={`/sign-in?next=${encodeURIComponent(currentPath)}`}>
+                  로그인
+                </Link>
+              )}
+              <Link className="btn-primary" href="/builder">
+                시작하기
               </Link>
-              <button className="btn-outline" onClick={handleSignOut} type="button">
-                로그아웃
-              </button>
-            </>
-          ) : (
-            <Link className="btn-outline" href={`/sign-in?next=${encodeURIComponent(currentPath)}`}>
-              로그인
-            </Link>
-          )}
-          <Link className="btn-primary" href="/builder">
-            시작하기
-          </Link>
-        </div>
+            </div>
+          </>
+        )}
       </div>
     </header>
   );

@@ -11,7 +11,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:shared": "vitest run packages/shared/src/types/invitation.test.ts",
     "test:watch": "vitest"

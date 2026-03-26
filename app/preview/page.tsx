@@ -43,7 +43,7 @@ export default function PreviewPage() {
 
   return (
     <>
-      <SiteHeader />
+      <SiteHeader mode="focus" />
       <div className="app-page-offset">
         <InvitationView
           mode="preview"

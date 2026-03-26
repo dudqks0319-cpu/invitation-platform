@@ -187,22 +187,19 @@ export function InvitationView({
         ) : null}
         <div className="invitation-hero-overlay" />
         <div className="invitation-hero-inner">
-          {!payload.backgroundImageUrl ? (
-            <div className="invitation-template-showcase">
-              <TemplateMarkup template={selectedTemplate} />
-            </div>
-          ) : null}
           {payload.mainImageUrl ? (
             <div className="invitation-main-image-wrap">
               <img alt="초대장 메인 이미지" src={payload.mainImageUrl} style={{ display: "block" }} />
             </div>
           ) : null}
-          <p className="invitation-category">{categoryMeta.badgeText}</p>
-          <h1 className="invitation-names">{heroTitle}</h1>
-          {heroSubtitle ? <p style={{ marginTop: "10px", fontSize: "0.95rem", color: "#5f5549" }}>{heroSubtitle}</p> : null}
-          <p className="invitation-date">{formatEventDateTime(payload.eventDateTime)}</p>
-          <p className="invitation-venue">{formatVenue(payload)}</p>
-          <p className="invitation-message">{payload.message}</p>
+          <div className="invitation-hero-copy">
+            <p className="invitation-category">{categoryMeta.badgeText}</p>
+            <h1 className="invitation-names">{heroTitle}</h1>
+            {heroSubtitle ? <p className="invitation-subtitle">{heroSubtitle}</p> : null}
+            <p className="invitation-date">{formatEventDateTime(payload.eventDateTime)}</p>
+            <p className="invitation-venue">{formatVenue(payload)}</p>
+            <p className="invitation-message">{payload.message}</p>
+          </div>
         </div>
       </section>
 
