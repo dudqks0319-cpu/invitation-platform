@@ -170,6 +170,8 @@ export function InvitationView({
   }
 
   const kakaoPayLink = normalizeUrl(payload.kakaoPayLink);
+  const videoUrl = normalizeUrl(payload.videoUrl);
+  const backgroundMusicUrl = normalizeUrl(payload.backgroundMusicUrl);
   const mapLink =
     normalizeUrl(payload.naverMapLink) ||
     `https://map.naver.com/p/search/${encodeURIComponent(payload.mapAddress || payload.venueAddress || payload.venueName)}`;
@@ -282,6 +284,24 @@ export function InvitationView({
           </article>
         ) : null}
 
+        {videoUrl ? (
+          <article className="invitation-card">
+            <h2>식전 영상</h2>
+            <p>예식 전 함께 보실 수 있는 영상을 준비했습니다.</p>
+            <a className="btn-primary invitation-wide-btn" href={videoUrl} rel="noreferrer noopener" target="_blank">
+              영상 보기
+            </a>
+          </article>
+        ) : null}
+
+        {backgroundMusicUrl ? (
+          <article className="invitation-card">
+            <h2>배경음악</h2>
+            <p>초대장과 함께 준비한 음악을 재생해 보세요.</p>
+            <audio controls preload="none" src={backgroundMusicUrl} style={{ width: "100%", marginTop: 12 }} />
+          </article>
+        ) : null}
+
         <article className="invitation-card">
           <h2>RSVP</h2>
           <form
@@ -387,6 +407,13 @@ export function InvitationView({
             )}
           </ul>
         </article>
+
+        {payload.thankYouMessage ? (
+          <article className="invitation-card">
+            <h2>감사 인사</h2>
+            <p style={{ whiteSpace: "pre-line" }}>{payload.thankYouMessage}</p>
+          </article>
+        ) : null}
       </section>
     </main>
   );

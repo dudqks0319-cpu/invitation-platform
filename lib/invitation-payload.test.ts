@@ -13,6 +13,21 @@ describe("invitation payload helpers", () => {
     expect(draft.title).toBe("테스트 초대장");
     expect(draft.templateId).toBe(defaultInvitationDraft.templateId);
     expect(draft.venueName).toBe(defaultInvitationDraft.venueName);
+    expect(draft.videoUrl).toBe("");
+    expect(draft.backgroundMusicUrl).toBe("");
+    expect(draft.thankYouMessage).toBe("");
+  });
+
+  it("preserves optional media and thank-you fields", () => {
+    const draft = normalizeDraft({
+      videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      backgroundMusicUrl: "https://cdn.example.com/music.mp3",
+      thankYouMessage: "함께해 주셔서 감사합니다."
+    });
+
+    expect(draft.videoUrl).toBe("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    expect(draft.backgroundMusicUrl).toBe("https://cdn.example.com/music.mp3");
+    expect(draft.thankYouMessage).toBe("함께해 주셔서 감사합니다.");
   });
 
   it("creates a readable slug", () => {

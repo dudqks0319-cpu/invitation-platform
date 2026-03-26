@@ -665,6 +665,23 @@ export function BuilderStudio({
           </label>
         </div>
 
+        <div className="builder-form-section">
+          <h3>6. 추가 꾸미기</h3>
+          <label>
+            식전영상 링크
+            <input className={inputClassName} placeholder="https://..." value={payload.videoUrl} onChange={(event) => updateField("videoUrl", event.target.value)} />
+          </label>
+          <label>
+            배경음악 링크
+            <input className={inputClassName} placeholder="https://.../music.mp3" value={payload.backgroundMusicUrl} onChange={(event) => updateField("backgroundMusicUrl", event.target.value)} />
+          </label>
+          <label>
+            감사 메시지
+            <textarea className={inputClassName} rows={3} value={payload.thankYouMessage} onChange={(event) => updateField("thankYouMessage", event.target.value)} />
+          </label>
+          <p className="builder-help">배경음악은 모바일에서 자동 재생되지 않을 수 있어, 게스트가 직접 재생하는 방식으로 제공됩니다.</p>
+        </div>
+
         <button className="btn-primary form-submit" disabled={pending} type="submit">
           {pending ? "저장 중..." : "초안 저장"}
         </button>

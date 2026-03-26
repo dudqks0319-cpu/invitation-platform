@@ -29,4 +29,16 @@ describe("invitation payload normalization", () => {
       "https://example.com/2.jpg"
     ]);
   });
+
+  it("preserves optional media and thank-you fields", () => {
+    const payload = normalizeInvitationPayload({
+      videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      backgroundMusicUrl: "https://cdn.example.com/music.mp3",
+      thankYouMessage: "함께해 주셔서 감사합니다."
+    });
+
+    expect(payload.videoUrl).toBe("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+    expect(payload.backgroundMusicUrl).toBe("https://cdn.example.com/music.mp3");
+    expect(payload.thankYouMessage).toBe("함께해 주셔서 감사합니다.");
+  });
 });

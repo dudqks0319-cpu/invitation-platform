@@ -31,4 +31,30 @@ describe("InvitationView", () => {
     expect(screen.queryByText("신랑측 계좌 복사")).not.toBeInTheDocument();
     expect(screen.queryByText(/신랑/)).not.toBeInTheDocument();
   });
+
+  it("renders optional media and thank-you sections when provided", () => {
+    const { container } = render(
+      <InvitationView
+        mode="public"
+        payload={{
+          ...defaultInvitationDraft,
+          videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+          backgroundMusicUrl: "https://cdn.example.com/music.mp3",
+          thankYouMessage: "함께해 주셔서 감사합니다.\n좋은 날에 다시 뵙겠습니다."
+        }}
+        shareUrl="https://invitehub.test/invitations/kim-lee-demo"
+        slug="kim-lee-demo"
+      />
+    );
+
+    expect(screen.getByRole("heading", { name: "식전 영상" })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "영상 보기" })).toHaveAttribute(
+      "href",
+      "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    );
+    expect(screen.getByRole("heading", { name: "배경음악" })).toBeInTheDocument();
+    expect(container.querySelector("audio")).toHaveAttribute("src", "https://cdn.example.com/music.mp3");
+    expect(screen.getByRole("heading", { name: "감사 인사" })).toBeInTheDocument();
+    expect(screen.getByText((content, node) => node?.textContent === "함께해 주셔서 감사합니다.\n좋은 날에 다시 뵙겠습니다.")).toBeInTheDocument();
+  });
 });
