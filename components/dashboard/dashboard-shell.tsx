@@ -13,6 +13,7 @@ import {
 } from "@/lib/invitation-payload";
 
 type DashboardItem = InvitationRecord & {
+  viewCount?: number;
   rsvpCount?: number;
   guestbookCount?: number;
   repurchaseRequired?: boolean;
@@ -111,9 +112,40 @@ export function DashboardShell() {
         publishedAt: row.published_at
       }));
 
-      setItems(rows);
-      setSelectedInvitationId((current) => current || rows[0]?.id || "");
-      setMessage(rows.length ? "저장된 초대장을 불러왔습니다." : "아직 저장된 초대장이 없습니다.");
+      if (!rows.length) {
+        setItems([]);
+        setSelectedInvitationId("");
+        setMessage("아직 저장된 초대장이 없습니다.");
+        return;
+      }
+
+      const invitationIds = rows.map((row) => row.id);
+      const [{ data: rsvpCountRows }, { data: guestbookCountRows }, { data: viewCountRows }] = await Promise.all([
+        supabase.from("rsvps").select("invitation_id").in("invitation_id", invitationIds),
+        supabase.from("guestbook_entries").select("invitation_id").in("invitation_id", invitationIds),
+        supabase.from("view_logs").select("invitation_id").in("invitation_id", invitationIds)
+      ]);
+
+      const countByInvitation = (entries: Array<{ invitation_id: string }> | null | undefined) =>
+        (entries ?? []).reduce<Record<string, number>>((acc, entry) => {
+          acc[entry.invitation_id] = (acc[entry.invitation_id] ?? 0) + 1;
+          return acc;
+        }, {});
+
+      const rsvpCountMap = countByInvitation(rsvpCountRows);
+      const guestbookCountMap = countByInvitation(guestbookCountRows);
+      const viewCountMap = countByInvitation(viewCountRows);
+
+      const enrichedRows = rows.map((row) => ({
+        ...row,
+        viewCount: viewCountMap[row.id] ?? 0,
+        rsvpCount: rsvpCountMap[row.id] ?? 0,
+        guestbookCount: guestbookCountMap[row.id] ?? 0
+      }));
+
+      setItems(enrichedRows);
+      setSelectedInvitationId((current) => current || enrichedRows[0]?.id || "");
+      setMessage("저장된 초대장을 불러왔습니다.");
     }
 
     void loadDashboard();
@@ -268,6 +300,16 @@ export function DashboardShell() {
   }
 
   const selectedInvitation = items.find((item) => item.id === selectedInvitationId);
+  const dashboardSummary = useMemo(
+    () => ({
+      totalInvitations: items.length,
+      publishedInvitations: items.filter((item) => item.status === "published").length,
+      totalViews: items.reduce((sum, item) => sum + (item.viewCount ?? 0), 0),
+      totalRsvps: items.reduce((sum, item) => sum + (item.rsvpCount ?? 0), 0),
+      totalGuestbook: items.reduce((sum, item) => sum + (item.guestbookCount ?? 0), 0)
+    }),
+    [items]
+  );
   const rsvpSummary = useMemo(() => {
     const attending = rsvpEntries.filter((entry) => entry.attending);
     const declined = rsvpEntries.length - attending.length;
@@ -293,6 +335,26 @@ export function DashboardShell() {
             <p className="ops-note">발행한 초대장은 대시보드에서 계속 수정할 수 있고, 영상·배경음악·감사 메시지도 이후에 추가할 수 있습니다.</p>
             <p className="ops-note">환불이 완료되면 공개 링크는 비활성화되므로, 다시 공개하려면 재발행이 필요합니다.</p>
           </article>
+          <article className="ops-card">
+            <h3>전체 초대장</h3>
+            <p className="ops-value">{dashboardSummary.totalInvitations}</p>
+            <p className="ops-note">발행 {dashboardSummary.publishedInvitations}건</p>
+          </article>
+          <article className="ops-card">
+            <h3>누적 조회수</h3>
+            <p className="ops-value">{dashboardSummary.totalViews}</p>
+            <p className="ops-note">공개 초대장 기준 집계</p>
+          </article>
+          <article className="ops-card">
+            <h3>누적 RSVP</h3>
+            <p className="ops-value">{dashboardSummary.totalRsvps}</p>
+            <p className="ops-note">전체 응답 기준</p>
+          </article>
+          <article className="ops-card">
+            <h3>누적 방명록</h3>
+            <p className="ops-value">{dashboardSummary.totalGuestbook}</p>
+            <p className="ops-note">승인 전 항목 포함</p>
+          </article>
         </div>
         <div className="ops-grid">
           {items.map((item) => (
@@ -301,6 +363,7 @@ export function DashboardShell() {
               <p className="ops-value">{getStatusLabel(item.status)}</p>
               <p className="ops-line">카테고리 <strong>{item.category}</strong></p>
               <p className="ops-line">템플릿 <strong>{item.templateId}</strong></p>
+              <p className="ops-line">조회 <strong>{item.viewCount ?? 0}</strong> · RSVP <strong>{item.rsvpCount ?? 0}</strong> · 방명록 <strong>{item.guestbookCount ?? 0}</strong></p>
               {item.repurchaseRequired ? (
                 <p className="ops-note">이미지 또는 템플릿 변경으로 재결제가 필요합니다.</p>
               ) : null}
