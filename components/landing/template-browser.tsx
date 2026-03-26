@@ -2,17 +2,10 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import type { GensparkArtwork } from "@/lib/genspark-gallery";
 import { templateCategories, templates, type TemplatePreset } from "@/lib/templates";
 import { TemplateMarkup } from "@/components/landing/template-markup";
 
-export function TemplateBrowser({
-  featuredImages = [],
-  archiveImages = []
-}: {
-  featuredImages?: GensparkArtwork[];
-  archiveImages?: readonly string[];
-}) {
+export function TemplateBrowser() {
   const [activeCategory, setActiveCategory] = useState<string>(templateCategories[0].key);
   const [previewTarget, setPreviewTarget] = useState<TemplatePreset | null>(null);
 
@@ -23,43 +16,11 @@ export function TemplateBrowser({
 
   return (
     <>
-      {featuredImages.length ? (
-        <section className="template-showcase-section">
-          <div className="section-inner template-showcase-grid">
-            <div className="template-showcase-copy">
-              <p className="section-kicker">ART DIRECTION</p>
-              <h2 className="section-title left">바른손카드처럼 첫인상부터 신뢰가 가는 무드</h2>
-              <p className="section-sub left">
-                실제 카드 브랜드가 쓰는 여백, 종이 톤, 플로럴 프레임 감성을 기준으로
-                랜딩과 템플릿 탐색의 시작점을 더 고급스럽게 다듬었습니다.
-              </p>
-              <div className="template-showcase-meta">
-                <span>프리미엄 페이퍼 톤</span>
-                <span>수채화 플로럴 자산</span>
-                <span>모바일 퍼스트 카드 구성</span>
-              </div>
-            </div>
-            <div className="template-showcase-cards">
-              {featuredImages.slice(0, 4).map((image) => (
-                <article className="showcase-art-card" key={image.src}>
-                  <div className="showcase-art-image" style={{ backgroundImage: `url(${image.src})` }} />
-                  <div className="showcase-art-copy">
-                    <p>{image.tone}</p>
-                    <strong>{image.title}</strong>
-                    <span>{image.note}</span>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </section>
-      ) : null}
-
       <section className="categories" id="categories">
         <div className="section-inner">
-          <p className="section-kicker">CATEGORY SELECTOR</p>
-          <h2 className="section-title">어떤 행사를 준비하시나요?</h2>
-          <p className="section-sub">목적에 맞는 템플릿을 바로 찾아보세요</p>
+          <p className="section-kicker">행사별 디자인</p>
+          <h2 className="section-title">어떤 날을 준비하시나요?</h2>
+          <p className="section-sub">행사 분위기에 맞는 템플릿을 골라보세요.</p>
           <div className="cat-tabs">
             {templateCategories.map((category) => (
               <button
@@ -77,14 +38,14 @@ export function TemplateBrowser({
 
       <section className="templates-section" id="templates">
         <div className="section-inner">
-          <p className="section-kicker">TEMPLATE PREVIEW</p>
-          <h2 className="section-title">인기 템플릿</h2>
-          <p className="section-sub">감성 가득한 디자인으로 마음을 전하세요</p>
+          <p className="section-kicker">인기 디자인</p>
+          <h2 className="section-title">마음에 드는 템플릿을 골라보세요</h2>
+          <p className="section-sub">모든 템플릿은 무료로 미리 볼 수 있고, 바로 빌더로 이어집니다.</p>
           <div className="templates-grid">
             {filteredTemplates.map((template) => (
               <div className="template-card" key={template.id}>
                 <div className="template-thumb">
-                  <TemplateMarkup template={template} />
+                  <TemplateMarkup template={template} variant="browser" />
                   <div className="template-overlay">
                     <div className="overlay-btns">
                       <button
@@ -118,27 +79,6 @@ export function TemplateBrowser({
         </div>
       </section>
 
-      {archiveImages.length ? (
-        <section className="archive-section" id="genspark-archive">
-          <div className="section-inner">
-            <p className="section-kicker">FULL GENSPARK ARCHIVE</p>
-            <h2 className="section-title">Genspark 이미지 {archiveImages.length}장 전체 보관</h2>
-            <p className="section-sub">
-              확인된 자산을 전부 로컬에 내려받아, 카드 무드보드처럼 한 화면에서 바로 비교할 수 있게 정리했습니다.
-            </p>
-            <div className="archive-grid">
-              {archiveImages.map((image, index) => (
-                <div
-                  className={`archive-thumb ${index % 8 === 0 ? "tall" : index % 5 === 0 ? "wide" : ""}`}
-                  key={image}
-                  style={{ backgroundImage: `url(${image})` }}
-                />
-              ))}
-            </div>
-          </div>
-        </section>
-      ) : null}
-
       <div className={`modal-overlay ${previewTarget ? "open" : ""}`} onClick={() => setPreviewTarget(null)}>
         <div className="preview-modal-box" onClick={(event) => event.stopPropagation()}>
           <button className="modal-close" onClick={() => setPreviewTarget(null)} type="button">
@@ -158,19 +98,12 @@ export function TemplateBrowser({
               <div style={{ padding: "0 24px" }}>
                 <TemplateMarkup template={previewTarget} />
               </div>
-              <div style={{ padding: "16px 24px 0", display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                {previewTarget.tags.map((tag) => (
-                  <span className="tag" key={tag}>
-                    {tag}
-                  </span>
-                ))}
-              </div>
               <div className="preview-actions">
                 <button className="btn-outline" onClick={() => setPreviewTarget(null)} type="button">
                   닫기
                 </button>
                 <Link className="btn-primary" href={`/builder?template=${previewTarget.id}`}>
-                  이 템플릿 사용하기
+                  이 템플릿으로 만들기
                 </Link>
               </div>
             </>

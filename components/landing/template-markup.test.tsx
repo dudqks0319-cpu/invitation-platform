@@ -41,4 +41,25 @@ describe("TemplateMarkup", () => {
     expect(artworkImages.length).toBeGreaterThan(0);
     expect(document.body.textContent).toContain("초대장 문구");
   });
+
+  it("uses a clean browser preview variant without shared artwork layers", () => {
+    document.body.innerHTML = renderToStaticMarkup(
+      <TemplateMarkup
+        variant="browser"
+        template={{
+          id: "wedding-modern",
+          category: "wedding",
+          name: "다크 골드",
+          badge: "결혼식",
+          desc: "테스트",
+          tags: [],
+          html: `<div class="tmpl-wedding-modern"><div class="names">Kim &amp; Park</div></div>`
+        }}
+      />
+    );
+
+    expect(document.querySelector(".template-markup-enhanced")).toBeNull();
+    expect(document.querySelector(".template-markup-browser")).not.toBeNull();
+    expect(document.body.textContent).toContain("Kim & Park");
+  });
 });

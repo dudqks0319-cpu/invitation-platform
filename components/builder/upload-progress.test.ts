@@ -1,5 +1,6 @@
 import {
   clampUploadPercent,
+  countUploadTargets,
   getAggregateUploadPercent,
   getUploadProgressLabel
 } from "@/components/builder/upload-progress";
@@ -20,5 +21,11 @@ describe("upload progress helpers", () => {
   it("returns user-facing labels for the upload phases", () => {
     expect(getUploadProgressLabel({ completedFiles: 0, totalFiles: 2, currentFileLabel: "메인 사진" })).toBe("메인 사진 업로드 중");
     expect(getUploadProgressLabel({ completedFiles: 2, totalFiles: 2, currentFileLabel: "배경 사진" })).toBe("이미지 업로드를 마무리하고 있습니다");
+  });
+
+  it("counts gallery uploads together with main and background uploads", () => {
+    expect(countUploadTargets({ hasMain: false, hasBackground: false, galleryCount: 0 })).toBe(0);
+    expect(countUploadTargets({ hasMain: true, hasBackground: false, galleryCount: 2 })).toBe(3);
+    expect(countUploadTargets({ hasMain: true, hasBackground: true, galleryCount: 3 })).toBe(5);
   });
 });

@@ -6,16 +6,27 @@ import { getTemplateImages } from "@/lib/template-images";
 
 export function TemplateMarkup({
   template,
-  className = ""
+  className = "",
+  variant = "full"
 }: {
   template: TemplatePreset;
   className?: string;
+  variant?: "full" | "browser";
 }) {
   const images = getTemplateImages(template.category);
   const sanitizedHtml = sanitizeTemplateMarkup(template.html);
   const hasImages = Boolean(
     images.topDecor || images.bottomDecor || images.divider || images.background || images.frame
   );
+
+  if (variant === "browser") {
+    return (
+      <div
+        className={`template-markup-browser ${className}`.trim()}
+        dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
+      />
+    );
+  }
 
   if (!hasImages) {
     return <div className={className} dangerouslySetInnerHTML={{ __html: sanitizedHtml }} />;

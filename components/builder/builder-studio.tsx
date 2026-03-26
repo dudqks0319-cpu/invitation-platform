@@ -18,6 +18,7 @@ import { templates } from "@/lib/templates";
 import { TemplateMarkup } from "@/components/landing/template-markup";
 import { BUILDER_STEPS, clampBuilderStep, getBuilderStep } from "@/components/builder/builder-steps";
 import {
+  countUploadTargets,
   getAggregateUploadPercent,
   getUploadProgressLabel,
   type UploadProgressState
@@ -112,6 +113,8 @@ export function BuilderStudio({
   const [backgroundImagePreviewUrl, setBackgroundImagePreviewUrl] = useState<string>(payload.backgroundImageUrl);
   const [pendingMainImageFile, setPendingMainImageFile] = useState<File | null>(null);
   const [pendingBackgroundImageFile, setPendingBackgroundImageFile] = useState<File | null>(null);
+  const [pendingGalleryFiles, setPendingGalleryFiles] = useState<File[]>([]);
+  const [pendingGalleryPreviewUrls, setPendingGalleryPreviewUrls] = useState<string[]>([]);
 
   const selectedTemplate = useMemo(
     () => templates.find((template) => template.id === payload.templateId) ?? templates[0],
@@ -159,6 +162,7 @@ export function BuilderStudio({
       });
       setMainImagePreviewUrl(nextPayload.mainImageUrl);
       setBackgroundImagePreviewUrl(nextPayload.backgroundImageUrl);
+      setPendingGalleryPreviewUrls([]);
       paidSnapshotRef.current = data.paid_payload_snapshot ? normalizeDraft(data.paid_payload_snapshot) : null;
     })();
   }, [initialInvitationId, supabase, userId]);
@@ -198,8 +202,10 @@ export function BuilderStudio({
       payload.templateId !== paidSnapshotRef.current.templateId ||
       payload.mainImagePath !== paidSnapshotRef.current.mainImagePath ||
       payload.backgroundImagePath !== paidSnapshotRef.current.backgroundImagePath ||
+      payload.galleryImagePaths.join("|") !== paidSnapshotRef.current.galleryImagePaths.join("|") ||
       payload.mainImageUrl !== paidSnapshotRef.current.mainImageUrl ||
-      payload.backgroundImageUrl !== paidSnapshotRef.current.backgroundImageUrl
+      payload.backgroundImageUrl !== paidSnapshotRef.current.backgroundImageUrl ||
+      payload.galleryImages.join("|") !== paidSnapshotRef.current.galleryImages.join("|")
     );
 
   useEffect(() => {
@@ -252,9 +258,22 @@ export function BuilderStudio({
     }
   }
 
+  function handleGallerySelection(fileList: FileList | null) {
+    const files = fileList ? Array.from(fileList) : [];
+
+    if (files.some((file) => file.size > MAX_DEMO_IMAGE_BYTES)) {
+      setMessage("갤러리 이미지는 5MB 이하 파일만 업로드할 수 있습니다.");
+      setMessageType("error");
+      return;
+    }
+
+    setPendingGalleryFiles(files);
+    setPendingGalleryPreviewUrls(files.map((file) => createPreviewUrl(file)));
+  }
+
   async function uploadImage(
     file: File,
-    kind: "main" | "background",
+    kind: "main" | "background" | "gallery",
     onProgress?: (percent: number) => void
   ) {
     const formData = new FormData();
@@ -324,6 +343,7 @@ export function BuilderStudio({
 
     const previousMainImagePath = payload.mainImagePath;
     const previousBackgroundImagePath = payload.backgroundImagePath;
+    const previousGalleryImagePaths = payload.galleryImagePaths;
     const rollbackPaths: string[] = [];
 
     try {
@@ -344,9 +364,19 @@ export function BuilderStudio({
           (!pendingBackgroundImageFile && nextPayload.backgroundImageUrl.startsWith("data:") && !nextPayload.backgroundImagePath)
         )
       );
-      const totalUploads = [shouldUploadMain, shouldUploadBackground].filter(Boolean).length;
+      const galleryDataIndexes = nextPayload.galleryImages.reduce<number[]>((indexes, imageUrl, index) => {
+        if (imageUrl.startsWith("data:") && !nextPayload.galleryImagePaths[index]) {
+          indexes.push(index);
+        }
+        return indexes;
+      }, []);
+      const totalUploads = countUploadTargets({
+        hasMain: shouldUploadMain,
+        hasBackground: shouldUploadBackground,
+        galleryCount: pendingGalleryFiles.length + galleryDataIndexes.length
+      });
 
-      if ((pendingMainImageFile || pendingBackgroundImageFile) && (!supabase || !userId)) {
+      if ((pendingMainImageFile || pendingBackgroundImageFile || pendingGalleryFiles.length) && (!supabase || !userId)) {
         setMessage("데모 모드에서는 이미지가 현재 세션 미리보기로만 반영됩니다.");
         setMessageType("success");
       }
@@ -366,6 +396,14 @@ export function BuilderStudio({
           ...nextPayload,
           backgroundImageUrl: dataUrl,
           backgroundImagePath: ""
+        });
+      }
+
+      if (pendingGalleryFiles.length && (!supabase || !userId)) {
+        const dataUrls = await Promise.all(pendingGalleryFiles.map((file) => fileToDataUrl(file)));
+        nextPayload = normalizeDraft({
+          ...nextPayload,
+          galleryImages: [...nextPayload.galleryImages, ...dataUrls]
         });
       }
 
@@ -413,6 +451,38 @@ export function BuilderStudio({
           ...nextPayload,
           backgroundImageUrl: uploaded.publicUrl,
           backgroundImagePath: uploaded.path
+        });
+      }
+
+      if (pendingGalleryFiles.length && supabase && userId) {
+        const completedFiles = [pendingMainImageFile, pendingBackgroundImageFile].filter(Boolean).length;
+        const uploadedGallery = [];
+
+        for (const [index, file] of pendingGalleryFiles.entries()) {
+          setUploadProgress({
+            completedFiles: completedFiles + index,
+            totalFiles: totalUploads,
+            currentFilePercent: 0,
+            currentFileLabel: `갤러리 사진 ${index + 1}`
+          });
+
+          const uploaded = await uploadImage(file, "gallery", (percent) => {
+            setUploadProgress((current) => ({
+              completedFiles: completedFiles + index,
+              totalFiles: current?.totalFiles ?? totalUploads,
+              currentFilePercent: percent,
+              currentFileLabel: `갤러리 사진 ${index + 1}`
+            }));
+          });
+
+          uploadedGallery.push(uploaded);
+        }
+
+        rollbackPaths.push(...uploadedGallery.map((item) => item.path));
+        nextPayload = normalizeDraft({
+          ...nextPayload,
+          galleryImages: [...nextPayload.galleryImages, ...uploadedGallery.map((item) => item.publicUrl)],
+          galleryImagePaths: [...nextPayload.galleryImagePaths, ...uploadedGallery.map((item) => item.path)]
         });
       }
 
@@ -483,6 +553,48 @@ export function BuilderStudio({
         });
       }
 
+      if (!pendingGalleryFiles.length && supabase && userId && galleryDataIndexes.length) {
+        const completedFiles = countUploadTargets({
+          hasMain: shouldUploadMain,
+          hasBackground: shouldUploadBackground,
+          galleryCount: 0
+        });
+        const nextGalleryImages = [...nextPayload.galleryImages];
+        const nextGalleryPaths = [...nextPayload.galleryImagePaths];
+
+        for (const [offset, index] of galleryDataIndexes.entries()) {
+          setUploadProgress({
+            completedFiles: completedFiles + offset,
+            totalFiles: totalUploads,
+            currentFilePercent: 0,
+            currentFileLabel: `갤러리 사진 ${index + 1}`
+          });
+
+          const uploaded = await uploadImage(
+            await dataUrlToFile(nextPayload.galleryImages[index], `gallery-${index + 1}.png`),
+            "gallery",
+            (percent) => {
+              setUploadProgress((current) => ({
+                completedFiles: completedFiles + offset,
+                totalFiles: current?.totalFiles ?? totalUploads,
+                currentFilePercent: percent,
+                currentFileLabel: `갤러리 사진 ${index + 1}`
+              }));
+            }
+          );
+
+          rollbackPaths.push(uploaded.path);
+          nextGalleryImages[index] = uploaded.publicUrl;
+          nextGalleryPaths[index] = uploaded.path;
+        }
+
+        nextPayload = normalizeDraft({
+          ...nextPayload,
+          galleryImages: nextGalleryImages,
+          galleryImagePaths: nextGalleryPaths
+        });
+      }
+
       const nextSlug = meta.slug || createInvitationSlug(nextPayload);
       const nextMeta = { ...meta, slug: nextSlug, status };
 
@@ -496,6 +608,10 @@ export function BuilderStudio({
         if (pendingBackgroundImageFile) {
           setPendingBackgroundImageFile(null);
           setBackgroundImagePreviewUrl(nextPayload.backgroundImageUrl);
+        }
+        if (pendingGalleryFiles.length) {
+          setPendingGalleryFiles([]);
+          setPendingGalleryPreviewUrls([]);
         }
         setPending(false);
         setMessage(status === "published" ? "데모 모드에서 미리보기용 발행 상태로 저장했습니다." : "데모 모드로 초안을 저장했습니다.");
@@ -545,6 +661,10 @@ export function BuilderStudio({
         setPendingBackgroundImageFile(null);
         setBackgroundImagePreviewUrl(nextPayload.backgroundImageUrl);
       }
+      if (pendingGalleryFiles.length) {
+        setPendingGalleryFiles([]);
+        setPendingGalleryPreviewUrls([]);
+      }
 
       if (
         supabase &&
@@ -562,6 +682,16 @@ export function BuilderStudio({
         previousBackgroundImagePath !== nextPayload.backgroundImagePath
       ) {
         await deleteImage(previousBackgroundImagePath).catch(() => {});
+      }
+
+      if (supabase && userId && previousGalleryImagePaths.length) {
+        const removedGalleryPaths = previousGalleryImagePaths.filter(
+          (path) => !nextPayload.galleryImagePaths.includes(path)
+        );
+
+        if (removedGalleryPaths.length) {
+          await Promise.allSettled(removedGalleryPaths.map((path) => deleteImage(path)));
+        }
       }
 
       setPending(false);
@@ -743,14 +873,46 @@ export function BuilderStudio({
         <div className="builder-form-section" hidden={currentStep !== 2}>
           <h3>3. 사진 설정</h3>
           <p className="builder-help">메인 사진과 배경 이미지는 발행 후 교체 시 재결제가 필요합니다. 업로드 전 최종 이미지를 먼저 골라 두는 편이 안전합니다.</p>
-          <label>
-            메인 사진 업로드
-            <input className={inputClassName} accept="image/*" onChange={(event) => handleImageSelection("main", event.target.files?.[0] ?? null)} type="file" />
-          </label>
-          <label>
-            배경 사진 업로드
-            <input className={inputClassName} accept="image/*" onChange={(event) => handleImageSelection("background", event.target.files?.[0] ?? null)} type="file" />
-          </label>
+            <label>
+              메인 사진 업로드
+              <div className="builder-upload-control">
+                <span className="builder-upload-filename">
+                  {pendingMainImageFile?.name || (payload.mainImageUrl ? "현재 메인 사진이 연결되어 있습니다." : "선택된 파일 없음")}
+                </span>
+                <span className="builder-upload-button">메인 사진 선택</span>
+                <input className="builder-hidden-file" accept="image/*" onChange={(event) => handleImageSelection("main", event.target.files?.[0] ?? null)} type="file" />
+              </div>
+            </label>
+            <label>
+              배경 사진 업로드
+              <div className="builder-upload-control">
+                <span className="builder-upload-filename">
+                  {pendingBackgroundImageFile?.name || (payload.backgroundImageUrl ? "현재 배경 사진이 연결되어 있습니다." : "선택된 파일 없음")}
+                </span>
+                <span className="builder-upload-button">배경 사진 선택</span>
+                <input className="builder-hidden-file" accept="image/*" onChange={(event) => handleImageSelection("background", event.target.files?.[0] ?? null)} type="file" />
+              </div>
+            </label>
+            <label>
+              갤러리 사진 업로드
+              <div className="builder-upload-control">
+                <span className="builder-upload-filename">
+                  {pendingGalleryFiles.length
+                    ? `${pendingGalleryFiles.length}장 선택됨`
+                    : payload.galleryImages.length
+                      ? `현재 ${payload.galleryImages.length}장 연결됨`
+                      : "선택된 파일 없음"}
+                </span>
+                <span className="builder-upload-button">갤러리 사진 선택</span>
+                <input
+                  className="builder-hidden-file"
+                  accept="image/*"
+                  multiple
+                  onChange={(event) => handleGallerySelection(event.target.files)}
+                  type="file"
+                />
+              </div>
+            </label>
           <div className="header-actions" style={{ marginTop: "12px" }}>
             <button
               className="btn-outline"
@@ -776,7 +938,32 @@ export function BuilderStudio({
             >
               배경 사진 제거
             </button>
+            <button
+              className="btn-outline"
+              onClick={() => {
+                setPendingGalleryFiles([]);
+                setPendingGalleryPreviewUrls([]);
+                updateField("galleryImages", []);
+                updateField("galleryImagePaths", []);
+              }}
+              type="button"
+            >
+              갤러리 비우기
+            </button>
           </div>
+          <p className="builder-help">
+            이미지 {payload.galleryImages.length}장
+            {pendingGalleryFiles.length ? ` · 저장 대기 ${pendingGalleryFiles.length}장` : ""}
+          </p>
+          {payload.galleryImages.length || pendingGalleryPreviewUrls.length ? (
+            <div className="builder-gallery-grid">
+              {[...payload.galleryImages, ...pendingGalleryPreviewUrls].map((imageUrl, index) => (
+                <div className="builder-gallery-thumb" key={`${imageUrl}-${index}`}>
+                  <img alt={`갤러리 미리보기 ${index + 1}`} src={imageUrl} />
+                </div>
+              ))}
+            </div>
+          ) : null}
           <p className="builder-help">이미지는 저장 시 Storage로 업로드되고, payload에는 URL만 기록됩니다.</p>
         </div>
 

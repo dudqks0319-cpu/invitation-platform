@@ -5,6 +5,18 @@ export type UploadProgressState = {
   currentFileLabel: string;
 };
 
+export function countUploadTargets({
+  hasMain,
+  hasBackground,
+  galleryCount
+}: {
+  hasMain: boolean;
+  hasBackground: boolean;
+  galleryCount: number;
+}) {
+  return (hasMain ? 1 : 0) + (hasBackground ? 1 : 0) + Math.max(galleryCount, 0);
+}
+
 export function clampUploadPercent(value: number) {
   return Math.min(Math.max(Math.round(value), 0), 100);
 }
