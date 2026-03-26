@@ -18,6 +18,3 @@ tsconfig.tsbuildinfo
 .omx
 output/
 test-results/
-src
-!packages/shared/src/
-!packages/shared/src/**
