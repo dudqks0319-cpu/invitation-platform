@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { templateCategories, templates, type TemplatePreset } from "@/lib/templates";
 import { TemplateMarkup } from "@/components/landing/template-markup";
 
 export function TemplateBrowser() {
+  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState<string>(templateCategories[0].key);
   const [previewTarget, setPreviewTarget] = useState<TemplatePreset | null>(null);
 
@@ -43,19 +45,39 @@ export function TemplateBrowser() {
           <p className="section-sub">모든 템플릿은 무료로 미리 볼 수 있고, 바로 빌더로 이어집니다.</p>
           <div className="templates-grid">
             {filteredTemplates.map((template) => (
-              <div className="template-card" key={template.id}>
+              <div
+                aria-label={`${template.name} 템플릿 선택`}
+                className="template-card"
+                key={template.id}
+                onClick={() => router.push(`/builder?template=${template.id}`)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    router.push(`/builder?template=${template.id}`);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+              >
                 <div className="template-thumb">
                   <TemplateMarkup template={template} variant="browser" />
                   <div className="template-overlay">
                     <div className="overlay-btns">
                       <button
                         className="overlay-btn"
-                        onClick={() => setPreviewTarget(template)}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setPreviewTarget(template);
+                        }}
                         type="button"
                       >
                         미리보기
                       </button>
-                      <Link className="overlay-btn primary" href={`/builder?template=${template.id}`}>
+                      <Link
+                        className="overlay-btn primary"
+                        href={`/builder?template=${template.id}`}
+                        onClick={(event) => event.stopPropagation()}
+                      >
                         사용하기
                       </Link>
                     </div>
