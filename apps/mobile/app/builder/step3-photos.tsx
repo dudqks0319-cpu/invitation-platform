@@ -83,12 +83,12 @@ export default function BuilderStep3PhotosScreen() {
         <Text style={{ color: "#8d5a2b", lineHeight: 22, marginBottom: 12 }}>
           업로드 대기: {draft?.pendingPhotos.length ?? 0}개
         </Text>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
           {draft?.payload.photos.gallery.map((photo) => (
             <Image
               key={photo.order}
               source={{ uri: photo.uri }}
-              style={{ width: 88, height: 88, borderRadius: 12 }}
+              style={{ width: 92, height: 92, borderRadius: 14 }}
             />
           ))}
         </View>

@@ -9,13 +9,13 @@ import { theme } from "@/components/ui/theme";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 
 const inputStyle = {
-  minHeight: 46,
-  borderRadius: 14,
-  borderWidth: 1,
+  minHeight: 48,
+  borderRadius: 10,
+  borderWidth: 1.5,
   borderColor: theme.colors.border,
   backgroundColor: "#fff",
-  paddingHorizontal: 14,
-  paddingVertical: 10,
+  paddingHorizontal: 16,
+  paddingVertical: 14,
   color: theme.colors.text
 } as const;
 
@@ -35,7 +35,7 @@ export default function BuilderStep1Screen() {
       <StepIndicator current={1} title="기본 정보" />
       {loading ? <Loading label="로컬 초안을 준비하는 중..." /> : null}
       <Card eyebrow="입력 항목" title="제목 · 날짜 · 장소">
-        <View>
+        <View style={{ gap: 14 }}>
           <Text style={labelStyle}>행사 제목</Text>
           <TextInput
             onChangeText={(title) => updateBasics({ title })}
@@ -44,7 +44,7 @@ export default function BuilderStep1Screen() {
             value={draft?.payload.title ?? ""}
           />
         </View>
-        <View>
+        <View style={{ gap: 14 }}>
           <Text style={labelStyle}>행사 일시</Text>
           <TextInput
             onChangeText={(eventDateTime) => updateBasics({ eventDateTime })}
@@ -53,7 +53,7 @@ export default function BuilderStep1Screen() {
             value={draft?.payload.eventDateTime ?? ""}
           />
         </View>
-        <View>
+        <View style={{ gap: 14 }}>
           <Text style={labelStyle}>예식장 이름</Text>
           <TextInput
             onChangeText={(venueName) => updateBasics({ venueName })}
@@ -62,7 +62,7 @@ export default function BuilderStep1Screen() {
             value={draft?.payload.venueName ?? ""}
           />
         </View>
-        <View>
+        <View style={{ gap: 14 }}>
           <Text style={labelStyle}>예식장 주소</Text>
           <TextInput
             onChangeText={(venueAddress) => updateBasics({ venueAddress })}
@@ -71,7 +71,7 @@ export default function BuilderStep1Screen() {
             value={draft?.payload.venueAddress ?? ""}
           />
         </View>
-        <View>
+        <View style={{ gap: 14 }}>
           <Text style={labelStyle}>초대 메시지</Text>
           <TextInput
             multiline

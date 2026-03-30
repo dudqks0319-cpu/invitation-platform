@@ -1,0 +1,63 @@
+import { Text, View } from "react-native";
+import { theme } from "@/components/ui/theme";
+
+const processCards = [
+  {
+    step: "01",
+    title: "디자인 선택",
+    body: "행사 분위기에 어울리는 템플릿을 고르면 바로 빌더가 시작됩니다."
+  },
+  {
+    step: "02",
+    title: "내용 입력",
+    body: "이름, 장소, 사진, 계좌 정보까지 차근차근 입력하면 미리보기로 바로 확인할 수 있습니다."
+  },
+  {
+    step: "03",
+    title: "발행 후 공유",
+    body: "완성한 초대장은 링크로 공유하고, 응답과 방명록도 함께 받을 수 있습니다."
+  }
+];
+
+function Surface({ children }: { children: React.ReactNode }) {
+  return (
+    <View
+      style={{
+        backgroundColor: "rgba(255, 253, 249, 0.92)",
+        borderRadius: 24,
+        borderWidth: 1,
+        borderColor: theme.colors.border,
+        paddingHorizontal: 18,
+        paddingVertical: 18,
+        shadowColor: theme.shadow.card.shadowColor,
+        shadowOffset: { width: 0, height: 10 },
+        shadowOpacity: 0.55,
+        shadowRadius: 22,
+        elevation: 4,
+        gap: 8
+      }}
+    >
+      {children}
+    </View>
+  );
+}
+
+export function ProcessSteps() {
+  return (
+    <View style={{ gap: 12 }}>
+      <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700", letterSpacing: 1.6 }}>
+        이렇게 간단해요
+      </Text>
+      <Text style={{ color: theme.colors.text, fontSize: 24, fontWeight: "700" }}>고르고, 쓰고, 바로 보내기</Text>
+      <View style={{ gap: 12 }}>
+        {processCards.map((item) => (
+          <Surface key={item.step}>
+            <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700" }}>{item.step}</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "700" }}>{item.title}</Text>
+            <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24 }}>{item.body}</Text>
+          </Surface>
+        ))}
+      </View>
+    </View>
+  );
+}

@@ -1,17 +1,22 @@
 export const theme = {
   colors: {
-    background: "#f7f3ed",
-    surface: "#fffdf9",
-    surfaceSoft: "#fff7f1",
-    border: "#eadfce",
-    text: "#2c241e",
-    muted: "#74665a",
-    accent: "#9b6832",
-    accentSoft: "#e8d4b7",
-    blush: "#f4d8d6",
-    eucalyptus: "#d9e5db",
-    success: "#547a61",
-    shadow: "rgba(102, 82, 63, 0.14)"
+    primary: "#C9935A",
+    primaryLight: "#F0DEC8",
+    primaryDark: "#A5743D",
+    accent: "#8B7355",
+    bgCream: "#FDF8F3",
+    bgLight: "#FAF7F4",
+    background: "#FDF8F3",
+    surface: "#FFFFFF",
+    surfaceSoft: "#FAF7F4",
+    border: "#E8DDD3",
+    text: "#2C2C2C",
+    muted: "#666666",
+    textLight: "#999999",
+    blush: "rgba(201,147,90,0.12)",
+    eucalyptus: "rgba(201,147,90,0.08)",
+    success: "#547A61",
+    shadow: "rgba(0,0,0,0.08)"
   },
   spacing: {
     xs: 6,
@@ -21,16 +26,25 @@ export const theme = {
     xl: 28
   },
   radius: {
+    sm: 8,
     md: 16,
-    lg: 22
+    lg: 24,
+    pill: 50
   },
   shadow: {
     card: {
-      shadowColor: "rgba(102, 82, 63, 0.14)",
-      shadowOffset: { width: 0, height: 14 },
+      shadowColor: "rgba(0,0,0,0.08)",
+      shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 1,
-      shadowRadius: 28,
-      elevation: 6
+      shadowRadius: 24,
+      elevation: 4
+    },
+    heroButton: {
+      shadowColor: "rgba(201,147,90,0.4)",
+      shadowOffset: { width: 0, height: 6 },
+      shadowOpacity: 1,
+      shadowRadius: 20,
+      elevation: 5
     }
   }
 } as const;

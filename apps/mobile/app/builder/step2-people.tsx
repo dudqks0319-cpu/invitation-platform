@@ -8,13 +8,13 @@ import { theme } from "@/components/ui/theme";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 
 const inputStyle = {
-  minHeight: 46,
-  borderRadius: 14,
-  borderWidth: 1,
+  minHeight: 48,
+  borderRadius: 10,
+  borderWidth: 1.5,
   borderColor: theme.colors.border,
   backgroundColor: "#fff",
-  paddingHorizontal: 14,
-  paddingVertical: 10,
+  paddingHorizontal: 16,
+  paddingVertical: 14,
   color: theme.colors.text
 } as const;
 
@@ -33,7 +33,7 @@ export default function BuilderStep2PeopleScreen() {
     <Screen subtitle="신랑, 신부, 양가 정보 입력 단계입니다." title="초대장 만들기">
       <StepIndicator current={2} title="인물 정보" />
       <Card eyebrow="결혼식 전용" title="신랑 · 신부 · 부모님">
-        <View>
+        <View style={{ gap: 14 }}>
           <Text style={labelStyle}>신랑 이름</Text>
           <TextInput
             onChangeText={(groomName) => updateCouple({ groomName })}
@@ -42,7 +42,7 @@ export default function BuilderStep2PeopleScreen() {
             value={draft?.payload.eventData.groom.name ?? ""}
           />
         </View>
-        <View style={{ marginTop: 12 }}>
+        <View style={{ gap: 14 }}>
           <Text style={labelStyle}>신부 이름</Text>
           <TextInput
             onChangeText={(brideName) => updateCouple({ brideName })}

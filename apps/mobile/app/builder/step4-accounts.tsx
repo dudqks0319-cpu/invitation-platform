@@ -8,13 +8,13 @@ import { theme } from "@/components/ui/theme";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 
 const inputStyle = {
-  minHeight: 46,
-  borderRadius: 14,
-  borderWidth: 1,
+  minHeight: 48,
+  borderRadius: 10,
+  borderWidth: 1.5,
   borderColor: theme.colors.border,
   backgroundColor: "#fff",
-  paddingHorizontal: 14,
-  paddingVertical: 10,
+  paddingHorizontal: 16,
+  paddingVertical: 14,
   color: theme.colors.text
 } as const;
 
@@ -33,7 +33,7 @@ export default function BuilderStep4AccountsScreen() {
     <Screen subtitle="축의금 계좌와 카카오페이 링크를 준비합니다." title="초대장 만들기">
       <StepIndicator current={4} title="계좌 정보" />
       <Card eyebrow="공유 준비" title="신랑측 · 신부측 계좌">
-        <View>
+        <View style={{ gap: 14 }}>
           <Text style={labelStyle}>신랑측 은행</Text>
           <TextInput
             onChangeText={(primaryBank) => updateAccounts({ primaryBank })}
@@ -42,7 +42,7 @@ export default function BuilderStep4AccountsScreen() {
             value={draft?.payload.accounts.primary?.bank ?? ""}
           />
         </View>
-        <View style={{ marginTop: 12 }}>
+        <View style={{ gap: 14 }}>
           <Text style={labelStyle}>신랑측 예금주</Text>
           <TextInput
             onChangeText={(primaryHolder) => updateAccounts({ primaryHolder })}
@@ -51,7 +51,7 @@ export default function BuilderStep4AccountsScreen() {
             value={draft?.payload.accounts.primary?.holder ?? ""}
           />
         </View>
-        <View style={{ marginTop: 12 }}>
+        <View style={{ gap: 14 }}>
           <Text style={labelStyle}>신랑측 계좌번호</Text>
           <TextInput
             onChangeText={(primaryAccount) => updateAccounts({ primaryAccount })}
@@ -60,7 +60,7 @@ export default function BuilderStep4AccountsScreen() {
             value={draft?.payload.accounts.primary?.account ?? ""}
           />
         </View>
-        <View style={{ marginTop: 12 }}>
+        <View style={{ gap: 14 }}>
           <Text style={labelStyle}>신부측 은행</Text>
           <TextInput
             onChangeText={(secondaryBank) => updateAccounts({ secondaryBank })}
@@ -69,7 +69,7 @@ export default function BuilderStep4AccountsScreen() {
             value={draft?.payload.accounts.secondary?.bank ?? ""}
           />
         </View>
-        <View style={{ marginTop: 12 }}>
+        <View style={{ gap: 14 }}>
           <Text style={labelStyle}>신부측 예금주</Text>
           <TextInput
             onChangeText={(secondaryHolder) => updateAccounts({ secondaryHolder })}
@@ -78,7 +78,7 @@ export default function BuilderStep4AccountsScreen() {
             value={draft?.payload.accounts.secondary?.holder ?? ""}
           />
         </View>
-        <View style={{ marginTop: 12 }}>
+        <View style={{ gap: 14 }}>
           <Text style={labelStyle}>신부측 계좌번호</Text>
           <TextInput
             onChangeText={(secondaryAccount) => updateAccounts({ secondaryAccount })}
@@ -87,7 +87,7 @@ export default function BuilderStep4AccountsScreen() {
             value={draft?.payload.accounts.secondary?.account ?? ""}
           />
         </View>
-        <View style={{ marginTop: 12 }}>
+        <View style={{ gap: 14 }}>
           <Text style={labelStyle}>카카오페이 링크</Text>
           <TextInput
             autoCapitalize="none"

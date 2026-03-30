@@ -12,7 +12,7 @@ export function Card({ children, eyebrow, title }: CardProps) {
     <View
       style={{
         backgroundColor: theme.colors.surface,
-        borderRadius: theme.radius.lg,
+        borderRadius: theme.radius.md,
         borderWidth: 1,
         borderColor: theme.colors.border,
         padding: theme.spacing.lg,
@@ -27,17 +27,17 @@ export function Card({ children, eyebrow, title }: CardProps) {
       {eyebrow ? (
         <Text
           style={{
-            color: theme.colors.accent,
-            fontSize: 12,
+            color: theme.colors.primaryDark,
+            fontSize: 11,
             fontWeight: "700",
-            letterSpacing: 0.8,
+            letterSpacing: 1.6,
             textTransform: "uppercase"
           }}
         >
           {eyebrow}
         </Text>
       ) : null}
-      <Text style={{ color: theme.colors.text, fontSize: 20, fontWeight: "700", lineHeight: 28 }}>{title}</Text>
+      <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "700", lineHeight: 26 }}>{title}</Text>
       {children}
     </View>
   );

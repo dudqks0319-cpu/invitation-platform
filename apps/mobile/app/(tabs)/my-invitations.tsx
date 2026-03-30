@@ -11,7 +11,7 @@ import { Screen } from "@/components/ui/Screen";
 import type { MobileInvitationDraft } from "@/lib/drafts";
 import { deleteDraft, listDrafts } from "@/lib/drafts";
 import { listRemoteInvitations } from "@/lib/invitations";
-import { openInvitationPublicPage, shareInvitationLink } from "@/lib/share";
+import { openInvitationPublicPage, openWebBuilder, shareInvitationLink } from "@/lib/share";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function MyInvitationsScreen() {
@@ -175,7 +175,7 @@ export default function MyInvitationsScreen() {
               {draft.payload.isPublished && draft.payload.share.slug ? "공개 링크 공유" : "공개 후 공유 가능"}
             </Button>
             <Button
-              accessibilityLabel="웹 공개 페이지 열기"
+              accessibilityLabel="웹 화면 열기"
               onPress={
                 draft.payload.isPublished && draft.payload.share.slug
                   ? () => {
@@ -187,11 +187,25 @@ export default function MyInvitationsScreen() {
                           setError(caught instanceof Error ? caught.message : "웹 공개 페이지를 열지 못했습니다.")
                         );
                     }
+                  : draft.serverId
+                    ? () => {
+                        setMessage("");
+                        setError("");
+                        void openWebBuilder({ invitationId: draft.serverId })
+                          .then(() => setMessage("웹 빌더를 열었습니다."))
+                          .catch((caught) =>
+                            setError(caught instanceof Error ? caught.message : "웹 빌더를 열지 못했습니다.")
+                          );
+                      }
                   : undefined
               }
               variant="outline"
             >
-              {draft.payload.isPublished && draft.payload.share.slug ? "웹 공개 페이지 열기" : "공개 후 웹 확인 가능"}
+              {draft.payload.isPublished && draft.payload.share.slug
+                ? "웹 공개 페이지 열기"
+                : draft.serverId
+                  ? "웹 빌더 열기"
+                  : "서버 저장 후 웹에서 이어서 편집"}
             </Button>
             {isLocalOnlyDraft(draft) ? (
               <Button

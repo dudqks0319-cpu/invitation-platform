@@ -1108,30 +1108,32 @@ export function BuilderStudio({
               <div className="builder-preview-main-photo-wrap">
                 {mainImagePreviewUrl ? <img alt="메인 사진 미리보기" className="builder-preview-main-photo has-image" src={mainImagePreviewUrl} /> : <div className="builder-preview-main-photo" />}
               </div>
-              <p className="builder-preview-label">{selectedTemplate.badge.toUpperCase()} INVITATION</p>
-              <h2 className="builder-preview-names">
-                {(payload.groomName || "신랑") + " ♡ " + (payload.brideName || "신부")}
-              </h2>
-              <p className="builder-preview-date">
-                {payload.eventDateTime
-                  ? new Date(payload.eventDateTime).toLocaleString("ko-KR", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "numeric",
-                      minute: "2-digit"
-                    })
-                  : "날짜와 시간을 선택하세요"}
-              </p>
-              <p className="builder-preview-venue">
-                {payload.venueName || payload.venueAddress
-                  ? [payload.venueName, payload.venueAddress].filter(Boolean).join(" · ")
-                  : "예식장과 주소를 입력해 주세요"}
-              </p>
-              <p className="builder-preview-message">{payload.message || "소중한 자리에 함께해 주세요"}</p>
-              <p className="builder-preview-note">
-                이미지는 업로드 후 URL로 저장됩니다. 미발행 상태에서도 초안 저장과 owner 대시보드 연결이 유지됩니다.
-              </p>
+              <div className="builder-preview-copy-card">
+                <p className="builder-preview-label">{selectedTemplate.badge.toUpperCase()} INVITATION</p>
+                <h2 className="builder-preview-names">
+                  {(payload.groomName || "신랑") + " ♡ " + (payload.brideName || "신부")}
+                </h2>
+                <p className="builder-preview-date">
+                  {payload.eventDateTime
+                    ? new Date(payload.eventDateTime).toLocaleString("ko-KR", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "2-digit"
+                      })
+                    : "날짜와 시간을 선택하세요"}
+                </p>
+                <p className="builder-preview-venue">
+                  {payload.venueName || payload.venueAddress
+                    ? [payload.venueName, payload.venueAddress].filter(Boolean).join(" · ")
+                    : "예식장과 주소를 입력해 주세요"}
+                </p>
+                <p className="builder-preview-message">{payload.message || "소중한 자리에 함께해 주세요"}</p>
+                <p className="builder-preview-note">
+                  실제 화면 보기에서 전체 초대장 레이아웃을 확인할 수 있습니다.
+                </p>
+              </div>
             </div>
           </div>
         </div>

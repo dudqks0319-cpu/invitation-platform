@@ -10,7 +10,7 @@ import { Screen } from "@/components/ui/Screen";
 import type { MobileInvitationDraft } from "@/lib/drafts";
 import { deleteDraft, loadDraft, saveDraft } from "@/lib/drafts";
 import { deleteRemoteInvitation, loadRemoteInvitation, saveDraftToSupabase } from "@/lib/invitations";
-import { getPublicInvitationUrl, openInvitationPublicPage, shareInvitationLink } from "@/lib/share";
+import { getPublicInvitationUrl, openInvitationPublicPage, openWebBuilder, shareInvitationLink } from "@/lib/share";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function InvitationDetailScreen() {
@@ -165,9 +165,9 @@ export default function InvitationDetailScreen() {
           공개 링크 공유
         </Button>
         <Button
-          accessibilityLabel="웹 공개 페이지 열기"
+          accessibilityLabel="웹 화면 열기"
           onPress={
-            publicUrl
+            draft?.payload.isPublished && publicUrl
               ? () => {
                   setError("");
                   setMessage("");
@@ -177,11 +177,25 @@ export default function InvitationDetailScreen() {
                       setError(caught instanceof Error ? caught.message : "웹 공개 페이지를 열지 못했습니다.")
                     );
                 }
+              : draft?.serverId
+                ? () => {
+                    setError("");
+                    setMessage("");
+                    void openWebBuilder({ invitationId: draft.serverId })
+                      .then(() => setMessage("웹 빌더를 열었습니다."))
+                      .catch((caught) =>
+                        setError(caught instanceof Error ? caught.message : "웹 빌더를 열지 못했습니다.")
+                      );
+                  }
               : undefined
           }
           variant="outline"
         >
-          {publicUrl ? "웹 공개 페이지 열기" : "발행 후 웹 확인 가능"}
+          {draft?.payload.isPublished && publicUrl
+            ? "웹 공개 페이지 열기"
+            : draft?.serverId
+              ? "웹 빌더 열기"
+              : "서버 저장 후 웹에서 이어서 편집"}
         </Button>
         <Button
           accessibilityLabel="운영 화면에서 서버 저장"

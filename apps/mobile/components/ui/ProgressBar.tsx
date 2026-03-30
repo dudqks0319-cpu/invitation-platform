@@ -16,7 +16,7 @@ export function ProgressBar({
         style={{
           height: 8,
           borderRadius: 999,
-          backgroundColor: "#eadfd5",
+          backgroundColor: "rgba(157,111,72,0.16)",
           overflow: "hidden"
         }}
       >
@@ -24,7 +24,7 @@ export function ProgressBar({
           style={{
             width: `${ratio * 100}%`,
             height: "100%",
-            backgroundColor: theme.colors.accent
+            backgroundColor: theme.colors.primary
           }}
         />
       </View>

@@ -22,31 +22,30 @@ export function Button({
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
       style={{
-        minHeight: 52,
-        borderRadius: 18,
-        borderWidth: isPrimary ? 0 : 1,
-        borderColor: theme.colors.border,
+        minHeight: 50,
+        borderRadius: theme.radius.pill,
+        borderWidth: isPrimary ? 0 : 2,
+        borderColor: theme.colors.primary,
         backgroundColor: disabled
-          ? theme.colors.accentSoft
+          ? theme.colors.primaryLight
           : isPrimary
-            ? theme.colors.accent
+            ? theme.colors.primary
             : theme.colors.surface,
         alignItems: "center",
         justifyContent: "center",
-        paddingHorizontal: 18,
-        shadowColor: isPrimary ? theme.shadow.card.shadowColor : "transparent",
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: isPrimary ? 0.6 : 0,
-        shadowRadius: 20,
-        elevation: isPrimary ? 4 : 0
+        paddingHorizontal: 24,
+        shadowColor: isPrimary ? theme.shadow.heroButton.shadowColor : "transparent",
+        shadowOffset: isPrimary ? theme.shadow.heroButton.shadowOffset : { width: 0, height: 0 },
+        shadowOpacity: isPrimary ? theme.shadow.heroButton.shadowOpacity : 0,
+        shadowRadius: isPrimary ? theme.shadow.heroButton.shadowRadius : 0,
+        elevation: isPrimary ? theme.shadow.heroButton.elevation : 0
       }}
     >
       <Text
         style={{
-          color: isPrimary ? "#fff" : theme.colors.text,
+          color: isPrimary ? "#fff" : theme.colors.primaryDark,
           fontSize: 15,
-          fontWeight: "700",
-          letterSpacing: 0.2
+          fontWeight: "700"
         }}
       >
         {children}

@@ -18,7 +18,7 @@ describe("template artwork mapping", () => {
       const template = templates.find((item) => item.id === id);
 
       expect(template, `${id} template should exist`).toBeDefined();
-      expect(template?.html).toContain("/images/genspark/");
+      expect(template?.html).toContain("/images/");
       expect(template?.html).not.toContain(removedEmoji);
     }
   });

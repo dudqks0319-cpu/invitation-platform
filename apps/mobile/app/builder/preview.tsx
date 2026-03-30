@@ -1,11 +1,12 @@
 import { Link, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { Text, View } from "react-native";
+import { ImageBackground, Text, View } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ErrorView } from "@/components/ui/ErrorView";
 import { Loading } from "@/components/ui/Loading";
 import { Screen } from "@/components/ui/Screen";
+import { theme } from "@/components/ui/theme";
 import { useAuth } from "@/hooks/useAuth";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 import { openInvitationPublicPage, shareInvitationLink } from "@/lib/share";
@@ -88,50 +89,127 @@ export default function BuilderPreviewScreen() {
       ) : null}
       <View
         style={{
-          backgroundColor: "#fffdf9",
-          borderRadius: 28,
+          minHeight: 640,
+          borderRadius: 36,
+          overflow: "hidden",
           borderWidth: 1,
-          borderColor: "#e6d8c6",
-          padding: 22,
-          gap: 12,
-          shadowColor: "rgba(102, 82, 63, 0.16)",
-          shadowOffset: { width: 0, height: 16 },
+          borderColor: "#e9dece",
+          backgroundColor: "#f6f1ea",
+          shadowColor: "rgba(102, 82, 63, 0.18)",
+          shadowOffset: { width: 0, height: 18 },
           shadowOpacity: 1,
-          shadowRadius: 30,
-          elevation: 6
+          shadowRadius: 34,
+          elevation: 7
         }}
       >
-        <Text style={{ color: "#a07a52", fontSize: 12, fontWeight: "700", letterSpacing: 1.4, textAlign: "center" }}>
-          WEDDING INVITATION
-        </Text>
-        <Text style={{ color: "#3a3028", fontSize: 30, fontWeight: "700", lineHeight: 38, textAlign: "center" }}>
-          {names}
-        </Text>
-        <View style={{ alignItems: "center", gap: 6 }}>
-          <Text style={{ color: "#9b6832", fontSize: 16, fontWeight: "600" }}>날짜 및 시간</Text>
-          <Text style={{ color: "#5b4a3b", fontSize: 18, lineHeight: 26, textAlign: "center" }}>
-            {draft?.payload.eventDateTime || "행사 일시를 입력해 주세요."}
-          </Text>
-        </View>
-        <View style={{ alignItems: "center", gap: 6 }}>
-          <Text style={{ color: "#9b6832", fontSize: 16, fontWeight: "600" }}>장소</Text>
-          <Text style={{ color: "#5b4a3b", fontSize: 18, lineHeight: 26, textAlign: "center" }}>
-            {[draft?.payload.venueName, draft?.payload.venueAddress].filter(Boolean).join(" · ") ||
-              "예식장 정보를 입력해 주세요."}
-          </Text>
-        </View>
-        <View
+        <ImageBackground
+          imageStyle={{
+            resizeMode: draft?.payload.photos.backgroundUri ? "cover" : "cover",
+            opacity: draft?.payload.photos.backgroundUri ? 0.38 : 0
+          }}
+          source={draft?.payload.photos.backgroundUri ? { uri: draft.payload.photos.backgroundUri } : undefined}
           style={{
-            borderTopWidth: 1,
-            borderTopColor: "#efe2d2",
-            marginTop: 8,
-            paddingTop: 16
+            flex: 1,
+            paddingHorizontal: 18,
+            paddingTop: 28,
+            paddingBottom: 26,
+            justifyContent: "flex-start"
           }}
         >
-          <Text style={{ color: "#5b4a3b", fontSize: 16, lineHeight: 28, textAlign: "center" }}>
-            {draft?.payload.message || "초대 메시지를 입력하면 이곳에 반영됩니다."}
-          </Text>
-        </View>
+          {!draft?.payload.photos.backgroundUri ? (
+            <>
+              <View
+                style={{
+                  position: "absolute",
+                  top: -20,
+                  left: -12,
+                  width: 170,
+                  height: 170,
+                  borderRadius: 999,
+                  backgroundColor: theme.colors.eucalyptus,
+                  opacity: 0.26
+                }}
+              />
+              <View
+                style={{
+                  position: "absolute",
+                  top: -12,
+                  right: -18,
+                  width: 180,
+                  height: 180,
+                  borderRadius: 999,
+                  backgroundColor: theme.colors.blush,
+                  opacity: 0.24
+                }}
+              />
+            </>
+          ) : null}
+
+          <View style={{ alignItems: "center", marginTop: 18 }}>
+            <Text style={{ color: "#d3c3ad", fontSize: 12, fontWeight: "700", letterSpacing: 2.4, textAlign: "center" }}>
+              WEDDING INVITATION
+            </Text>
+            <Text
+              style={{
+                color: "#d7cab8",
+                fontSize: 18,
+                fontWeight: "600",
+                lineHeight: 28,
+                marginTop: 12,
+                textAlign: "center"
+              }}
+            >
+              {names}
+            </Text>
+            <Text style={{ color: "#d3c3ad", fontSize: 14, lineHeight: 20, marginTop: 10, textAlign: "center" }}>
+              {draft?.payload.eventDateTime || "2026. 04. 12 SAT PM 2:00"}
+            </Text>
+          </View>
+
+          <View
+            style={{
+              marginTop: 120,
+              backgroundColor: "rgba(255, 249, 241, 0.92)",
+              borderRadius: 28,
+              borderWidth: 1,
+              borderColor: "#eadcc9",
+              paddingHorizontal: 22,
+              paddingVertical: 24,
+              alignItems: "center",
+              shadowColor: "rgba(102, 82, 63, 0.16)",
+              shadowOffset: { width: 0, height: 14 },
+              shadowOpacity: 1,
+              shadowRadius: 28,
+              elevation: 6
+            }}
+          >
+            <Text style={{ color: "#a07a52", fontSize: 12, fontWeight: "700", letterSpacing: 1.8, textAlign: "center" }}>
+              결혼식 INVITATION
+            </Text>
+            <Text style={{ color: "#3a3028", fontSize: 28, fontWeight: "700", lineHeight: 38, marginTop: 10, textAlign: "center" }}>
+              {names}
+            </Text>
+            <Text style={{ color: "#5b4a3b", fontSize: 17, lineHeight: 25, marginTop: 12, textAlign: "center" }}>
+              {draft?.payload.eventDateTime || "행사 일시를 입력해 주세요."}
+            </Text>
+            <Text style={{ color: "#5b4a3b", fontSize: 17, lineHeight: 25, marginTop: 6, textAlign: "center" }}>
+              {[draft?.payload.venueName, draft?.payload.venueAddress].filter(Boolean).join(" · ") ||
+                "예식장 정보를 입력해 주세요."}
+            </Text>
+            <View
+              style={{
+                width: 84,
+                height: 1,
+                backgroundColor: "#e8d7c1",
+                marginTop: 18,
+                marginBottom: 16
+              }}
+            />
+            <Text style={{ color: "#5b4a3b", fontSize: 16, lineHeight: 28, textAlign: "center" }}>
+              {draft?.payload.message || "초대 메시지를 입력하면 이곳에 반영됩니다."}
+            </Text>
+          </View>
+        </ImageBackground>
       </View>
       <Card eyebrow="공유 정보" title="계좌 · 위치">
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>

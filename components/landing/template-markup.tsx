@@ -15,14 +15,15 @@ export function TemplateMarkup({
 }) {
   const images = getTemplateImages(template.category);
   const sanitizedHtml = sanitizeTemplateMarkup(template.html);
+  const isStandaloneArtwork = sanitizedHtml.includes("tmpl-standalone-art");
   const hasImages = Boolean(
     images.topDecor || images.bottomDecor || images.divider || images.background || images.frame
   );
 
-  if (variant === "browser") {
+  if (variant === "browser" || isStandaloneArtwork) {
     return (
       <div
-        className={`template-markup-browser ${className}`.trim()}
+        className={`${variant === "browser" ? "template-markup-browser" : "template-markup-plain"} ${className}`.trim()}
         dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
       />
     );

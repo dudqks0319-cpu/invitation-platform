@@ -22,6 +22,7 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
   const router = useRouter();
   const supabase = useMemo(() => createBrowserClient(), []);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!supabase) {
@@ -59,6 +60,7 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
 
     await supabase.auth.signOut();
     setIsAuthenticated(false);
+    setIsMenuOpen(false);
     router.push("/");
     router.refresh();
   }
@@ -72,9 +74,18 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
         </Link>
         {mode === "focus" ? null : (
           <>
+            <button
+              aria-expanded={isMenuOpen}
+              aria-label={isMenuOpen ? "메뉴 닫기" : "메뉴 열기"}
+              className="hamburger"
+              onClick={() => setIsMenuOpen((current) => !current)}
+              type="button"
+            >
+              {isMenuOpen ? "✕" : "☰"}
+            </button>
             <nav className="main-nav">
               {navLinks.map((link) => (
-                <Link href={link.href} key={link.href}>
+                <Link href={link.href} key={link.href} onClick={() => setIsMenuOpen(false)}>
                   {link.label}
                 </Link>
               ))}
@@ -90,17 +101,41 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
                   </button>
                 </>
               ) : (
-                <Link className="btn-outline" href={`/sign-in?next=${encodeURIComponent(currentPath)}`}>
+                <Link className="btn-outline" href={`/sign-in?next=${encodeURIComponent(currentPath)}`} onClick={() => setIsMenuOpen(false)}>
                   로그인
                 </Link>
               )}
-              <Link className="btn-primary" href="/builder">
+              <Link className="btn-primary" href="/builder" onClick={() => setIsMenuOpen(false)}>
                 시작하기
               </Link>
             </div>
           </>
         )}
       </div>
+      {mode === "focus" ? null : (
+        <div className={`mobile-menu ${isMenuOpen ? "open" : ""}`}>
+          {navLinks.map((link) => (
+            <Link href={link.href} key={link.href} onClick={() => setIsMenuOpen(false)}>
+              {link.label}
+            </Link>
+          ))}
+          {pathname === "/sign-in" ? null : isAuthenticated ? (
+            <>
+              <Link href="/dashboard">내 대시보드</Link>
+              <button onClick={handleSignOut} type="button">
+                로그아웃
+              </button>
+            </>
+          ) : (
+            <Link href={`/sign-in?next=${encodeURIComponent(currentPath)}`} onClick={() => setIsMenuOpen(false)}>
+              로그인
+            </Link>
+          )}
+          <Link href="/builder" onClick={() => setIsMenuOpen(false)}>
+            시작하기
+          </Link>
+        </div>
+      )}
     </header>
   );
 }

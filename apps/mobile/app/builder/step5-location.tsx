@@ -8,13 +8,13 @@ import { theme } from "@/components/ui/theme";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 
 const inputStyle = {
-  minHeight: 46,
-  borderRadius: 14,
-  borderWidth: 1,
+  minHeight: 48,
+  borderRadius: 10,
+  borderWidth: 1.5,
   borderColor: theme.colors.border,
   backgroundColor: "#fff",
-  paddingHorizontal: 14,
-  paddingVertical: 10,
+  paddingHorizontal: 16,
+  paddingVertical: 14,
   color: theme.colors.text
 } as const;
 
@@ -33,7 +33,7 @@ export default function BuilderStep5LocationScreen() {
     <Screen subtitle="지도 링크와 교통 안내를 마지막으로 점검합니다." title="초대장 만들기">
       <StepIndicator current={5} title="오시는 길" />
       <Card eyebrow="공개 페이지" title="네이버 지도와 교통 안내">
-        <View>
+        <View style={{ gap: 14 }}>
           <Text style={labelStyle}>예식장 주소</Text>
           <TextInput
             onChangeText={(venueAddress) => updateBasics({ venueAddress })}
@@ -42,7 +42,7 @@ export default function BuilderStep5LocationScreen() {
             value={draft?.payload.venueAddress ?? ""}
           />
         </View>
-        <View style={{ marginTop: 12 }}>
+        <View style={{ gap: 14 }}>
           <Text style={labelStyle}>네이버 지도 링크</Text>
           <TextInput
             autoCapitalize="none"
@@ -52,7 +52,7 @@ export default function BuilderStep5LocationScreen() {
             value={draft?.payload.location.naverMapUrl ?? ""}
           />
         </View>
-        <View style={{ marginTop: 12 }}>
+        <View style={{ gap: 14 }}>
           <Text style={labelStyle}>교통 안내</Text>
           <TextInput
             multiline
