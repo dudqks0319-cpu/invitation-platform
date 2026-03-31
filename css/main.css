@@ -242,7 +242,7 @@ ul { list-style: none; }
   outline-offset: 4px;
 }
 .template-thumb {
-  height: 380px; position: relative; overflow: hidden;
+  height: 420px; position: relative; overflow: hidden;
 }
 .template-overlay {
   position: absolute; inset: 0;
@@ -1420,6 +1420,9 @@ ul { list-style: none; }
 
 .template-markup-browser .tmpl-card-copy {
   background: rgba(255, 250, 244, 0.72);
+  width: min(62%, 210px);
+  padding: 28px 16px;
+  border-radius: 28px;
 }
 
 .invitation-template-backdrop .tmpl-card-copy,
@@ -1805,7 +1808,7 @@ ul { list-style: none; }
     flex-shrink: 0;
   }
   .templates-grid { grid-template-columns: 1fr; gap: 16px; }
-  .template-thumb { height: 220px; }
+  .template-thumb { height: 260px; }
   .process-grid { grid-template-columns: 1fr; }
   .tmpl-wedding-classic, .tmpl-wedding-modern, .tmpl-wedding-floral, .tmpl-wedding-minimal,
   .tmpl-wedding-nature, .tmpl-dol-cute, .tmpl-dol-pastel, .tmpl-dol-blue, .tmpl-dol-nature,

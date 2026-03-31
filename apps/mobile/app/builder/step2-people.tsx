@@ -1,21 +1,17 @@
 import { Link, useLocalSearchParams } from "expo-router";
-import { Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 import { StepIndicator } from "@/components/builder/StepIndicator";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { FocusInput } from "@/components/ui/FocusInput";
 import { Screen } from "@/components/ui/Screen";
 import { theme } from "@/components/ui/theme";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 
 const inputStyle = {
   minHeight: 48,
-  borderRadius: 10,
-  borderWidth: 1.5,
-  borderColor: theme.colors.border,
-  backgroundColor: "#fff",
-  paddingHorizontal: 16,
-  paddingVertical: 14,
-  color: theme.colors.text
+  borderRadius: 12,
+  fontSize: 15
 } as const;
 
 const labelStyle = {
@@ -35,7 +31,7 @@ export default function BuilderStep2PeopleScreen() {
       <Card eyebrow="결혼식 전용" title="신랑 · 신부 · 부모님">
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>신랑 이름</Text>
-          <TextInput
+          <FocusInput
             onChangeText={(groomName) => updateCouple({ groomName })}
             placeholder="예: 홍길동"
             style={inputStyle}
@@ -44,7 +40,7 @@ export default function BuilderStep2PeopleScreen() {
         </View>
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>신부 이름</Text>
-          <TextInput
+          <FocusInput
             onChangeText={(brideName) => updateCouple({ brideName })}
             placeholder="예: 김부인"
             style={inputStyle}
@@ -52,13 +48,17 @@ export default function BuilderStep2PeopleScreen() {
           />
         </View>
       </Card>
-      <View style={{ gap: 12 }}>
-        <Link asChild href={{ pathname: "/builder/step1-basic", params: localId ? { localId } : {} }}>
-          <Button accessibilityLabel="이전 단계로 이동" variant="outline">이전</Button>
-        </Link>
-        <Link asChild href={{ pathname: "/builder/step3-photos", params: localId ? { localId } : {} }}>
-          <Button accessibilityLabel="다음 단계로 이동">다음</Button>
-        </Link>
+      <View style={{ gap: 12, flexDirection: "row" }}>
+        <View style={{ flex: 1 }}>
+          <Link asChild href={{ pathname: "/builder/step1-basic", params: localId ? { localId } : {} }}>
+            <Button accessibilityLabel="이전 단계로 이동" variant="outline">이전</Button>
+          </Link>
+        </View>
+        <View style={{ flex: 2 }}>
+          <Link asChild href={{ pathname: "/builder/step3-photos", params: localId ? { localId } : {} }}>
+            <Button accessibilityLabel="다음 단계로 이동">다음</Button>
+          </Link>
+        </View>
       </View>
     </Screen>
   );

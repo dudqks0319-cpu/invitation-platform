@@ -27,7 +27,7 @@ create table if not exists public.payments (
   id uuid primary key default gen_random_uuid(),
   invitation_id uuid not null references public.invitations(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
-  provider text not null default 'kakaopay' check (provider in ('kakaopay')),
+  provider text not null default 'kakaopay' check (provider in ('kakaopay', 'naverpay', 'credit_card', 'bank_transfer', 'apple_iap', 'google_play')),
   status text not null default 'payment_pending' check (status in ('payment_pending', 'paid', 'refund_pending', 'refunded', 'payment_failed')),
   amount integer not null,
   currency text not null default 'KRW',

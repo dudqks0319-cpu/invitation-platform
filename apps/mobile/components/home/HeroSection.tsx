@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from "react-native";
+import { Text, View } from "react-native";
+import { Button } from "@/components/ui/Button";
 import { Pill } from "@/components/ui/Pill";
 import { theme } from "@/components/ui/theme";
 import { PhoneMock } from "./PhoneMock";
@@ -39,9 +40,9 @@ export function HeroSection({ onBrowse, onStart }: HeroSectionProps) {
         <Text
           style={{
             color: theme.colors.text,
-            fontSize: 34,
+            fontSize: 30,
             fontWeight: "700",
-            lineHeight: 44
+            lineHeight: 40
           }}
         >
           마음을 담은 초대장,
@@ -60,39 +61,8 @@ export function HeroSection({ onBrowse, onStart }: HeroSectionProps) {
       </View>
 
       <View style={{ gap: 12 }}>
-        <Pressable
-          accessibilityLabel="무료로 시작하기"
-          onPress={onStart}
-          style={{
-            backgroundColor: theme.colors.accent,
-            borderRadius: 18,
-            minHeight: 54,
-            alignItems: "center",
-            justifyContent: "center",
-            shadowColor: theme.shadow.card.shadowColor,
-            shadowOffset: { width: 0, height: 12 },
-            shadowOpacity: 0.8,
-            shadowRadius: 24,
-            elevation: 5
-          }}
-        >
-          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "700" }}>무료로 시작하기</Text>
-        </Pressable>
-        <Pressable
-          accessibilityLabel="디자인 둘러보기"
-          onPress={onBrowse}
-          style={{
-            borderRadius: 18,
-            minHeight: 54,
-            alignItems: "center",
-            justifyContent: "center",
-            borderWidth: 1.5,
-            borderColor: theme.colors.accent,
-            backgroundColor: "transparent"
-          }}
-        >
-          <Text style={{ color: theme.colors.accent, fontSize: 16, fontWeight: "700" }}>디자인 둘러보기</Text>
-        </Pressable>
+        <Button accessibilityLabel="무료로 시작하기" onPress={onStart}>무료로 시작하기</Button>
+        <Button accessibilityLabel="디자인 둘러보기" onPress={onBrowse} variant="outline">디자인 둘러보기</Button>
       </View>
 
       <PhoneMock />

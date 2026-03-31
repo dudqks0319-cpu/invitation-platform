@@ -1,8 +1,9 @@
 import { Link, useLocalSearchParams } from "expo-router";
-import { Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 import { StepIndicator } from "@/components/builder/StepIndicator";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { FocusInput } from "@/components/ui/FocusInput";
 import { Loading } from "@/components/ui/Loading";
 import { Screen } from "@/components/ui/Screen";
 import { theme } from "@/components/ui/theme";
@@ -10,13 +11,8 @@ import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 
 const inputStyle = {
   minHeight: 48,
-  borderRadius: 10,
-  borderWidth: 1.5,
-  borderColor: theme.colors.border,
-  backgroundColor: "#fff",
-  paddingHorizontal: 16,
-  paddingVertical: 14,
-  color: theme.colors.text
+  borderRadius: 12,
+  fontSize: 15
 } as const;
 
 const labelStyle = {
@@ -37,7 +33,7 @@ export default function BuilderStep1Screen() {
       <Card eyebrow="입력 항목" title="제목 · 날짜 · 장소">
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>행사 제목</Text>
-          <TextInput
+          <FocusInput
             onChangeText={(title) => updateBasics({ title })}
             placeholder="예: 우리 결혼합니다"
             style={inputStyle}
@@ -46,7 +42,7 @@ export default function BuilderStep1Screen() {
         </View>
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>행사 일시</Text>
-          <TextInput
+          <FocusInput
             onChangeText={(eventDateTime) => updateBasics({ eventDateTime })}
             placeholder="예: 2026-05-23T14:00"
             style={inputStyle}
@@ -55,7 +51,7 @@ export default function BuilderStep1Screen() {
         </View>
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>예식장 이름</Text>
-          <TextInput
+          <FocusInput
             onChangeText={(venueName) => updateBasics({ venueName })}
             placeholder="예: 더파인 웨딩홀"
             style={inputStyle}
@@ -64,7 +60,7 @@ export default function BuilderStep1Screen() {
         </View>
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>예식장 주소</Text>
-          <TextInput
+          <FocusInput
             onChangeText={(venueAddress) => updateBasics({ venueAddress })}
             placeholder="예: 서울 강남구 테헤란로 123"
             style={inputStyle}
@@ -73,7 +69,7 @@ export default function BuilderStep1Screen() {
         </View>
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>초대 메시지</Text>
-          <TextInput
+          <FocusInput
             multiline
             onChangeText={(message) => updateBasics({ message })}
             placeholder="소중한 자리에 함께해 주세요."
@@ -82,7 +78,7 @@ export default function BuilderStep1Screen() {
           />
         </View>
       </Card>
-      <View style={{ gap: 12 }}>
+      <View style={{ gap: 12, flexDirection: "row" }}>
         <Link asChild href={{ pathname: "/builder/step2-people", params: localId ? { localId } : {} }}>
           <Button accessibilityLabel="다음 단계로 이동">다음</Button>
         </Link>

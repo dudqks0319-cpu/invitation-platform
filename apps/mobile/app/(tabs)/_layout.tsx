@@ -23,11 +23,16 @@ export default function TabsLayout() {
           borderTopColor: "#E8DDD3",
           height: 72,
           paddingBottom: 12,
-          paddingTop: 10
+          paddingTop: 10,
+          shadowColor: "rgba(0,0,0,0.08)",
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 1,
+          shadowRadius: 12
         },
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: "600"
+          fontWeight: "600",
+          letterSpacing: 0.5
         }
       }}
     >

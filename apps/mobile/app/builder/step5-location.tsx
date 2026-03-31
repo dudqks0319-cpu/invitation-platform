@@ -1,21 +1,17 @@
 import { Link, useLocalSearchParams } from "expo-router";
-import { Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 import { StepIndicator } from "@/components/builder/StepIndicator";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { FocusInput } from "@/components/ui/FocusInput";
 import { Screen } from "@/components/ui/Screen";
 import { theme } from "@/components/ui/theme";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 
 const inputStyle = {
   minHeight: 48,
-  borderRadius: 10,
-  borderWidth: 1.5,
-  borderColor: theme.colors.border,
-  backgroundColor: "#fff",
-  paddingHorizontal: 16,
-  paddingVertical: 14,
-  color: theme.colors.text
+  borderRadius: 12,
+  fontSize: 15
 } as const;
 
 const labelStyle = {
@@ -35,7 +31,7 @@ export default function BuilderStep5LocationScreen() {
       <Card eyebrow="공개 페이지" title="네이버 지도와 교통 안내">
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>예식장 주소</Text>
-          <TextInput
+          <FocusInput
             onChangeText={(venueAddress) => updateBasics({ venueAddress })}
             placeholder="예: 서울 강남구 테헤란로 123"
             style={inputStyle}
@@ -44,7 +40,7 @@ export default function BuilderStep5LocationScreen() {
         </View>
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>네이버 지도 링크</Text>
-          <TextInput
+          <FocusInput
             autoCapitalize="none"
             onChangeText={(naverMapUrl) => updateLocation({ naverMapUrl })}
             placeholder="https://map.naver.com/..."
@@ -54,7 +50,7 @@ export default function BuilderStep5LocationScreen() {
         </View>
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>교통 안내</Text>
-          <TextInput
+          <FocusInput
             multiline
             onChangeText={(transportNote) => updateLocation({ transportNote })}
             placeholder="주차, 셔틀, 지하철 안내를 적어주세요."
@@ -63,13 +59,17 @@ export default function BuilderStep5LocationScreen() {
           />
         </View>
       </Card>
-      <View style={{ gap: 12 }}>
-        <Link asChild href={{ pathname: "/builder/step4-accounts", params: localId ? { localId } : {} }}>
-          <Button accessibilityLabel="이전 단계로 이동" variant="outline">이전</Button>
-        </Link>
-        <Link asChild href={{ pathname: "/builder/preview", params: localId ? { localId } : {} }}>
-          <Button accessibilityLabel="미리보기 화면으로 이동">미리보기</Button>
-        </Link>
+      <View style={{ gap: 12, flexDirection: "row" }}>
+        <View style={{ flex: 1 }}>
+          <Link asChild href={{ pathname: "/builder/step4-accounts", params: localId ? { localId } : {} }}>
+            <Button accessibilityLabel="이전 단계로 이동" variant="outline">이전</Button>
+          </Link>
+        </View>
+        <View style={{ flex: 2 }}>
+          <Link asChild href={{ pathname: "/builder/preview", params: localId ? { localId } : {} }}>
+            <Button accessibilityLabel="미리보기 화면으로 이동">미리보기</Button>
+          </Link>
+        </View>
       </View>
     </Screen>
   );

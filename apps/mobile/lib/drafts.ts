@@ -63,9 +63,22 @@ export async function ensureDraft(ownerId: string, localId?: string) {
   return created;
 }
 
-export async function createAndPersistDraft(ownerId: string) {
+export async function createAndPersistDraft(
+  ownerId: string,
+  options?: { eventType?: string; templateId?: string; title?: string }
+) {
   const drafts = await readDraftMap();
   const created = createLocalDraft(ownerId);
+  if (options?.templateId) {
+    created.payload.templateId = options.templateId;
+  }
+  if (options?.eventType) {
+    created.payload.eventType = options.eventType;
+    created.payload.eventData.type = options.eventType;
+  }
+  if (options?.title) {
+    created.payload.title = options.title;
+  }
   drafts[created.localId] = created;
   await writeDraftMap(drafts);
   return created;

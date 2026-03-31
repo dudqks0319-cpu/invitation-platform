@@ -6,7 +6,9 @@ import { createBrowserClient } from "@/lib/supabase/browser";
 import { authDestination } from "@/lib/auth";
 import { LOCAL_DRAFT_KEY, createInvitationSlug, normalizeDraft, type InvitationDraftPayload } from "@/lib/invitation-payload";
 import { INVITATION_PRICE_KRW } from "@/lib/payments/constants";
+import { DEFAULT_WEB_PAYMENT_PROVIDER } from "@/lib/payments/config";
 import { getPaidChangeLabels, hasPaidChange } from "@/lib/payments/entitlement";
+import { getPaymentProviderMeta, webPaymentProviders, type PaymentProvider } from "@/lib/payments/providers";
 
 type DraftMeta = {
   id?: string;
@@ -36,6 +38,7 @@ export function CheckoutFlow({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<PaymentProvider>(DEFAULT_WEB_PAYMENT_PROVIDER);
   const [repurchaseRequired, setRepurchaseRequired] = useState(false);
   const [repurchaseReasons, setRepurchaseReasons] = useState<string[]>([]);
   const [termsChecked, setTermsChecked] = useState(false);
@@ -186,12 +189,13 @@ export function CheckoutFlow({
     setMessage("");
 
     try {
-      const response = await fetch("/api/payments/kakaopay/ready", {
+      const response = await fetch("/api/payments/ready", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
+          provider: selectedProvider,
           invitationId,
           buyerName,
           buyerEmail,
@@ -236,6 +240,37 @@ export function CheckoutFlow({
           <p className="ops-note" style={{ marginTop: "8px" }}>
             커피 한 잔 가격으로 초대장 완성. 지금은 4,900원에 초대장을 보내세요.
           </p>
+          <div className="ops-card" style={{ marginTop: "18px", padding: "18px" }}>
+            <h3>결제 수단</h3>
+            <p className="ops-note" style={{ marginTop: "8px" }}>
+              웹에서는 카카오페이, 네이버페이, 카드, 계좌이체를 순차적으로 지원하고, 모바일 앱은 Apple/Google 스토어 결제를 사용합니다.
+            </p>
+            <div style={{ display: "grid", gap: "10px", marginTop: "14px" }}>
+              {webPaymentProviders.map((provider) => {
+                const meta = getPaymentProviderMeta(provider);
+                const active = selectedProvider === provider;
+
+                return (
+                  <button
+                    key={provider}
+                    onClick={() => setSelectedProvider(provider)}
+                    style={{
+                      textAlign: "left",
+                      borderRadius: "18px",
+                      border: active ? "2px solid var(--primary)" : "1px solid var(--border)",
+                      background: active ? "rgba(240,222,200,0.45)" : "#fff",
+                      padding: "16px 18px",
+                      cursor: "pointer"
+                    }}
+                    type="button"
+                  >
+                    <div style={{ fontWeight: 700, color: "var(--text-dark)" }}>{meta.label}</div>
+                    <div style={{ color: "var(--text-mid)", fontSize: "0.92rem", marginTop: "4px" }}>{meta.description}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <div className="form-grid" style={{ marginTop: "24px" }}>
             <div className="data-form">
               <label>
@@ -255,13 +290,18 @@ export function CheckoutFlow({
                 결제 및 발행 정책에 동의합니다.
               </label>
               <button className="btn-primary form-submit" disabled={pending || !invitationId} onClick={handleCheckout} type="button">
-                {pending ? "결제 준비 중..." : repurchaseRequired ? "재결제 후 변경 반영" : "결제 후 발행"}
+                {pending
+                  ? "결제 준비 중..."
+                  : repurchaseRequired
+                    ? `${getPaymentProviderMeta(selectedProvider).label}로 재결제`
+                    : `${getPaymentProviderMeta(selectedProvider).label}로 결제 후 발행`}
               </button>
             </div>
             <div className="ops-card">
               <h3>주문 요약</h3>
               <p className="ops-line">상품 <strong>{invitationTitle}</strong></p>
               <p className="ops-line">가격 <strong>₩{INVITATION_PRICE_KRW.toLocaleString("ko-KR")}</strong></p>
+              <p className="ops-line">선택 수단 <strong>{getPaymentProviderMeta(selectedProvider).label}</strong></p>
               <p className="ops-line">결제 후 처리 <strong>자동 발행</strong></p>
               {repurchaseRequired ? (
                 <p className="ops-note">

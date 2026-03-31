@@ -1,21 +1,17 @@
 import { Link, useLocalSearchParams } from "expo-router";
-import { Text, TextInput, View } from "react-native";
+import { Text, View } from "react-native";
 import { StepIndicator } from "@/components/builder/StepIndicator";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { FocusInput } from "@/components/ui/FocusInput";
 import { Screen } from "@/components/ui/Screen";
 import { theme } from "@/components/ui/theme";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 
 const inputStyle = {
   minHeight: 48,
-  borderRadius: 10,
-  borderWidth: 1.5,
-  borderColor: theme.colors.border,
-  backgroundColor: "#fff",
-  paddingHorizontal: 16,
-  paddingVertical: 14,
-  color: theme.colors.text
+  borderRadius: 12,
+  fontSize: 15
 } as const;
 
 const labelStyle = {
@@ -35,7 +31,7 @@ export default function BuilderStep4AccountsScreen() {
       <Card eyebrow="공유 준비" title="신랑측 · 신부측 계좌">
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>신랑측 은행</Text>
-          <TextInput
+          <FocusInput
             onChangeText={(primaryBank) => updateAccounts({ primaryBank })}
             placeholder="예: 신한은행"
             style={inputStyle}
@@ -44,7 +40,7 @@ export default function BuilderStep4AccountsScreen() {
         </View>
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>신랑측 예금주</Text>
-          <TextInput
+          <FocusInput
             onChangeText={(primaryHolder) => updateAccounts({ primaryHolder })}
             placeholder="예: 홍길동"
             style={inputStyle}
@@ -53,7 +49,7 @@ export default function BuilderStep4AccountsScreen() {
         </View>
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>신랑측 계좌번호</Text>
-          <TextInput
+          <FocusInput
             onChangeText={(primaryAccount) => updateAccounts({ primaryAccount })}
             placeholder="예: 110-123-456789"
             style={inputStyle}
@@ -62,7 +58,7 @@ export default function BuilderStep4AccountsScreen() {
         </View>
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>신부측 은행</Text>
-          <TextInput
+          <FocusInput
             onChangeText={(secondaryBank) => updateAccounts({ secondaryBank })}
             placeholder="예: 국민은행"
             style={inputStyle}
@@ -71,7 +67,7 @@ export default function BuilderStep4AccountsScreen() {
         </View>
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>신부측 예금주</Text>
-          <TextInput
+          <FocusInput
             onChangeText={(secondaryHolder) => updateAccounts({ secondaryHolder })}
             placeholder="예: 김부인"
             style={inputStyle}
@@ -80,7 +76,7 @@ export default function BuilderStep4AccountsScreen() {
         </View>
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>신부측 계좌번호</Text>
-          <TextInput
+          <FocusInput
             onChangeText={(secondaryAccount) => updateAccounts({ secondaryAccount })}
             placeholder="예: 123-45-678901"
             style={inputStyle}
@@ -89,7 +85,7 @@ export default function BuilderStep4AccountsScreen() {
         </View>
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>카카오페이 링크</Text>
-          <TextInput
+          <FocusInput
             autoCapitalize="none"
             onChangeText={(kakaoPayLink) => updateAccounts({ kakaoPayLink })}
             placeholder="https://qr.kakaopay.com/..."
@@ -98,13 +94,17 @@ export default function BuilderStep4AccountsScreen() {
           />
         </View>
       </Card>
-      <View style={{ gap: 12 }}>
-        <Link asChild href={{ pathname: "/builder/step3-photos", params: localId ? { localId } : {} }}>
-          <Button accessibilityLabel="이전 단계로 이동" variant="outline">이전</Button>
-        </Link>
-        <Link asChild href={{ pathname: "/builder/step5-location", params: localId ? { localId } : {} }}>
-          <Button accessibilityLabel="다음 단계로 이동">다음</Button>
-        </Link>
+      <View style={{ gap: 12, flexDirection: "row" }}>
+        <View style={{ flex: 1 }}>
+          <Link asChild href={{ pathname: "/builder/step3-photos", params: localId ? { localId } : {} }}>
+            <Button accessibilityLabel="이전 단계로 이동" variant="outline">이전</Button>
+          </Link>
+        </View>
+        <View style={{ flex: 2 }}>
+          <Link asChild href={{ pathname: "/builder/step5-location", params: localId ? { localId } : {} }}>
+            <Button accessibilityLabel="다음 단계로 이동">다음</Button>
+          </Link>
+        </View>
       </View>
     </Screen>
   );

@@ -25,17 +25,18 @@ function Surface({ children }: { children: React.ReactNode }) {
     <View
       style={{
         backgroundColor: "rgba(255, 253, 249, 0.92)",
-        borderRadius: 24,
+        borderRadius: 16,
         borderWidth: 1,
         borderColor: theme.colors.border,
-        paddingHorizontal: 18,
-        paddingVertical: 18,
+        paddingHorizontal: 24,
+        paddingVertical: 24,
         shadowColor: theme.shadow.card.shadowColor,
         shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.55,
         shadowRadius: 22,
         elevation: 4,
-        gap: 8
+        gap: 8,
+        width: "48%"
       }}
     >
       {children}
@@ -46,25 +47,25 @@ function Surface({ children }: { children: React.ReactNode }) {
 export function FeatureGrid() {
   return (
     <View style={{ gap: 12 }}>
-      <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700", letterSpacing: 1.6 }}>
+      <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700", letterSpacing: 1.6, textAlign: "center" }}>
         왜 InviteHub인가요
       </Text>
-      <Text style={{ color: theme.colors.text, fontSize: 24, fontWeight: "700", lineHeight: 34 }}>
+      <Text style={{ color: theme.colors.text, fontSize: 24, fontWeight: "700", lineHeight: 34, textAlign: "center" }}>
         예쁘기만 한 초대장이 아니라,
         {"\n"}
         보내기까지 편한 초대장
       </Text>
-      <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24 }}>
+      <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24, textAlign: "center" }}>
         디자인부터 참석 관리까지, 초대장에 필요한 핵심 기능만 깔끔하게 담았습니다.
       </Text>
-      <View style={{ gap: 12 }}>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, justifyContent: "space-between" }}>
         {featureCards.map((item, index) => (
           <Surface key={item.title}>
-            <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700" }}>
+            <Text style={{ color: theme.colors.primary, fontSize: 28, fontWeight: "700", textAlign: "center" }}>
               {String(index + 1).padStart(2, "0")}
             </Text>
-            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "700" }}>{item.title}</Text>
-            <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24 }}>{item.body}</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "700", textAlign: "center" }}>{item.title}</Text>
+            <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24, textAlign: "center" }}>{item.body}</Text>
           </Surface>
         ))}
       </View>

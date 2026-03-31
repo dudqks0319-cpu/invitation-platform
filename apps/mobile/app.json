@@ -21,7 +21,16 @@
     },
     "plugins": [
       "expo-router",
-      "expo-web-browser"
+      "expo-web-browser",
+      "react-native-iap",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "kotlinVersion": "2.1.20"
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": false
@@ -32,6 +41,9 @@
         "projectId": "e253cb22-fbc1-4f8b-a172-0fdb16ededd3"
       }
     },
-    "owner": "jyb1126"
+    "owner": "jyb1126",
+    "android": {
+      "package": "com.invitehub.app.dev"
+    }
   }
 }

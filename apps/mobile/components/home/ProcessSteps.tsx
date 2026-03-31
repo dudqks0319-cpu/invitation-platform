@@ -45,14 +45,25 @@ function Surface({ children }: { children: React.ReactNode }) {
 export function ProcessSteps() {
   return (
     <View style={{ gap: 12 }}>
-      <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700", letterSpacing: 1.6 }}>
+      <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700", letterSpacing: 1.6, textAlign: "center" }}>
         이렇게 간단해요
       </Text>
-      <Text style={{ color: theme.colors.text, fontSize: 24, fontWeight: "700" }}>고르고, 쓰고, 바로 보내기</Text>
+      <Text style={{ color: theme.colors.text, fontSize: 24, fontWeight: "700", textAlign: "center" }}>고르고, 쓰고, 바로 보내기</Text>
       <View style={{ gap: 12 }}>
         {processCards.map((item) => (
           <Surface key={item.step}>
-            <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700" }}>{item.step}</Text>
+            <View
+              style={{
+                width: 42,
+                height: 42,
+                borderRadius: 21,
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: "#F0DEC8"
+              }}
+            >
+              <Text style={{ color: "#A5743D", fontSize: 15, fontWeight: "800" }}>{item.step}</Text>
+            </View>
             <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "700" }}>{item.title}</Text>
             <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24 }}>{item.body}</Text>
           </Surface>

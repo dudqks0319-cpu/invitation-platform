@@ -1,12 +1,19 @@
+import { useRouter } from "expo-router";
 import { Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
 import { HeroSection } from "@/components/home/HeroSection";
 import { FeatureGrid } from "@/components/home/FeatureGrid";
 import { ProcessSteps } from "@/components/home/ProcessSteps";
 import { PricingCards } from "@/components/home/PricingCards";
+import { SiteFooter } from "@/components/home/SiteFooter";
 import { theme } from "@/components/ui/theme";
-import { openWebBuilder, openWebTemplates } from "@/lib/share";
+import { createAndPersistDraft } from "@/lib/drafts";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function HomeScreen() {
+  const router = useRouter();
+  const { status, user } = useAuth();
+  const draftOwnerId = status === "authenticated" && user?.id ? user.id : "local-preview-owner";
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <View
@@ -29,9 +36,8 @@ export default function HomeScreen() {
       >
         <View
           style={{
-            paddingHorizontal: 18,
-            paddingTop: 14,
-            paddingBottom: 16,
+            paddingHorizontal: 24,
+            height: 68,
             borderBottomWidth: 1,
             borderBottomColor: theme.colors.border,
             backgroundColor: "rgba(255,255,255,0.92)",
@@ -40,12 +46,12 @@ export default function HomeScreen() {
             justifyContent: "space-between"
           }}
         >
-          <Text style={{ color: theme.colors.accent, fontSize: 18, fontWeight: "700" }}>💌 InviteHub</Text>
+          <Text style={{ color: theme.colors.accent, fontSize: 20, fontWeight: "800" }}>💌 InviteHub</Text>
           <View style={{ flexDirection: "row", gap: 10 }}>
             <Pressable
               accessibilityLabel="로그인"
               onPress={() => {
-                void openWebTemplates();
+                router.push("/login");
               }}
               style={{
                 borderRadius: 999,
@@ -59,8 +65,9 @@ export default function HomeScreen() {
             </Pressable>
             <Pressable
               accessibilityLabel="시작하기"
-              onPress={() => {
-                void openWebBuilder();
+              onPress={async () => {
+                const draft = await createAndPersistDraft(draftOwnerId);
+                router.push({ pathname: "/builder/step1-basic", params: { localId: draft.localId } });
               }}
               style={{
                 borderRadius: 999,
@@ -77,15 +84,17 @@ export default function HomeScreen() {
         <View style={{ paddingHorizontal: 18, paddingTop: 24, gap: 36 }}>
           <HeroSection
             onBrowse={() => {
-              void openWebTemplates();
+              router.push("/templates");
             }}
-            onStart={() => {
-              void openWebBuilder();
+            onStart={async () => {
+              const draft = await createAndPersistDraft(draftOwnerId);
+              router.push({ pathname: "/builder/step1-basic", params: { localId: draft.localId } });
             }}
           />
           <FeatureGrid />
           <ProcessSteps />
           <PricingCards />
+          <SiteFooter />
         </View>
       </ScrollView>
     </SafeAreaView>

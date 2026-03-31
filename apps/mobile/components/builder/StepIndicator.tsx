@@ -12,8 +12,18 @@ export function StepIndicator({
   total?: number;
 }) {
   return (
-    <View style={{ gap: 12 }}>
-      <View style={{ flexDirection: "row", gap: 8, flexWrap: "wrap" }}>
+    <View
+      style={{
+        gap: 12,
+        backgroundColor: "#FFF8F1",
+        borderWidth: 1,
+        borderColor: "rgba(143,111,82,0.18)",
+        borderRadius: 18,
+        padding: 16
+      }}
+    >
+      <Text style={{ color: "#9d6f48", fontSize: 12, fontWeight: "700", letterSpacing: 2 }}>빌더 진행 단계</Text>
+      <View style={{ flexDirection: "row", gap: 8 }}>
         {Array.from({ length: total }, (_, index) => {
           const step = index + 1;
           const active = step === current;
@@ -21,7 +31,7 @@ export function StepIndicator({
             <View
               key={step}
               style={{
-                minWidth: 56,
+                flex: 1,
                 paddingHorizontal: 12,
                 paddingVertical: 8,
                 borderRadius: 999,

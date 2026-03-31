@@ -37,7 +37,7 @@ export function Card({ children, eyebrow, title }: CardProps) {
           {eyebrow}
         </Text>
       ) : null}
-      <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "700", lineHeight: 26 }}>{title}</Text>
+      <Text style={{ color: "#58432f", fontSize: 18, fontWeight: "700", lineHeight: 26 }}>{title}</Text>
       {children}
     </View>
   );

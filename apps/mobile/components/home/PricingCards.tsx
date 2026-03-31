@@ -1,5 +1,7 @@
 import { Text, View } from "react-native";
 import { theme } from "@/components/ui/theme";
+import { Button } from "@/components/ui/Button";
+import { openWebBuilder } from "@/lib/share";
 
 const pricingCards = [
   {
@@ -50,35 +52,43 @@ function Surface({ children }: { children: React.ReactNode }) {
 export function PricingCards() {
   return (
     <View style={{ gap: 12 }}>
-      <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700", letterSpacing: 1.6 }}>
+      <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700", letterSpacing: 1.6, textAlign: "center" }}>
         가격
       </Text>
-      <Text style={{ color: theme.colors.text, fontSize: 24, fontWeight: "700", lineHeight: 34 }}>
+      <Text style={{ color: theme.colors.text, fontSize: 24, fontWeight: "700", lineHeight: 34, textAlign: "center" }}>
         커피 한 잔 가격으로
         {"\n"}
         초대장 완성
       </Text>
-      <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24 }}>
+      <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24, textAlign: "center" }}>
         체험은 무료, 발행은 4,900원 한 번이면 끝입니다.
       </Text>
       <View style={{ gap: 12 }}>
         {pricingCards.map((item, index) => (
-          <Surface key={item.title}>
+          <View
+            key={item.title}
+            style={{
+              borderWidth: index === 1 ? 2 : 0,
+              borderColor: index === 1 ? "#C9935A" : "transparent",
+              borderRadius: 24
+            }}
+          >
+          <Surface>
             <View
               style={{
                 alignSelf: "flex-start",
-                    backgroundColor: index === 1 ? theme.colors.primary : theme.colors.primaryLight,
+                backgroundColor: index === 1 ? "#C9935A" : "#e8f5e9",
                 borderRadius: 999,
                 paddingHorizontal: 12,
                 paddingVertical: 6
               }}
             >
-              <Text style={{ color: index === 1 ? "#fff" : theme.colors.accent, fontSize: 12, fontWeight: "700" }}>
+              <Text style={{ color: index === 1 ? "#fff" : "#2e7d32", fontSize: 12, fontWeight: "700" }}>
                 {item.badge}
               </Text>
             </View>
             <Text style={{ color: theme.colors.text, fontSize: 20, fontWeight: "700" }}>{item.title}</Text>
-            <Text style={{ color: theme.colors.accent, fontSize: 26, fontWeight: "700" }}>{item.price}</Text>
+            <Text style={{ color: "#A5743D", fontSize: 32, fontWeight: "900" }}>{item.price}</Text>
             <View style={{ gap: 8 }}>
               {item.items.map((line) => (
                 <Text key={line} style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24 }}>
@@ -86,7 +96,16 @@ export function PricingCards() {
                 </Text>
               ))}
             </View>
+            <Button
+              accessibilityLabel={`${item.title} 시작하기`}
+              onPress={() => {
+                void openWebBuilder();
+              }}
+            >
+              시작하기
+            </Button>
           </Surface>
+          </View>
         ))}
       </View>
     </View>

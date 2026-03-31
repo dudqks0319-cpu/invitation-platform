@@ -48,7 +48,7 @@ export type Database = {
           id: string;
           invitation_id: string;
           user_id: string;
-          provider: "kakaopay";
+          provider: "kakaopay" | "naverpay" | "credit_card" | "bank_transfer" | "apple_iap" | "google_play";
           status: "payment_pending" | "paid" | "refund_pending" | "refunded" | "payment_failed";
           amount: number;
           currency: string;
@@ -68,7 +68,7 @@ export type Database = {
           id?: string;
           invitation_id: string;
           user_id: string;
-          provider?: "kakaopay";
+          provider?: "kakaopay" | "naverpay" | "credit_card" | "bank_transfer" | "apple_iap" | "google_play";
           status?: "payment_pending" | "paid" | "refund_pending" | "refunded" | "payment_failed";
           amount: number;
           currency?: string;

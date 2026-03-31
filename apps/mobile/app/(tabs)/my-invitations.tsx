@@ -8,6 +8,7 @@ import { ErrorView } from "@/components/ui/ErrorView";
 import { Loading } from "@/components/ui/Loading";
 import { Pill } from "@/components/ui/Pill";
 import { Screen } from "@/components/ui/Screen";
+import { theme } from "@/components/ui/theme";
 import type { MobileInvitationDraft } from "@/lib/drafts";
 import { deleteDraft, listDrafts } from "@/lib/drafts";
 import { listRemoteInvitations } from "@/lib/invitations";
@@ -91,16 +92,16 @@ export default function MyInvitationsScreen() {
       <View style={{ gap: 12 }}>
         {message ? (
           <Card eyebrow="상태" title="작업 완료">
-            <Text style={{ color: "#6a5645", lineHeight: 22 }}>{message}</Text>
+            <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>{message}</Text>
           </Card>
         ) : null}
         {error ? <ErrorView description={error} title="목록 불러오기 실패" /> : null}
         <Card eyebrow="목록 상태" title="초안 동기화">
-          <Text style={{ color: "#6a5645", lineHeight: 22 }}>
+          <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
             로컬 초안과 서버 저장본을 함께 보여줍니다. 로컬 전용 초안은 여기서 바로 지울 수 있습니다.
           </Text>
           {!configured ? (
-            <Text style={{ color: "#8d5a2b", lineHeight: 22, marginTop: 8 }}>
+            <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginTop: 8 }}>
               원격 기능 안내: {configMessage}
             </Text>
           ) : null}
@@ -125,14 +126,14 @@ export default function MyInvitationsScreen() {
           eyebrow={draft.syncStatus}
           title={draft.payload.title || "제목 없는 초대장"}
         >
-          <Text style={{ color: "#5b4a3b", lineHeight: 22 }}>
+          <Text style={{ color: theme.colors.text, lineHeight: 22 }}>
             {draft.payload.eventData.groom.name || "신랑"} ♡ {draft.payload.eventData.bride.name || "신부"}
           </Text>
-          <Text style={{ color: "#6a5645", lineHeight: 22, marginTop: 6 }}>
+          <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 6 }}>
             {[draft.payload.venueName, draft.payload.venueAddress].filter(Boolean).join(" · ") || "장소 미입력"}
           </Text>
-          <Text style={{ color: "#6a5645", lineHeight: 22, marginTop: 6 }}>{getStatusSummary(draft)}</Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 10 }}>
+          <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 6 }}>{getStatusSummary(draft)}</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
             <Pill active={Boolean(draft.serverId)} label={draft.serverId ? "원격 저장됨" : "로컬 전용"} />
             <Pill active={draft.isDirty} label={draft.isDirty ? "미저장 변경" : "동기화 안정"} />
             <Pill active={draft.pendingPhotos.length > 0} label={`업로드 대기 ${draft.pendingPhotos.length}`} />
@@ -148,11 +149,11 @@ export default function MyInvitationsScreen() {
                   justifyContent: "center",
                   borderRadius: 16,
                   borderWidth: 1,
-                  borderColor: "#d2bba6",
-                  backgroundColor: "#fffaf5"
+                  borderColor: theme.colors.border,
+                  backgroundColor: theme.colors.surfaceSoft
                 }}
               >
-                <Text style={{ color: "#8d5a2b", fontWeight: "700" }}>운영 화면 열기</Text>
+                <Text style={{ color: theme.colors.primaryDark, fontWeight: "700" }}>운영 화면 열기</Text>
               </Pressable>
             </Link>
             <Button
