@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { mobileTemplateGallery } from "@/lib/template-gallery";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 import { openInvitationPublicPage, shareInvitationLink } from "@/lib/share";
+import { getInviteHubBaseUrl } from "@/lib/web-links";
 
 export default function BuilderPreviewScreen() {
   const { localId } = useLocalSearchParams<{ localId?: string }>();
@@ -24,7 +25,9 @@ export default function BuilderPreviewScreen() {
     : "";
   const shareSlug = draft?.payload.share.slug ?? "";
   const selectedTemplate = draft ? mobileTemplateGallery.find((item) => item.id === draft.payload.templateId) : null;
-  const previewImage = selectedTemplate?.previewPath ? { uri: `https://invitehub.co.kr${selectedTemplate.previewPath}` } : undefined;
+  const previewImage = selectedTemplate?.previewPath
+    ? { uri: `${getInviteHubBaseUrl()}${selectedTemplate.previewPath}` }
+    : undefined;
   const galleryCount = draft?.payload.photos.gallery.length ?? 0;
   const galleryCharge = galleryCount > 0 ? Math.ceil(galleryCount / 10) * 1000 : 0;
   const addOnLines = [
