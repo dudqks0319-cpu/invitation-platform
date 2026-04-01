@@ -38,6 +38,34 @@
 4. RSVP/방명록 샘플 데이터 준비
 5. 스크린샷 순서대로 캡처
 
+## Automation
+
+기본 자동 캡처 스크립트:
+
+```bash
+zsh /Users/jyb-m3max/Desktop/codex/invitation-platform/scripts/capture-store-screenshots.sh
+```
+
+기본 출력 경로:
+
+```bash
+/Users/jyb-m3max/Desktop/codex/invitation-platform/output/store-screenshots
+```
+
+지원 범위:
+- 홈
+- 디자인 둘러보기
+- 빌더 Step 1
+- 빌더 Step 3
+- 미리보기
+- 마이페이지
+
+수동 추가 권장:
+- 공개 초대장
+- RSVP 입력 후 상태
+- 방명록 샘플 데이터
+- 운영 화면/통계 화면
+
 ## Reviewer Demo Flow
 
 1. 홈에서 `디자인 둘러보기`
