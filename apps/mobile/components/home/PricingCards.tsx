@@ -5,23 +5,23 @@ import { openWebBuilder } from "@/lib/share";
 
 const pricingCards = [
   {
-    badge: "체험",
-    title: "무료 미리보기",
+    badge: "무료",
+    title: "현재 디자인 전체",
     price: "₩0",
     items: [
-      "모든 템플릿 둘러보기",
-      "회원가입 없이 빌더 체험",
-      "미리보기 화면 확인"
+      "현재 공개 템플릿 전부 무료",
+      "링크 · RSVP · 방명록 포함",
+      "부담 없이 바로 시작 가능"
     ]
   },
   {
-    badge: "발행",
-    title: "초대장 발행",
-    price: "₩4,900",
+    badge: "옵션",
+    title: "사진 애드온",
+    price: "필요한 만큼",
     items: [
-      "커피 한 잔 가격",
-      "공개 링크 자동 생성",
-      "RSVP + 방명록 + 지도 포함"
+      "인물사진 추가 500원",
+      "배경사진 추가 500원",
+      "갤러리 10장당 1,000원"
     ]
   }
 ];
@@ -53,15 +53,15 @@ export function PricingCards() {
   return (
     <View style={{ gap: 12 }}>
       <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700", letterSpacing: 1.6, textAlign: "center" }}>
-        가격
+        요금 안내
       </Text>
       <Text style={{ color: theme.colors.text, fontSize: 24, fontWeight: "700", lineHeight: 34, textAlign: "center" }}>
-        커피 한 잔 가격으로
+        현재 디자인은
         {"\n"}
-        초대장 완성
+        모두 무료예요
       </Text>
       <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24, textAlign: "center" }}>
-        체험은 무료, 발행은 4,900원 한 번이면 끝입니다.
+        나중에 새로 공개되는 특별 디자인만 유료로 운영하고, 지금은 사진 옵션만 추가 비용이 있습니다.
       </Text>
       <View style={{ gap: 12 }}>
         {pricingCards.map((item, index) => (

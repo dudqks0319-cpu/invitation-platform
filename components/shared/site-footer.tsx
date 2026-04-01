@@ -12,7 +12,7 @@ export function SiteFooter() {
           <Link href="/preview">미리보기</Link>
           <Link href="/privacy">개인정보처리방침</Link>
           <Link href="/terms">이용약관</Link>
-          <a href="mailto:support@invitehub.kr">문의하기</a>
+          <a href="mailto:support@invitehub.co.kr">문의하기</a>
         </div>
         <p className="footer-copy">© 2026 InviteHub. All rights reserved.</p>
       </div>

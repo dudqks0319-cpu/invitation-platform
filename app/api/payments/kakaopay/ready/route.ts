@@ -3,6 +3,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCheckoutPrice, requestKakaoPayReady } from "@/lib/payments/kakaopay";
 import { generateApproveNonce } from "@/lib/payments/nonce";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
 
 type ReadyRequest = {
   invitationId: string;
@@ -44,7 +45,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: "초대장을 찾을 수 없습니다." }, { status: 404 });
   }
 
-  const price = getCheckoutPrice();
+  const normalizedPayload = normalizeInvitationPayload(invitation.payload);
+  const price = getCheckoutPrice(normalizedPayload);
+
+  if (price.amount <= 0) {
+    return NextResponse.json({ success: false, message: "무료 발행 대상은 결제 대신 무료 발행 경로를 사용해야 합니다." }, { status: 409 });
+  }
   const paymentOrderId = crypto.randomUUID();
   const approveNonce = generateApproveNonce();
   const siteOrigin = request.headers.get("origin") || process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
@@ -87,6 +93,7 @@ export async function POST(request: Request) {
     const readyResult = await requestKakaoPayReady({
       orderId: payment.provider_order_id,
       userId: user.id,
+      amount: price.amount,
       approvalUrl: approvalUrl.toString(),
       cancelUrl: cancelUrl.toString(),
       failUrl: failUrl.toString(),

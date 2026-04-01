@@ -241,9 +241,11 @@ export function InvitationView({
   const kakaoPayLink = normalizeUrl(payload.kakaoPayLink);
   const videoUrl = normalizeUrl(payload.videoUrl);
   const backgroundMusicUrl = normalizeUrl(payload.backgroundMusicUrl);
+  const mapQuery = encodeURIComponent(payload.mapAddress || payload.venueAddress || payload.venueName);
   const mapLink =
     normalizeUrl(payload.naverMapLink) ||
-    `https://map.naver.com/p/search/${encodeURIComponent(payload.mapAddress || payload.venueAddress || payload.venueName)}`;
+    `https://map.naver.com/p/search/${mapQuery}`;
+  const kakaoMapLink = `https://map.kakao.com/link/search/${mapQuery}`;
 
   return (
     <main className="invitation-main">
@@ -317,9 +319,14 @@ export function InvitationView({
           <h2>위치</h2>
           <p>{payload.mapAddress || payload.venueAddress || "위치 정보를 입력해 주세요."}</p>
           <p className="invitation-transport">{payload.transportNote}</p>
-          <a className="btn-primary invitation-wide-btn" href={mapLink} rel="noreferrer noopener" target="_blank">
-            네이버 지도 열기
-          </a>
+          <div className="invitation-inline-actions">
+            <a className="btn-primary invitation-small-btn" href={mapLink} rel="noreferrer noopener" target="_blank">
+              네이버 지도 열기
+            </a>
+            <a className="btn-outline invitation-small-btn" href={kakaoMapLink} rel="noreferrer noopener" target="_blank">
+              카카오맵 열기
+            </a>
+          </div>
         </article>
 
         {payload.galleryImages.length ? (

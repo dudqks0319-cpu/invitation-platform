@@ -5,19 +5,19 @@ import { SiteHeader } from "@/components/shared/site-header";
 
 const features = [
   {
-    title: "5분이면 완성",
+    title: "현재 디자인은 무료",
     description:
-      "템플릿을 고르고 날짜와 장소를 적으면, 링크로 바로 보낼 수 있는 초대장이 완성됩니다."
+      "지금 공개된 템플릿은 비용 걱정 없이 고르고 바로 초대장을 시작할 수 있습니다."
   },
   {
-    title: "참석 여부 자동 수집",
+    title: "옵션만 필요한 만큼",
     description:
-      "하객이 초대장에서 바로 RSVP를 남기면, 호스트는 대시보드에서 참석 인원을 한눈에 확인할 수 있습니다."
+      "인물사진, 배경사진, 갤러리처럼 필요한 요소만 추가해서 부담 없이 완성도를 높일 수 있습니다."
   },
   {
-    title: "감성 디자인 템플릿",
+    title: "응답과 방명록까지",
     description:
-      "결혼식, 돌잔치, 생일, 집들이까지. 행사 분위기에 맞는 디자인을 고르고 바로 적용할 수 있습니다."
+      "링크를 보낸 뒤에는 참석 여부와 축하 메시지까지 한 번에 받을 수 있습니다."
   },
   {
     title: "링크 하나로 공유",
@@ -30,40 +30,40 @@ const processSteps = [
   {
     step: "01",
     title: "디자인 선택",
-    description: "행사 분위기에 어울리는 템플릿을 고르면 바로 빌더가 시작됩니다."
+    description: "현재 공개된 무료 디자인 중 마음에 드는 템플릿을 고르면 바로 시작됩니다."
   },
   {
     step: "02",
     title: "내용 입력",
-    description: "이름, 장소, 사진, 계좌 정보까지 차근차근 입력하면 미리보기로 바로 확인할 수 있습니다."
+    description: "이름, 장소, 문구를 채우고 필요하면 사진 옵션만 더해 완성도를 높입니다."
   },
   {
     step: "03",
-    title: "발행 후 공유",
-    description: "결제를 마치면 공개 링크가 생성되고, 참석 응답과 방명록도 함께 받을 수 있습니다."
+    title: "바로 발행 · 공유",
+    description: "무료 구성은 바로 발행하고, 옵션이 있으면 필요한 만큼만 결제해 링크로 보낼 수 있습니다."
   }
 ];
 
 const pricing = [
   {
-    badge: "체험",
-    title: "무료 미리보기",
+    badge: "무료",
+    title: "현재 디자인 전체",
     price: "₩0",
     items: [
-      "모든 템플릿 둘러보기",
-      "회원가입 없이 빌더 체험",
-      "미리보기 화면 확인"
+      "현재 공개 템플릿 전부 무료",
+      "링크 · RSVP · 방명록 포함",
+      "부담 없이 바로 시작 가능"
     ]
   },
   {
-    badge: "발행",
-    title: "초대장 발행",
-    price: "₩4,900",
+    badge: "옵션",
+    title: "사진 애드온",
+    price: "필요한 만큼",
     popular: true,
     items: [
-      "커피 한 잔 가격",
-      "공개 링크 자동 생성",
-      "RSVP + 방명록 + 지도 포함"
+      "인물사진 추가 500원",
+      "배경사진 추가 500원",
+      "갤러리 10장당 1,000원"
     ]
   }
 ];
@@ -75,21 +75,21 @@ export default function HomePage() {
 
       <section className="hero">
         <div className="hero-content">
-          <p className="hero-badge">당신의 소중한 날을 위한 초대장</p>
+          <p className="hero-badge">지금 있는 디자인, 전부 무료</p>
           <h1 className="hero-title">
-            마음을 담은 초대장,
+            예쁜 초대장,
             <br />
-            5분이면 완성
+            지금은 무료로 시작
           </h1>
           <p className="hero-subtitle">
-            감성적인 디자인과 간편한 기능을 하나로 담았습니다.
+            현재 공개된 디자인은 모두 무료예요.
             <br />
-            템플릿을 고르고 정보를 입력하면, 바로 공유할 수 있는 모바일 초대장이 완성됩니다.
+            필요한 경우에만 사진 옵션을 더해, 부담 없이 시작하고 정성껏 완성해 보세요.
           </p>
           <div className="hero-proof-list">
-            <span>50+ 디자인 템플릿</span>
-            <span>결혼·돌잔치·생일 맞춤</span>
-            <span>링크 하나로 참석 확인까지</span>
+            <span>현재 디자인 전부 무료</span>
+            <span>사진 옵션만 필요한 만큼</span>
+            <span>링크 · RSVP · 방명록 한 번에</span>
           </div>
           <div className="hero-btns">
             <Link className="btn-hero-primary" href="/builder">
@@ -127,14 +127,14 @@ export default function HomePage() {
 
       <section className="features-section" id="features">
         <div className="section-inner">
-          <p className="section-kicker">왜 InviteHub인가요</p>
+          <p className="section-kicker">가볍게 시작하세요</p>
           <h2 className="section-title">
-            예쁘기만 한 초대장이 아니라,
+            기본은 무료,
             <br />
-            보내기까지 편한 초대장
+            필요한 만큼만 더하기
           </h2>
           <p className="section-sub">
-            디자인부터 참석 관리까지, 초대장에 필요한 핵심 기능만 깔끔하게 담았습니다.
+            초대장 자체는 무료로 만들고, 사진 옵션만 선택적으로 추가하는 방식으로 부담을 낮췄습니다.
           </p>
           <div className="features-grid">
             {features.map((feature, index) => (
@@ -150,8 +150,8 @@ export default function HomePage() {
 
       <section className="process-section">
         <div className="section-inner">
-          <p className="section-kicker">이렇게 간단해요</p>
-          <h2 className="section-title">고르고, 쓰고, 바로 보내기</h2>
+          <p className="section-kicker">이렇게 진행돼요</p>
+          <h2 className="section-title">디자인 고르고, 내용 넣고, 원하는 옵션만</h2>
           <div className="process-grid">
             {processSteps.map((step) => (
               <article className="process-card" key={step.step}>
@@ -166,9 +166,9 @@ export default function HomePage() {
 
       <section className="pricing-section" id="pricing">
         <div className="section-inner">
-          <p className="section-kicker">가격</p>
-          <h2 className="section-title">커피 한 잔 가격으로 초대장 완성</h2>
-          <p className="section-sub">체험은 무료, 발행은 4,900원 한 번이면 끝입니다.</p>
+          <p className="section-kicker">요금 안내</p>
+          <h2 className="section-title">현재 디자인은 모두 무료예요</h2>
+          <p className="section-sub">나중에 새로 공개되는 특별 디자인만 유료로 운영하고, 지금은 사진 옵션만 추가 비용이 있습니다.</p>
           <div className="pricing-grid">
             {pricing.map((plan) => (
               <article className={`price-card ${plan.popular ? "popular" : ""}`} key={plan.title}>

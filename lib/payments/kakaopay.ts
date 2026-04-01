@@ -1,4 +1,6 @@
-import { INVITATION_CURRENCY, INVITATION_ITEM_NAME, INVITATION_PRICE_KRW } from "@/lib/payments/constants";
+import { INVITATION_CURRENCY, INVITATION_ITEM_NAME } from "@/lib/payments/constants";
+import type { InvitationDraftPayload } from "@/lib/invitation-payload";
+import { getInvitationPricing } from "@/lib/payments/pricing";
 
 const KAKAOPAY_BASE_URL = "https://open-api.kakaopay.com/online/v1/payment";
 
@@ -48,9 +50,11 @@ async function requestKakaoPay<T>(path: string, payload: Record<string, unknown>
   return data as T;
 }
 
-export function getCheckoutPrice() {
+export function getCheckoutPrice(payload?: InvitationDraftPayload) {
+  const pricing = payload ? getInvitationPricing(payload) : { amount: 0 };
+
   return {
-    amount: INVITATION_PRICE_KRW,
+    amount: pricing.amount,
     currency: INVITATION_CURRENCY,
     itemName: INVITATION_ITEM_NAME
   };
@@ -59,13 +63,13 @@ export function getCheckoutPrice() {
 export async function requestKakaoPayReady(input: {
   orderId: string;
   userId: string;
+  amount: number;
   itemName?: string;
   approvalUrl: string;
   cancelUrl: string;
   failUrl: string;
 }) {
   const { cid } = requireKakaoConfig();
-  const price = getCheckoutPrice();
 
   return requestKakaoPay<{
     tid: string;
@@ -77,9 +81,9 @@ export async function requestKakaoPayReady(input: {
     cid,
     partner_order_id: input.orderId,
     partner_user_id: input.userId,
-    item_name: input.itemName || price.itemName,
+    item_name: input.itemName || INVITATION_ITEM_NAME,
     quantity: 1,
-    total_amount: price.amount,
+    total_amount: input.amount,
     tax_free_amount: 0,
     approval_url: input.approvalUrl,
     cancel_url: input.cancelUrl,

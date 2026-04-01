@@ -10,9 +10,9 @@ type HeroSectionProps = {
 };
 
 const proofChips = [
-  "50+ 디자인 템플릿",
-  "결혼·돌잔치·생일 맞춤",
-  "링크 하나로 참석 확인까지"
+  "현재 디자인 전부 무료",
+  "사진 옵션만 필요한 만큼",
+  "링크 · RSVP · 방명록 한 번에"
 ];
 
 export function HeroSection({ onBrowse, onStart }: HeroSectionProps) {
@@ -32,7 +32,7 @@ export function HeroSection({ onBrowse, onStart }: HeroSectionProps) {
         }}
       >
         <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700" }}>
-          당신의 소중한 날을 위한 초대장
+          지금 있는 디자인, 전부 무료
         </Text>
       </View>
 
@@ -45,12 +45,12 @@ export function HeroSection({ onBrowse, onStart }: HeroSectionProps) {
             lineHeight: 40
           }}
         >
-          마음을 담은 초대장,
+          예쁜 초대장,
           {"\n"}
-          5분이면 완성
+          지금은 무료로 시작
         </Text>
         <Text style={{ color: theme.colors.muted, fontSize: 16, lineHeight: 26 }}>
-          감성적인 디자인과 간편한 기능을 하나로 담았습니다. 템플릿을 고르고 정보를 입력하면, 바로 공유할 수 있는 모바일 초대장이 완성됩니다.
+          현재 공개된 디자인은 모두 무료예요. 필요한 경우에만 사진 옵션을 더해, 부담 없이 시작하고 정성껏 완성해 보세요.
         </Text>
       </View>
 

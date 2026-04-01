@@ -417,7 +417,7 @@ export function DashboardShell() {
               <p className="ops-line">템플릿 <strong>{item.templateId}</strong></p>
               <p className="ops-line">조회 <strong>{item.viewCount ?? 0}</strong> · RSVP <strong>{item.rsvpCount ?? 0}</strong> · 방명록 <strong>{item.guestbookCount ?? 0}</strong></p>
               {item.repurchaseRequired ? (
-                <p className="ops-note">이미지 또는 템플릿 변경으로 재결제가 필요합니다.</p>
+                <p className="ops-note">사진 옵션 변경으로 추가 결제가 필요합니다.</p>
               ) : null}
               <p className="ops-note">
                 생성일 {new Date(item.createdAt).toLocaleDateString("ko-KR")}

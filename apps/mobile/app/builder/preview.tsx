@@ -3,12 +3,12 @@ import { useState } from "react";
 import { ImageBackground, Text, View } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
-import { StorePurchaseCard } from "@/components/payments/StorePurchaseCard";
 import { ErrorView } from "@/components/ui/ErrorView";
 import { Loading } from "@/components/ui/Loading";
 import { Screen } from "@/components/ui/Screen";
 import { theme } from "@/components/ui/theme";
 import { useAuth } from "@/hooks/useAuth";
+import { mobileTemplateGallery } from "@/lib/template-gallery";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 import { openInvitationPublicPage, shareInvitationLink } from "@/lib/share";
 
@@ -23,6 +23,15 @@ export default function BuilderPreviewScreen() {
     ? `${draft.payload.eventData.groom.name || "신랑"} ♡ ${draft.payload.eventData.bride.name || "신부"}`
     : "";
   const shareSlug = draft?.payload.share.slug ?? "";
+  const selectedTemplate = draft ? mobileTemplateGallery.find((item) => item.id === draft.payload.templateId) : null;
+  const previewImage = selectedTemplate?.previewPath ? { uri: `https://invitehub.co.kr${selectedTemplate.previewPath}` } : undefined;
+  const galleryCount = draft?.payload.photos.gallery.length ?? 0;
+  const galleryCharge = galleryCount > 0 ? Math.ceil(galleryCount / 10) * 1000 : 0;
+  const addOnLines = [
+    draft?.payload.photos.mainUri ? "인물사진 추가 500원" : null,
+    draft?.payload.photos.backgroundUri ? "배경사진 추가 500원" : null,
+    galleryCharge > 0 ? `갤러리 ${Math.ceil(galleryCount / 10) * 10}장 범위 ${galleryCharge.toLocaleString("ko-KR")}원` : null
+  ].filter(Boolean) as string[];
 
   async function handleSave(nextStatus: "draft" | "published") {
     if (!configured) {
@@ -117,10 +126,10 @@ export default function BuilderPreviewScreen() {
         />
         <ImageBackground
           imageStyle={{
-            resizeMode: draft?.payload.photos.backgroundUri ? "cover" : "cover",
-            opacity: draft?.payload.photos.backgroundUri ? 0.38 : 0
+            resizeMode: "cover",
+            opacity: draft?.payload.photos.backgroundUri ? 0.42 : previewImage ? 0.9 : 0
           }}
-          source={draft?.payload.photos.backgroundUri ? { uri: draft.payload.photos.backgroundUri } : undefined}
+          source={draft?.payload.photos.backgroundUri ? { uri: draft.payload.photos.backgroundUri } : previewImage}
           style={{
             flex: 1,
             paddingHorizontal: 18,
@@ -129,7 +138,7 @@ export default function BuilderPreviewScreen() {
             justifyContent: "flex-start"
           }}
         >
-          {!draft?.payload.photos.backgroundUri ? (
+          {!draft?.payload.photos.backgroundUri && !previewImage ? (
             <>
               <View
                 style={{
@@ -160,12 +169,12 @@ export default function BuilderPreviewScreen() {
 
           <View style={{ alignItems: "center", marginTop: 18 }}>
             <Text style={{ color: "#d3c3ad", fontSize: 12, fontWeight: "700", letterSpacing: 2.4, textAlign: "center" }}>
-              WEDDING INVITATION
+              {selectedTemplate?.badge || "WEDDING INVITATION"}
             </Text>
             <Text
               style={{
                 color: "#d7cab8",
-                fontSize: 18,
+                fontSize: 16,
                 fontWeight: "600",
                 lineHeight: 28,
                 marginTop: 12,
@@ -181,13 +190,16 @@ export default function BuilderPreviewScreen() {
 
           <View
             style={{
-              marginTop: 120,
+              width: "78%",
+              alignSelf: "center",
+              marginTop: 84,
+              minHeight: 330,
               backgroundColor: "rgba(255, 249, 241, 0.92)",
-              borderRadius: 28,
+              borderRadius: 30,
               borderWidth: 1,
               borderColor: "#eadcc9",
               paddingHorizontal: 22,
-              paddingVertical: 24,
+              paddingVertical: 28,
               alignItems: "center",
               shadowColor: "rgba(102, 82, 63, 0.16)",
               shadowOffset: { width: 0, height: 14 },
@@ -197,7 +209,7 @@ export default function BuilderPreviewScreen() {
             }}
           >
             <Text style={{ color: "#a07a52", fontSize: 12, fontWeight: "700", letterSpacing: 1.8, textAlign: "center" }}>
-              결혼식 INVITATION
+              {selectedTemplate?.name || "초대장 미리보기"}
             </Text>
             <Text style={{ color: "#3a3028", fontSize: 28, fontWeight: "700", lineHeight: 38, marginTop: 10, textAlign: "center" }}>
               {names}
@@ -262,7 +274,24 @@ export default function BuilderPreviewScreen() {
           <Text style={{ color: theme.colors.primaryDark, lineHeight: 22 }}>{configMessage}</Text>
         </Card>
       ) : null}
-      <StorePurchaseCard />
+      <Card eyebrow="요금 안내" title="현재 디자인은 모두 무료">
+        <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
+          지금 공개된 디자인은 비용 없이 바로 발행할 수 있습니다. 필요한 경우에만 사진 옵션이 추가됩니다.
+        </Text>
+        {addOnLines.length > 0 ? (
+          <View style={{ gap: 6, marginTop: 10 }}>
+            {addOnLines.map((line) => (
+              <Text key={line} style={{ color: theme.colors.primaryDark, lineHeight: 22 }}>
+                • {line}
+              </Text>
+            ))}
+          </View>
+        ) : (
+          <Text style={{ color: theme.colors.success, lineHeight: 22, marginTop: 10 }}>
+            현재 선택은 무료 구성입니다.
+          </Text>
+        )}
+      </Card>
       <View style={{ gap: 12 }}>
         <View style={{ flexDirection: "row", gap: 12 }}>
           <View style={{ flex: 1 }}>

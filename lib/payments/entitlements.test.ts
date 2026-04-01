@@ -12,18 +12,18 @@ describe("paid edit entitlements", () => {
     expect(hasPaidEditImpact(defaultInvitationDraft, next)).toBe(false);
   });
 
-  it("flags template and image changes", () => {
+  it("flags paid image add-ons only", () => {
     expect(
       hasPaidEditImpact(defaultInvitationDraft, {
         ...defaultInvitationDraft,
-        templateId: "wedding-modern"
+        mainImageUrl: "https://example.com/new.png"
       })
     ).toBe(true);
 
     expect(
       hasPaidEditImpact(defaultInvitationDraft, {
         ...defaultInvitationDraft,
-        mainImageUrl: "https://example.com/new.png"
+        galleryImages: ["https://example.com/1.jpg"]
       })
     ).toBe(true);
   });

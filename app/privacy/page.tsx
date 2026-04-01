@@ -80,7 +80,7 @@ export default function PrivacyPage() {
             <h2 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "28px 0 12px" }}>
               6. 문의처
             </h2>
-            <p style={{ marginBottom: 24 }}>support@invitehub.kr</p>
+            <p style={{ marginBottom: 24 }}>support@invitehub.co.kr</p>
 
             <p style={{ color: "#999", fontSize: "0.82rem", marginTop: 40 }}>
               본 방침은 2026년 3월 25일부터 시행됩니다.

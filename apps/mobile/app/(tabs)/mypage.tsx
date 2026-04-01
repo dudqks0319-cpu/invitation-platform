@@ -1,22 +1,23 @@
 import { useState } from "react";
 import { Link } from "expo-router";
-import { Text, View } from "react-native";
+import { Alert, Text, View } from "react-native";
 import * as ExpoLinking from "expo-linking";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { theme } from "@/components/ui/theme";
 import { useAuth } from "@/hooks/useAuth";
+import { getInviteHubBaseUrl } from "@/lib/web-links";
 
 export default function MyPageScreen() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [pendingAction, setPendingAction] = useState<"" | "support" | "faq" | "privacy" | "terms" | "delete" | "logout">("");
-  const { configMessage, configMissingKeys, configured, signOut, status, user } = useAuth();
+  const { configMessage, configMissingKeys, configured, session, signOut, status, user } = useAuth();
   const isAuthenticated = status === "authenticated";
 
   async function openUrl(
-    action: "support" | "faq" | "privacy" | "terms" | "delete",
+    action: "support" | "faq" | "privacy" | "terms",
     url: string,
     doneMessage: string
   ) {
@@ -32,6 +33,48 @@ export default function MyPageScreen() {
     } finally {
       setPendingAction("");
     }
+  }
+
+  function confirmDeleteAccount() {
+    Alert.alert(
+      "계정 삭제",
+      "계정을 삭제하면 초대장과 결제 기록이 함께 제거되며 되돌릴 수 없습니다.",
+      [
+        { text: "취소", style: "cancel" },
+        {
+          text: "삭제",
+          style: "destructive",
+          onPress: () => {
+            if (!session?.access_token) {
+              setError("로그인 세션을 확인할 수 없습니다.");
+              return;
+            }
+
+            setError("");
+            setMessage("");
+            setPendingAction("delete");
+
+            void fetch(`${getInviteHubBaseUrl()}/api/account/delete`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${session.access_token}`
+              }
+            })
+              .then(async (response) => {
+                const result = (await response.json().catch(() => ({}))) as { message?: string; success?: boolean };
+                if (!response.ok || !result.success) {
+                  throw new Error(result.message || "계정 삭제에 실패했습니다.");
+                }
+
+                return signOut();
+              })
+              .then(() => setMessage("계정을 삭제했습니다."))
+              .catch((caught) => setError(caught instanceof Error ? caught.message : "계정 삭제에 실패했습니다."))
+              .finally(() => setPendingAction(""));
+          }
+        }
+      ]
+    );
   }
 
   return (
@@ -116,13 +159,11 @@ export default function MyPageScreen() {
           {pendingAction === "terms" ? "페이지 여는 중..." : "이용약관"}
         </Button>
         <Button
-          accessibilityLabel="계정 삭제 요청 열기"
-          onPress={() =>
-            void openUrl("delete", "https://invitehub.co.kr/account/delete-request", "계정 삭제 요청 페이지를 열었습니다.")
-          }
+          accessibilityLabel="계정 삭제"
+          onPress={isAuthenticated ? confirmDeleteAccount : undefined}
           variant="outline"
         >
-          {pendingAction === "delete" ? "요청 페이지 여는 중..." : "계정 삭제 요청"}
+          {pendingAction === "delete" ? "계정 삭제 중..." : isAuthenticated ? "계정 삭제" : "로그인 후 사용 가능"}
         </Button>
         {isAuthenticated ? (
           <Button
