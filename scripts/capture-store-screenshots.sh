@@ -6,6 +6,7 @@ IOS_WORKSPACE="$ROOT/apps/mobile/ios"
 IOS_APP="$HOME/Library/Developer/Xcode/DerivedData/InviteHub-hevapvaabsdjcdfsxondvdutghav/Build/Products/Release-iphonesimulator/InviteHub.app"
 DEVICE_NAME="${DEVICE_NAME:-iPhone 17}"
 OUTPUT_DIR="${1:-$ROOT/output/store-screenshots}"
+BUNDLE_ID="${APP_BUNDLE_ID:-com.invitehub.app.dev}"
 
 mkdir -p "$OUTPUT_DIR"
 
@@ -19,8 +20,8 @@ fi
 echo "Using device: $DEVICE_NAME ($DEVICE_ID)"
 
 /usr/bin/xcrun simctl install "$DEVICE_ID" "$IOS_APP" >/dev/null
-/usr/bin/xcrun simctl terminate "$DEVICE_ID" com.invitehub.app.dev >/dev/null 2>&1 || true
-/usr/bin/xcrun simctl launch "$DEVICE_ID" com.invitehub.app.dev >/dev/null
+/usr/bin/xcrun simctl terminate "$DEVICE_ID" "$BUNDLE_ID" >/dev/null 2>&1 || true
+/usr/bin/xcrun simctl launch "$DEVICE_ID" "$BUNDLE_ID" >/dev/null
 sleep 1
 /usr/bin/xcrun simctl io "$DEVICE_ID" screenshot "$OUTPUT_DIR/01-home.png" >/dev/null
 

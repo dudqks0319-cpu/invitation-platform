@@ -1,7 +1,9 @@
-import type { InvitationPayload, PendingPhotoUpload } from "@/lib/invitation-shared";
-import { supabase } from "@/lib/supabase";
-import type { MobileInvitationDraft } from "@/lib/drafts";
-import { getPublicInvitationUrl } from "@/lib/share";
+import type { InvitationPayload, PendingPhotoUpload } from "./invitation-shared";
+import { getMobileInvitationPricing } from "./payments/pricing";
+export { getPublishAccess } from "./publish-access";
+import { supabase } from "./supabase";
+import type { MobileInvitationDraft } from "./drafts";
+import { getPublicInvitationUrl } from "./share";
 
 type RemoteInvitationRow = {
   id: string;
@@ -20,6 +22,10 @@ export type PublishReadiness = {
   canPublish: boolean;
   missingFields: string[];
 };
+
+export function requiresPaymentBeforePublish(payload: InvitationPayload) {
+  return !getMobileInvitationPricing(payload).isFree;
+}
 
 function slugify(input: string) {
   return input
@@ -186,6 +192,10 @@ export async function saveDraftToSupabase(
 
     if (!readiness.canPublish) {
       throw new Error(`공개 발행 전 입력이 필요한 항목: ${readiness.missingFields.join(", ")}`);
+    }
+
+    if (requiresPaymentBeforePublish(normalizedPayload)) {
+      throw new Error("유료 옵션이 포함되어 있어 스토어 결제를 완료해야 공개할 수 있습니다.");
     }
   }
 

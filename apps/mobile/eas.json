@@ -12,6 +12,11 @@
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
+      "env": {
+        "APP_VARIANT": "development",
+        "APP_BUNDLE_ID": "com.invitehub.app.dev",
+        "APP_ANDROID_PACKAGE": "com.invitehub.app.dev"
+      },
       "ios": {
         "simulator": false,
         "resourceClass": "m-medium"
@@ -22,6 +27,11 @@
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
+      "env": {
+        "APP_VARIANT": "development",
+        "APP_BUNDLE_ID": "com.invitehub.app.dev",
+        "APP_ANDROID_PACKAGE": "com.invitehub.app.dev"
+      },
       "ios": {
         "simulator": true
       }
@@ -30,6 +40,11 @@
       "extends": "base",
       "distribution": "internal",
       "channel": "preview",
+      "env": {
+        "APP_VARIANT": "development",
+        "APP_BUNDLE_ID": "com.invitehub.app.dev",
+        "APP_ANDROID_PACKAGE": "com.invitehub.app.dev"
+      },
       "ios": {
         "resourceClass": "m-medium"
       }
@@ -39,6 +54,11 @@
       "distribution": "store",
       "autoIncrement": true,
       "channel": "production",
+      "env": {
+        "APP_VARIANT": "production",
+        "APP_BUNDLE_ID": "com.invitehub.app",
+        "APP_ANDROID_PACKAGE": "com.invitehub.app"
+      },
       "ios": {
         "resourceClass": "m-medium"
       }

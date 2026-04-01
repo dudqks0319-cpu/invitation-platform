@@ -4,9 +4,28 @@ import { Card } from "@/components/ui/Card";
 import { theme } from "@/components/ui/theme";
 import { useStorePurchase } from "@/hooks/useStorePurchase";
 
-export function StorePurchaseCard() {
+type StorePurchaseCardProps = {
+  accessToken?: string;
+  disabledReason?: string;
+  invitationId?: string;
+  onBeforePurchase?: () => Promise<{ invitationId: string } | null>;
+  onVerified?: (result: { invitationId: string; slug: string }) => void;
+};
+
+export function StorePurchaseCard({
+  accessToken,
+  disabledReason,
+  invitationId,
+  onBeforePurchase,
+  onVerified
+}: StorePurchaseCardProps) {
   const { canPurchase, connected, error, message, notice, pendingPurchase, product, productIds, provider, purchase } =
-    useStorePurchase();
+    useStorePurchase({
+      accessToken,
+      invitationId,
+      onBeforePurchase,
+      onVerified
+    });
 
   const title = provider === "apple_iap" ? "Apple 인앱결제" : provider === "google_play" ? "Google Play 결제" : "스토어 결제";
 
@@ -28,15 +47,24 @@ export function StorePurchaseCard() {
       {error ? (
         <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginTop: 10 }}>{error}</Text>
       ) : null}
+      {disabledReason ? (
+        <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginTop: 10 }}>{disabledReason}</Text>
+      ) : null}
       <Text style={{ color: theme.colors.textLight, lineHeight: 20, marginTop: 10 }}>
-        실제 발행권 반영은 다음 단계에서 서버 영수증 검증과 entitlement 연결이 필요합니다.
+        유료 옵션 초대장은 앱 스토어 결제를 완료해야 발행됩니다.
       </Text>
       <Button
         accessibilityLabel="스토어 결제 시작"
-        onPress={canPurchase ? () => void purchase() : undefined}
-        variant={canPurchase ? "primary" : "outline"}
+        onPress={canPurchase && !disabledReason ? () => void purchase() : undefined}
+        variant={canPurchase && !disabledReason ? "primary" : "outline"}
       >
-        {pendingPurchase ? "결제 요청 중..." : canPurchase ? "스토어 결제로 발행권 구매" : "스토어 상품 설정 필요"}
+        {pendingPurchase
+          ? "결제 요청 중..."
+          : disabledReason
+            ? "결제 전 준비 필요"
+            : canPurchase
+              ? "스토어 결제로 발행권 구매"
+              : "스토어 상품 설정 필요"}
       </Button>
     </Card>
   );

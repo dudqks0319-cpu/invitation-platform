@@ -2,6 +2,7 @@ import { Link, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { ImageBackground, Text, View } from "react-native";
 import { Button } from "@/components/ui/Button";
+import { StorePurchaseCard } from "@/components/payments/StorePurchaseCard";
 import { Card } from "@/components/ui/Card";
 import { ErrorView } from "@/components/ui/ErrorView";
 import { Loading } from "@/components/ui/Loading";
@@ -9,14 +10,16 @@ import { Screen } from "@/components/ui/Screen";
 import { theme } from "@/components/ui/theme";
 import { useAuth } from "@/hooks/useAuth";
 import { mobileTemplateGallery } from "@/lib/template-gallery";
+import { getMobileInvitationPricing, requiresStorePurchase } from "@/lib/payments/pricing";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 import { openInvitationPublicPage, shareInvitationLink } from "@/lib/share";
 import { getInviteHubBaseUrl } from "@/lib/web-links";
 
 export default function BuilderPreviewScreen() {
   const { localId } = useLocalSearchParams<{ localId?: string }>();
-  const { canShare, draft, loading, publicUrl, publishReadiness, saveToCloud } = useInvitationDraft("local-preview-owner", localId);
-  const { configMessage, configured, status, user } = useAuth();
+  const { applyRemotePublish, canShare, draft, loading, publicUrl, publishReadiness, saveToCloud } =
+    useInvitationDraft("local-preview-owner", localId);
+  const { configMessage, configured, session, status, user } = useAuth();
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState<"" | "save" | "publish" | "share">("");
@@ -28,13 +31,24 @@ export default function BuilderPreviewScreen() {
   const previewImage = selectedTemplate?.previewPath
     ? { uri: `${getInviteHubBaseUrl()}${selectedTemplate.previewPath}` }
     : undefined;
-  const galleryCount = draft?.payload.photos.gallery.length ?? 0;
-  const galleryCharge = galleryCount > 0 ? Math.ceil(galleryCount / 10) * 1000 : 0;
-  const addOnLines = [
-    draft?.payload.photos.mainUri ? "인물사진 추가 500원" : null,
-    draft?.payload.photos.backgroundUri ? "배경사진 추가 500원" : null,
-    galleryCharge > 0 ? `갤러리 ${Math.ceil(galleryCount / 10) * 10}장 범위 ${galleryCharge.toLocaleString("ko-KR")}원` : null
-  ].filter(Boolean) as string[];
+  const pricing = draft ? getMobileInvitationPricing(draft.payload) : { amount: 0, breakdown: [], isFree: true };
+  const requiresPurchase = draft ? requiresStorePurchase(draft.payload) : false;
+  const addOnLines = pricing.breakdown
+    .filter((item) => item.amount > 0)
+    .map((item) => `${item.label} ${item.amount.toLocaleString("ko-KR")}원`);
+
+  async function ensureDraftForPurchase() {
+    if (!configured) {
+      throw new Error(configMessage);
+    }
+
+    if (status !== "authenticated" || !user?.id) {
+      throw new Error("로그인 후 서버 저장을 진행할 수 있습니다.");
+    }
+
+    const nextDraft = await saveToCloud(user.id, "draft");
+    return { invitationId: nextDraft.serverId ?? "" };
+  }
 
   async function handleSave(nextStatus: "draft" | "published") {
     if (!configured) {
@@ -49,6 +63,12 @@ export default function BuilderPreviewScreen() {
 
     if (nextStatus === "published" && !publishReadiness.canPublish) {
       setError(`공개 전 입력이 필요한 항목: ${publishReadiness.missingFields.join(", ")}`);
+      setMessage("");
+      return;
+    }
+
+    if (nextStatus === "published" && requiresPurchase) {
+      setError("유료 옵션이 포함되어 있어 스토어 결제를 완료해야 공개할 수 있습니다.");
       setMessage("");
       return;
     }
@@ -262,6 +282,11 @@ export default function BuilderPreviewScreen() {
         <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 4 }}>
           공유 URL: {publicUrl || "서버 저장 후 자동 생성"}
         </Text>
+        {requiresPurchase ? (
+          <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginTop: 10 }}>
+            유료 옵션이 포함되어 있어 공개 링크 발행 대신 앱 스토어 결제를 완료해야 합니다.
+          </Text>
+        ) : null}
         {!publishReadiness.canPublish ? (
           <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginTop: 10 }}>
             공개 전 필요 항목: {publishReadiness.missingFields.join(", ")}
@@ -277,9 +302,11 @@ export default function BuilderPreviewScreen() {
           <Text style={{ color: theme.colors.primaryDark, lineHeight: 22 }}>{configMessage}</Text>
         </Card>
       ) : null}
-      <Card eyebrow="요금 안내" title="현재 디자인은 모두 무료">
+      <Card eyebrow="요금 안내" title={requiresPurchase ? "유료 옵션 포함" : "현재 디자인은 모두 무료"}>
         <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
-          지금 공개된 디자인은 비용 없이 바로 발행할 수 있습니다. 필요한 경우에만 사진 옵션이 추가됩니다.
+          {requiresPurchase
+            ? `선택한 옵션 결제 금액은 ${pricing.amount.toLocaleString("ko-KR")}원입니다. 스토어 결제 후 자동으로 발행됩니다.`
+            : "지금 공개된 디자인은 비용 없이 바로 발행할 수 있습니다. 필요한 경우에만 사진 옵션이 추가됩니다."}
         </Text>
         {addOnLines.length > 0 ? (
           <View style={{ gap: 6, marginTop: 10 }}>
@@ -318,40 +345,62 @@ export default function BuilderPreviewScreen() {
             </Button>
           </View>
         </View>
-        <View style={{ flexDirection: "row", gap: 12 }}>
-          <View
-            style={{
-              flex: 2,
-              shadowColor: "rgba(201,147,90,0.4)",
-              shadowOffset: { width: 0, height: 6 },
-              shadowOpacity: 1,
-              shadowRadius: 20,
-              elevation: 5
+        {requiresPurchase ? (
+          <StorePurchaseCard
+            accessToken={session?.access_token}
+            disabledReason={
+              !configured
+                ? configMessage
+                : status !== "authenticated"
+                  ? "로그인 후 스토어 결제를 사용할 수 있습니다."
+                  : !publishReadiness.canPublish
+                    ? `공개 전 필요 항목: ${publishReadiness.missingFields.join(", ")}`
+                    : ""
+            }
+            invitationId={draft?.serverId}
+            onBeforePurchase={ensureDraftForPurchase}
+            onVerified={({ invitationId, slug }) => {
+              applyRemotePublish(invitationId, slug);
+              setMessage(`스토어 결제가 완료되어 공개 링크를 발행했습니다.\nhttps://invitehub.co.kr/i/${slug}`);
+              setError("");
             }}
-          >
-            <Button
-              accessibilityLabel="공개 링크 발행"
-              onPress={() => void handleSave("published")}
+          />
+        ) : (
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <View
+              style={{
+                flex: 2,
+                shadowColor: "rgba(201,147,90,0.4)",
+                shadowOffset: { width: 0, height: 6 },
+                shadowOpacity: 1,
+                shadowRadius: 20,
+                elevation: 5
+              }}
             >
-              {pending === "publish"
-                ? "발행 중..."
-                : !configured
-                  ? "Supabase 설정 필요"
-                  : draft?.payload.isPublished
-                    ? "공개 상태 다시 저장"
-                    : "공개 링크 발행"}
-            </Button>
+              <Button
+                accessibilityLabel="공개 링크 발행"
+                onPress={() => void handleSave("published")}
+              >
+                {pending === "publish"
+                  ? "발행 중..."
+                  : !configured
+                    ? "Supabase 설정 필요"
+                    : draft?.payload.isPublished
+                      ? "공개 상태 다시 저장"
+                      : "공개 링크 발행"}
+              </Button>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button
+                accessibilityLabel="공유 시트 열기"
+                onPress={canShare ? () => void handleShare() : undefined}
+                variant="outline"
+              >
+                {pending === "share" ? "공유 중..." : canShare ? "공유하기" : "공개 후 공유 가능"}
+              </Button>
+            </View>
           </View>
-          <View style={{ flex: 1 }}>
-            <Button
-              accessibilityLabel="공유 시트 열기"
-              onPress={canShare ? () => void handleShare() : undefined}
-              variant="outline"
-            >
-              {pending === "share" ? "공유 중..." : canShare ? "공유하기" : "공개 후 공유 가능"}
-            </Button>
-          </View>
-        </View>
+        )}
         <View style={{ flexDirection: "row", gap: 12 }}>
           <View style={{ flex: 1 }}>
             <Button

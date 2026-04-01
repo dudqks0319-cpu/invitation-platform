@@ -186,6 +186,24 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
     return nextDraft;
   }, [draft]);
 
+  const applyRemotePublish = useCallback((serverId: string, slug: string) => {
+    persist((current) => ({
+      ...current,
+      serverId,
+      syncStatus: "synced",
+      isDirty: false,
+      localUpdatedAt: new Date().toISOString(),
+      payload: {
+        ...current.payload,
+        isPublished: true,
+        share: {
+          ...current.payload.share,
+          slug
+        }
+      }
+    }));
+  }, [persist]);
+
   const publishReadiness = useMemo(
     () =>
       draft
@@ -202,6 +220,7 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
 
   return {
     addGalleryPhoto,
+    applyRemotePublish,
     canShare,
     draft,
     loading,
