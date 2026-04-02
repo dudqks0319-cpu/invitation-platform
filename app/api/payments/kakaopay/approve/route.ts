@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
 import { requestKakaoPayApprove } from "@/lib/payments/kakaopay";
@@ -98,6 +99,7 @@ export async function GET(request: Request) {
     });
 
     const normalizedPayload = normalizeInvitationPayload(invitation.payload);
+    const publishedPayload = buildPublishedInvitationAssetPayload(invitation.slug, normalizedPayload);
 
     await admin.from("payments").update({
       status: "paid",
@@ -112,6 +114,7 @@ export async function GET(request: Request) {
     });
 
     await admin.from("invitations").update({
+      payload: publishedPayload,
       status: "published",
       published_at: new Date().toISOString(),
       repurchase_required: false,

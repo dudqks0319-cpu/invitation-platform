@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
   }
 
   const payload = normalizeInvitationPayload(invitation.payload);
+  const publishedPayload = buildPublishedInvitationAssetPayload(invitation.slug, payload);
   const pricing = getInvitationPricing(payload);
 
   if (!pricing.isFree) {
@@ -51,6 +53,7 @@ export async function POST(request: Request) {
   const { error: updateError } = await admin
     .from("invitations")
     .update({
+      payload: publishedPayload,
       status: "published",
       published_at: new Date().toISOString(),
       repurchase_required: false,

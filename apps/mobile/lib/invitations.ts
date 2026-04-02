@@ -17,6 +17,7 @@ type RemoteInvitationRow = {
 };
 
 const STORAGE_BUCKET = "invitation-assets";
+const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 7;
 
 export type PublishReadiness = {
   canPublish: boolean;
@@ -123,8 +124,18 @@ async function uploadPendingPhoto(
     throw new Error(error?.message || `${photo.slot} 사진 업로드에 실패했습니다.`);
   }
 
-  const { data: publicUrlData } = supabase.storage.from(STORAGE_BUCKET).getPublicUrl(data.path);
-  return publicUrlData.publicUrl;
+  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .createSignedUrl(data.path, 60 * 60 * 24 * 7);
+
+  if (signedUrlError || !signedUrlData?.signedUrl) {
+    throw new Error("업로드한 사진의 미리보기 URL을 생성하지 못했습니다.");
+  }
+
+  return {
+    path: data.path,
+    signedUrl: signedUrlData.signedUrl
+  };
 }
 
 export async function saveDraftToSupabase(
@@ -137,28 +148,40 @@ export async function saveDraftToSupabase(
   }
 
   let payloadWithUploads = draft.payload;
+  let mainImagePath =
+    typeof draft.sourcePayload?.mainImagePath === "string" ? draft.sourcePayload.mainImagePath : "";
+  let backgroundImagePath =
+    typeof draft.sourcePayload?.backgroundImagePath === "string" ? draft.sourcePayload.backgroundImagePath : "";
+  let galleryImagePaths = Array.isArray(draft.sourcePayload?.galleryImagePaths)
+    ? draft.sourcePayload.galleryImagePaths.filter((item): item is string => typeof item === "string")
+    : [];
 
   if (draft.pendingPhotos.length > 0) {
     for (const photo of draft.pendingPhotos) {
-      const publicUrl = await uploadPendingPhoto(photo, userId, draft.localId);
+      const uploaded = await uploadPendingPhoto(photo, userId, draft.localId);
 
       if (photo.slot === "main") {
+        mainImagePath = uploaded.path;
         payloadWithUploads = {
           ...payloadWithUploads,
           photos: {
             ...payloadWithUploads.photos,
-            mainUri: publicUrl
+            mainUri: uploaded.signedUrl
           }
         };
       } else if (photo.slot === "background") {
+        backgroundImagePath = uploaded.path;
         payloadWithUploads = {
           ...payloadWithUploads,
           photos: {
             ...payloadWithUploads.photos,
-            backgroundUri: publicUrl
+            backgroundUri: uploaded.signedUrl
           }
         };
       } else {
+        const nextGalleryPaths = [...galleryImagePaths];
+        nextGalleryPaths[photo.order ?? nextGalleryPaths.length] = uploaded.path;
+        galleryImagePaths = nextGalleryPaths;
         payloadWithUploads = {
           ...payloadWithUploads,
           photos: {
@@ -167,7 +190,7 @@ export async function saveDraftToSupabase(
               item.order === photo.order
                 ? {
                     ...item,
-                    uri: publicUrl
+                    uri: uploaded.signedUrl
                   }
                 : item
             )
@@ -208,7 +231,10 @@ export async function saveDraftToSupabase(
     status,
     payload: {
       ...(draft.sourcePayload ?? {}),
-      ...toLegacyInvitationPayload(normalizedPayload)
+      ...toLegacyInvitationPayload(normalizedPayload),
+      mainImagePath,
+      backgroundImagePath,
+      galleryImagePaths
     },
     published_at: status === "published" ? new Date().toISOString() : null
   };
@@ -296,6 +322,61 @@ function toSharedInvitationPayload(row: RemoteInvitationRow, ownerId: string): I
   };
 }
 
+async function createSignedAssetUrl(path: string) {
+  if (!supabase || !path) {
+    return "";
+  }
+
+  const { data, error } = await supabase.storage
+    .from(STORAGE_BUCKET)
+    .createSignedUrl(path, SIGNED_URL_TTL_SECONDS);
+
+  if (error || !data?.signedUrl) {
+    return "";
+  }
+
+  return data.signedUrl;
+}
+
+async function toSharedInvitationDraft(row: RemoteInvitationRow, ownerId: string): Promise<MobileInvitationDraft> {
+  const payload = row.payload ?? {};
+  const mainImagePath = typeof payload.mainImagePath === "string" ? payload.mainImagePath : "";
+  const backgroundImagePath = typeof payload.backgroundImagePath === "string" ? payload.backgroundImagePath : "";
+  const galleryImagePaths = Array.isArray(payload.galleryImagePaths)
+    ? payload.galleryImagePaths.filter((item): item is string => typeof item === "string" && item.length > 0)
+    : [];
+
+  const [signedMainUrl, signedBackgroundUrl, signedGalleryUrls] = await Promise.all([
+    mainImagePath ? createSignedAssetUrl(mainImagePath) : Promise.resolve(""),
+    backgroundImagePath ? createSignedAssetUrl(backgroundImagePath) : Promise.resolve(""),
+    Promise.all(galleryImagePaths.map((path) => createSignedAssetUrl(path)))
+  ]);
+
+  const nextPayload = toSharedInvitationPayload(
+    {
+      ...row,
+      payload: {
+        ...payload,
+        ...(signedMainUrl ? { mainImageUrl: signedMainUrl } : {}),
+        ...(signedBackgroundUrl ? { backgroundImageUrl: signedBackgroundUrl } : {}),
+        ...(signedGalleryUrls.length > 0 ? { galleryImages: signedGalleryUrls } : {})
+      }
+    },
+    ownerId
+  );
+
+  return {
+    localId: row.id,
+    serverId: row.id,
+    payload: nextPayload,
+    sourcePayload: row.payload,
+    syncStatus: "synced",
+    localUpdatedAt: String(row.updated_at ?? new Date().toISOString()),
+    pendingPhotos: [],
+    isDirty: false
+  };
+}
+
 export async function listRemoteInvitations(userId: string): Promise<MobileInvitationDraft[]> {
   if (!supabase) {
     return [];
@@ -311,16 +392,7 @@ export async function listRemoteInvitations(userId: string): Promise<MobileInvit
     return [];
   }
 
-  return data.map((row) => ({
-    localId: row.id,
-    serverId: row.id,
-    payload: toSharedInvitationPayload(row as RemoteInvitationRow, userId),
-    sourcePayload: (row as RemoteInvitationRow).payload,
-    syncStatus: "synced",
-    localUpdatedAt: String((row as RemoteInvitationRow).updated_at ?? new Date().toISOString()),
-    pendingPhotos: [],
-    isDirty: false
-  }));
+  return Promise.all(data.map((row) => toSharedInvitationDraft(row as RemoteInvitationRow, userId)));
 }
 
 export async function loadRemoteInvitation(serverId: string, userId: string): Promise<MobileInvitationDraft | null> {
@@ -339,16 +411,7 @@ export async function loadRemoteInvitation(serverId: string, userId: string): Pr
     return null;
   }
 
-  return {
-    localId: data.id,
-    serverId: data.id,
-    payload: toSharedInvitationPayload(data as RemoteInvitationRow, userId),
-    sourcePayload: (data as RemoteInvitationRow).payload,
-    syncStatus: "synced",
-    localUpdatedAt: String((data as RemoteInvitationRow).updated_at ?? new Date().toISOString()),
-    pendingPhotos: [],
-    isDirty: false
-  };
+  return toSharedInvitationDraft(data as RemoteInvitationRow, userId);
 }
 
 export type RemoteRsvpSummary = {

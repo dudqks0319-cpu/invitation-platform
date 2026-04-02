@@ -6,6 +6,9 @@
     "apps/*",
     "packages/*"
   ],
+  "overrides": {
+    "@xmldom/xmldom": "0.8.12"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",

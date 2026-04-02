@@ -2,6 +2,9 @@
   "name": "@invitehub/mobile",
   "version": "0.1.0",
   "private": true,
+  "overrides": {
+    "@xmldom/xmldom": "0.8.12"
+  },
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",

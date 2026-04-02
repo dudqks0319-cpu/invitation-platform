@@ -7,6 +7,12 @@ import {
 import { verifyAppleTransaction } from "@/lib/payments/apple-store";
 import { verifyGooglePlayPurchase } from "@/lib/payments/google-play";
 import { getInvitationPricing } from "@/lib/payments/pricing";
+import {
+  getStoreProviderReference,
+  isAllowedStoreProductId,
+  sanitizeStoreVerification
+} from "@/lib/payments/store-entitlements";
+import { buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
 
@@ -73,6 +79,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: "스토어 결제 검증 정보가 누락되었습니다." }, { status: 400 });
   }
 
+  if (!isAllowedStoreProductId(body.provider, body.productId)) {
+    return NextResponse.json({ success: false, message: "허용되지 않은 스토어 상품입니다." }, { status: 400 });
+  }
+
   const { data: invitation, error: invitationError } = await admin
     .from("invitations")
     .select("*")
@@ -89,6 +99,7 @@ export async function POST(request: Request) {
   }
 
   const normalizedPayload = normalizeInvitationPayload(invitation.payload);
+  const publishedPayload = buildPublishedInvitationAssetPayload(invitation.slug, normalizedPayload);
   const pricing = getInvitationPricing(normalizedPayload);
 
   if (pricing.isFree) {
@@ -99,7 +110,6 @@ export async function POST(request: Request) {
   }
 
   let verification: Record<string, unknown>;
-  let providerReference = "";
 
   if (body.provider === "apple_iap") {
     if (!body.transactionId && !body.receiptData) {
@@ -116,7 +126,6 @@ export async function POST(request: Request) {
         productId: body.productId,
         environment: body.environment
       }) as Record<string, unknown>;
-      providerReference = String(verification.transactionId ?? body.transactionId ?? "");
     } catch (error) {
       return NextResponse.json(
         { success: false, message: error instanceof Error ? error.message : "Apple 영수증 검증에 실패했습니다." },
@@ -137,7 +146,6 @@ export async function POST(request: Request) {
         productId: body.productId,
         purchaseToken: body.purchaseToken
       }) as Record<string, unknown>;
-      providerReference = body.purchaseToken;
     } catch (error) {
       return NextResponse.json(
         { success: false, message: error instanceof Error ? error.message : "Google Play 영수증 검증에 실패했습니다." },
@@ -146,6 +154,8 @@ export async function POST(request: Request) {
     }
   }
 
+  const sanitizedVerification = sanitizeStoreVerification(body.provider, verification);
+  const providerReference = getStoreProviderReference(body.provider, verification);
   const buyerName =
     (typeof user.user_metadata?.full_name === "string" && user.user_metadata.full_name) ||
     user.email ||
@@ -182,7 +192,7 @@ export async function POST(request: Request) {
             buyer_phone: user.phone || "",
             provider_tid: providerReference || null,
             provider_order_id: providerOrderId,
-            ready_payload: verification,
+            ready_payload: sanitizedVerification,
             approved_at: new Date().toISOString()
           })
           .select()
@@ -201,12 +211,13 @@ export async function POST(request: Request) {
       provider: body.provider,
       productId: body.productId
     },
-    response_payload: verification
+    response_payload: sanitizedVerification
   });
 
   const { error: updateError } = await admin
     .from("invitations")
     .update({
+      payload: publishedPayload,
       status: "published",
       published_at: new Date().toISOString(),
       repurchase_required: false,
@@ -222,6 +233,6 @@ export async function POST(request: Request) {
     success: true,
     invitationId: invitation.id,
     slug: invitation.slug,
-    verification
+    verification: sanitizedVerification
   });
 }

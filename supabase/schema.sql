@@ -352,12 +352,6 @@ set public = excluded.public,
     allowed_mime_types = excluded.allowed_mime_types;
 
 drop policy if exists "public can read invitation assets" on storage.objects;
-create policy "public can read invitation assets"
-on storage.objects
-for select
-to public
-using (bucket_id = 'invitation-assets');
-
 drop policy if exists "authenticated users manage own invitation assets" on storage.objects;
 create policy "authenticated users manage own invitation assets"
 on storage.objects

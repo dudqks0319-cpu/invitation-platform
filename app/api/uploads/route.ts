@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
+import { INVITATION_ASSET_BUCKET, INVITATION_ASSET_TTL_SECONDS } from "@/lib/invitation-assets";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { maxUploadBytes, storageMimeTypes } from "@/lib/supabase/public-write";
-
-const STORAGE_BUCKET = "invitation-assets";
 
 function sanitizeFilename(filename: string) {
   return filename.replace(/[^a-zA-Z0-9._-]/g, "-");
@@ -76,7 +75,7 @@ export async function POST(request: Request) {
   const fileExtension = file.name.split(".").pop() || "jpg";
   const path = `${user.id}/${Date.now()}-${sanitizeFilename(file.name || `upload.${fileExtension}`)}`;
 
-  const { data, error } = await admin.storage.from(STORAGE_BUCKET).upload(path, file, {
+  const { data, error } = await admin.storage.from(INVITATION_ASSET_BUCKET).upload(path, file, {
     cacheControl: "3600",
     contentType: file.type,
     upsert: false
@@ -89,11 +88,20 @@ export async function POST(request: Request) {
     );
   }
 
-  const { data: publicUrlData } = admin.storage.from(STORAGE_BUCKET).getPublicUrl(data.path);
+  const { data: signedUrlData, error: signedUrlError } = await admin.storage
+    .from(INVITATION_ASSET_BUCKET)
+    .createSignedUrl(data.path, INVITATION_ASSET_TTL_SECONDS);
+
+  if (signedUrlError || !signedUrlData?.signedUrl) {
+    return NextResponse.json(
+      { success: false, message: "이미지 미리보기 URL을 생성하지 못했습니다. 잠시 후 다시 시도해 주세요." },
+      { status: 500 }
+    );
+  }
 
   return NextResponse.json({
     success: true,
-    publicUrl: publicUrlData.publicUrl,
+    publicUrl: signedUrlData.signedUrl,
     path: data.path
   });
 }
@@ -132,7 +140,7 @@ export async function DELETE(request: Request) {
     );
   }
 
-  const { error } = await admin.storage.from(STORAGE_BUCKET).remove([path]);
+  const { error } = await admin.storage.from(INVITATION_ASSET_BUCKET).remove([path]);
 
   if (error) {
     return NextResponse.json(

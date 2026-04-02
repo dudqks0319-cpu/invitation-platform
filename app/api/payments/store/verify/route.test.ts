@@ -217,7 +217,8 @@ describe("POST /api/payments/store/verify", () => {
     verifyGooglePlayPurchaseMock.mockResolvedValue({
       orderId: "order-1",
       purchaseToken: "purchase-token",
-      productId: "publish.credit.android"
+      productId: "publish.credit.android",
+      purchaseState: 0
     });
   });
 
@@ -262,6 +263,21 @@ describe("POST /api/payments/store/verify", () => {
       environment: "sandbox"
     });
     expect(admin.state.paymentInserts).toHaveLength(1);
+    expect(admin.state.paymentInserts[0]?.provider_order_id).toBe("apple_iap:tx-1");
+    expect(admin.state.paymentInserts[0]?.ready_payload).toEqual({
+      bundleId: null,
+      environment: null,
+      originalTransactionId: null,
+      productId: "publish.credit.ios",
+      transactionId: "tx-1"
+    });
+    expect(admin.state.auditInserts[0]?.response_payload).toEqual({
+      bundleId: null,
+      environment: null,
+      originalTransactionId: null,
+      productId: "publish.credit.ios",
+      transactionId: "tx-1"
+    });
     expect(admin.state.invitationUpdates).toContainEqual(
       expect.objectContaining({
         status: "published",
@@ -315,6 +331,25 @@ describe("POST /api/payments/store/verify", () => {
 
     expect(response.status).toBe(409);
     expect(payload.message).toContain("무료");
+  });
+
+  it("rejects unapproved product ids before verification completes", async () => {
+    createSupabaseAdminClientMock.mockReturnValue(createAdminDouble().client);
+    isAppleStoreVerificationEnabledMock.mockReturnValue(true);
+
+    const response = await POST(
+      createRequest({
+        invitationId: "invitation-1",
+        provider: "apple_iap",
+        productId: "unexpected.product",
+        transactionId: "tx-1"
+      })
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload.message).toContain("상품");
+    expect(verifyAppleTransactionMock).not.toHaveBeenCalled();
   });
 
   it("reuses an existing verified payment for the same purchase token", async () => {
