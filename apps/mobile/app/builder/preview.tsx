@@ -11,6 +11,7 @@ import { theme } from "@/components/ui/theme";
 import { useAuth } from "@/hooks/useAuth";
 import { mobileTemplateGallery } from "@/lib/template-gallery";
 import { getMobileInvitationPricing, requiresStorePurchase } from "@/lib/payments/pricing";
+import { getPreviewFlowState } from "@/lib/preview-flow";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 import { openInvitationPublicPage, shareInvitationLink } from "@/lib/share";
 import { getInviteHubBaseUrl } from "@/lib/web-links";
@@ -33,9 +34,21 @@ export default function BuilderPreviewScreen() {
     : undefined;
   const pricing = draft ? getMobileInvitationPricing(draft.payload) : { amount: 0, breakdown: [], isFree: true };
   const requiresPurchase = draft ? requiresStorePurchase(draft.payload) : false;
+  const flowState = getPreviewFlowState({
+    isPublished: Boolean(draft?.payload.isPublished),
+    requiresPurchase
+  });
   const addOnLines = pricing.breakdown
     .filter((item) => item.amount > 0)
     .map((item) => `${item.label} ${item.amount.toLocaleString("ko-KR")}원`);
+  const statusLabel = draft?.payload.isPublished ? "공개 중" : requiresPurchase ? "결제 후 발행" : "비공개 초안";
+  const publishGuide = draft?.payload.isPublished
+    ? "지금 공유 가능한 링크가 준비되어 있습니다."
+    : requiresPurchase
+      ? "유료 옵션이 포함되어 있어 스토어 결제를 완료해야 발행됩니다."
+      : "필수 정보만 채우면 바로 공개 링크를 발행할 수 있습니다.";
+  const urlGuide = publicUrl || (requiresPurchase ? "결제 완료 후 자동 생성" : "서버 저장 후 자동 생성");
+  const missingItemsText = publishReadiness.missingFields.join(" · ");
 
   async function ensureDraftForPurchase() {
     if (!configured) {
@@ -120,6 +133,85 @@ export default function BuilderPreviewScreen() {
           <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>{message}</Text>
         </Card>
       ) : null}
+      <Card eyebrow="발행 흐름" title="미리보기 → 결제 → 발행 완료">
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          {flowState.steps.map((step, index) => {
+            const isCurrent = step.status === "current";
+            const isDone = step.status === "done";
+            const isSkipped = step.status === "skipped";
+
+            return (
+              <View
+                key={step.label}
+                style={{
+                  flex: 1,
+                  borderRadius: theme.radius.md,
+                  borderWidth: 1,
+                  borderColor: isCurrent
+                    ? theme.colors.primary
+                    : isDone
+                      ? "rgba(84,122,97,0.22)"
+                      : theme.colors.border,
+                  backgroundColor: isCurrent
+                    ? "rgba(201,147,90,0.14)"
+                    : isDone
+                      ? "rgba(84,122,97,0.1)"
+                      : theme.colors.surfaceSoft,
+                  paddingHorizontal: 10,
+                  paddingVertical: 12,
+                  gap: 6
+                }}
+              >
+                <Text
+                  style={{
+                    color: isCurrent
+                      ? theme.colors.primaryDark
+                      : isDone
+                        ? theme.colors.success
+                        : theme.colors.muted,
+                    fontSize: 12,
+                    fontWeight: "700"
+                  }}
+                >
+                  {`0${index + 1}`}
+                </Text>
+                <Text
+                  style={{
+                    color: isSkipped ? theme.colors.textLight : theme.colors.text,
+                    fontSize: 14,
+                    fontWeight: "700",
+                    lineHeight: 20
+                  }}
+                >
+                  {step.label}
+                </Text>
+                <Text
+                  style={{
+                    color: isCurrent
+                      ? theme.colors.primaryDark
+                      : isDone
+                        ? theme.colors.success
+                        : isSkipped
+                          ? theme.colors.textLight
+                          : theme.colors.muted,
+                    fontSize: 12,
+                    lineHeight: 18
+                  }}
+                >
+                  {isCurrent
+                    ? "진행 중"
+                    : isDone
+                      ? "완료"
+                      : isSkipped
+                        ? "건너뜀"
+                        : "대기"}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+        <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>{flowState.note}</Text>
+      </Card>
       <View
         style={{
           minHeight: 640,
@@ -259,54 +351,132 @@ export default function BuilderPreviewScreen() {
           </View>
         </ImageBackground>
       </View>
-      <Card eyebrow="공유 정보" title="계좌 · 위치">
-        <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
-          계좌: {draft?.payload.accounts.primary?.holder || "미입력"} / {draft?.payload.accounts.secondary?.holder || "미입력"}
-        </Text>
-        <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 4 }}>
-          지도 링크: {draft?.payload.location.naverMapUrl || "미입력"}
-        </Text>
-        <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 4 }}>
-          교통 안내: {draft?.payload.location.transportNote || "미입력"}
-        </Text>
-        <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 4 }}>
-          업로드 대기 사진: {draft?.pendingPhotos.length ?? 0}장
-        </Text>
-      </Card>
-      <Card eyebrow="발행 상태" title={draft?.payload.isPublished ? "공개 중" : "비공개 초안"}>
-        <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
-          {draft?.payload.isPublished
-            ? "현재 하객에게 전달 가능한 공개 링크가 있습니다."
-            : "아직 공개되지 않았습니다. 필수 정보를 채운 뒤 공개 링크를 발행하세요."}
-        </Text>
-        <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 4 }}>
-          공유 URL: {publicUrl || "서버 저장 후 자동 생성"}
-        </Text>
-        {requiresPurchase ? (
-          <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginTop: 10 }}>
-            유료 옵션이 포함되어 있어 공개 링크 발행 대신 앱 스토어 결제를 완료해야 합니다.
+      <Card eyebrow="발행 요약" title={statusLabel}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+          <View
+            style={{
+              backgroundColor: draft?.payload.isPublished ? "rgba(84,122,97,0.12)" : "rgba(201,147,90,0.14)",
+              borderRadius: theme.radius.pill,
+              paddingHorizontal: 12,
+              paddingVertical: 6
+            }}
+          >
+            <Text
+              style={{
+                color: draft?.payload.isPublished ? theme.colors.success : theme.colors.primaryDark,
+                fontSize: 12,
+                fontWeight: "700"
+              }}
+            >
+              {statusLabel}
+            </Text>
+          </View>
+          <View
+            style={{
+              backgroundColor: requiresPurchase ? "rgba(201,147,90,0.12)" : "rgba(84,122,97,0.1)",
+              borderRadius: theme.radius.pill,
+              paddingHorizontal: 12,
+              paddingVertical: 6
+            }}
+          >
+            <Text
+              style={{
+                color: requiresPurchase ? theme.colors.primaryDark : theme.colors.success,
+                fontSize: 12,
+                fontWeight: "700"
+              }}
+            >
+              {requiresPurchase ? `${pricing.amount.toLocaleString("ko-KR")}원 결제 필요` : "무료 발행 가능"}
+            </Text>
+          </View>
+        </View>
+        <View
+          style={{
+            backgroundColor: theme.colors.surfaceSoft,
+            borderRadius: theme.radius.md,
+            paddingHorizontal: theme.spacing.md,
+            paddingVertical: 14,
+            gap: 6
+          }}
+        >
+          <Text style={{ color: theme.colors.text, fontSize: 15, fontWeight: "700", lineHeight: 22 }}>
+            {publishGuide}
           </Text>
-        ) : null}
+          <Text style={{ color: theme.colors.muted, fontSize: 14, lineHeight: 21 }}>
+            공유 URL: {urlGuide}
+          </Text>
+        </View>
         {!publishReadiness.canPublish ? (
-          <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginTop: 10 }}>
-            공개 전 필요 항목: {publishReadiness.missingFields.join(", ")}
-          </Text>
+          <View
+            style={{
+              backgroundColor: "rgba(201,147,90,0.08)",
+              borderRadius: theme.radius.md,
+              paddingHorizontal: theme.spacing.md,
+              paddingVertical: 12
+            }}
+          >
+            <Text style={{ color: theme.colors.primaryDark, fontSize: 13, fontWeight: "700", lineHeight: 20 }}>
+              공개 전 필요 항목
+            </Text>
+            <Text style={{ color: theme.colors.primaryDark, fontSize: 14, lineHeight: 21, marginTop: 4 }}>
+              {missingItemsText}
+            </Text>
+          </View>
         ) : (
-          <Text style={{ color: theme.colors.success, lineHeight: 22, marginTop: 10 }}>
-            공개 필수 항목이 모두 준비되었습니다.
-          </Text>
+          <Text style={{ color: theme.colors.success, lineHeight: 22 }}>공개 필수 항목이 모두 준비되었습니다.</Text>
         )}
       </Card>
-      {!configured ? (
-        <Card eyebrow="원격 기능 안내" title="현재는 로컬 프리뷰 모드">
-          <Text style={{ color: theme.colors.primaryDark, lineHeight: 22 }}>{configMessage}</Text>
-        </Card>
-      ) : null}
-      <Card eyebrow="요금 안내" title={requiresPurchase ? "유료 옵션 포함" : "현재 디자인은 모두 무료"}>
+      <Card eyebrow="준비 정보" title="계좌 · 위치 · 업로드">
+        <View style={{ gap: 12 }}>
+          <View
+            style={{
+              backgroundColor: theme.colors.surfaceSoft,
+              borderRadius: theme.radius.md,
+              paddingHorizontal: theme.spacing.md,
+              paddingVertical: 12
+            }}
+          >
+            <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700" }}>계좌 안내</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 14, lineHeight: 21, marginTop: 4 }}>
+              {draft?.payload.accounts.primary?.holder || "미입력"} / {draft?.payload.accounts.secondary?.holder || "미입력"}
+            </Text>
+          </View>
+          <View
+            style={{
+              backgroundColor: theme.colors.surfaceSoft,
+              borderRadius: theme.radius.md,
+              paddingHorizontal: theme.spacing.md,
+              paddingVertical: 12
+            }}
+          >
+            <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700" }}>위치 정보</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 14, lineHeight: 21, marginTop: 4 }}>
+              지도 링크: {draft?.payload.location.naverMapUrl || "미입력"}
+            </Text>
+            <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 20, marginTop: 4 }}>
+              교통 안내: {draft?.payload.location.transportNote || "미입력"}
+            </Text>
+          </View>
+          <View
+            style={{
+              backgroundColor: theme.colors.surfaceSoft,
+              borderRadius: theme.radius.md,
+              paddingHorizontal: theme.spacing.md,
+              paddingVertical: 12
+            }}
+          >
+            <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700" }}>업로드 상태</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 14, lineHeight: 21, marginTop: 4 }}>
+              대기 중인 사진 {draft?.pendingPhotos.length ?? 0}장
+            </Text>
+          </View>
+        </View>
+      </Card>
+      <Card eyebrow="요금 안내" title={requiresPurchase ? "선택한 옵션 결제" : "무료 발행"}>
         <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
           {requiresPurchase
-            ? `선택한 옵션 결제 금액은 ${pricing.amount.toLocaleString("ko-KR")}원입니다. 스토어 결제 후 자동으로 발행됩니다.`
-            : "지금 공개된 디자인은 비용 없이 바로 발행할 수 있습니다. 필요한 경우에만 사진 옵션이 추가됩니다."}
+            ? `선택한 옵션 결제 금액은 ${pricing.amount.toLocaleString("ko-KR")}원입니다. 결제가 끝나면 자동으로 공개 링크가 발행됩니다.`
+            : "지금 선택한 구성은 무료입니다. 공개 링크를 바로 발행할 수 있습니다."}
         </Text>
         {addOnLines.length > 0 ? (
           <View style={{ gap: 6, marginTop: 10 }}>
@@ -316,35 +486,14 @@ export default function BuilderPreviewScreen() {
               </Text>
             ))}
           </View>
-        ) : (
-          <Text style={{ color: theme.colors.success, lineHeight: 22, marginTop: 10 }}>
-            현재 선택은 무료 구성입니다.
-          </Text>
-        )}
+        ) : null}
       </Card>
+      {!configured ? (
+        <Card eyebrow="원격 기능 안내" title="현재는 로컬 프리뷰 모드">
+          <Text style={{ color: theme.colors.primaryDark, lineHeight: 22 }}>{configMessage}</Text>
+        </Card>
+      ) : null}
       <View style={{ gap: 12 }}>
-        <View style={{ flexDirection: "row", gap: 12 }}>
-          <View style={{ flex: 1 }}>
-            <Link asChild href={{ pathname: "/builder/step5-location", params: localId ? { localId } : {} }}>
-              <Button accessibilityLabel="이전 단계로 이동" variant="outline">이전</Button>
-            </Link>
-          </View>
-          <View style={{ flex: 2 }}>
-            <Button
-              accessibilityLabel="서버에 초안 저장"
-              onPress={() => void handleSave("draft")}
-              variant="outline"
-            >
-              {pending === "save"
-                ? "저장 중..."
-                : !configured
-                  ? "Supabase 설정 필요"
-                  : status === "authenticated"
-                    ? "서버에 초안 저장"
-                    : "로그인 후 서버 저장"}
-            </Button>
-          </View>
-        </View>
         {requiresPurchase ? (
           <StorePurchaseCard
             accessToken={session?.access_token}
@@ -366,42 +515,61 @@ export default function BuilderPreviewScreen() {
             }}
           />
         ) : (
-          <View style={{ flexDirection: "row", gap: 12 }}>
-            <View
-              style={{
-                flex: 2,
-                shadowColor: "rgba(201,147,90,0.4)",
-                shadowOffset: { width: 0, height: 6 },
-                shadowOpacity: 1,
-                shadowRadius: 20,
-                elevation: 5
-              }}
+          <View
+            style={{
+              shadowColor: "rgba(201,147,90,0.4)",
+              shadowOffset: { width: 0, height: 6 },
+              shadowOpacity: 1,
+              shadowRadius: 20,
+              elevation: 5
+            }}
+          >
+            <Button
+              accessibilityLabel="공개 링크 발행"
+              onPress={() => void handleSave("published")}
             >
-              <Button
-                accessibilityLabel="공개 링크 발행"
-                onPress={() => void handleSave("published")}
-              >
-                {pending === "publish"
-                  ? "발행 중..."
-                  : !configured
-                    ? "Supabase 설정 필요"
-                    : draft?.payload.isPublished
-                      ? "공개 상태 다시 저장"
-                      : "공개 링크 발행"}
-              </Button>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Button
-                accessibilityLabel="공유 시트 열기"
-                onPress={canShare ? () => void handleShare() : undefined}
-                variant="outline"
-              >
-                {pending === "share" ? "공유 중..." : canShare ? "공유하기" : "공개 후 공유 가능"}
-              </Button>
-            </View>
+              {pending === "publish"
+                ? "발행 중..."
+                : !configured
+                  ? "Supabase 설정 필요"
+                  : draft?.payload.isPublished
+                    ? "공개 상태 다시 저장"
+                    : "공개 링크 발행"}
+            </Button>
           </View>
         )}
         <View style={{ flexDirection: "row", gap: 12 }}>
+          <View style={{ flex: 1 }}>
+            <Link asChild href={{ pathname: "/builder/step5-location", params: localId ? { localId } : {} }}>
+              <Button accessibilityLabel="이전 단계로 이동" variant="outline">이전</Button>
+            </Link>
+          </View>
+          <View style={{ flex: 1.3 }}>
+            <Button
+              accessibilityLabel="서버에 초안 저장"
+              onPress={() => void handleSave("draft")}
+              variant="outline"
+            >
+              {pending === "save"
+                ? "저장 중..."
+                : !configured
+                  ? "설정 필요"
+                  : status === "authenticated"
+                    ? "초안 저장"
+                    : "로그인 후 저장"}
+            </Button>
+          </View>
+        </View>
+        <View style={{ flexDirection: "row", gap: 12 }}>
+          <View style={{ flex: 1 }}>
+            <Button
+              accessibilityLabel="공유 시트 열기"
+              onPress={canShare ? () => void handleShare() : undefined}
+              variant="outline"
+            >
+              {pending === "share" ? "공유 중..." : canShare ? "공유하기" : "공개 후 공유"}
+            </Button>
+          </View>
           <View style={{ flex: 1 }}>
             <Button
               accessibilityLabel="공개 페이지 열기"
@@ -420,21 +588,19 @@ export default function BuilderPreviewScreen() {
               }
               variant="outline"
             >
-              {canShare && publicUrl ? "웹 공개 페이지 열기" : "공개 후 웹 확인 가능"}
+              {canShare && publicUrl ? "웹에서 확인" : "공개 후 확인"}
             </Button>
           </View>
-          <View style={{ flex: 1 }}>
-            <Link
-              asChild
-              href={{
-                pathname: "/invitation/[id]/index",
-                params: { id: localId ?? "demo" }
-              }}
-            >
-              <Button accessibilityLabel="운영 화면 예시로 이동">운영 화면 보기</Button>
-            </Link>
-          </View>
         </View>
+        <Link
+          asChild
+          href={{
+            pathname: "/invitation/[id]/index",
+            params: { id: localId ?? "demo" }
+          }}
+        >
+          <Button accessibilityLabel="운영 화면 예시로 이동" variant="outline">운영 화면 보기</Button>
+        </Link>
       </View>
     </Screen>
   );

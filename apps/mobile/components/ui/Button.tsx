@@ -1,9 +1,10 @@
 import { PropsWithChildren } from "react";
 import { Pressable, Text } from "react-native";
+import { getButtonStyleConfig, type ButtonVariant } from "./button-styles";
 import { theme } from "./theme";
 
 type ButtonProps = PropsWithChildren<{
-  variant?: "primary" | "outline";
+  variant?: ButtonVariant;
   accessibilityLabel: string;
   onPress?: () => void;
 }>;
@@ -14,8 +15,9 @@ export function Button({
   onPress,
   variant = "primary"
 }: ButtonProps) {
-  const isPrimary = variant === "primary";
   const disabled = !onPress;
+  const config = getButtonStyleConfig(variant, disabled);
+  const isPrimary = variant === "primary";
 
   return (
     <Pressable
@@ -25,25 +27,21 @@ export function Button({
         minHeight: 50,
         borderRadius: theme.radius.pill,
         borderWidth: isPrimary ? 0 : 2,
-        borderColor: theme.colors.primary,
-        backgroundColor: disabled
-          ? theme.colors.primaryLight
-          : isPrimary
-            ? theme.colors.primary
-            : theme.colors.surface,
+        borderColor: config.borderColor,
+        backgroundColor: config.backgroundColor,
         alignItems: "center",
         justifyContent: "center",
         paddingHorizontal: 24,
-        shadowColor: isPrimary ? theme.shadow.heroButton.shadowColor : "transparent",
-        shadowOffset: isPrimary ? theme.shadow.heroButton.shadowOffset : { width: 0, height: 0 },
-        shadowOpacity: isPrimary ? theme.shadow.heroButton.shadowOpacity : 0,
-        shadowRadius: isPrimary ? theme.shadow.heroButton.shadowRadius : 0,
-        elevation: isPrimary ? theme.shadow.heroButton.elevation : 0
+        shadowColor: config.shadowEnabled ? theme.shadow.heroButton.shadowColor : "transparent",
+        shadowOffset: config.shadowEnabled ? theme.shadow.heroButton.shadowOffset : { width: 0, height: 0 },
+        shadowOpacity: config.shadowEnabled ? theme.shadow.heroButton.shadowOpacity : 0,
+        shadowRadius: config.shadowEnabled ? theme.shadow.heroButton.shadowRadius : 0,
+        elevation: config.shadowEnabled ? theme.shadow.heroButton.elevation : 0
       }}
     >
       <Text
         style={{
-          color: isPrimary ? "#fff" : theme.colors.primaryDark,
+          color: config.textColor,
           fontSize: 15,
           fontWeight: "700"
         }}

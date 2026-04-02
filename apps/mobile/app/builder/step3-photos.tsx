@@ -1,6 +1,7 @@
 /* eslint-disable jsx-a11y/alt-text */
 
 import { Link, useLocalSearchParams } from "expo-router";
+import { useState } from "react";
 import { Image, Pressable, Text, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
@@ -38,18 +39,29 @@ async function pickPreparedImage() {
 
 export default function BuilderStep3PhotosScreen() {
   const { localId } = useLocalSearchParams<{ localId?: string }>();
-  const { addGalleryPhoto, draft, updatePhoto } = useInvitationDraft("local-preview-owner", localId);
+  const { addGalleryPhoto, draft, removeGalleryPhoto, updatePhoto } = useInvitationDraft("local-preview-owner", localId);
+  const [pendingSlot, setPendingSlot] = useState<"" | "main" | "background" | "gallery">("");
+  const [error, setError] = useState("");
 
   async function handlePick(slot: "main" | "background" | "gallery") {
-    const localUri = await pickPreparedImage();
-    if (!localUri) return;
+    setError("");
+    setPendingSlot(slot);
 
-    if (slot === "gallery") {
-      addGalleryPhoto(localUri);
-      return;
+    try {
+      const localUri = await pickPreparedImage();
+      if (!localUri) return;
+
+      if (slot === "gallery") {
+        addGalleryPhoto(localUri);
+        return;
+      }
+
+      updatePhoto(slot, localUri);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "사진을 준비하지 못했습니다.");
+    } finally {
+      setPendingSlot("");
     }
-
-    updatePhoto(slot, localUri);
   }
 
   return (
@@ -67,7 +79,7 @@ export default function BuilderStep3PhotosScreen() {
           onPress={() => void handlePick("main")}
           style={{
             borderWidth: 1,
-            borderColor: "rgba(143,111,82,0.18)",
+            borderColor: pendingSlot === "main" ? theme.colors.primary : "rgba(143,111,82,0.18)",
             borderRadius: 14,
             padding: 12,
             backgroundColor: "#fff",
@@ -77,16 +89,20 @@ export default function BuilderStep3PhotosScreen() {
             gap: 10
           }}
         >
-          <Text style={{ color: theme.colors.text, fontSize: 15, fontWeight: "600" }}>메인 사진 선택</Text>
+          <Text style={{ color: theme.colors.text, fontSize: 15, fontWeight: "600" }}>
+            {pendingSlot === "main" ? "메인 사진 처리 중..." : "메인 사진 선택"}
+          </Text>
           <View
             style={{
               borderRadius: 999,
-              backgroundColor: "#C9935A",
+              backgroundColor: pendingSlot === "main" ? theme.colors.primaryDark : "#C9935A",
               paddingHorizontal: 14,
               paddingVertical: 8
             }}
           >
-            <Text style={{ color: "#fff8f1", fontSize: 13, fontWeight: "700" }}>업로드</Text>
+            <Text style={{ color: "#fff8f1", fontSize: 13, fontWeight: "700" }}>
+              {pendingSlot === "main" ? "처리 중" : "업로드"}
+            </Text>
           </View>
         </Pressable>
       </Card>
@@ -102,7 +118,7 @@ export default function BuilderStep3PhotosScreen() {
           onPress={() => void handlePick("background")}
           style={{
             borderWidth: 1,
-            borderColor: "rgba(143,111,82,0.18)",
+            borderColor: pendingSlot === "background" ? theme.colors.primary : "rgba(143,111,82,0.18)",
             borderRadius: 14,
             padding: 12,
             backgroundColor: "#fff",
@@ -112,16 +128,20 @@ export default function BuilderStep3PhotosScreen() {
             gap: 10
           }}
         >
-          <Text style={{ color: theme.colors.text, fontSize: 15, fontWeight: "600" }}>배경 사진 선택</Text>
+          <Text style={{ color: theme.colors.text, fontSize: 15, fontWeight: "600" }}>
+            {pendingSlot === "background" ? "배경 사진 처리 중..." : "배경 사진 선택"}
+          </Text>
           <View
             style={{
               borderRadius: 999,
-              backgroundColor: "#C9935A",
+              backgroundColor: pendingSlot === "background" ? theme.colors.primaryDark : "#C9935A",
               paddingHorizontal: 14,
               paddingVertical: 8
             }}
           >
-            <Text style={{ color: "#fff8f1", fontSize: 13, fontWeight: "700" }}>업로드</Text>
+            <Text style={{ color: "#fff8f1", fontSize: 13, fontWeight: "700" }}>
+              {pendingSlot === "background" ? "처리 중" : "업로드"}
+            </Text>
           </View>
         </Pressable>
       </Card>
@@ -129,16 +149,39 @@ export default function BuilderStep3PhotosScreen() {
         <Text style={{ color: theme.colors.muted, lineHeight: 22, marginBottom: 12 }}>
           v1에서는 한 장씩 추가하는 방식으로 먼저 연결합니다.
         </Text>
+        {error ? (
+          <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginBottom: 12 }}>
+            {error}
+          </Text>
+        ) : null}
         <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginBottom: 12 }}>
           업로드 대기: {draft?.pendingPhotos.length ?? 0}개
         </Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
           {draft?.payload.photos.gallery.map((photo) => (
-            <Image
-              key={photo.order}
-              source={{ uri: photo.uri }}
-              style={{ width: 92, height: 92, borderRadius: 14 }}
-            />
+            <View key={photo.order} style={{ position: "relative" }}>
+              <Image
+                source={{ uri: photo.uri }}
+                style={{ width: 92, height: 92, borderRadius: 14 }}
+              />
+              <Pressable
+                accessibilityLabel="갤러리 사진 삭제"
+                onPress={() => removeGalleryPhoto(photo.order)}
+                style={{
+                  position: "absolute",
+                  top: 6,
+                  right: 6,
+                  width: 28,
+                  height: 28,
+                  borderRadius: 14,
+                  backgroundColor: "rgba(44,44,44,0.72)",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+              >
+                <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>×</Text>
+              </Pressable>
+            </View>
           ))}
         </View>
         <Pressable
@@ -146,7 +189,7 @@ export default function BuilderStep3PhotosScreen() {
           onPress={() => void handlePick("gallery")}
           style={{
             borderWidth: 1,
-            borderColor: "rgba(143,111,82,0.18)",
+            borderColor: pendingSlot === "gallery" ? theme.colors.primary : "rgba(143,111,82,0.18)",
             borderRadius: 14,
             padding: 12,
             backgroundColor: "#fff",
@@ -156,16 +199,20 @@ export default function BuilderStep3PhotosScreen() {
             gap: 10
           }}
         >
-          <Text style={{ color: theme.colors.text, fontSize: 15, fontWeight: "600" }}>갤러리 사진 추가</Text>
+          <Text style={{ color: theme.colors.text, fontSize: 15, fontWeight: "600" }}>
+            {pendingSlot === "gallery" ? "갤러리 사진 처리 중..." : "갤러리 사진 추가"}
+          </Text>
           <View
             style={{
               borderRadius: 999,
-              backgroundColor: "#C9935A",
+              backgroundColor: pendingSlot === "gallery" ? theme.colors.primaryDark : "#C9935A",
               paddingHorizontal: 14,
               paddingVertical: 8
             }}
           >
-            <Text style={{ color: "#fff8f1", fontSize: 13, fontWeight: "700" }}>추가</Text>
+            <Text style={{ color: "#fff8f1", fontSize: 13, fontWeight: "700" }}>
+              {pendingSlot === "gallery" ? "처리 중" : "추가"}
+            </Text>
           </View>
         </Pressable>
       </Card>

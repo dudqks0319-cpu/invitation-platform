@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "expo-router";
 import { Pressable, Text, TextInput, View } from "react-native";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ErrorView } from "@/components/ui/ErrorView";
 import { Loading } from "@/components/ui/Loading";
@@ -42,8 +43,10 @@ export default function LoginScreen() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pendingAction, setPendingAction] = useState<"" | ActionKey>("");
+  const [passwordVisible, setPasswordVisible] = useState(false);
   const hasEmailCredentials = email.trim().length > 0 && password.trim().length > 0;
   const isAuthenticated = status === "authenticated";
+  const showDebugInfo = __DEV__;
 
   async function runAction(actionKey: ActionKey, action: () => Promise<AuthActionResult>) {
     if ((actionKey === "email-sign-in" || actionKey === "email-sign-up") && !hasEmailCredentials) {
@@ -103,7 +106,7 @@ export default function LoginScreen() {
           <Text style={{ color: "#6a5645", lineHeight: 22 }}>{message}</Text>
         </Card>
       ) : null}
-      <Card eyebrow="현재 세션" title={status === "authenticated" ? "로그인됨" : "로그인 전"}>
+      <Card eyebrow="현재 세션" title={status === "authenticated" ? "로그인됨" : "로그인이 필요합니다"}>
         <Text style={{ color: "#5b4a3b", lineHeight: 22 }}>
           {status === "authenticated"
             ? user?.email ?? "사용자 정보 없음"
@@ -112,12 +115,14 @@ export default function LoginScreen() {
               : "Supabase 설정이 없어서 현재는 둘러보기 전용 상태입니다."}
         </Text>
         <Text style={{ color: "#766452", lineHeight: 22, marginTop: 8 }}>
-          Kakao OAuth callback: {authCallbackPath}
-        </Text>
-        <Text style={{ color: "#766452", lineHeight: 22, marginTop: 8 }}>
           현재 상태: {isAuthenticated ? "원격 저장과 운영 데이터 동기화 가능" : "로컬 초안만 생성 가능"}
         </Text>
-        {!configured && configMissingKeys.length > 0 ? (
+        {showDebugInfo ? (
+          <Text style={{ color: "#8d5a2b", lineHeight: 22, marginTop: 8 }}>
+            Kakao OAuth callback: {authCallbackPath}
+          </Text>
+        ) : null}
+        {showDebugInfo && !configured && configMissingKeys.length > 0 ? (
           <Text style={{ color: "#8d5a2b", lineHeight: 22, marginTop: 8 }}>
             누락된 환경변수: {configMissingKeys.join(", ")}
           </Text>
@@ -158,50 +163,68 @@ export default function LoginScreen() {
           style={inputStyle}
           value={email}
         />
-        <TextInput
-          onChangeText={setPassword}
-          placeholder="비밀번호"
-          secureTextEntry
-          style={[inputStyle, { marginTop: 12 }]}
-          value={password}
-        />
-        <View style={{ marginTop: 12 }}>
+        <View
+          style={[
+            inputStyle,
+            {
+              marginTop: 12,
+              flexDirection: "row",
+              alignItems: "center",
+              paddingHorizontal: 0
+            }
+          ]}
+        >
+          <TextInput
+            onChangeText={setPassword}
+            placeholder="비밀번호"
+            secureTextEntry={!passwordVisible}
+            style={{
+              flex: 1,
+              minHeight: 48,
+              paddingHorizontal: 14,
+              color: theme.colors.text
+            }}
+            value={password}
+          />
           <Pressable
-            accessibilityLabel="이메일로 로그인"
-            disabled={!configured || pendingAction !== ""}
-            onPress={() => runAction("email-sign-in", () => signInWithPassword(email, password))}
+            accessibilityLabel={passwordVisible ? "비밀번호 숨기기" : "비밀번호 보기"}
+            onPress={() => setPasswordVisible((current) => !current)}
             style={{
               minHeight: 48,
-              borderRadius: 16,
-              backgroundColor: configured ? theme.colors.accent : "#d8cfc4",
+              paddingHorizontal: 14,
               alignItems: "center",
               justifyContent: "center"
             }}
           >
-            <Text style={{ color: "#fff", fontWeight: "700" }}>
-              {pendingAction === "email-sign-in" ? "로그인 중..." : "이메일로 로그인"}
+            <Text style={{ color: theme.colors.primaryDark, fontWeight: "700" }}>
+              {passwordVisible ? "숨기기" : "보기"}
             </Text>
           </Pressable>
         </View>
-        <View style={{ marginTop: 10 }}>
-          <Pressable
-            accessibilityLabel="이메일로 계정 생성"
-            disabled={!configured || pendingAction !== ""}
-            onPress={() => runAction("email-sign-up", () => signUpWithPassword(email, password))}
-            style={{
-              minHeight: 48,
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: "#d8c3b0",
-              backgroundColor: "#fff",
-              alignItems: "center",
-              justifyContent: "center"
-            }}
+        <View style={{ marginTop: 12 }}>
+          <Button
+            accessibilityLabel="이메일로 로그인"
+            onPress={
+              configured && pendingAction === ""
+                ? () => void runAction("email-sign-in", () => signInWithPassword(email, password))
+                : undefined
+            }
           >
-            <Text style={{ color: "#2e231a", fontWeight: "700" }}>
-              {pendingAction === "email-sign-up" ? "계정 생성 중..." : "이메일 계정 만들기"}
-            </Text>
-          </Pressable>
+            {pendingAction === "email-sign-in" ? "로그인 중..." : "이메일로 로그인"}
+          </Button>
+        </View>
+        <View style={{ marginTop: 10 }}>
+          <Button
+            accessibilityLabel="이메일로 계정 생성"
+            onPress={
+              configured && pendingAction === ""
+                ? () => void runAction("email-sign-up", () => signUpWithPassword(email, password))
+                : undefined
+            }
+            variant="outline"
+          >
+            {pendingAction === "email-sign-up" ? "계정 생성 중..." : "이메일 계정 만들기"}
+          </Button>
         </View>
         <Text style={{ color: "#766452", lineHeight: 22, marginTop: 10 }}>
           처음 사용하는 이메일이면 가입 버튼으로 계정을 만든 뒤 바로 로그인 상태를 확인합니다.
@@ -212,42 +235,28 @@ export default function LoginScreen() {
       {!isAuthenticated ? (
         <Card eyebrow="소셜 로그인" title="Apple · Kakao">
         <View style={{ gap: 12 }}>
-          <Pressable
+          <Button
             accessibilityLabel="Apple로 로그인"
-            disabled={!configured || pendingAction !== ""}
-            onPress={() => runAction("apple", signInWithApple)}
-            style={{
-              minHeight: 48,
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: "#d8c3b0",
-              backgroundColor: "#fff",
-              alignItems: "center",
-              justifyContent: "center"
-            }}
+            onPress={
+              configured && pendingAction === ""
+                ? () => void runAction("apple", signInWithApple)
+                : undefined
+            }
+            variant="outline"
           >
-            <Text style={{ color: "#2e231a", fontWeight: "700" }}>
-              {pendingAction === "apple" ? "Apple 로그인 중..." : "Apple로 로그인"}
-            </Text>
-          </Pressable>
-          <Pressable
+            {pendingAction === "apple" ? "Apple 로그인 중..." : "Apple로 로그인"}
+          </Button>
+          <Button
             accessibilityLabel="Kakao로 로그인"
-            disabled={!configured || pendingAction !== ""}
-            onPress={() => runAction("kakao", signInWithKakao)}
-            style={{
-              minHeight: 48,
-              borderRadius: 16,
-              borderWidth: 1,
-              borderColor: "#d8c3b0",
-              backgroundColor: "#fff",
-              alignItems: "center",
-              justifyContent: "center"
-            }}
+            onPress={
+              configured && pendingAction === ""
+                ? () => void runAction("kakao", signInWithKakao)
+                : undefined
+            }
+            variant="outline"
           >
-            <Text style={{ color: "#2e231a", fontWeight: "700" }}>
-              {pendingAction === "kakao" ? "Kakao 로그인 중..." : "Kakao로 로그인"}
-            </Text>
-          </Pressable>
+            {pendingAction === "kakao" ? "Kakao 로그인 중..." : "Kakao로 로그인"}
+          </Button>
         </View>
         <Text style={{ color: "#766452", lineHeight: 22, marginTop: 10 }}>
           Kakao 로그인 후 브라우저에서 앱으로 돌아오면 내 초대장 탭으로 연결됩니다.

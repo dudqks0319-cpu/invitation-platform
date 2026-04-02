@@ -71,7 +71,7 @@ export default function InvitationDetailScreen() {
 
   return (
     <Screen subtitle="앱 안에서는 공개 페이지 복제가 아니라 운영 대시보드 경험을 제공합니다." title="초대장 운영">
-      {loading ? <Loading label="초대장 데이터를 불러오는 중..." /> : null}
+      {loading ? <Loading label="초대장 데이터를 불러오는 중..." variant="cards" /> : null}
       {error ? <ErrorView description={error} title="작업 실패" /> : null}
       {message ? (
         <Card eyebrow="상태" title="작업 완료">
@@ -94,7 +94,7 @@ export default function InvitationDetailScreen() {
       </Card>
       <Card eyebrow="공유 준비" title="공개 링크 · 계좌 · 지도">
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
-          slug: {draft?.payload.share.slug || "(미정)"}
+          공유 주소: {draft?.payload.share.slug || "(발행 전)"}
         </Text>
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
           공개 URL: {publicUrl || "발행 후 자동 생성"}
@@ -114,153 +114,200 @@ export default function InvitationDetailScreen() {
           </Text>
         ) : null}
       </Card>
-      <View style={{ gap: 12 }}>
-        <Button
-          accessibilityLabel="운영 화면 새로고침"
-          onPress={() => {
-            setMessage("");
-            setError("");
-            setRefreshing(true);
-            void (async () => {
-              try {
-                if (configured && status === "authenticated" && user?.id && id) {
-                  const remote = await loadRemoteInvitation(id, user.id);
-                  if (remote) {
-                    setDraft(remote);
-                    setMessage("운영 데이터를 새로고침했습니다.");
-                    return;
-                  }
+      <Card eyebrow="빠른 작업" title="자주 쓰는 작업">
+        <View style={{ gap: 10 }}>
+          {draft?.payload.isPublished && draft.payload.share.slug ? (
+            <Button
+              accessibilityLabel="공개 링크 공유"
+              onPress={() => {
+                setError("");
+                setMessage("");
+                void shareInvitationLink(draft.payload.share.slug, draft.payload.title || "InviteHub 초대장")
+                  .then(() => setMessage("공유 시트를 열었습니다."))
+                  .catch((caught) => setError(caught instanceof Error ? caught.message : "공유에 실패했습니다."));
+              }}
+            >
+              공개 링크 공유
+            </Button>
+          ) : draft?.serverId ? (
+            <Button
+              accessibilityLabel="웹 빌더 열기"
+              onPress={() => {
+                setError("");
+                setMessage("");
+                void openWebBuilder({ invitationId: draft.serverId })
+                  .then(() => setMessage("웹 빌더를 열었습니다."))
+                  .catch((caught) =>
+                    setError(caught instanceof Error ? caught.message : "웹 빌더를 열지 못했습니다.")
+                  );
+              }}
+            >
+              웹에서 이어서 편집
+            </Button>
+          ) : (
+            <Button accessibilityLabel="운영 화면에서 서버 저장" onPress={undefined}>
+              서버 저장 후 사용 가능
+            </Button>
+          )}
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <View style={{ flex: 1 }}>
+              <Button
+                accessibilityLabel="웹 화면 열기"
+                onPress={
+                  draft?.payload.isPublished && publicUrl
+                    ? () => {
+                        setError("");
+                        setMessage("");
+                        void openInvitationPublicPage(shareSlug)
+                          .then(() => setMessage("웹 공개 페이지를 열었습니다."))
+                          .catch((caught) =>
+                            setError(caught instanceof Error ? caught.message : "웹 공개 페이지를 열지 못했습니다.")
+                          );
+                      }
+                    : draft?.serverId
+                      ? () => {
+                          setError("");
+                          setMessage("");
+                          void openWebBuilder({ invitationId: draft.serverId })
+                            .then(() => setMessage("웹 빌더를 열었습니다."))
+                            .catch((caught) =>
+                              setError(caught instanceof Error ? caught.message : "웹 빌더를 열지 못했습니다.")
+                            );
+                        }
+                      : undefined
                 }
-
-                if (id) {
-                  const local = await loadDraft(id);
-                  setDraft(local);
-                  setMessage("로컬 초안을 다시 불러왔습니다.");
-                }
-              } catch (caught) {
-                setError(caught instanceof Error ? caught.message : "새로고침에 실패했습니다.");
-              } finally {
-                setRefreshing(false);
-              }
-            })();
-          }}
-          variant="outline"
-        >
-          {refreshing ? "새로고침 중..." : "운영 데이터 새로고침"}
-        </Button>
-        <Button
-          accessibilityLabel="공개 링크 공유"
-          onPress={() => {
-            if (!draft?.payload.share.slug) {
-              setError("공개 링크 slug가 없어 공유할 수 없습니다.");
-              return;
-            }
-            setError("");
-            setMessage("");
-            void shareInvitationLink(draft.payload.share.slug, draft.payload.title || "InviteHub 초대장")
-              .then(() => setMessage("공유 시트를 열었습니다."))
-              .catch((caught) => setError(caught instanceof Error ? caught.message : "공유에 실패했습니다."));
-          }}
-        >
-          공개 링크 공유
-        </Button>
-        <Button
-          accessibilityLabel="웹 화면 열기"
-          onPress={
-            draft?.payload.isPublished && publicUrl
-              ? () => {
-                  setError("");
+                variant="outline"
+              >
+                {draft?.payload.isPublished && publicUrl
+                  ? "웹 공개 페이지"
+                  : draft?.serverId
+                    ? "웹 빌더"
+                    : "웹 작업 대기"}
+              </Button>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button
+                accessibilityLabel="운영 화면 새로고침"
+                onPress={() => {
                   setMessage("");
-                  void openInvitationPublicPage(shareSlug)
-                    .then(() => setMessage("웹 공개 페이지를 열었습니다."))
-                    .catch((caught) =>
-                      setError(caught instanceof Error ? caught.message : "웹 공개 페이지를 열지 못했습니다.")
-                    );
-                }
-              : draft?.serverId
+                  setError("");
+                  setRefreshing(true);
+                  void (async () => {
+                    try {
+                      if (configured && status === "authenticated" && user?.id && id) {
+                        const remote = await loadRemoteInvitation(id, user.id);
+                        if (remote) {
+                          setDraft(remote);
+                          setMessage("운영 데이터를 새로고침했습니다.");
+                          return;
+                        }
+                      }
+
+                      if (id) {
+                        const local = await loadDraft(id);
+                        setDraft(local);
+                        setMessage("로컬 초안을 다시 불러왔습니다.");
+                      }
+                    } catch (caught) {
+                      setError(caught instanceof Error ? caught.message : "새로고침에 실패했습니다.");
+                    } finally {
+                      setRefreshing(false);
+                    }
+                  })();
+                }}
+                variant="outline"
+              >
+                {refreshing ? "새로고침 중..." : "데이터 새로고침"}
+              </Button>
+            </View>
+          </View>
+        </View>
+      </Card>
+      <Card eyebrow="운영 도구" title="관리 메뉴">
+        <View style={{ gap: 10 }}>
+          <Button
+            accessibilityLabel="운영 화면에서 서버 저장"
+            onPress={
+              configured && status === "authenticated" && user?.id && draft
                 ? () => {
                     setError("");
                     setMessage("");
-                    void openWebBuilder({ invitationId: draft.serverId })
-                      .then(() => setMessage("웹 빌더를 열었습니다."))
-                      .catch((caught) =>
-                        setError(caught instanceof Error ? caught.message : "웹 빌더를 열지 못했습니다.")
-                      );
+                    void saveDraftToSupabase(draft, user.id, draft.payload.isPublished ? "published" : "draft")
+                      .then(async (result) => {
+                        const nextDraft: MobileInvitationDraft = {
+                          ...draft,
+                          serverId: result.serverId,
+                          payload: result.payload,
+                          pendingPhotos: result.pendingPhotos,
+                          syncStatus: "synced",
+                          isDirty: false,
+                          localUpdatedAt: new Date().toISOString()
+                        };
+                        await saveDraft(nextDraft);
+                        setDraft(nextDraft);
+                        setMessage(result.payload.isPublished ? "공개 상태를 서버에 동기화했습니다." : "운영 화면에서 서버 초안을 저장했습니다.");
+                      })
+                      .catch((caught) => {
+                        setError(caught instanceof Error ? caught.message : "서버 저장에 실패했습니다.");
+                      });
                   }
-              : undefined
-          }
-          variant="outline"
-        >
-          {draft?.payload.isPublished && publicUrl
-            ? "웹 공개 페이지 열기"
-            : draft?.serverId
-              ? "웹 빌더 열기"
-              : "서버 저장 후 웹에서 이어서 편집"}
-        </Button>
-        <Button
-          accessibilityLabel="운영 화면에서 서버 저장"
-          onPress={
-            configured && status === "authenticated" && user?.id && draft
-              ? () => {
-                  setError("");
-                  setMessage("");
-                  void saveDraftToSupabase(draft, user.id, draft.payload.isPublished ? "published" : "draft")
-                    .then(async (result) => {
-                      const nextDraft: MobileInvitationDraft = {
-                        ...draft,
-                        serverId: result.serverId,
-                        payload: result.payload,
-                        pendingPhotos: result.pendingPhotos,
-                        syncStatus: "synced",
-                        isDirty: false,
-                        localUpdatedAt: new Date().toISOString()
-                      };
-                      await saveDraft(nextDraft);
-                      setDraft(nextDraft);
-                      setMessage(result.payload.isPublished ? "공개 상태를 서버에 동기화했습니다." : "운영 화면에서 서버 초안을 저장했습니다.");
-                    })
-                    .catch((caught) => {
-                      setError(caught instanceof Error ? caught.message : "서버 저장에 실패했습니다.");
-                    });
-                }
-              : undefined
-          }
-          variant="outline"
-        >
-          {!configured
-            ? "Supabase 설정 필요"
-            : configured && status === "authenticated"
-              ? "운영 화면에서 서버 저장"
-              : "로그인 후 서버 저장"}
-        </Button>
-        <Button
-          accessibilityLabel="초대장 삭제"
-          onPress={() => {
-            setError("");
-            setMessage("");
-            if (!draft) return;
+                : undefined
+            }
+            variant="outline"
+          >
+            {!configured
+              ? "Supabase 설정 필요"
+              : configured && status === "authenticated"
+                ? "서버 저장"
+                : "로그인 후 서버 저장"}
+          </Button>
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <View style={{ flex: 1 }}>
+              <Link asChild href={`/invitation/${id ?? "demo"}/rsvp`}>
+                <Button accessibilityLabel="RSVP 관리 화면으로 이동" variant="outline">RSVP 관리</Button>
+              </Link>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Link asChild href={`/invitation/${id ?? "demo"}/guestbook`}>
+                <Button accessibilityLabel="방명록 관리 화면으로 이동" variant="outline">방명록 관리</Button>
+              </Link>
+            </View>
+          </View>
+          <Link asChild href={`/invitation/${id ?? "demo"}/stats`}>
+            <Button accessibilityLabel="통계 화면으로 이동" variant="outline">통계 보기</Button>
+          </Link>
+        </View>
+      </Card>
+      <Card eyebrow="주의" title="위험 작업">
+        <Text style={{ color: "#6a5645", lineHeight: 22 }}>
+          초대장을 삭제하면 로컬 초안과 서버 저장본이 함께 제거될 수 있습니다.
+        </Text>
+        <View style={{ marginTop: 10 }}>
+          <Button
+            accessibilityLabel="초대장 삭제"
+            onPress={() => {
+              setError("");
+              setMessage("");
+              if (!draft) return;
 
-            void deleteDraft(draft.localId)
-              .then(async () => {
-                if (configured && status === "authenticated" && user?.id && draft.serverId) {
-                  await deleteRemoteInvitation(draft.serverId, user.id);
-                }
-                setMessage("초대장을 삭제했습니다.");
-              })
-              .catch((caught) => setError(caught instanceof Error ? caught.message : "삭제에 실패했습니다."));
-          }}
-          variant="outline"
-        >
-          초대장 삭제
-        </Button>
+              void deleteDraft(draft.localId)
+                .then(async () => {
+                  if (configured && status === "authenticated" && user?.id && draft.serverId) {
+                    await deleteRemoteInvitation(draft.serverId, user.id);
+                  }
+                  setMessage("초대장을 삭제했습니다.");
+                })
+                .catch((caught) => setError(caught instanceof Error ? caught.message : "삭제에 실패했습니다."));
+            }}
+            variant="outline"
+          >
+            초대장 삭제
+          </Button>
+        </View>
+      </Card>
+      <View style={{ gap: 12 }}>
         <Link asChild href={`/invitation/${id ?? "demo"}/rsvp`}>
-          <Button accessibilityLabel="RSVP 관리 화면으로 이동">RSVP 관리</Button>
-        </Link>
-        <Link asChild href={`/invitation/${id ?? "demo"}/guestbook`}>
-          <Button accessibilityLabel="방명록 관리 화면으로 이동" variant="outline">방명록 관리</Button>
-        </Link>
-        <Link asChild href={`/invitation/${id ?? "demo"}/stats`}>
-          <Button accessibilityLabel="통계 화면으로 이동" variant="outline">통계</Button>
+          <Button accessibilityLabel="RSVP 관리 화면으로 이동">RSVP 관리 바로가기</Button>
         </Link>
       </View>
     </Screen>

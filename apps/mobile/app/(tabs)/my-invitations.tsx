@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { Pressable, Text, View } from "react-native";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -16,6 +16,7 @@ import { openInvitationPublicPage, openWebBuilder, shareInvitationLink } from "@
 import { useAuth } from "@/hooks/useAuth";
 
 export default function MyInvitationsScreen() {
+  const router = useRouter();
   const [drafts, setDrafts] = useState<MobileInvitationDraft[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -113,10 +114,12 @@ export default function MyInvitationsScreen() {
         </Card>
       </View>
 
-      {loading ? <Loading label="저장된 초안을 불러오는 중..." /> : null}
+      {loading ? <Loading label="저장된 초안을 불러오는 중..." variant="cards" /> : null}
       {!loading && drafts.length === 0 ? (
         <EmptyState
+          actionLabel="첫 초대장 만들기"
           body="아직 저장된 초대장이 없습니다. 빌더에서 첫 초대장을 만들어 주세요."
+          onAction={() => router.push("/builder/step1-basic")}
           title="저장된 초대장이 없습니다"
         />
       ) : null}
@@ -141,26 +144,16 @@ export default function MyInvitationsScreen() {
           </View>
           <View style={{ marginTop: 12, gap: 10 }}>
             <Link asChild href={{ pathname: "/invitation/[id]/index", params: { id: draft.serverId ?? draft.localId } }}>
-              <Pressable
-                accessibilityLabel="초대장 운영 화면으로 이동"
-                style={{
-                  minHeight: 46,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  borderRadius: 16,
-                  borderWidth: 1,
-                  borderColor: theme.colors.border,
-                  backgroundColor: theme.colors.surfaceSoft
-                }}
-              >
-                <Text style={{ color: theme.colors.primaryDark, fontWeight: "700" }}>운영 화면 열기</Text>
-              </Pressable>
+              <Button accessibilityLabel="초대장 운영 화면으로 이동">
+                운영 화면 열기
+              </Button>
             </Link>
-            <Button
-              accessibilityLabel="공개 링크 공유"
-              onPress={
-                draft.payload.isPublished && draft.payload.share.slug
-                  ? () => {
+            {draft.payload.isPublished && draft.payload.share.slug ? (
+              <View style={{ flexDirection: "row", gap: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    accessibilityLabel="공개 링크 공유"
+                    onPress={() => {
                       setMessage("");
                       setError("");
                       void shareInvitationLink(draft.payload.share.slug, draft.payload.title || "InviteHub 초대장")
@@ -168,18 +161,16 @@ export default function MyInvitationsScreen() {
                         .catch((caught) =>
                           setError(caught instanceof Error ? caught.message : "공유 시트를 열지 못했습니다.")
                         );
-                    }
-                  : undefined
-              }
-              variant="outline"
-            >
-              {draft.payload.isPublished && draft.payload.share.slug ? "공개 링크 공유" : "공개 후 공유 가능"}
-            </Button>
-            <Button
-              accessibilityLabel="웹 화면 열기"
-              onPress={
-                draft.payload.isPublished && draft.payload.share.slug
-                  ? () => {
+                    }}
+                    variant="outline"
+                  >
+                    공유하기
+                  </Button>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Button
+                    accessibilityLabel="웹 공개 페이지 열기"
+                    onPress={() => {
                       setMessage("");
                       setError("");
                       void openInvitationPublicPage(draft.payload.share.slug)
@@ -187,35 +178,40 @@ export default function MyInvitationsScreen() {
                         .catch((caught) =>
                           setError(caught instanceof Error ? caught.message : "웹 공개 페이지를 열지 못했습니다.")
                         );
-                    }
-                  : draft.serverId
-                    ? () => {
-                        setMessage("");
-                        setError("");
-                        void openWebBuilder({ invitationId: draft.serverId })
-                          .then(() => setMessage("웹 빌더를 열었습니다."))
-                          .catch((caught) =>
-                            setError(caught instanceof Error ? caught.message : "웹 빌더를 열지 못했습니다.")
-                          );
-                      }
-                  : undefined
-              }
-              variant="outline"
-            >
-              {draft.payload.isPublished && draft.payload.share.slug
-                ? "웹 공개 페이지 열기"
-                : draft.serverId
-                  ? "웹 빌더 열기"
-                  : "서버 저장 후 웹에서 이어서 편집"}
-            </Button>
-            {isLocalOnlyDraft(draft) ? (
+                    }}
+                    variant="outline"
+                  >
+                    웹에서 확인
+                  </Button>
+                </View>
+              </View>
+            ) : draft.serverId ? (
               <Button
-                accessibilityLabel="로컬 초안 삭제"
-                onPress={() => void handleDeleteLocalDraft(draft)}
+                accessibilityLabel="웹 빌더 열기"
+                onPress={() => {
+                  setMessage("");
+                  setError("");
+                  void openWebBuilder({ invitationId: draft.serverId })
+                    .then(() => setMessage("웹 빌더를 열었습니다."))
+                    .catch((caught) =>
+                      setError(caught instanceof Error ? caught.message : "웹 빌더를 열지 못했습니다.")
+                    );
+                }}
                 variant="outline"
               >
-                {pendingDeleteId === draft.localId ? "삭제 중..." : "로컬 초안 삭제"}
+                웹에서 이어서 편집
               </Button>
+            ) : null}
+            {isLocalOnlyDraft(draft) ? (
+              <Pressable
+                accessibilityLabel="로컬 초안 삭제"
+                onPress={() => void handleDeleteLocalDraft(draft)}
+                style={{ alignItems: "center", paddingVertical: 6 }}
+              >
+                <Text style={{ color: theme.colors.primaryDark, fontSize: 13, fontWeight: "700" }}>
+                  {pendingDeleteId === draft.localId ? "삭제 중..." : "로컬 초안 삭제"}
+                </Text>
+              </Pressable>
             ) : null}
           </View>
         </Card>

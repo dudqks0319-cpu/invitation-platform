@@ -58,6 +58,9 @@ export function StepIndicator({
         {title}
       </Text>
       <ProgressBar current={current} total={total} />
+      <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 20 }}>
+        입력값은 단계마다 자동 저장됩니다.
+      </Text>
     </View>
   );
 }

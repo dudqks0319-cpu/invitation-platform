@@ -3,6 +3,7 @@ import type { MobileInvitationDraft } from "@/lib/drafts";
 import { ensureDraft, saveDraft, upsertPendingPhoto } from "@/lib/drafts";
 import {
   updateInvitationBasics,
+  updateWeddingFamily,
   updateWeddingNames,
   type PendingPhotoUpload
 } from "@/lib/invitation-shared";
@@ -59,10 +60,20 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
     }));
   }, [persist]);
 
-  const updateCouple = useCallback((patch: { groomName?: string; brideName?: string }) => {
+  const updateCouple = useCallback((patch: {
+    groomName?: string;
+    brideName?: string;
+    groomFatherName?: string;
+    groomMotherName?: string;
+    brideFatherName?: string;
+    brideMotherName?: string;
+  }) => {
     persist((current) => withMeta({
       ...current,
-      payload: updateWeddingNames(current.payload, patch)
+      payload: updateWeddingFamily(
+        updateWeddingNames(current.payload, patch),
+        patch
+      )
     }));
   }, [persist]);
 
@@ -165,6 +176,25 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
     });
   }, [persist]);
 
+  const removeGalleryPhoto = useCallback((order: number) => {
+    persist((current) => withMeta({
+      ...current,
+      pendingPhotos: current.pendingPhotos.filter((photo) => !(photo.slot === "gallery" && photo.order === order)),
+      payload: {
+        ...current.payload,
+        photos: {
+          ...current.payload.photos,
+          gallery: current.payload.photos.gallery
+            .filter((item) => item.order !== order)
+            .map((item, index) => ({
+              ...item,
+              order: index
+            }))
+        }
+      }
+    }));
+  }, [persist]);
+
   const saveToCloud = useCallback(async (userId: string, status: "draft" | "published" = "draft") => {
     if (!draft) {
       throw new Error("저장할 초안이 없습니다.");
@@ -226,6 +256,7 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
     loading,
     publicUrl,
     publishReadiness,
+    removeGalleryPhoto,
     saveToCloud,
     updateAccounts,
     updateBasics,

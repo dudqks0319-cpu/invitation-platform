@@ -178,3 +178,52 @@ export function updateWeddingNames(
     }
   };
 }
+
+export function updateWeddingFamily(
+  payload: InvitationPayload,
+  patch: {
+    groomFatherName?: string;
+    groomMotherName?: string;
+    brideFatherName?: string;
+    brideMotherName?: string;
+  }
+) {
+  return {
+    ...payload,
+    eventData: {
+      ...payload.eventData,
+      groomParents: {
+        father:
+          patch.groomFatherName !== undefined || payload.eventData.groomParents.father
+            ? {
+                name: patch.groomFatherName ?? payload.eventData.groomParents.father?.name ?? "",
+                phone: payload.eventData.groomParents.father?.phone ?? ""
+              }
+            : undefined,
+        mother:
+          patch.groomMotherName !== undefined || payload.eventData.groomParents.mother
+            ? {
+                name: patch.groomMotherName ?? payload.eventData.groomParents.mother?.name ?? "",
+                phone: payload.eventData.groomParents.mother?.phone ?? ""
+              }
+            : undefined
+      },
+      brideParents: {
+        father:
+          patch.brideFatherName !== undefined || payload.eventData.brideParents.father
+            ? {
+                name: patch.brideFatherName ?? payload.eventData.brideParents.father?.name ?? "",
+                phone: payload.eventData.brideParents.father?.phone ?? ""
+              }
+            : undefined,
+        mother:
+          patch.brideMotherName !== undefined || payload.eventData.brideParents.mother
+            ? {
+                name: patch.brideMotherName ?? payload.eventData.brideParents.mother?.name ?? "",
+                phone: payload.eventData.brideParents.mother?.phone ?? ""
+              }
+            : undefined
+      }
+    }
+  };
+}

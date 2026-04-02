@@ -3,11 +3,14 @@ import { Text, View } from "react-native";
 import { StepIndicator } from "@/components/builder/StepIndicator";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { DateTimeField } from "@/components/ui/DateTimeField";
 import { FocusInput } from "@/components/ui/FocusInput";
 import { Loading } from "@/components/ui/Loading";
 import { Screen } from "@/components/ui/Screen";
 import { theme } from "@/components/ui/theme";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
+import { getBuilderStepValidation } from "@/lib/builder-validation";
+import { createEmptyInvitationDraft } from "@/lib/invitation-shared";
 
 const inputStyle = {
   minHeight: 48,
@@ -25,6 +28,10 @@ const labelStyle = {
 export default function BuilderStep1Screen() {
   const { localId } = useLocalSearchParams<{ localId?: string }>();
   const { draft, loading, updateBasics } = useInvitationDraft("local-preview-owner", localId);
+  const validation = getBuilderStepValidation(
+    1,
+    draft?.payload ?? createEmptyInvitationDraft("local-preview-owner").payload
+  );
 
   return (
     <Screen subtitle="행사 제목, 날짜, 장소를 먼저 정리합니다." title="초대장 만들기">
@@ -42,10 +49,8 @@ export default function BuilderStep1Screen() {
         </View>
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>행사 일시</Text>
-          <FocusInput
+          <DateTimeField
             onChangeText={(eventDateTime) => updateBasics({ eventDateTime })}
-            placeholder="예: 2026-05-23T14:00"
-            style={inputStyle}
             value={draft?.payload.eventDateTime ?? ""}
           />
         </View>
@@ -77,11 +82,29 @@ export default function BuilderStep1Screen() {
             value={draft?.payload.message ?? ""}
           />
         </View>
+        {!validation.canContinue ? (
+          <Text style={{ color: theme.colors.primaryDark, fontSize: 13, lineHeight: 20 }}>
+            {validation.message}
+          </Text>
+        ) : null}
       </Card>
       <View style={{ gap: 12, flexDirection: "row" }}>
-        <Link asChild href={{ pathname: "/builder/step2-people", params: localId ? { localId } : {} }}>
-          <Button accessibilityLabel="다음 단계로 이동">다음</Button>
-        </Link>
+        <View style={{ flex: 1 }}>
+          <Link asChild href="/(tabs)">
+            <Button accessibilityLabel="처음으로 돌아가기" variant="outline">처음으로</Button>
+          </Link>
+        </View>
+        <View style={{ flex: 1.4 }}>
+          {validation.canContinue ? (
+            <Link asChild href={{ pathname: "/builder/step2-people", params: localId ? { localId } : {} }}>
+              <Button accessibilityLabel="다음 단계로 이동">다음</Button>
+            </Link>
+          ) : (
+            <Button accessibilityLabel="필수 정보 입력 필요">
+              필수 정보 입력 필요
+            </Button>
+          )}
+        </View>
       </View>
     </Screen>
   );
