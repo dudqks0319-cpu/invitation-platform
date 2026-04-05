@@ -1,12 +1,18 @@
-import appJson from "./app.json";
+const { readFileSync } = require("node:fs");
+const path = require("node:path");
+
+const appJson = JSON.parse(
+  readFileSync(path.join(__dirname, "app.json"), "utf8")
+);
 
 const baseConfig = appJson.expo;
-const variant = process.env.APP_VARIANT ?? "development";
+const buildProfile = process.env.EAS_BUILD_PROFILE ?? "";
+const variant = process.env.APP_VARIANT ?? (buildProfile === "production" ? "production" : "development");
 const isProduction = variant === "production";
 const bundleId = process.env.APP_BUNDLE_ID || (isProduction ? "com.invitehub.app" : "com.invitehub.app.dev");
 const androidPackage = process.env.APP_ANDROID_PACKAGE || (isProduction ? "com.invitehub.app" : "com.invitehub.app.dev");
 
-const config = {
+module.exports = {
   ...baseConfig,
   icon: "./assets/icon.png",
   splash: {
@@ -27,5 +33,3 @@ const config = {
     appVariant: variant
   }
 };
-
-export default config;

@@ -23,7 +23,7 @@ describe("mobile invitation pricing", () => {
     }));
 
     expect(getMobileInvitationPricing(payload)).toMatchObject({
-      amount: 3000,
+      amount: 3300,
       isFree: false
     });
     expect(requiresStorePurchase(payload)).toBe(true);

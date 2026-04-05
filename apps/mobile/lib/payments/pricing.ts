@@ -1,9 +1,6 @@
 import type { InvitationPayload } from "../invitation-shared";
 
-export const MAIN_IMAGE_ADDON_PRICE_KRW = 500;
-export const BACKGROUND_IMAGE_ADDON_PRICE_KRW = 500;
-export const GALLERY_BLOCK_SIZE = 10;
-export const GALLERY_BLOCK_PRICE_KRW = 1000;
+export const PHOTO_PUBLISH_PASS_PRICE_KRW = 3300;
 
 export type MobileInvitationPricing = {
   amount: number;
@@ -16,19 +13,10 @@ export function getMobileInvitationPricing(payload: InvitationPayload): MobileIn
     { label: "기본 템플릿", amount: 0 }
   ];
 
-  if (payload.photos.mainUri.trim()) {
-    breakdown.push({ label: "인물 사진 추가", amount: MAIN_IMAGE_ADDON_PRICE_KRW });
-  }
-
-  if (payload.photos.backgroundUri.trim()) {
-    breakdown.push({ label: "배경 사진 추가", amount: BACKGROUND_IMAGE_ADDON_PRICE_KRW });
-  }
-
-  if (payload.photos.gallery.length > 0) {
-    const blocks = Math.ceil(payload.photos.gallery.length / GALLERY_BLOCK_SIZE);
+  if (payload.photos.mainUri.trim() || payload.photos.backgroundUri.trim() || payload.photos.gallery.length > 0) {
     breakdown.push({
-      label: `갤러리 ${payload.photos.gallery.length}장`,
-      amount: blocks * GALLERY_BLOCK_PRICE_KRW
+      label: "사진 포함 발행권",
+      amount: PHOTO_PUBLISH_PASS_PRICE_KRW
     });
   }
 

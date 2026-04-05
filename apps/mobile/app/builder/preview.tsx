@@ -472,10 +472,10 @@ export default function BuilderPreviewScreen() {
           </View>
         </View>
       </Card>
-      <Card eyebrow="요금 안내" title={requiresPurchase ? "선택한 옵션 결제" : "무료 발행"}>
+      <Card eyebrow="요금 안내" title={requiresPurchase ? "사진 포함 발행권" : "무료 발행"}>
         <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
           {requiresPurchase
-            ? `선택한 옵션 결제 금액은 ${pricing.amount.toLocaleString("ko-KR")}원입니다. 결제가 끝나면 자동으로 공개 링크가 발행됩니다.`
+            ? `사진이 포함된 초대장을 발행하려면 ${pricing.amount.toLocaleString("ko-KR")}원 발행권이 필요합니다. 결제가 끝나면 프로필, 배경, 갤러리 사진을 포함해 자동으로 공개 링크가 발행됩니다.`
             : "지금 선택한 구성은 무료입니다. 공개 링크를 바로 발행할 수 있습니다."}
         </Text>
         {addOnLines.length > 0 ? (

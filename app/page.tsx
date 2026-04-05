@@ -5,17 +5,17 @@ import { SiteHeader } from "@/components/shared/site-header";
 
 const features = [
   {
-    title: "현재 디자인은 무료",
+    title: "기본 청첩장은 무료",
     description:
-      "지금 공개된 템플릿은 비용 걱정 없이 고르고 바로 초대장을 시작할 수 있습니다."
+      "현재 공개된 템플릿은 무료로 만들고 미리보기할 수 있어 부담 없이 초대장을 시작할 수 있습니다."
   },
   {
-    title: "옵션만 필요한 만큼",
+    title: "사진까지 담고 싶다면 3,300원",
     description:
-      "인물사진, 배경사진, 갤러리처럼 필요한 요소만 추가해서 부담 없이 완성도를 높일 수 있습니다."
+      "사진 포함 발행권 한 번이면 프로필 사진, 배경 사진, 갤러리 사진까지 모두 담아 완성할 수 있습니다."
   },
   {
-    title: "응답과 방명록까지",
+    title: "참석 여부와 방명록까지",
     description:
       "링크를 보낸 뒤에는 참석 여부와 축하 메시지까지 한 번에 받을 수 있습니다."
   },
@@ -35,35 +35,36 @@ const processSteps = [
   {
     step: "02",
     title: "내용 입력",
-    description: "이름, 장소, 문구를 채우고 필요하면 사진 옵션만 더해 완성도를 높입니다."
+    description: "이름, 장소, 문구를 채우고 사진이 필요하면 사진 포함 발행권으로 한 번에 준비합니다."
   },
   {
     step: "03",
     title: "바로 발행 · 공유",
-    description: "무료 구성은 바로 발행하고, 옵션이 있으면 필요한 만큼만 결제해 링크로 보낼 수 있습니다."
+    description: "기본 구성은 무료로 발행하고, 사진이 포함되면 3,300원 발행권으로 마무리해 링크로 보낼 수 있습니다."
   }
 ];
 
 const pricing = [
   {
     badge: "무료",
-    title: "현재 디자인 전체",
-    price: "₩0",
+    title: "기본 청첩장",
+    price: "무료",
     items: [
       "현재 공개 템플릿 전부 무료",
-      "링크 · RSVP · 방명록 포함",
-      "부담 없이 바로 시작 가능"
+      "링크 공유 · 참석 여부 · 방명록 포함",
+      "사진 없이 바로 발행 가능"
     ]
   },
   {
-    badge: "옵션",
-    title: "사진 애드온",
-    price: "필요한 만큼",
+    badge: "유료",
+    title: "사진 포함 발행권",
+    price: "₩3,300",
     popular: true,
     items: [
-      "인물사진 추가 500원",
-      "배경사진 추가 500원",
-      "갤러리 10장당 1,000원"
+      "프로필 사진 포함",
+      "배경 사진 포함",
+      "갤러리 사진 전체 포함",
+      "한 번 구매로 초대장 1건 발행"
     ]
   }
 ];
@@ -75,21 +76,21 @@ export default function HomePage() {
 
       <section className="hero">
         <div className="hero-content">
-          <p className="hero-badge">지금 있는 디자인, 전부 무료</p>
+          <p className="hero-badge">기본 청첩장은 무료</p>
           <h1 className="hero-title">
-            예쁜 초대장,
+            무료로 만들고,
             <br />
-            지금은 무료로 시작
+            사진까지 담으면 3,300원
           </h1>
           <p className="hero-subtitle">
-            현재 공개된 디자인은 모두 무료예요.
+            기본 청첩장은 무료로 만들고 미리보기할 수 있어요.
             <br />
-            필요한 경우에만 사진 옵션을 더해, 부담 없이 시작하고 정성껏 완성해 보세요.
+            사진이 포함된 초대장을 발행할 때만 3,300원 발행권이 필요합니다.
           </p>
           <div className="hero-proof-list">
-            <span>현재 디자인 전부 무료</span>
-            <span>사진 옵션만 필요한 만큼</span>
-            <span>링크 · RSVP · 방명록 한 번에</span>
+            <span>기본 청첩장 무료</span>
+            <span>사진 포함 발행권 3,300원</span>
+            <span>링크 공유 · 참석 여부 · 방명록</span>
           </div>
           <div className="hero-btns">
             <Link className="btn-hero-primary" href="/builder">
@@ -131,10 +132,10 @@ export default function HomePage() {
           <h2 className="section-title">
             기본은 무료,
             <br />
-            필요한 만큼만 더하기
+            사진까지 담고 싶다면 3,300원
           </h2>
           <p className="section-sub">
-            초대장 자체는 무료로 만들고, 사진 옵션만 선택적으로 추가하는 방식으로 부담을 낮췄습니다.
+            기본 청첩장은 무료로 만들고, 사진이 포함된 초대장을 발행할 때만 3,300원 발행권을 사용합니다.
           </p>
           <div className="features-grid">
             {features.map((feature, index) => (
@@ -151,7 +152,7 @@ export default function HomePage() {
       <section className="process-section">
         <div className="section-inner">
           <p className="section-kicker">이렇게 진행돼요</p>
-          <h2 className="section-title">디자인 고르고, 내용 넣고, 원하는 옵션만</h2>
+          <h2 className="section-title">디자인 고르고, 내용 넣고, 바로 발행</h2>
           <div className="process-grid">
             {processSteps.map((step) => (
               <article className="process-card" key={step.step}>
@@ -167,8 +168,8 @@ export default function HomePage() {
       <section className="pricing-section" id="pricing">
         <div className="section-inner">
           <p className="section-kicker">요금 안내</p>
-          <h2 className="section-title">현재 디자인은 모두 무료예요</h2>
-          <p className="section-sub">나중에 새로 공개되는 특별 디자인만 유료로 운영하고, 지금은 사진 옵션만 추가 비용이 있습니다.</p>
+          <h2 className="section-title">무료로 시작하고, 사진이 들어가면 3,300원</h2>
+          <p className="section-sub">사진이 포함된 초대장을 발행할 때만 3,300원 발행권이 필요하며, 프로필·배경·갤러리 사진이 모두 포함됩니다.</p>
           <div className="pricing-grid">
             {pricing.map((plan) => (
               <article className={`price-card ${plan.popular ? "popular" : ""}`} key={plan.title}>

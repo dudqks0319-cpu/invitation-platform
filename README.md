@@ -50,6 +50,12 @@ KAKAOPAY_SECRET_KEY=
 
 그리고 `supabase/schema.sql`을 SQL Editor에서 실행합니다.
 
+## 인수인계 / 외부 서비스 설정
+
+다른 사람이나 AI가 바로 이어받아 작업하려면 아래 문서를 먼저 읽는 것이 좋습니다.
+
+- [handoff-setup-guide.md](/Users/jyb-m3max/Desktop/codex/invitation-platform/docs/handoff-setup-guide.md)
+
 ## 검증 명령
 
 ```bash

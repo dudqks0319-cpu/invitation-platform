@@ -6,22 +6,23 @@ import { openWebBuilder } from "@/lib/share";
 const pricingCards = [
   {
     badge: "무료",
-    title: "현재 디자인 전체",
-    price: "₩0",
+    title: "기본 청첩장",
+    price: "무료",
     items: [
       "현재 공개 템플릿 전부 무료",
-      "링크 · RSVP · 방명록 포함",
-      "부담 없이 바로 시작 가능"
+      "링크 공유 · 참석 여부 · 방명록 포함",
+      "사진 없이 바로 발행 가능"
     ]
   },
   {
-    badge: "옵션",
-    title: "사진 애드온",
-    price: "필요한 만큼",
+    badge: "유료",
+    title: "사진 포함 발행권",
+    price: "₩3,300",
     items: [
-      "인물사진 추가 500원",
-      "배경사진 추가 500원",
-      "갤러리 10장당 1,000원"
+      "프로필 사진 포함",
+      "배경 사진 포함",
+      "갤러리 사진 전체 포함",
+      "한 번 구매로 초대장 1건 발행"
     ]
   }
 ];
@@ -56,12 +57,12 @@ export function PricingCards() {
         요금 안내
       </Text>
       <Text style={{ color: theme.colors.text, fontSize: 24, fontWeight: "700", lineHeight: 34, textAlign: "center" }}>
-        현재 디자인은
+        기본은 무료,
         {"\n"}
-        모두 무료예요
+        사진까지 담고 싶다면 3,300원
       </Text>
       <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24, textAlign: "center" }}>
-        나중에 새로 공개되는 특별 디자인만 유료로 운영하고, 지금은 사진 옵션만 추가 비용이 있습니다.
+        기본 청첩장은 무료로 만들고, 사진이 포함된 초대장을 발행할 때만 3,300원 발행권을 사용합니다.
       </Text>
       <View style={{ gap: 12 }}>
         {pricingCards.map((item, index) => (
