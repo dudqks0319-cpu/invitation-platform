@@ -195,18 +195,7 @@ export function BuilderStudio({
     };
   }, []);
 
-  const hasRestrictedPaidChanges =
-    meta.status === "published" &&
-    paidSnapshotRef.current !== null &&
-    (
-      payload.templateId !== paidSnapshotRef.current.templateId ||
-      payload.mainImagePath !== paidSnapshotRef.current.mainImagePath ||
-      payload.backgroundImagePath !== paidSnapshotRef.current.backgroundImagePath ||
-      payload.galleryImagePaths.join("|") !== paidSnapshotRef.current.galleryImagePaths.join("|") ||
-      payload.mainImageUrl !== paidSnapshotRef.current.mainImageUrl ||
-      payload.backgroundImageUrl !== paidSnapshotRef.current.backgroundImageUrl ||
-      payload.galleryImages.join("|") !== paidSnapshotRef.current.galleryImages.join("|")
-    );
+  const hasRestrictedPaidChanges = false;
 
   useEffect(() => {
     if (!intentCheckout || checkoutIntentHandledRef.current || !supabase || !userId) {
@@ -715,12 +704,6 @@ export function BuilderStudio({
   const inputClassName = "modal-input";
   const currentStepMeta = getBuilderStep(currentStep);
   const lastStepIndex = BUILDER_STEPS.length - 1;
-  const publishButtonLabel =
-    meta.status === "published"
-      ? hasRestrictedPaidChanges
-        ? "재결제 후 재발행"
-        : "무료 수정 저장"
-      : "결제 후 발행";
 
   function moveStep(delta: number) {
     setCurrentStep((step) => clampBuilderStep(step + delta));
@@ -1074,20 +1057,15 @@ export function BuilderStudio({
               }}
               type="button"
             >
-              {publishButtonLabel}
+              {meta.status === "published" ? "공개 상태 다시 저장" : "무료 발행 페이지로 이동"}
             </button>
           </>
         ) : (
-          <p className="builder-help">마지막 단계에서 실제 화면 보기와 결제/발행을 진행할 수 있습니다.</p>
+          <p className="builder-help">마지막 단계에서 실제 화면 보기와 무료 발행을 진행할 수 있습니다.</p>
         )}
-        {meta.status === "published" && hasRestrictedPaidChanges ? (
-          <p className="form-message error">
-            템플릿 또는 이미지를 변경하면 재결제가 필요합니다. 체크아웃에서 결제 후 다시 발행됩니다.
-          </p>
-        ) : null}
         {meta.status && meta.status !== "draft" && meta.status !== "published" ? (
           <p className="form-message error">
-            현재 결제 상태: {meta.status}. 결제 완료 전까지 공개 링크는 활성화되지 않습니다.
+            현재 처리 상태: {meta.status}. 발행이 완료되기 전까지 공개 링크는 활성화되지 않습니다.
           </p>
         ) : null}
         <p className={`form-message ${messageType}`}>{message}</p>

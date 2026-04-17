@@ -9,7 +9,7 @@ describe("invitation pricing", () => {
     });
   });
 
-  it("charges a single photo-inclusive publish pass when any photo is added", () => {
+  it("stays free even when photos are added", () => {
     const payload = normalizeDraft({
       ...defaultInvitationDraft,
       mainImageUrl: "https://example.com/main.jpg",
@@ -19,7 +19,7 @@ describe("invitation pricing", () => {
     expect(getInvitationPricing(payload).amount).toBe(3300);
   });
 
-  it("keeps the same fixed price even when multiple gallery images exist", () => {
+  it("stays free even when multiple gallery images exist", () => {
     const payload = normalizeDraft({
       ...defaultInvitationDraft,
       galleryImages: Array.from({ length: 11 }, (_, index) => `https://example.com/${index}.jpg`)

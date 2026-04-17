@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  getFaqUrl,
   getInviteHubBaseUrl,
+  getPrivacyUrl,
   getPublicInvitationUrl,
+  getSupportUrl,
+  getTermsUrl,
   getWebBuilderUrl,
   getWebTemplatesUrl
 } from "./web-links";
@@ -32,5 +36,12 @@ describe("web-links", () => {
     expect(getPublicInvitationUrl("hello-world", "https://invitehub.co.kr/")).toBe(
       "https://invitehub.co.kr/i/hello-world"
     );
+  });
+
+  it("builds faq, support, and policy urls from one base url", () => {
+    expect(getFaqUrl("https://invitehub.co.kr/")).toBe("https://invitehub.co.kr/faq");
+    expect(getPrivacyUrl("https://invitehub.co.kr/")).toBe("https://invitehub.co.kr/privacy");
+    expect(getTermsUrl("https://invitehub.co.kr/")).toBe("https://invitehub.co.kr/terms");
+    expect(getSupportUrl("https://invitehub.co.kr/")).toBe("https://invitehub.co.kr/support");
   });
 });

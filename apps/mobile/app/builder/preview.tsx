@@ -14,7 +14,7 @@ import { getMobileInvitationPricing, requiresStorePurchase } from "@/lib/payment
 import { getPreviewFlowState } from "@/lib/preview-flow";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 import { openInvitationPublicPage, shareInvitationLink } from "@/lib/share";
-import { getInviteHubBaseUrl } from "@/lib/web-links";
+import { getInviteHubBaseUrl, getPublicInvitationUrl } from "@/lib/web-links";
 
 export default function BuilderPreviewScreen() {
   const { localId } = useLocalSearchParams<{ localId?: string }>();
@@ -41,13 +41,13 @@ export default function BuilderPreviewScreen() {
   const addOnLines = pricing.breakdown
     .filter((item) => item.amount > 0)
     .map((item) => `${item.label} ${item.amount.toLocaleString("ko-KR")}원`);
-  const statusLabel = draft?.payload.isPublished ? "공개 중" : requiresPurchase ? "결제 후 발행" : "비공개 초안";
+  const statusLabel = draft?.payload.isPublished ? "공개 중" : requiresPurchase ? "스토어 결제 후 발행" : "비공개 초안";
   const publishGuide = draft?.payload.isPublished
     ? "지금 공유 가능한 링크가 준비되어 있습니다."
     : requiresPurchase
-      ? "유료 옵션이 포함되어 있어 스토어 결제를 완료해야 발행됩니다."
+      ? "유료 옵션이 포함되어 있어 앱 스토어 결제를 완료해야 발행됩니다."
       : "필수 정보만 채우면 바로 공개 링크를 발행할 수 있습니다.";
-  const urlGuide = publicUrl || (requiresPurchase ? "결제 완료 후 자동 생성" : "서버 저장 후 자동 생성");
+  const urlGuide = publicUrl || (requiresPurchase ? "스토어 결제 완료 후 자동 생성" : "서버 저장 후 자동 생성");
   const missingItemsText = publishReadiness.missingFields.join(" · ");
 
   async function ensureDraftForPurchase() {
@@ -80,12 +80,6 @@ export default function BuilderPreviewScreen() {
       return;
     }
 
-    if (nextStatus === "published" && requiresPurchase) {
-      setError("유료 옵션이 포함되어 있어 스토어 결제를 완료해야 공개할 수 있습니다.");
-      setMessage("");
-      return;
-    }
-
     setPending(nextStatus === "published" ? "publish" : "save");
     setError("");
     setMessage("");
@@ -94,7 +88,7 @@ export default function BuilderPreviewScreen() {
       const nextDraft = await saveToCloud(user.id, nextStatus);
       setMessage(
         nextStatus === "published"
-          ? `공개 링크를 발행했습니다.\n${nextDraft.payload.share.slug ? `https://invitehub.co.kr/i/${nextDraft.payload.share.slug}` : ""}`
+          ? `공개 링크를 발행했습니다.\n${nextDraft.payload.share.slug ? getPublicInvitationUrl(nextDraft.payload.share.slug) : ""}`
           : "서버에 초안을 저장했습니다."
       );
     } catch (caught) {
@@ -133,7 +127,7 @@ export default function BuilderPreviewScreen() {
           <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>{message}</Text>
         </Card>
       ) : null}
-      <Card eyebrow="발행 흐름" title="미리보기 → 결제 → 발행 완료">
+      <Card eyebrow="발행 흐름" title="미리보기 → 스토어 결제 → 발행 완료">
         <View style={{ flexDirection: "row", gap: 10 }}>
           {flowState.steps.map((step, index) => {
             const isCurrent = step.status === "current";
@@ -386,7 +380,7 @@ export default function BuilderPreviewScreen() {
                 fontWeight: "700"
               }}
             >
-              {requiresPurchase ? `${pricing.amount.toLocaleString("ko-KR")}원 결제 필요` : "무료 발행 가능"}
+              {requiresPurchase ? `${pricing.amount.toLocaleString("ko-KR")}원 앱 결제 필요` : "무료 발행 가능"}
             </Text>
           </View>
         </View>
@@ -472,10 +466,10 @@ export default function BuilderPreviewScreen() {
           </View>
         </View>
       </Card>
-      <Card eyebrow="요금 안내" title={requiresPurchase ? "사진 포함 발행권" : "무료 발행"}>
+      <Card eyebrow="요금 안내" title={requiresPurchase ? "스토어 발행권" : "무료 발행"}>
         <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
           {requiresPurchase
-            ? `사진이 포함된 초대장을 발행하려면 ${pricing.amount.toLocaleString("ko-KR")}원 발행권이 필요합니다. 결제가 끝나면 프로필, 배경, 갤러리 사진을 포함해 자동으로 공개 링크가 발행됩니다.`
+            ? `사진이 포함된 초대장은 iOS에서는 Apple IAP, Android에서는 Google Play Billing으로 ${pricing.amount.toLocaleString("ko-KR")}원 결제 후 발행됩니다.`
             : "지금 선택한 구성은 무료입니다. 공개 링크를 바로 발행할 수 있습니다."}
         </Text>
         {addOnLines.length > 0 ? (
@@ -510,7 +504,7 @@ export default function BuilderPreviewScreen() {
             onBeforePurchase={ensureDraftForPurchase}
             onVerified={({ invitationId, slug }) => {
               applyRemotePublish(invitationId, slug);
-              setMessage(`스토어 결제가 완료되어 공개 링크를 발행했습니다.\nhttps://invitehub.co.kr/i/${slug}`);
+              setMessage(`스토어 결제가 완료되어 공개 링크를 발행했습니다.\n${getPublicInvitationUrl(slug)}`);
               setError("");
             }}
           />

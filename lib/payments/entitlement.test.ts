@@ -9,7 +9,7 @@ describe("payment entitlement", () => {
     expect(hasPaidChange(edited, original)).toBe(false);
   });
 
-  it("requires repurchase only for photo add-ons", () => {
+  it("requires repurchase for photo edits", () => {
     const original = defaultInvitationDraft;
     const edited = normalizeDraft({
       ...original,
@@ -18,6 +18,6 @@ describe("payment entitlement", () => {
     });
 
     expect(hasPaidChange(edited, original)).toBe(true);
-    expect(getPaidChangeLabels(edited, original)).toEqual(["인물사진 추가", "갤러리 10장 단위 추가"]);
+    expect(getPaidChangeLabels(edited, original)).toEqual(["사진 포함 발행권"]);
   });
 });

@@ -34,8 +34,8 @@ export default function PrivacyPage() {
               회원 가입 시 이메일 주소와 소셜 로그인 프로필 정보를 수집합니다.
             </p>
             <p style={{ marginBottom: 16 }}>
-              결제 시 구매자 이름, 이메일, 연락처를 수집하며 카드번호 등 민감한 결제정보는
-              카카오페이가 직접 처리합니다.
+              계정 삭제 요청, 문의 전달, 공개 링크 운영 과정에서 필요한 최소한의 연락 정보가
+              수집될 수 있습니다.
             </p>
             <p style={{ marginBottom: 16 }}>
               RSVP 제출 시 하객 이름, 연락처(선택), 참석 여부, 동행 인원, 메모를 수집합니다.
@@ -65,8 +65,7 @@ export default function PrivacyPage() {
             </h2>
             <p style={{ marginBottom: 24 }}>
               서비스는 이용자의 동의 없이 개인정보를 제3자에게 제공하지 않습니다. 다만 RSVP
-              정보는 해당 초대장 소유자에게 제공되고, 결제 처리를 위해 카카오페이에 필요한
-              최소한의 정보가 전달됩니다.
+              정보와 방명록 정보는 해당 초대장 소유자에게 전달됩니다.
             </p>
 
             <h2 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "28px 0 12px" }}>
@@ -80,7 +79,8 @@ export default function PrivacyPage() {
             <h2 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "28px 0 12px" }}>
               6. 문의처
             </h2>
-            <p style={{ marginBottom: 24 }}>support@invitehub.co.kr</p>
+            <p style={{ marginBottom: 8 }}>서비스 문의와 계정 관련 요청은 지원 페이지를 이용해 주세요.</p>
+            <p style={{ marginBottom: 24 }}><a href="/support">/support</a></p>
 
             <p style={{ color: "#999", fontSize: "0.82rem", marginTop: 40 }}>
               본 방침은 2026년 3월 25일부터 시행됩니다.

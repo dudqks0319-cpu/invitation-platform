@@ -1,5 +1,4 @@
 import type { InvitationDraftPayload } from "@/lib/invitation-payload";
-import { getGalleryBillingBlocks } from "@/lib/payments/pricing";
 
 export function hasPaidChange(current: InvitationDraftPayload, snapshot: InvitationDraftPayload | null) {
   if (!snapshot) {
@@ -15,26 +14,19 @@ export function getPaidChangeLabels(current: InvitationDraftPayload, snapshot: I
   }
 
   const labels: string[] = [];
+  const currentHasPhoto =
+    Boolean(current.mainImageUrl || current.mainImagePath) ||
+    Boolean(current.backgroundImageUrl || current.backgroundImagePath) ||
+    current.galleryImages.length > 0 ||
+    current.galleryImagePaths.length > 0;
+  const snapshotHasPhoto =
+    Boolean(snapshot.mainImageUrl || snapshot.mainImagePath) ||
+    Boolean(snapshot.backgroundImageUrl || snapshot.backgroundImagePath) ||
+    snapshot.galleryImages.length > 0 ||
+    snapshot.galleryImagePaths.length > 0;
 
-  if (
-    current.mainImageUrl !== snapshot.mainImageUrl ||
-    current.mainImagePath !== snapshot.mainImagePath
-  ) {
-    labels.push("인물사진 추가");
-  }
-
-  if (
-    current.backgroundImageUrl !== snapshot.backgroundImageUrl ||
-    current.backgroundImagePath !== snapshot.backgroundImagePath
-  ) {
-    labels.push("배경사진 추가");
-  }
-
-  const currentGalleryBlocks = getGalleryBillingBlocks(Math.max(current.galleryImages.length, current.galleryImagePaths.length));
-  const snapshotGalleryBlocks = getGalleryBillingBlocks(Math.max(snapshot.galleryImages.length, snapshot.galleryImagePaths.length));
-
-  if (currentGalleryBlocks !== snapshotGalleryBlocks) {
-    labels.push("갤러리 10장 단위 추가");
+  if (currentHasPhoto !== snapshotHasPhoto) {
+    labels.push("사진 포함 발행권");
   }
 
   return labels;

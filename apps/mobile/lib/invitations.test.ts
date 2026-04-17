@@ -46,9 +46,9 @@ describe("mobile publish pricing gate", () => {
     const pricing = getMobileInvitationPricing(payload);
     const access = getPublishAccess(payload);
 
-    expect(pricing.amount).toBe(500);
+    expect(pricing.amount).toBe(3300);
     expect(access.canPublishDirectly).toBe(false);
-    expect(access.paidItems).toContain("인물 사진 추가");
+    expect(access.paidItems).toContain("사진 포함 발행권");
   });
 
   it("rejects paid drafts before saving a published invitation", async () => {

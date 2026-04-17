@@ -4,6 +4,10 @@ export function getInviteHubBaseUrl(baseUrl = process.env.EXPO_PUBLIC_WEB_BASE_U
   return baseUrl.replace(/\/$/, "");
 }
 
+function buildPathUrl(path: string, baseUrl?: string) {
+  return new URL(path, `${getInviteHubBaseUrl(baseUrl)}/`).toString();
+}
+
 export function getWebTemplatesUrl(baseUrl?: string) {
   return `${getInviteHubBaseUrl(baseUrl)}/#templates`;
 }
@@ -34,5 +38,21 @@ export function getWebBuilderUrl(
 }
 
 export function getPublicInvitationUrl(slug: string, baseUrl?: string) {
-  return `${getInviteHubBaseUrl(baseUrl)}/i/${slug}`;
+  return buildPathUrl(`/i/${slug}`, baseUrl);
+}
+
+export function getFaqUrl(baseUrl?: string) {
+  return buildPathUrl("/faq", baseUrl);
+}
+
+export function getPrivacyUrl(baseUrl?: string) {
+  return buildPathUrl("/privacy", baseUrl);
+}
+
+export function getTermsUrl(baseUrl?: string) {
+  return buildPathUrl("/terms", baseUrl);
+}
+
+export function getSupportUrl(baseUrl?: string) {
+  return buildPathUrl("/support", baseUrl);
 }

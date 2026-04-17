@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import * as ExpoLinking from "expo-linking";
+import { getPrivacyUrl, getSupportUrl, getTermsUrl } from "@/lib/web-links";
 
 export function SiteFooter() {
   return (
@@ -16,9 +17,9 @@ export function SiteFooter() {
       <Text style={{ color: "#fff", fontSize: 20, fontWeight: "700", marginBottom: 12 }}>💌 InviteHub</Text>
       <View style={{ flexDirection: "row", gap: 24, marginVertical: 20 }}>
         {[
-          { label: "이용약관", url: "https://invitehub.co.kr/terms" },
-          { label: "개인정보처리방침", url: "https://invitehub.co.kr/privacy" },
-          { label: "문의하기", url: "mailto:support@invitehub.co.kr" }
+          { label: "이용약관", url: getTermsUrl() },
+          { label: "개인정보처리방침", url: getPrivacyUrl() },
+          { label: "지원", url: getSupportUrl() }
         ].map((item) => (
           <Pressable
             key={item.label}

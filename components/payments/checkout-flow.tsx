@@ -5,10 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { createBrowserClient } from "@/lib/supabase/browser";
 import { authDestination } from "@/lib/auth";
 import { LOCAL_DRAFT_KEY, createInvitationSlug, normalizeDraft, type InvitationDraftPayload } from "@/lib/invitation-payload";
-import { DEFAULT_WEB_PAYMENT_PROVIDER } from "@/lib/payments/config";
-import { getPaidChangeLabels, hasPaidChange } from "@/lib/payments/entitlement";
 import { getInvitationPricing } from "@/lib/payments/pricing";
-import { getPaymentProviderMeta, webPaymentProviders, type PaymentProvider } from "@/lib/payments/providers";
 
 type DraftMeta = {
   id?: string;
@@ -38,9 +35,6 @@ export function CheckoutFlow({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
-  const [selectedProvider, setSelectedProvider] = useState<PaymentProvider>(DEFAULT_WEB_PAYMENT_PROVIDER);
-  const [repurchaseRequired, setRepurchaseRequired] = useState(false);
-  const [repurchaseReasons, setRepurchaseReasons] = useState<string[]>([]);
   const [termsChecked, setTermsChecked] = useState(false);
   const [pricing, setPricing] = useState(() => getInvitationPricing(normalizeDraft({})));
 
@@ -98,13 +92,10 @@ export function CheckoutFlow({
 
         if (data) {
           const payload = normalizeDraft(data.payload);
-          const snapshot = data.paid_payload_snapshot ? normalizeDraft(data.paid_payload_snapshot) : null;
           setInvitationTitle(data.title);
           setPublicSlug(data.slug);
           setInvitationId(data.id);
           setPricing(getInvitationPricing(payload));
-          setRepurchaseRequired(Boolean(data.repurchase_required) || hasPaidChange(payload, snapshot));
-          setRepurchaseReasons(getPaidChangeLabels(payload, snapshot));
           return;
         }
       }
@@ -187,55 +178,35 @@ export function CheckoutFlow({
       return;
     }
 
+    if (!pricing.isFree) {
+      setError("유료 옵션이 포함된 초대장은 웹이 아니라 모바일 앱에서 스토어 결제로 발행해 주세요.");
+      return;
+    }
+
     setPending(true);
     setError("");
     setMessage("");
 
     try {
-      if (pricing.isFree) {
-        const response = await fetch("/api/payments/free-publish", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ invitationId })
-        });
-
-        const result = (await response.json()) as { success?: boolean; message?: string; slug?: string };
-
-        if (!response.ok || !result.success) {
-          throw new Error(result.message || "무료 발행에 실패했습니다.");
-        }
-
-        setPublicSlug(result.slug ?? "");
-        setMessage("무료 발행이 완료되었습니다.");
-        setPending(false);
-        return;
-      }
-
-      const response = await fetch("/api/payments/ready", {
+      const response = await fetch("/api/payments/free-publish", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({
-          provider: selectedProvider,
-          invitationId,
-          buyerName,
-          buyerEmail,
-          buyerPhone
-        })
+        body: JSON.stringify({ invitationId })
       });
 
-      const result = (await response.json()) as { success?: boolean; message?: string; redirectUrl?: string };
+      const result = (await response.json()) as { success?: boolean; message?: string; slug?: string };
 
-      if (!response.ok || !result.redirectUrl) {
-        throw new Error(result.message || "결제 준비에 실패했습니다.");
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "무료 발행에 실패했습니다.");
       }
 
-      window.location.assign(result.redirectUrl);
-    } catch (checkoutError) {
-      setError(checkoutError instanceof Error ? checkoutError.message : "결제 준비에 실패했습니다.");
+      setPublicSlug(result.slug ?? "");
+      setMessage("무료 발행이 완료되었습니다.");
+    } catch (publishError) {
+      setError(publishError instanceof Error ? publishError.message : "무료 발행에 실패했습니다.");
+    } finally {
       setPending(false);
     }
   }
@@ -243,12 +214,12 @@ export function CheckoutFlow({
   return (
     <div className="ops-card">
       <h1 className="section-title" style={{ textAlign: "left" }}>
-        {initialPaymentState === "success" ? "결제가 완료되었습니다" : "결제 후 발행"}
+        {initialPaymentState === "success" ? "발행이 완료되었습니다" : "무료 발행"}
       </h1>
       {initialPaymentState === "success" ? (
         <>
           <p className="ops-note" style={{ marginTop: "8px" }}>
-            결제가 성공적으로 끝났고 초대장이 자동 발행되었습니다.
+            초대장이 정상적으로 공개 링크로 발행되었습니다.
           </p>
           <div className="header-actions" style={{ marginTop: "20px" }}>
             <Link className="btn-primary" href={publicSlug ? `/invitations/${publicSlug}` : authDestination.dashboard}>
@@ -262,49 +233,12 @@ export function CheckoutFlow({
       ) : (
         <>
           <p className="ops-note" style={{ marginTop: "8px" }}>
-            현재 공개된 디자인은 모두 무료입니다. 인물사진, 배경사진, 갤러리처럼 필요한 옵션만 추가 비용으로 발행합니다.
+            무료 구성은 웹에서 바로 발행할 수 있고, 유료 옵션이 포함된 초대장은 모바일 앱에서 스토어 결제로 발행합니다.
           </p>
-          <div className="ops-card" style={{ marginTop: "18px", padding: "18px" }}>
-            <h3>결제 수단</h3>
-            <p className="ops-note" style={{ marginTop: "8px" }}>
-              웹에서는 카카오페이, 네이버페이, 카드, 계좌이체를 순차적으로 지원하고, 모바일 앱은 Apple/Google 스토어 결제를 사용합니다.
-            </p>
-            {!pricing.isFree ? (
-              <div style={{ display: "grid", gap: "10px", marginTop: "14px" }}>
-                {webPaymentProviders.map((provider) => {
-                  const meta = getPaymentProviderMeta(provider);
-                  const active = selectedProvider === provider;
-
-                  return (
-                    <button
-                      key={provider}
-                      onClick={() => setSelectedProvider(provider)}
-                      style={{
-                        textAlign: "left",
-                        borderRadius: "18px",
-                        border: active ? "2px solid var(--primary)" : "1px solid var(--border)",
-                        background: active ? "rgba(240,222,200,0.45)" : "#fff",
-                        padding: "16px 18px",
-                        cursor: "pointer"
-                      }}
-                      type="button"
-                    >
-                      <div style={{ fontWeight: 700, color: "var(--text-dark)" }}>{meta.label}</div>
-                      <div style={{ color: "var(--text-mid)", fontSize: "0.92rem", marginTop: "4px" }}>{meta.description}</div>
-                    </button>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="ops-note" style={{ marginTop: "14px" }}>
-                지금 선택은 무료 구성이어서 별도 결제 없이 바로 발행할 수 있습니다.
-              </p>
-            )}
-          </div>
           <div className="form-grid" style={{ marginTop: "24px" }}>
             <div className="data-form">
               <label>
-                결제 전 이름
+                발행 전 이름
                 <input className="modal-input" value={buyerName} onChange={(event) => setBuyerName(event.target.value)} placeholder="예: 홍길동" />
               </label>
               <label>
@@ -317,24 +251,28 @@ export function CheckoutFlow({
               </label>
               <label style={{ display: "flex", gap: "10px", alignItems: "center", marginTop: "12px" }}>
                 <input checked={termsChecked} onChange={(event) => setTermsChecked(event.target.checked)} type="checkbox" />
-                결제 및 발행 정책에 동의합니다.
+                발행 정책에 동의합니다.
               </label>
-              <button className="btn-primary form-submit" disabled={pending || !invitationId} onClick={handleCheckout} type="button">
-                {pending
-                  ? "결제 준비 중..."
-                  : pricing.isFree
-                    ? "무료로 발행하기"
-                  : repurchaseRequired
-                    ? `${getPaymentProviderMeta(selectedProvider).label}로 재결제`
-                    : `${getPaymentProviderMeta(selectedProvider).label}로 결제 후 발행`}
+              <button
+                className="btn-primary form-submit"
+                disabled={pending || !invitationId || !pricing.isFree}
+                onClick={handleCheckout}
+                type="button"
+              >
+                {pending ? "발행 중..." : pricing.isFree ? "무료로 발행하기" : "앱에서 스토어 결제 필요"}
               </button>
+              {!pricing.isFree ? (
+                <p className="ops-note" style={{ marginTop: "12px" }}>
+                  사진이 포함된 초대장은 웹 결제가 아니라 iOS Apple IAP / Android Play Billing으로 발행합니다.
+                </p>
+              ) : null}
             </div>
             <div className="ops-card">
               <h3>주문 요약</h3>
               <p className="ops-line">상품 <strong>{invitationTitle}</strong></p>
               <p className="ops-line">가격 <strong>₩{pricing.amount.toLocaleString("ko-KR")}</strong></p>
-              <p className="ops-line">선택 수단 <strong>{pricing.isFree ? "무료 발행" : getPaymentProviderMeta(selectedProvider).label}</strong></p>
-              <p className="ops-line">처리 방식 <strong>{pricing.isFree ? "즉시 발행" : "결제 후 자동 발행"}</strong></p>
+              <p className="ops-line">선택 수단 <strong>{pricing.isFree ? "무료 발행" : "앱 스토어 결제"}</strong></p>
+              <p className="ops-line">처리 방식 <strong>{pricing.isFree ? "즉시 발행" : "모바일 앱에서 결제 후 발행"}</strong></p>
               <div style={{ marginTop: "12px", display: "grid", gap: "6px" }}>
                 {pricing.breakdown.map((item) => (
                   <p className="ops-line" key={item.label}>
@@ -342,15 +280,11 @@ export function CheckoutFlow({
                   </p>
                 ))}
               </div>
-              {repurchaseRequired ? (
-                <p className="ops-note">
-                  재결제 필요 변경:
-                  <br />
-                  {repurchaseReasons.join(", ")}
-                </p>
-              ) : (
-                <p className="ops-note">텍스트/일시/장소/연락처/교통 안내 수정은 무료 반영됩니다.</p>
-              )}
+              <p className="ops-note">
+                {pricing.isFree
+                  ? "텍스트, 일정, 장소, 이미지, 교통 안내까지 무료로 반영됩니다."
+                  : "유료 옵션이 포함된 초대장은 웹이 아니라 모바일 앱에서 스토어 결제로 발행합니다."}
+              </p>
               {publicSlug ? (
                 <p className="ops-note" style={{ marginTop: "16px" }}>
                   예정 공개 링크: `/invitations/{publicSlug}`

@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { theme } from "@/components/ui/theme";
 import { useAuth } from "@/hooks/useAuth";
-import { getInviteHubBaseUrl } from "@/lib/web-links";
+import { getFaqUrl, getInviteHubBaseUrl, getPrivacyUrl, getSupportUrl, getTermsUrl } from "@/lib/web-links";
 
 export default function MyPageScreen() {
   const [error, setError] = useState("");
@@ -131,29 +131,29 @@ export default function MyPageScreen() {
           </Link>
         ) : null}
         <Button
-          accessibilityLabel="문의 메일 열기"
-          onPress={() => void openUrl("support", "mailto:support@invitehub.co.kr", "문의 메일 앱을 열었습니다.")}
+          accessibilityLabel="지원 페이지 열기"
+          onPress={() => void openUrl("support", getSupportUrl(), "지원 페이지를 열었습니다.")}
           variant="outline"
         >
-          {pendingAction === "support" ? "문의 열기 중..." : "문의하기"}
+          {pendingAction === "support" ? "지원 여는 중..." : "지원"}
         </Button>
         <Button
           accessibilityLabel="FAQ 열기"
-          onPress={() => void openUrl("faq", "https://invitehub.co.kr/faq", "FAQ 페이지를 열었습니다.")}
+          onPress={() => void openUrl("faq", getFaqUrl(), "FAQ 페이지를 열었습니다.")}
           variant="outline"
         >
           {pendingAction === "faq" ? "FAQ 여는 중..." : "FAQ"}
         </Button>
         <Button
           accessibilityLabel="개인정보처리방침 열기"
-          onPress={() => void openUrl("privacy", "https://invitehub.co.kr/privacy", "개인정보처리방침 페이지를 열었습니다.")}
+          onPress={() => void openUrl("privacy", getPrivacyUrl(), "개인정보처리방침 페이지를 열었습니다.")}
           variant="outline"
         >
           {pendingAction === "privacy" ? "페이지 여는 중..." : "개인정보처리방침"}
         </Button>
         <Button
           accessibilityLabel="이용약관 열기"
-          onPress={() => void openUrl("terms", "https://invitehub.co.kr/terms", "이용약관 페이지를 열었습니다.")}
+          onPress={() => void openUrl("terms", getTermsUrl(), "이용약관 페이지를 열었습니다.")}
           variant="outline"
         >
           {pendingAction === "terms" ? "페이지 여는 중..." : "이용약관"}

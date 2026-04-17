@@ -234,62 +234,6 @@ export function DashboardShell() {
     setMessage(approved ? "방명록을 승인했습니다." : "방명록을 비공개 상태로 변경했습니다.");
   }
 
-  async function requestRefund(item: DashboardItem) {
-    if (!supabase) {
-      return;
-    }
-
-    const reason = window.prompt("환불 사유를 입력해 주세요.", "고객 요청");
-    if (!reason) {
-      return;
-    }
-
-    const { data: payment, error: paymentError } = await supabase
-      .from("payments")
-      .select("id")
-      .eq("invitation_id", item.id)
-      .eq("status", "paid")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (paymentError || !payment) {
-      setMessage("환불 가능한 결제를 찾지 못했습니다.");
-      return;
-    }
-
-    const response = await fetch("/api/payments/kakaopay/cancel", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        paymentId: payment.id,
-        reason
-      })
-    });
-
-    const result = (await response.json()) as { message?: string };
-
-    if (!response.ok) {
-      setMessage(result.message || "환불 처리에 실패했습니다.");
-      return;
-    }
-
-    setItems((current) =>
-      current.map((entry) =>
-        entry.id === item.id
-          ? {
-              ...entry,
-              status: "refunded",
-              publishedAt: null
-            }
-          : entry
-      )
-    );
-    setMessage("환불이 처리되었습니다.");
-  }
-
   async function copyPublicLink(item: DashboardItem) {
     if (typeof window === "undefined") {
       return;
@@ -416,9 +360,6 @@ export function DashboardShell() {
               <p className="ops-line">카테고리 <strong>{item.category}</strong></p>
               <p className="ops-line">템플릿 <strong>{item.templateId}</strong></p>
               <p className="ops-line">조회 <strong>{item.viewCount ?? 0}</strong> · RSVP <strong>{item.rsvpCount ?? 0}</strong> · 방명록 <strong>{item.guestbookCount ?? 0}</strong></p>
-              {item.repurchaseRequired ? (
-                <p className="ops-note">사진 옵션 변경으로 추가 결제가 필요합니다.</p>
-              ) : null}
               <p className="ops-note">
                 생성일 {new Date(item.createdAt).toLocaleDateString("ko-KR")}
                 <br />
@@ -441,17 +382,12 @@ export function DashboardShell() {
                   </>
                 ) : (
                   <Link className="btn-primary" href={`/checkout?invitationId=${item.id}`}>
-                    결제/발행
+                    발행하기
                   </Link>
                 )}
                 <button className="btn-outline" onClick={() => setSelectedInvitationId(item.id)} type="button">
                   모더레이션
                 </button>
-                {item.status === "published" || item.status === "paid" ? (
-                  <button className="btn-outline" onClick={() => requestRefund(item)} type="button">
-                    전액 환불
-                  </button>
-                ) : null}
                 {(item.id === "local-draft" || canDeleteInvitation(item.status)) ? (
                   <button className="btn-outline" onClick={() => void deleteInvitation(item)} type="button">
                     삭제
