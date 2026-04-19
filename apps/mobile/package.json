@@ -5,7 +5,7 @@
   "overrides": {
     "@xmldom/xmldom": "0.8.12"
   },
-  "main": "expo-router/entry",
+  "main": "index.js",
   "scripts": {
     "start": "expo start",
     "ios": "expo run:ios",
