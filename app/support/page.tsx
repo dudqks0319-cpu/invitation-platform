@@ -39,7 +39,7 @@ export default function SupportPage() {
             </div>
             <div>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 12 }}>현재 서비스 범위</h2>
-              <p>현재 제출 버전은 무료 전용이며, 초대장 작성, 미리보기, 공개 링크 발행, RSVP, 방명록 기능을 제공합니다.</p>
+              <p>현재 제출 버전은 무료 초대장을 로그인 없이 시작할 수 있고, 사진이 포함된 유료 발행은 앱 스토어 결제로 진행합니다.</p>
             </div>
           </div>
         </section>

@@ -27,7 +27,7 @@ export default function FaqPage() {
             </div>
             <div>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 12 }}>로그인 없이 사용할 수 있나요?</h2>
-              <p>초기 탐색과 일부 미리보기는 로그인 없이 가능하지만, 서버 저장과 공개 링크 발행은 로그인 후 사용할 수 있습니다.</p>
+              <p>무료 작성과 무료 발행은 로그인 없이 시작할 수 있습니다. 유료 발행과 계정 관리가 필요한 경우에만 이메일 또는 소셜 로그인을 요청합니다.</p>
             </div>
             <div>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 12 }}>공개 링크는 어떻게 만드나요?</h2>

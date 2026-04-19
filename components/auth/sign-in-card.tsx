@@ -6,7 +6,7 @@ import { authDestination, normalizeNextPath } from "@/lib/auth";
 import { createBrowserClient } from "@/lib/supabase/browser";
 
 type AuthMode = "signin" | "signup";
-type SocialProvider = "google" | "kakao";
+type SocialProvider = "google" | "apple" | "kakao";
 
 function getOAuthRedirectUrl(nextPath: string) {
   const origin = typeof window !== "undefined" ? window.location.origin : "";
@@ -138,6 +138,14 @@ export function SignInCard({
         type="button"
       >
         Google로 계속
+      </button>
+      <button
+        className="btn-outline"
+        disabled={!isConfigured || pending}
+        onClick={() => handleOAuth("apple")}
+        type="button"
+      >
+        Apple로 계속
       </button>
       <button
         className="btn-kakao"

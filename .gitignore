@@ -23,3 +23,5 @@ public
 !app/api/public/
 !app/api/public/**
 src
+.vercel
+.env*.local

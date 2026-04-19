@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Screen } from "@/components/ui/Screen";
 import { theme } from "@/components/ui/theme";
+import { hasFullAccount } from "@/lib/auth-access";
 import { useAuth } from "@/hooks/useAuth";
 import { getFaqUrl, getInviteHubBaseUrl, getPrivacyUrl, getSupportUrl, getTermsUrl } from "@/lib/web-links";
 
@@ -14,7 +15,8 @@ export default function MyPageScreen() {
   const [message, setMessage] = useState("");
   const [pendingAction, setPendingAction] = useState<"" | "support" | "faq" | "privacy" | "terms" | "delete" | "logout">("");
   const { configMessage, configMissingKeys, configured, session, signOut, status, user } = useAuth();
-  const isAuthenticated = status === "authenticated";
+  const isAuthenticated = hasFullAccount(status === "authenticated" ? user : null);
+  const isGuestMode = status === "authenticated" && !isAuthenticated;
 
   async function openUrl(
     action: "support" | "faq" | "privacy" | "terms",
@@ -89,20 +91,22 @@ export default function MyPageScreen() {
           <Text style={{ color: theme.colors.primaryDark, lineHeight: 22 }}>{error}</Text>
         </Card>
       ) : null}
-      <Card eyebrow="계정" title={status === "authenticated" ? "로그인됨" : "로그인 전"}>
+      <Card eyebrow="계정" title={isAuthenticated ? "로그인됨" : isGuestMode ? "게스트 모드" : "로그인 전"}>
         <Text style={{ color: theme.colors.text, lineHeight: 22 }}>
-          {isAuthenticated ? user?.email ?? "이메일 정보 없음" : "아직 연결된 계정이 없습니다."}
+          {isAuthenticated ? user?.email ?? "이메일 정보 없음" : isGuestMode ? "무료 기능을 게스트 모드로 사용 중입니다." : "아직 연결된 계정이 없습니다."}
         </Text>
         <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>
           Supabase 설정: {configured ? "활성" : "비활성"}
         </Text>
         <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>
-          계정 상태: {isAuthenticated ? "원격 저장 · RSVP · 방명록 관리 가능" : "로컬 초안만 관리"}
+          계정 상태: {isAuthenticated ? "원격 저장 · RSVP · 방명록 관리 가능" : isGuestMode ? "무료 초대장 저장 · 발행 가능" : "로컬 초안만 관리"}
         </Text>
         <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>
           {isAuthenticated
             ? "지금은 서버 저장본을 불러오고 공개 링크를 발행할 수 있습니다."
-            : "로그인하면 기기 밖에서도 초대장을 이어서 수정할 수 있습니다."}
+            : isGuestMode
+              ? "유료 발행과 계정 삭제는 이메일 또는 소셜 로그인 후 사용할 수 있습니다."
+              : "로그인하면 유료 발행과 계정 관리를 사용할 수 있습니다."}
         </Text>
         <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>{configMessage}</Text>
         {!configured && configMissingKeys.length > 0 ? (
@@ -112,9 +116,9 @@ export default function MyPageScreen() {
         ) : null}
       </Card>
 
-      <Card eyebrow="요금제" title="v1.0은 무료 전용">
+      <Card eyebrow="요금제" title="무료로 시작 · 유료는 스토어 결제">
         <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
-          유료 업셀 없이 결혼식 초대장 핵심 기능을 먼저 완성합니다.
+          무료 초대장은 로그인 없이 시작할 수 있고, 사진이 포함된 유료 발행은 iOS IAP 또는 Google Play Billing으로 진행합니다.
         </Text>
       </Card>
 

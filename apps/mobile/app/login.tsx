@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/Card";
 import { ErrorView } from "@/components/ui/ErrorView";
 import { Loading } from "@/components/ui/Loading";
 import { Screen } from "@/components/ui/Screen";
+import { SocialSignInButton } from "@/components/ui/SocialSignInButton";
 import { theme } from "@/components/ui/theme";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -19,7 +20,7 @@ const inputStyle = {
   color: theme.colors.text
 } as const;
 
-type ActionKey = "email-sign-in" | "email-sign-up" | "apple" | "kakao";
+type ActionKey = "email-sign-in" | "email-sign-up" | "google" | "apple" | "kakao";
 type AuthActionResult = {
   error?: Error | { message?: string } | null;
   data?: { session?: unknown; user?: unknown } | { provider?: unknown; url?: string | null } | null;
@@ -27,10 +28,14 @@ type AuthActionResult = {
 
 export default function LoginScreen() {
   const {
-    authCallbackPath,
     configMessage,
     configMissingKeys,
     configured,
+    hasFullAccount,
+    isAnonymousSession,
+    nativeGoogleConfigured,
+    nativeKakaoConfigured,
+    signInWithGoogle,
     signInWithApple,
     signInWithKakao,
     signInWithPassword,
@@ -45,7 +50,6 @@ export default function LoginScreen() {
   const [pendingAction, setPendingAction] = useState<"" | ActionKey>("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const hasEmailCredentials = email.trim().length > 0 && password.trim().length > 0;
-  const isAuthenticated = status === "authenticated";
   const showDebugInfo = __DEV__;
 
   async function runAction(actionKey: ActionKey, action: () => Promise<AuthActionResult>) {
@@ -76,6 +80,8 @@ export default function LoginScreen() {
               ? "계정을 만들고 바로 로그인했습니다."
               : "계정을 만들었습니다. 이메일 인증이 필요하다면 메일함을 확인해 주세요."
           );
+        } else if (actionKey === "google") {
+          setMessage("Google 인증 창을 열었습니다. 인증을 마치고 앱으로 돌아오면 연결됩니다.");
         } else if (actionKey === "kakao") {
           setMessage("Kakao 인증 창을 열었습니다. 인증을 마치고 앱으로 돌아오면 연결됩니다.");
         } else if (actionKey === "apple") {
@@ -106,20 +112,22 @@ export default function LoginScreen() {
           <Text style={{ color: "#6a5645", lineHeight: 22 }}>{message}</Text>
         </Card>
       ) : null}
-      <Card eyebrow="현재 세션" title={status === "authenticated" ? "로그인됨" : "로그인이 필요합니다"}>
+      <Card eyebrow="현재 세션" title={hasFullAccount ? "로그인됨" : isAnonymousSession ? "게스트 모드" : "로그인이 필요합니다"}>
         <Text style={{ color: "#5b4a3b", lineHeight: 22 }}>
-          {status === "authenticated"
+          {hasFullAccount
             ? user?.email ?? "사용자 정보 없음"
+            : isAnonymousSession
+              ? "무료 기능은 게스트 모드로 사용할 수 있습니다."
             : configured
               ? "아직 연결된 계정이 없습니다. 이메일 또는 소셜 로그인을 선택해 주세요."
               : "Supabase 설정이 없어서 현재는 둘러보기 전용 상태입니다."}
         </Text>
         <Text style={{ color: "#766452", lineHeight: 22, marginTop: 8 }}>
-          현재 상태: {isAuthenticated ? "원격 저장과 운영 데이터 동기화 가능" : "로컬 초안만 생성 가능"}
+          현재 상태: {hasFullAccount ? "원격 저장과 유료 발행 가능" : "무료 작성과 게스트 저장 가능"}
         </Text>
         {showDebugInfo ? (
           <Text style={{ color: "#8d5a2b", lineHeight: 22, marginTop: 8 }}>
-            Kakao OAuth callback: {authCallbackPath}
+            Native auth: Google {nativeGoogleConfigured ? "on" : "off"} / Kakao {nativeKakaoConfigured ? "on" : "off"}
           </Text>
         ) : null}
         {showDebugInfo && !configured && configMissingKeys.length > 0 ? (
@@ -129,7 +137,7 @@ export default function LoginScreen() {
         ) : null}
       </Card>
 
-      {isAuthenticated ? (
+      {hasFullAccount ? (
         <Card eyebrow="다음 단계" title="이제 내 초대장을 관리할 수 있습니다">
           <Text style={{ color: "#6a5645", lineHeight: 22 }}>
             로그인 세션이 연결되었습니다. 내 초대장 화면에서 저장본과 RSVP, 방명록, 통계를 확인할 수 있습니다.
@@ -153,114 +161,122 @@ export default function LoginScreen() {
         </Card>
       ) : null}
 
-      {!isAuthenticated ? (
+      {!hasFullAccount ? (
         <Card eyebrow="이메일 로그인" title="기본 인증">
-        <TextInput
-          autoCapitalize="none"
-          keyboardType="email-address"
-          onChangeText={setEmail}
-          placeholder="example@email.com"
-          style={inputStyle}
-          value={email}
-        />
-        <View
-          style={[
-            inputStyle,
-            {
-              marginTop: 12,
-              flexDirection: "row",
-              alignItems: "center",
-              paddingHorizontal: 0
-            }
-          ]}
-        >
           <TextInput
-            onChangeText={setPassword}
-            placeholder="비밀번호"
-            secureTextEntry={!passwordVisible}
-            style={{
-              flex: 1,
-              minHeight: 48,
-              paddingHorizontal: 14,
-              color: theme.colors.text
-            }}
-            value={password}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            onChangeText={setEmail}
+            placeholder="example@email.com"
+            style={inputStyle}
+            value={email}
           />
-          <Pressable
-            accessibilityLabel={passwordVisible ? "비밀번호 숨기기" : "비밀번호 보기"}
-            onPress={() => setPasswordVisible((current) => !current)}
-            style={{
-              minHeight: 48,
-              paddingHorizontal: 14,
-              alignItems: "center",
-              justifyContent: "center"
-            }}
+          <View
+            style={[
+              inputStyle,
+              {
+                marginTop: 12,
+                flexDirection: "row",
+                alignItems: "center",
+                paddingHorizontal: 0
+              }
+            ]}
           >
-            <Text style={{ color: theme.colors.primaryDark, fontWeight: "700" }}>
-              {passwordVisible ? "숨기기" : "보기"}
-            </Text>
-          </Pressable>
-        </View>
-        <View style={{ marginTop: 12 }}>
-          <Button
-            accessibilityLabel="이메일로 로그인"
-            onPress={
-              configured && pendingAction === ""
-                ? () => void runAction("email-sign-in", () => signInWithPassword(email, password))
-                : undefined
-            }
-          >
-            {pendingAction === "email-sign-in" ? "로그인 중..." : "이메일로 로그인"}
-          </Button>
-        </View>
-        <View style={{ marginTop: 10 }}>
-          <Button
-            accessibilityLabel="이메일로 계정 생성"
-            onPress={
-              configured && pendingAction === ""
-                ? () => void runAction("email-sign-up", () => signUpWithPassword(email, password))
-                : undefined
-            }
-            variant="outline"
-          >
-            {pendingAction === "email-sign-up" ? "계정 생성 중..." : "이메일 계정 만들기"}
-          </Button>
-        </View>
-        <Text style={{ color: "#766452", lineHeight: 22, marginTop: 10 }}>
-          처음 사용하는 이메일이면 가입 버튼으로 계정을 만든 뒤 바로 로그인 상태를 확인합니다.
-        </Text>
+            <TextInput
+              onChangeText={setPassword}
+              placeholder="비밀번호"
+              secureTextEntry={!passwordVisible}
+              style={{
+                flex: 1,
+                minHeight: 48,
+                paddingHorizontal: 14,
+                color: theme.colors.text
+              }}
+              value={password}
+            />
+            <Pressable
+              accessibilityLabel={passwordVisible ? "비밀번호 숨기기" : "비밀번호 보기"}
+              onPress={() => setPasswordVisible((current) => !current)}
+              style={{
+                minHeight: 48,
+                paddingHorizontal: 14,
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+            >
+              <Text style={{ color: theme.colors.primaryDark, fontWeight: "700" }}>
+                {passwordVisible ? "숨기기" : "보기"}
+              </Text>
+            </Pressable>
+          </View>
+          <View style={{ marginTop: 12 }}>
+            <Button
+              accessibilityLabel="이메일로 로그인"
+              onPress={
+                configured && pendingAction === ""
+                  ? () => void runAction("email-sign-in", () => signInWithPassword(email, password))
+                  : undefined
+              }
+            >
+              {pendingAction === "email-sign-in" ? "로그인 중..." : "이메일로 로그인"}
+            </Button>
+          </View>
+          <View style={{ marginTop: 10 }}>
+            <Button
+              accessibilityLabel="이메일로 계정 생성"
+              onPress={
+                configured && pendingAction === ""
+                  ? () => void runAction("email-sign-up", () => signUpWithPassword(email, password))
+                  : undefined
+              }
+              variant="outline"
+            >
+              {pendingAction === "email-sign-up" ? "계정 생성 중..." : "이메일 계정 만들기"}
+            </Button>
+          </View>
+          <Text style={{ color: "#766452", lineHeight: 22, marginTop: 10 }}>
+            처음 사용하는 이메일이면 가입 버튼으로 계정을 만든 뒤 바로 로그인 상태를 확인합니다.
+          </Text>
         </Card>
       ) : null}
 
-      {!isAuthenticated ? (
-        <Card eyebrow="소셜 로그인" title="Apple · Kakao">
-        <View style={{ gap: 12 }}>
-          <Button
-            accessibilityLabel="Apple로 로그인"
-            onPress={
-              configured && pendingAction === ""
-                ? () => void runAction("apple", signInWithApple)
-                : undefined
-            }
-            variant="outline"
-          >
-            {pendingAction === "apple" ? "Apple 로그인 중..." : "Apple로 로그인"}
-          </Button>
-          <Button
-            accessibilityLabel="Kakao로 로그인"
-            onPress={
-              configured && pendingAction === ""
-                ? () => void runAction("kakao", signInWithKakao)
-                : undefined
-            }
-            variant="outline"
-          >
-            {pendingAction === "kakao" ? "Kakao 로그인 중..." : "Kakao로 로그인"}
-          </Button>
-        </View>
-        <Text style={{ color: "#766452", lineHeight: 22, marginTop: 10 }}>
-          Kakao 로그인 후 브라우저에서 앱으로 돌아오면 내 초대장 탭으로 연결됩니다.
-        </Text>
+      {!hasFullAccount ? (
+        <Card eyebrow="소셜 로그인" title="Google · Apple · Kakao">
+          <View style={{ gap: 12 }}>
+            <SocialSignInButton
+              accessibilityLabel="Google로 로그인"
+              loadingLabel={pendingAction === "google" ? "Google 로그인 중..." : "Google로 계속하기"}
+              onPress={
+                configured && pendingAction === ""
+                  ? () => void runAction("google", signInWithGoogle)
+                  : undefined
+              }
+              provider="google"
+            />
+            <SocialSignInButton
+              accessibilityLabel="Apple로 로그인"
+              loadingLabel={pendingAction === "apple" ? "Apple 로그인 중..." : "Apple로 계속하기"}
+              onPress={
+                configured && pendingAction === ""
+                  ? () => void runAction("apple", signInWithApple)
+                  : undefined
+              }
+              provider="apple"
+            />
+            <SocialSignInButton
+              accessibilityLabel="Kakao로 로그인"
+              loadingLabel={pendingAction === "kakao" ? "Kakao 로그인 중..." : "Kakao로 계속하기"}
+              onPress={
+                configured && pendingAction === ""
+                  ? () => void runAction("kakao", signInWithKakao)
+                  : undefined
+              }
+              provider="kakao"
+            />
+          </View>
+          <Text style={{ color: "#766452", lineHeight: 22, marginTop: 10 }}>
+            Google, Apple, Kakao 인증 후 앱으로 돌아오면 내 초대장 탭으로 연결됩니다.
+          </Text>
         </Card>
       ) : null}
 

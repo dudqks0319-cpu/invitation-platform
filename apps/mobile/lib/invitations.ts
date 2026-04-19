@@ -96,6 +96,45 @@ export function toLegacyInvitationPayload(payload: InvitationPayload) {
   };
 }
 
+export async function publishGuestInvitation(draft: MobileInvitationDraft) {
+  const slug = ensureSlug(draft.payload);
+  const payload = toLegacyInvitationPayload({
+    ...draft.payload,
+    share: {
+      ...draft.payload.share,
+      slug
+    },
+    isPublished: true
+  });
+
+  const response = await fetch(`${getInviteHubBaseUrl()}/api/public/guest-publish`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      payload,
+      website: ""
+    })
+  });
+
+  const result = (await response.json().catch(() => ({}))) as {
+    success?: boolean;
+    message?: string;
+    invitationId?: string;
+    slug?: string;
+  };
+
+  if (!response.ok || !result.success || !result.invitationId || !result.slug) {
+    throw new Error(result.message || "무료 게스트 발행에 실패했습니다.");
+  }
+
+  return {
+    invitationId: result.invitationId,
+    slug: result.slug
+  };
+}
+
 async function uploadPendingPhoto(
   photo: PendingPhotoUpload,
   userId: string,

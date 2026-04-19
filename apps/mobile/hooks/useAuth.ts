@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import * as AppleAuthentication from "expo-apple-authentication";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import { login as loginWithKakaoNative, logout as logoutFromKakaoNative } from "@react-native-kakao/user";
 import * as WebBrowser from "expo-web-browser";
 import type { Session, User } from "@supabase/supabase-js";
+import { Platform } from "react-native";
 import {
   getAuthRedirectUrl,
   getSupabaseConfigMessage,
@@ -9,6 +12,8 @@ import {
   supabase,
   supabaseConfigMissingKeys
 } from "@/lib/supabase";
+import { hasFullAccount as userHasFullAccount, isAnonymousUser } from "@/lib/auth-access";
+import { isNativeGoogleConfigured, isNativeKakaoConfigured, nativeAuthConfig } from "@/lib/auth-native-config";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -52,10 +57,48 @@ export function useAuth() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isNativeGoogleConfigured()) {
+      return;
+    }
+
+    GoogleSignin.configure({
+      iosClientId: nativeAuthConfig.googleIosClientId || undefined,
+      webClientId: nativeAuthConfig.googleWebClientId || undefined
+    });
+  }, []);
+
   return useMemo(
     () => ({
       configured: isSupabaseConfigured,
       session,
+      signInWithGoogle: async () => {
+        if (!supabase) {
+          return { error: new Error("Supabase 환경 변수가 없어 Google 로그인을 시작할 수 없습니다.") };
+        }
+
+        if (!isNativeGoogleConfigured()) {
+          return {
+            error: new Error("Google 네이티브 로그인을 사용하려면 Google 클라이언트 ID 설정이 필요합니다.")
+          };
+        }
+
+        if (Platform.OS === "android") {
+          await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+        }
+
+        const result = await GoogleSignin.signIn();
+        if (result.type !== "success") {
+          return { error: new Error("Google 로그인이 취소되었습니다.") };
+        }
+
+        const tokens = await GoogleSignin.getTokens();
+        return supabase.auth.signInWithIdToken({
+          provider: "google",
+          token: tokens.idToken,
+          access_token: tokens.accessToken
+        });
+      },
       signInWithApple: async () => {
         if (!supabase) {
           return { error: new Error("Supabase 환경 변수가 없어 Apple 로그인을 시작할 수 없습니다.") };
@@ -90,21 +133,40 @@ export function useAuth() {
           return { error: new Error("Supabase 환경 변수가 없어 Kakao 로그인을 시작할 수 없습니다.") };
         }
 
-        const redirectTo = getAuthRedirectUrl();
-        const response = await supabase.auth.signInWithOAuth({
-          provider: "kakao",
-          options: {
-            redirectTo,
-            skipBrowserRedirect: true
-          } as never
-        });
-
-        if (response.error || !response.data?.url) {
-          return response;
+        if (!isNativeKakaoConfigured()) {
+          return {
+            error: new Error("Kakao 네이티브 로그인을 사용하려면 Kakao Native App Key 설정이 필요합니다.")
+          };
         }
 
-        await WebBrowser.openAuthSessionAsync(response.data.url, redirectTo);
-        return response;
+        const result = await loginWithKakaoNative();
+        if (!result.idToken) {
+          return { error: new Error("카카오 ID 토큰을 받지 못했습니다.") };
+        }
+
+        return supabase.auth.signInWithIdToken({
+          provider: "kakao",
+          token: result.idToken,
+          access_token: result.accessToken
+        });
+      },
+      ensureAnonymousSession: async () => {
+        if (!supabase) {
+          return { error: new Error("Supabase 환경 변수가 없어 게스트 세션을 시작할 수 없습니다.") };
+        }
+
+        const currentSession = await supabase.auth.getSession();
+        if (currentSession.data.session?.user) {
+          return {
+            data: {
+              session: currentSession.data.session,
+              user: currentSession.data.session.user
+            },
+            error: null
+          };
+        }
+
+        return supabase.auth.signInAnonymously();
       },
       signInWithPassword: async (email: string, password: string) => {
         if (!supabase) {
@@ -125,14 +187,22 @@ export function useAuth() {
           return { error: null };
         }
 
+        await Promise.allSettled([
+          GoogleSignin.signOut(),
+          logoutFromKakaoNative()
+        ]);
         return supabase.auth.signOut();
       },
       configMessage: getSupabaseConfigMessage(),
       configMissingKeys: supabaseConfigMissingKeys,
+      hasFullAccount: status === "authenticated" && userHasFullAccount(user),
+      isAnonymousSession: status === "authenticated" && isAnonymousUser(user),
       isAuthenticated: status === "authenticated",
       status,
       user,
-      authCallbackPath: getAuthRedirectUrl()
+      authCallbackPath: getAuthRedirectUrl(),
+      nativeGoogleConfigured: isNativeGoogleConfigured(),
+      nativeKakaoConfigured: isNativeKakaoConfigured()
     }),
     [session, status, user]
   );

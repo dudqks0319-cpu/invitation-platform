@@ -9,18 +9,28 @@ import { Loading } from "@/components/ui/Loading";
 import { Screen } from "@/components/ui/Screen";
 import { theme } from "@/components/ui/theme";
 import { useAuth } from "@/hooks/useAuth";
+import { getPaidPublishBlockReason, getRemoteAccessMode, hasFullAccount } from "@/lib/auth-access";
 import { mobileTemplateGallery } from "@/lib/template-gallery";
 import { getMobileInvitationPricing, requiresStorePurchase } from "@/lib/payments/pricing";
 import { getPreviewFlowState } from "@/lib/preview-flow";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 import { openInvitationPublicPage, shareInvitationLink } from "@/lib/share";
 import { getInviteHubBaseUrl, getPublicInvitationUrl } from "@/lib/web-links";
+import { getBundledTemplatePreviewSource } from "@/lib/template-preview-source";
+import { publishGuestInvitation } from "@/lib/invitations";
 
 export default function BuilderPreviewScreen() {
   const { localId } = useLocalSearchParams<{ localId?: string }>();
   const { applyRemotePublish, canShare, draft, loading, publicUrl, publishReadiness, saveToCloud } =
     useInvitationDraft("local-preview-owner", localId);
-  const { configMessage, configured, session, status, user } = useAuth();
+  const {
+    configMessage,
+    configured,
+    ensureAnonymousSession,
+    session,
+    status,
+    user
+  } = useAuth();
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState<"" | "save" | "publish" | "share">("");
@@ -29,11 +39,17 @@ export default function BuilderPreviewScreen() {
     : "";
   const shareSlug = draft?.payload.share.slug ?? "";
   const selectedTemplate = draft ? mobileTemplateGallery.find((item) => item.id === draft.payload.templateId) : null;
-  const previewImage = selectedTemplate?.previewPath
-    ? { uri: `${getInviteHubBaseUrl()}${selectedTemplate.previewPath}` }
-    : undefined;
+  const bundledPreviewImage = selectedTemplate ? getBundledTemplatePreviewSource(selectedTemplate.id) : null;
+  const previewImage = bundledPreviewImage ?? (
+    selectedTemplate?.previewPath
+      ? { uri: `${getInviteHubBaseUrl()}${selectedTemplate.previewPath}` }
+      : undefined
+  );
   const pricing = draft ? getMobileInvitationPricing(draft.payload) : { amount: 0, breakdown: [], isFree: true };
   const requiresPurchase = draft ? requiresStorePurchase(draft.payload) : false;
+  const remoteAccessMode = getRemoteAccessMode(status, user);
+  const canUsePaidAccount = remoteAccessMode === "full-account";
+  const paidPublishBlockReason = getPaidPublishBlockReason(status, user);
   const flowState = getPreviewFlowState({
     isPublished: Boolean(draft?.payload.isPublished),
     requiresPurchase
@@ -45,32 +61,53 @@ export default function BuilderPreviewScreen() {
   const publishGuide = draft?.payload.isPublished
     ? "지금 공유 가능한 링크가 준비되어 있습니다."
     : requiresPurchase
-      ? "유료 옵션이 포함되어 있어 앱 스토어 결제를 완료해야 발행됩니다."
-      : "필수 정보만 채우면 바로 공개 링크를 발행할 수 있습니다.";
+      ? "유료 옵션이 포함되어 있어 이메일 또는 소셜 로그인 후 앱 스토어 결제를 완료해야 발행됩니다."
+      : "필수 정보만 채우면 로그인 없이 게스트로 공개 링크를 발행할 수 있습니다.";
   const urlGuide = publicUrl || (requiresPurchase ? "스토어 결제 완료 후 자동 생성" : "서버 저장 후 자동 생성");
   const missingItemsText = publishReadiness.missingFields.join(" · ");
 
-  async function ensureDraftForPurchase() {
+  async function resolveRemoteUser(requireFullAccount = false) {
     if (!configured) {
       throw new Error(configMessage);
     }
 
-    if (status !== "authenticated" || !user?.id) {
-      throw new Error("로그인 후 서버 저장을 진행할 수 있습니다.");
+    if (remoteAccessMode === "loading") {
+      throw new Error("로그인 상태를 확인하는 중입니다.");
     }
 
-    const nextDraft = await saveToCloud(user.id, "draft");
+    if (status === "authenticated" && user?.id) {
+      if (requireFullAccount && !hasFullAccount(user)) {
+        throw new Error(paidPublishBlockReason);
+      }
+
+      return {
+        userId: user.id
+      };
+    }
+
+    const guestSession = await ensureAnonymousSession();
+    if (guestSession.error || !guestSession.data?.user?.id) {
+      throw new Error(guestSession.error?.message || "게스트 세션을 시작하지 못했습니다.");
+    }
+
+    if (requireFullAccount) {
+      throw new Error(paidPublishBlockReason);
+    }
+
+    return {
+      userId: guestSession.data.user.id
+    };
+  }
+
+  async function ensureDraftForPurchase() {
+    const { userId } = await resolveRemoteUser(true);
+    const nextDraft = await saveToCloud(userId, "draft");
     return { invitationId: nextDraft.serverId ?? "" };
   }
 
   async function handleSave(nextStatus: "draft" | "published") {
     if (!configured) {
       setError(configMessage);
-      return;
-    }
-
-    if (status !== "authenticated" || !user?.id) {
-      setError("로그인 후 서버 저장을 진행할 수 있습니다.");
       return;
     }
 
@@ -85,7 +122,24 @@ export default function BuilderPreviewScreen() {
     setMessage("");
 
     try {
-      const nextDraft = await saveToCloud(user.id, nextStatus);
+      if (remoteAccessMode !== "full-account" && nextStatus === "draft") {
+        setMessage("이 기기에 초안을 저장했습니다.");
+        return;
+      }
+
+      if (remoteAccessMode !== "full-account" && nextStatus === "published") {
+        if (!draft) {
+          throw new Error("발행할 초안이 없습니다.");
+        }
+
+        const result = await publishGuestInvitation(draft);
+        applyRemotePublish(result.invitationId, result.slug);
+        setMessage(`공개 링크를 발행했습니다.\n${getPublicInvitationUrl(result.slug)}`);
+        return;
+      }
+
+      const { userId } = await resolveRemoteUser(false);
+      const nextDraft = await saveToCloud(userId, nextStatus);
       setMessage(
         nextStatus === "published"
           ? `공개 링크를 발행했습니다.\n${nextDraft.payload.share.slug ? getPublicInvitationUrl(nextDraft.payload.share.slug) : ""}`
@@ -490,12 +544,12 @@ export default function BuilderPreviewScreen() {
       <View style={{ gap: 12 }}>
         {requiresPurchase ? (
           <StorePurchaseCard
-            accessToken={session?.access_token}
+            accessToken={canUsePaidAccount ? session?.access_token : ""}
             disabledReason={
               !configured
                 ? configMessage
-                : status !== "authenticated"
-                  ? "로그인 후 스토어 결제를 사용할 수 있습니다."
+                : paidPublishBlockReason
+                  ? paidPublishBlockReason
                   : !publishReadiness.canPublish
                     ? `공개 전 필요 항목: ${publishReadiness.missingFields.join(", ")}`
                     : ""
@@ -520,12 +574,14 @@ export default function BuilderPreviewScreen() {
           >
             <Button
               accessibilityLabel="공개 링크 발행"
-              onPress={() => void handleSave("published")}
+              onPress={remoteAccessMode === "loading" ? undefined : () => void handleSave("published")}
             >
               {pending === "publish"
                 ? "발행 중..."
                 : !configured
                   ? "Supabase 설정 필요"
+                  : remoteAccessMode === "loading"
+                    ? "세션 확인 중..."
                   : draft?.payload.isPublished
                     ? "공개 상태 다시 저장"
                     : "공개 링크 발행"}
@@ -541,16 +597,16 @@ export default function BuilderPreviewScreen() {
           <View style={{ flex: 1.3 }}>
             <Button
               accessibilityLabel="서버에 초안 저장"
-              onPress={() => void handleSave("draft")}
+              onPress={remoteAccessMode === "loading" ? undefined : () => void handleSave("draft")}
               variant="outline"
             >
               {pending === "save"
                 ? "저장 중..."
                 : !configured
                   ? "설정 필요"
-                  : status === "authenticated"
-                    ? "초안 저장"
-                    : "로그인 후 저장"}
+                  : remoteAccessMode === "loading"
+                    ? "세션 확인 중..."
+                  : "초안 저장"}
             </Button>
           </View>
         </View>

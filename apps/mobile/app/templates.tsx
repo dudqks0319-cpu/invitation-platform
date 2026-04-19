@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/Button";
 import { Pill } from "@/components/ui/Pill";
 import { theme } from "@/components/ui/theme";
 import { useAuth } from "@/hooks/useAuth";
+import { getDraftOwnerId } from "@/lib/auth-access";
 import { createAndPersistDraft } from "@/lib/drafts";
 import { mobileTemplateCategories, mobileTemplateGallery, type MobileTemplateGalleryItem } from "@/lib/template-gallery";
 import { getInviteHubBaseUrl } from "@/lib/web-links";
+import { getBundledTemplatePreviewSource } from "@/lib/template-preview-source";
 
 function getTemplatePreviewUrl(template: MobileTemplateGalleryItem) {
   if (!template.previewPath) return null;
@@ -17,10 +19,20 @@ function getTemplatePreviewUrl(template: MobileTemplateGalleryItem) {
   return `${getInviteHubBaseUrl()}${template.previewPath}`;
 }
 
+function getTemplatePreviewSource(template: MobileTemplateGalleryItem) {
+  const bundledSource = getBundledTemplatePreviewSource(template.id);
+  if (bundledSource) {
+    return bundledSource;
+  }
+
+  const imageUrl = getTemplatePreviewUrl(template);
+  return imageUrl ? { uri: imageUrl } : null;
+}
+
 export default function TemplatesScreen() {
   const router = useRouter();
   const { status, user } = useAuth();
-  const draftOwnerId = status === "authenticated" && user?.id ? user.id : "local-preview-owner";
+  const draftOwnerId = getDraftOwnerId(status === "authenticated" ? user : null);
   const [category, setCategory] = useState<string>(mobileTemplateCategories[0].key);
 
   const filteredTemplates = useMemo(
@@ -86,7 +98,7 @@ export default function TemplatesScreen() {
 
         <View style={{ gap: 18 }}>
           {filteredTemplates.map((template) => {
-            const imageUrl = getTemplatePreviewUrl(template);
+            const previewSource = getTemplatePreviewSource(template);
             return (
               <View
                 key={template.id}
@@ -112,9 +124,9 @@ export default function TemplatesScreen() {
                     justifyContent: "center"
                   }}
                 >
-                  {imageUrl ? (
+                  {previewSource ? (
                     <Image
-                      source={{ uri: imageUrl }}
+                      source={previewSource}
                       style={{ width: "100%", height: "100%", borderRadius: 22 }}
                       resizeMode="cover"
                     />

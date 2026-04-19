@@ -6,13 +6,14 @@ import { ProcessSteps } from "@/components/home/ProcessSteps";
 import { PricingCards } from "@/components/home/PricingCards";
 import { SiteFooter } from "@/components/home/SiteFooter";
 import { theme } from "@/components/ui/theme";
+import { getDraftOwnerId } from "@/lib/auth-access";
 import { createAndPersistDraft } from "@/lib/drafts";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function HomeScreen() {
   const router = useRouter();
   const { status, user } = useAuth();
-  const draftOwnerId = status === "authenticated" && user?.id ? user.id : "local-preview-owner";
+  const draftOwnerId = getDraftOwnerId(status === "authenticated" ? user : null);
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
