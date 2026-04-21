@@ -4,7 +4,7 @@ export function SiteFooter() {
   return (
     <footer className="site-footer-bottom">
       <div className="footer-inner">
-        <div className="footer-logo">💌 InviteHub</div>
+        <div className="footer-logo">invite</div>
         <p>소중한 순간을 더욱 특별하게 만들어드립니다</p>
         <div className="footer-links">
           <Link href="/builder">초대장 만들기</Link>
@@ -15,7 +15,7 @@ export function SiteFooter() {
           <Link href="/privacy">개인정보처리방침</Link>
           <Link href="/terms">이용약관</Link>
         </div>
-        <p className="footer-copy">© 2026 InviteHub. All rights reserved.</p>
+        <p className="footer-copy">© 2026 invite. All rights reserved.</p>
       </div>
     </footer>
   );

@@ -68,9 +68,8 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
   return (
     <header className={mode === "focus" ? "site-header site-header-focus" : "site-header"}>
       <div className="header-inner">
-        <Link aria-label="InviteHub 홈으로 이동" className="logo" href="/">
-          <span className="logo-icon">💌</span>
-          <span className="logo-text">InviteHub</span>
+        <Link aria-label="invite 홈으로 이동" className="logo" href="/">
+          <span className="logo-text">invite</span>
         </Link>
         {mode === "focus" ? null : (
           <>

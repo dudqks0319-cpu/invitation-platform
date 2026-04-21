@@ -483,6 +483,7 @@ export const templates: TemplatePreset[] = [
 ];
 
 export const templateCategories = [
+  { key: "all", label: "전체", emoji: "✨" },
   { key: "wedding", label: "결혼식", emoji: "💍" },
   { key: "dol", label: "돌잔치", emoji: "🎂" },
   { key: "hwangap", label: "환갑잔치", emoji: "🎊" },

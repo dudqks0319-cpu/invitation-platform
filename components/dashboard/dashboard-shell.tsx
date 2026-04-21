@@ -20,32 +20,41 @@ type DashboardItem = InvitationRecord & {
   repurchaseRequired?: boolean;
 };
 
+type DashboardTab = "all" | "draft" | "published" | "saved";
+
 function getStatusLabel(status: DashboardItem["status"]) {
   switch (status) {
-    case "published":
-      return "발행됨";
-    case "payment_pending":
-      return "결제 대기";
-    case "paid":
-      return "결제 완료";
-    case "refund_pending":
-      return "환불 대기";
-    case "refunded":
-      return "환불 완료";
-    case "payment_failed":
-      return "결제 실패";
-    default:
-      return "초안";
+    case "published": return "발행됨";
+    case "payment_pending": return "결제 대기";
+    case "paid": return "결제 완료";
+    case "refund_pending": return "환불 대기";
+    case "refunded": return "환불 완료";
+    case "payment_failed": return "결제 실패";
+    default: return "초안";
   }
+}
+
+function getCategoryEmoji(category: string) {
+  const map: Record<string, string> = {
+    wedding: "💍",
+    birthday: "🎂",
+    dol: "🍼",
+    anniversary: "💕",
+    hwangap: "🎊",
+    other: "🎉"
+  };
+  return map[category] ?? "💌";
 }
 
 export function DashboardShell() {
   const supabase = useMemo(() => createBrowserClient(), []);
   const [items, setItems] = useState<DashboardItem[]>([]);
   const [message, setMessage] = useState("불러오는 중...");
+  const [activeTab, setActiveTab] = useState<DashboardTab>("all");
   const [selectedInvitationId, setSelectedInvitationId] = useState<string>("");
   const [guestbookEntries, setGuestbookEntries] = useState<GuestbookEntry[]>([]);
   const [rsvpEntries, setRsvpEntries] = useState<RsvpEntry[]>([]);
+  const [showModeration, setShowModeration] = useState(false);
 
   useEffect(() => {
     async function loadDashboard() {
@@ -74,13 +83,11 @@ export function DashboardShell() {
 
         setItems(localItems);
         setSelectedInvitationId(localItems[0]?.id ?? "");
-        setMessage("현재는 데모 모드입니다. 로그인 후 실제 초대장을 저장할 수 있습니다.");
+        setMessage("데모 모드입니다. 로그인 후 실제 초대장을 저장할 수 있습니다.");
         return;
       }
 
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
         setItems([]);
@@ -179,66 +186,49 @@ export function DashboardShell() {
           .order("created_at", { ascending: false })
       ]);
 
-      if (guestbookError) {
-        setGuestbookEntries([]);
-      } else {
-        setGuestbookEntries(
-          (guestbookData ?? []).map((entry) => ({
-            id: entry.id,
-            nickname: entry.nickname,
-            message: entry.message,
-            approved: entry.approved,
-            createdAt: entry.created_at
-          }))
-        );
-      }
+      setGuestbookEntries(
+        guestbookError ? [] : (guestbookData ?? []).map((entry) => ({
+          id: entry.id,
+          nickname: entry.nickname,
+          message: entry.message,
+          approved: entry.approved,
+          createdAt: entry.created_at
+        }))
+      );
 
-      if (rsvpError) {
-        setRsvpEntries([]);
-      } else {
-        setRsvpEntries(
-          (rsvpData ?? []).map((entry) => ({
-            id: entry.id,
-            guestName: entry.guest_name,
-            guestPhone: entry.guest_phone ?? "",
-            attending: entry.attending,
-            guests: entry.guests,
-            memo: entry.memo ?? "",
-            createdAt: entry.created_at
-          }))
-        );
-      }
+      setRsvpEntries(
+        rsvpError ? [] : (rsvpData ?? []).map((entry) => ({
+          id: entry.id,
+          guestName: entry.guest_name,
+          guestPhone: entry.guest_phone ?? "",
+          attending: entry.attending,
+          guests: entry.guests,
+          memo: entry.memo ?? "",
+          createdAt: entry.created_at
+        }))
+      );
     }
 
     void loadGuestbookEntries();
   }, [selectedInvitationId, supabase]);
 
   async function updateModeration(entryId: string, approved: boolean) {
-    if (!supabase) {
-      return;
-    }
-
+    if (!supabase) return;
     const { error } = await supabase
       .from("guestbook_entries")
       .update({ approved })
       .eq("id", entryId);
-
     if (error) {
-      setMessage("방명록 상태를 업데이트하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      setMessage("방명록 상태를 업데이트하지 못했습니다.");
       return;
     }
-
     setGuestbookEntries((current) =>
       current.map((entry) => (entry.id === entryId ? { ...entry, approved } : entry))
     );
-    setMessage(approved ? "방명록을 승인했습니다." : "방명록을 비공개 상태로 변경했습니다.");
   }
 
   async function copyPublicLink(item: DashboardItem) {
-    if (typeof window === "undefined") {
-      return;
-    }
-
+    if (typeof window === "undefined") return;
     const publicUrl = `${window.location.origin}/invitations/${item.slug}`;
     await navigator.clipboard.writeText(publicUrl);
     setMessage("공개 링크를 복사했습니다.");
@@ -253,16 +243,13 @@ export function DashboardShell() {
       return;
     }
 
-    const confirmed = window.confirm(`"${item.title}" 초대장을 삭제할까요? 이 작업은 되돌릴 수 없습니다.`);
-    if (!confirmed) {
-      return;
-    }
+    const confirmed = window.confirm(`"${item.title}" 초대장을 삭제할까요?`);
+    if (!confirmed) return;
 
     if (!supabase || isLocalDraft) {
       if (typeof window !== "undefined") {
         window.localStorage.removeItem(LOCAL_DRAFT_KEY);
       }
-
       setItems((current) => {
         const nextItems = current.filter((entry) => entry.id !== item.id);
         setSelectedInvitationId(nextItems[0]?.id ?? "");
@@ -278,7 +265,7 @@ export function DashboardShell() {
       .eq("id", item.id);
 
     if (error) {
-      setMessage("초대장을 삭제하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      setMessage("초대장을 삭제하지 못했습니다.");
       return;
     }
 
@@ -290,152 +277,232 @@ export function DashboardShell() {
     setMessage("초대장을 삭제했습니다.");
   }
 
-  const selectedInvitation = items.find((item) => item.id === selectedInvitationId);
-  const dashboardSummary = useMemo(
-    () => ({
-      totalInvitations: items.length,
-      publishedInvitations: items.filter((item) => item.status === "published").length,
-      totalViews: items.reduce((sum, item) => sum + (item.viewCount ?? 0), 0),
-      totalRsvps: items.reduce((sum, item) => sum + (item.rsvpCount ?? 0), 0),
-      totalGuestbook: items.reduce((sum, item) => sum + (item.guestbookCount ?? 0), 0)
-    }),
-    [items]
-  );
+  const dashboardSummary = useMemo(() => ({
+    totalInvitations: items.length,
+    publishedInvitations: items.filter((item) => item.status === "published").length,
+    totalViews: items.reduce((sum, item) => sum + (item.viewCount ?? 0), 0),
+    totalRsvps: items.reduce((sum, item) => sum + (item.rsvpCount ?? 0), 0)
+  }), [items]);
+
   const rsvpSummary = useMemo(() => {
     const attending = rsvpEntries.filter((entry) => entry.attending);
-    const declined = rsvpEntries.length - attending.length;
-
     return {
       totalResponses: rsvpEntries.length,
       attending: attending.length,
-      declined,
+      declined: rsvpEntries.length - attending.length,
       totalGuests: attending.reduce((sum, entry) => sum + entry.guests, 0)
     };
   }, [rsvpEntries]);
 
+  const filteredItems = useMemo(() => {
+    switch (activeTab) {
+      case "draft": return items.filter((item) => item.status === "draft");
+      case "published": return items.filter((item) => item.status === "published");
+      case "saved": return items.filter((item) => item.status !== "draft" && item.status !== "published");
+      default: return items;
+    }
+  }, [items, activeTab]);
+
+  const selectedInvitation = items.find((item) => item.id === selectedInvitationId);
+
   return (
-    <section className="builder-section builder-section-page">
+    <section style={{ background: "var(--bg-light)", minHeight: "100vh", padding: "32px 0 80px" }}>
       <div className="section-inner">
-        <div style={{ marginBottom: "24px", textAlign: "center" }}>
-          <h1 className="section-title">초대장 대시보드</h1>
-          <p className="section-sub">{message}</p>
-        </div>
-        <div className="ops-grid" style={{ marginBottom: "24px" }}>
-          <article className="ops-card" style={{ gridColumn: "1 / -1" }}>
-            <h3>보관 및 운영 안내</h3>
-            <p className="ops-note">발행한 초대장은 대시보드에서 계속 수정할 수 있고, 영상·배경음악·감사 메시지도 이후에 추가할 수 있습니다.</p>
-            <p className="ops-note">환불이 완료되면 공개 링크는 비활성화되므로, 다시 공개하려면 재발행이 필요합니다.</p>
-          </article>
-          <article className="ops-card">
-            <h3>전체 초대장</h3>
-            <p className="ops-value">{dashboardSummary.totalInvitations}</p>
-            <p className="ops-note">발행 {dashboardSummary.publishedInvitations}건</p>
-          </article>
-          <article className="ops-card">
-            <h3>누적 조회수</h3>
-            <p className="ops-value">{dashboardSummary.totalViews}</p>
-            <p className="ops-note">공개 초대장 기준 집계</p>
-          </article>
-          <article className="ops-card">
-            <h3>누적 RSVP</h3>
-            <p className="ops-value">{dashboardSummary.totalRsvps}</p>
-            <p className="ops-note">전체 응답 기준</p>
-          </article>
-          <article className="ops-card">
-            <h3>누적 방명록</h3>
-            <p className="ops-value">{dashboardSummary.totalGuestbook}</p>
-            <p className="ops-note">승인 전 항목 포함</p>
-          </article>
-        </div>
-        <div className="ops-grid">
-          {items.map((item) => (
-            <article className="ops-card" key={item.id}>
-              {(() => {
-                const isLocalDraft = item.id === "local-draft";
-                const deleteNote = isLocalDraft ? "" : getDeletePolicyNote(item.status);
-                return deleteNote ? <p className="ops-note">{deleteNote}</p> : null;
-              })()}
-              <h3>{item.title}</h3>
-              <p className="ops-value">{getStatusLabel(item.status)}</p>
-              <p className="ops-line">카테고리 <strong>{item.category}</strong></p>
-              <p className="ops-line">템플릿 <strong>{item.templateId}</strong></p>
-              <p className="ops-line">조회 <strong>{item.viewCount ?? 0}</strong> · RSVP <strong>{item.rsvpCount ?? 0}</strong> · 방명록 <strong>{item.guestbookCount ?? 0}</strong></p>
-              <p className="ops-note">
-                생성일 {new Date(item.createdAt).toLocaleDateString("ko-KR")}
-                <br />
-                공개 링크 {item.slug}
-                <br />
-                {item.publishedAt ? `발행일 ${new Date(item.publishedAt).toLocaleDateString("ko-KR")}` : "아직 발행 전입니다."}
-              </p>
-              <div className="header-actions" style={{ marginTop: "16px" }}>
-                <Link className="btn-outline" href={`/builder?invitationId=${item.id}`}>
-                  편집하기
-                </Link>
-                {item.status === "published" ? (
-                  <>
-                    <Link className="btn-primary" href={`/invitations/${item.slug}`}>
-                      보기
-                    </Link>
-                    <button className="btn-outline" onClick={() => copyPublicLink(item)} type="button">
-                      링크 복사
-                    </button>
-                  </>
-                ) : (
-                  <Link className="btn-primary" href={`/checkout?invitationId=${item.id}`}>
-                    발행하기
-                  </Link>
-                )}
-                <button className="btn-outline" onClick={() => setSelectedInvitationId(item.id)} type="button">
-                  모더레이션
-                </button>
-                {(item.id === "local-draft" || canDeleteInvitation(item.status)) ? (
-                  <button className="btn-outline" onClick={() => void deleteInvitation(item)} type="button">
-                    삭제
-                  </button>
-                ) : null}
-              </div>
-            </article>
-          ))}
+
+        {/* Header */}
+        <div className="dash-header">
+          <h1 className="dash-title">내 초대장</h1>
+          <Link className="dash-new-btn" href="/builder">
+            + 초대장 만들기
+          </Link>
         </div>
 
-        <div className="ops-grid" style={{ marginTop: "24px" }}>
-          <article className="ops-card">
-            <h3>RSVP 운영</h3>
-            <p className="ops-note">
-              {selectedInvitation
-                ? `${selectedInvitation.title}의 RSVP 현황입니다.`
-                : "확인할 초대장을 선택해 주세요."}
-            </p>
-            <p className="ops-line">전체 응답 <strong>{rsvpSummary.totalResponses}</strong></p>
-            <p className="ops-line">참석 <strong>{rsvpSummary.attending}</strong></p>
-            <p className="ops-line">불참 <strong>{rsvpSummary.declined}</strong></p>
-            <p className="ops-line">예상 총 인원 <strong>{rsvpSummary.totalGuests}</strong></p>
-            <ul className="list-box">
-              {rsvpEntries.length ? (
-                rsvpEntries.slice(0, 10).map((entry) => (
-                  <li key={entry.id}>
-                    <div className="meta">
-                      {new Date(entry.createdAt).toLocaleString("ko-KR")} · {entry.guestName}
-                      {entry.guestPhone ? ` · ${entry.guestPhone}` : ""}
+        {/* Stats */}
+        <div className="dash-stats">
+          <div className="dash-stat-card">
+            <div className="dash-stat-value">{dashboardSummary.totalInvitations}</div>
+            <div className="dash-stat-label">전체 초대장</div>
+          </div>
+          <div className="dash-stat-card">
+            <div className="dash-stat-value">{dashboardSummary.publishedInvitations}</div>
+            <div className="dash-stat-label">발행됨</div>
+          </div>
+          <div className="dash-stat-card">
+            <div className="dash-stat-value">{dashboardSummary.totalViews}</div>
+            <div className="dash-stat-label">누적 조회</div>
+          </div>
+          <div className="dash-stat-card">
+            <div className="dash-stat-value">{dashboardSummary.totalRsvps}</div>
+            <div className="dash-stat-label">RSVP</div>
+          </div>
+        </div>
+
+        {/* Status message */}
+        {message ? (
+          <p style={{ fontSize: "0.82rem", color: "var(--text-mid)", marginBottom: "16px" }}>
+            {message}
+          </p>
+        ) : null}
+
+        {/* Tab nav */}
+        <div className="dash-tabs">
+          {(["all", "draft", "published", "saved"] as const).map((tab) => {
+            const labels: Record<typeof tab, string> = {
+              all: "전체",
+              draft: "작성중",
+              published: "발송완료",
+              saved: "임시저장"
+            };
+            return (
+              <button
+                className={`dash-tab ${activeTab === tab ? "active" : ""}`}
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                type="button"
+              >
+                {labels[tab]}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Invitation list */}
+        {filteredItems.length ? (
+          <div className="inv-list">
+            {filteredItems.map((item) => {
+              const isSelected = item.id === selectedInvitationId;
+              const isLocalDraft = item.id === "local-draft";
+
+              return (
+                <div
+                  className="inv-card"
+                  key={item.id}
+                  style={{ outline: isSelected ? "2px solid var(--text-dark)" : undefined }}
+                >
+                  <div className="inv-thumb">
+                    <span>{getCategoryEmoji(item.category)}</span>
+                  </div>
+                  <div className="inv-info">
+                    <div className="inv-title">{item.title}</div>
+                    <div className="inv-meta">
+                      {new Date(item.createdAt).toLocaleDateString("ko-KR")}
                     </div>
-                    <div className="value">
-                      {entry.attending ? "참석" : "불참"} / 동행 {entry.guests}명
+                    <div className="inv-meta" style={{ marginTop: "2px" }}>
+                      조회 {item.viewCount ?? 0} · RSVP {item.rsvpCount ?? 0}
                     </div>
-                    {entry.memo ? <div className="value">메모: {entry.memo}</div> : null}
-                  </li>
-                ))
-              ) : (
-                <li className="meta">아직 RSVP 응답이 없습니다.</li>
-              )}
-            </ul>
-          </article>
-          <article className="ops-card" style={{ gridColumn: "1 / -1" }}>
-            <h3>방명록 모더레이션</h3>
-            <p className="ops-note">
-              {selectedInvitation
-                ? `${selectedInvitation.title}의 방명록을 검토 중입니다.`
-                : "모더레이션할 초대장을 선택해 주세요."}
-            </p>
+                    <span
+                      className={`inv-dday ${item.status === "published" ? "upcoming" : "past"}`}
+                    >
+                      {getStatusLabel(item.status)}
+                    </span>
+                  </div>
+                  <div className="inv-actions">
+                    <Link className="inv-action-btn" href={`/builder?invitationId=${item.id}`}>
+                      편집
+                    </Link>
+                    {item.status === "published" ? (
+                      <button
+                        className="inv-action-btn"
+                        onClick={() => copyPublicLink(item)}
+                        type="button"
+                      >
+                        링크 복사
+                      </button>
+                    ) : (
+                      <Link className="inv-action-btn primary" href={`/checkout?invitationId=${item.id}`}>
+                        발행하기
+                      </Link>
+                    )}
+                    <button
+                      className="inv-action-btn"
+                      onClick={() => {
+                        setSelectedInvitationId(item.id);
+                        setShowModeration(true);
+                      }}
+                      type="button"
+                    >
+                      방명록
+                    </button>
+                    {(isLocalDraft || canDeleteInvitation(item.status)) && (
+                      <button
+                        className="inv-action-btn"
+                        onClick={() => void deleteInvitation(item)}
+                        style={{ color: "var(--rose-dark)" }}
+                        type="button"
+                      >
+                        삭제
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "60px 20px",
+              color: "var(--text-mid)"
+            }}
+          >
+            <div style={{ fontSize: "3rem", marginBottom: "16px" }}>💌</div>
+            <p style={{ fontSize: "0.95rem", marginBottom: "20px" }}>아직 초대장이 없습니다</p>
+            <Link className="dash-new-btn" href="/builder">
+              첫 초대장 만들기
+            </Link>
+          </div>
+        )}
+
+        {/* Moderation panel */}
+        {showModeration && selectedInvitation && (
+          <div
+            style={{
+              marginTop: "32px",
+              background: "#fff",
+              borderRadius: "16px",
+              border: "1px solid var(--border)",
+              padding: "22px"
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
+              <h3 style={{ fontSize: "1rem", fontWeight: 700 }}>
+                방명록 — {selectedInvitation.title}
+              </h3>
+              <button
+                onClick={() => setShowModeration(false)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--text-mid)", fontSize: "1.2rem" }}
+                type="button"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* RSVP summary */}
+            <div style={{ display: "flex", gap: "16px", marginBottom: "16px", flexWrap: "wrap" }}>
+              {[
+                { label: "전체 응답", value: rsvpSummary.totalResponses },
+                { label: "참석", value: rsvpSummary.attending },
+                { label: "불참", value: rsvpSummary.declined },
+                { label: "예상 인원", value: rsvpSummary.totalGuests }
+              ].map((stat) => (
+                <div
+                  key={stat.label}
+                  style={{
+                    background: "var(--bg-cream)",
+                    borderRadius: "10px",
+                    padding: "10px 16px",
+                    textAlign: "center",
+                    minWidth: "80px"
+                  }}
+                >
+                  <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "var(--text-dark)" }}>{stat.value}</div>
+                  <div style={{ fontSize: "0.72rem", color: "var(--text-mid)", marginTop: "2px" }}>{stat.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Guestbook entries */}
             <ul className="list-box">
               {guestbookEntries.length ? (
                 guestbookEntries.map((entry) => (
@@ -444,23 +511,33 @@ export function DashboardShell() {
                       {new Date(entry.createdAt).toLocaleString("ko-KR")} · {entry.nickname}
                     </div>
                     <div className="value">{entry.message}</div>
-                    <div className="header-actions" style={{ marginTop: "12px" }}>
-                      <button className="btn-primary" onClick={() => updateModeration(entry.id, true)} type="button">
+                    <div style={{ display: "flex", gap: "8px", marginTop: "8px", alignItems: "center" }}>
+                      <button
+                        className="inv-action-btn primary"
+                        onClick={() => updateModeration(entry.id, true)}
+                        type="button"
+                      >
                         승인
                       </button>
-                      <button className="btn-outline" onClick={() => updateModeration(entry.id, false)} type="button">
+                      <button
+                        className="inv-action-btn"
+                        onClick={() => updateModeration(entry.id, false)}
+                        type="button"
+                      >
                         숨기기
                       </button>
-                      <span className="auth-status">{entry.approved ? "공개중" : "승인 대기"}</span>
+                      <span className={`auth-status ${entry.approved ? "published" : ""}`}>
+                        {entry.approved ? "공개중" : "승인 대기"}
+                      </span>
                     </div>
                   </li>
                 ))
               ) : (
-                <li className="meta">대기 중인 방명록이 없습니다.</li>
+                <li className="meta" style={{ padding: "16px 0" }}>대기 중인 방명록이 없습니다.</li>
               )}
             </ul>
-          </article>
-        </div>
+          </div>
+        )}
       </div>
     </section>
   );

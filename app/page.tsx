@@ -2,24 +2,29 @@ import Link from "next/link";
 import { TemplateBrowser } from "@/components/landing/template-browser";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { SiteHeader } from "@/components/shared/site-header";
+import { MobileBottomNav } from "@/components/shared/mobile-bottom-nav";
 
 const features = [
   {
+    icon: "FREE",
     title: "기본 청첩장은 무료",
     description:
       "현재 공개된 템플릿은 무료로 만들고 미리보기할 수 있어 부담 없이 초대장을 시작할 수 있습니다."
   },
   {
+    icon: "3,300",
     title: "사진까지 담고 싶다면 3,300원",
     description:
       "사진 포함 발행권 한 번이면 프로필 사진, 배경 사진, 갤러리 사진까지 모두 담아 완성할 수 있습니다."
   },
   {
+    icon: "RSVP",
     title: "참석 여부와 방명록까지",
     description:
       "링크를 보낸 뒤에는 참석 여부와 축하 메시지까지 한 번에 받을 수 있습니다."
   },
   {
+    icon: "LINK",
     title: "링크 하나로 공유",
     description:
       "카카오톡, 문자, SNS 어디든. 링크 하나로 초대장, 지도, 계좌 안내, 방명록까지 함께 전달됩니다."
@@ -56,7 +61,7 @@ const pricing = [
     ]
   },
   {
-    badge: "유료",
+    badge: "인기",
     title: "사진 포함 발행권",
     price: "₩3,300",
     popular: true,
@@ -74,18 +79,19 @@ export default function HomePage() {
     <main className="app-shell">
       <SiteHeader />
 
+      {/* Hero */}
       <section className="hero">
         <div className="hero-content">
-          <p className="hero-badge">기본 청첩장은 무료</p>
+          <p className="hero-badge">기본 청첩장 무료 · 사진 포함 3,300원</p>
           <h1 className="hero-title">
-            무료로 만들고,
+            당신의 특별한 순간을
             <br />
-            사진까지 담으면 3,300원
+            초대장으로 전하세요
           </h1>
           <p className="hero-subtitle">
-            기본 청첩장은 무료로 만들고 미리보기할 수 있어요.
+            결혼, 돌잔치, 생일, 기념일까지.
             <br />
-            사진이 포함된 초대장을 발행할 때만 3,300원 발행권이 필요합니다.
+            다양한 템플릿으로 나만의 초대장을 무료로 만들어 보세요.
           </p>
           <div className="hero-proof-list">
             <span>기본 청첩장 무료</span>
@@ -94,7 +100,7 @@ export default function HomePage() {
           </div>
           <div className="hero-btns">
             <Link className="btn-hero-primary" href="/builder">
-              무료로 시작하기
+              초대장 만들기
             </Link>
             <a className="btn-hero-outline" href="#templates">
               디자인 둘러보기
@@ -112,11 +118,11 @@ export default function HomePage() {
                 }}
               >
                 <p className="preview-sub">Wedding Invitation</p>
-                <p className="preview-title font-display">Minjun &amp; Sua</p>
+                <p className="preview-title font-display">이준서 &amp; 김은재</p>
                 <p className="preview-msg">소중한 분들을 초대합니다</p>
                 <div className="preview-chip-row">
-                  <span>2026. 05. 10</span>
-                  <span>서울 더파인홀</span>
+                  <span>2025. 06. 21</span>
+                  <span>더마음웨딩홀</span>
                 </div>
               </div>
             </div>
@@ -126,21 +132,22 @@ export default function HomePage() {
 
       <TemplateBrowser />
 
+      {/* Features */}
       <section className="features-section" id="features">
         <div className="section-inner">
-          <p className="section-kicker">가볍게 시작하세요</p>
+          <p className="section-kicker">WHY INVITE</p>
           <h2 className="section-title">
-            기본은 무료,
+            가볍게 시작하고,
             <br />
-            사진까지 담고 싶다면 3,300원
+            특별하게 완성하세요
           </h2>
           <p className="section-sub">
             기본 청첩장은 무료로 만들고, 사진이 포함된 초대장을 발행할 때만 3,300원 발행권을 사용합니다.
           </p>
           <div className="features-grid">
-            {features.map((feature, index) => (
+            {features.map((feature) => (
               <article className="feature-card" key={feature.title}>
-                <div className="feature-icon">{String(index + 1).padStart(2, "0")}</div>
+                <div className="feature-icon">{feature.icon}</div>
                 <h3>{feature.title}</h3>
                 <p>{feature.description}</p>
               </article>
@@ -149,9 +156,10 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Process */}
       <section className="process-section">
         <div className="section-inner">
-          <p className="section-kicker">이렇게 진행돼요</p>
+          <p className="section-kicker">HOW IT WORKS</p>
           <h2 className="section-title">디자인 고르고, 내용 넣고, 바로 발행</h2>
           <div className="process-grid">
             {processSteps.map((step) => (
@@ -165,9 +173,10 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Pricing */}
       <section className="pricing-section" id="pricing">
         <div className="section-inner">
-          <p className="section-kicker">요금 안내</p>
+          <p className="section-kicker">PRICING</p>
           <h2 className="section-title">무료로 시작하고, 사진이 들어가면 3,300원</h2>
           <p className="section-sub">사진이 포함된 초대장을 발행할 때만 3,300원 발행권이 필요하며, 프로필·배경·갤러리 사진이 모두 포함됩니다.</p>
           <div className="pricing-grid">
@@ -186,7 +195,7 @@ export default function HomePage() {
                     </li>
                   ))}
                 </ul>
-                <Link className="btn-price" href="/builder">
+                <Link className={`btn-price ${plan.popular ? "btn-primary" : ""}`} href="/builder">
                   시작하기
                 </Link>
               </article>
@@ -196,6 +205,7 @@ export default function HomePage() {
       </section>
 
       <SiteFooter />
+      <MobileBottomNav />
     </main>
   );
 }
