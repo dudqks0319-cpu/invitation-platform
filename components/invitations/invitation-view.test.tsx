@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { InvitationView } from "@/components/invitations/invitation-view";
-import { defaultInvitationDraft } from "@/lib/invitation-payload";
+import { defaultInvitationDraft, normalizeDraft } from "@/lib/invitation-payload";
 
 describe("InvitationView", () => {
   it("warns that preview links cannot be shared yet", () => {
@@ -37,5 +37,26 @@ describe("InvitationView", () => {
     expect(document.body.innerHTML).not.toContain(
       "미리보기 단계에서는 나만 볼 수 있습니다."
     );
+  });
+
+  it("renders Korean map actions and a Naver map mount when coordinates exist", () => {
+    document.body.innerHTML = renderToStaticMarkup(
+      <InvitationView
+        mode="public"
+        payload={normalizeDraft({
+          mapAddress: "서울 강남구 테헤란로 123",
+          mapLatitude: "37.5665",
+          mapLongitude: "126.9780",
+          venueName: "더파인 웨딩홀"
+        })}
+        shareUrl="/invitations/demo"
+        slug="demo"
+      />
+    );
+
+    expect(document.body.textContent).toContain("네이버 지도 열기");
+    expect(document.body.textContent).toContain("카카오맵 열기");
+    expect(document.body.textContent).toContain("주소 복사");
+    expect(document.body.innerHTML).toContain("id=\"naver-map-embed\"");
   });
 });

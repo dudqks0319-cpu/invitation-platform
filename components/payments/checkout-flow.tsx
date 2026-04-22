@@ -259,7 +259,7 @@ export function CheckoutFlow({
                 onClick={handleCheckout}
                 type="button"
               >
-                {pending ? "발행 중..." : pricing.isFree ? "무료로 발행하기" : "앱에서 스토어 결제 필요"}
+                {pending ? "발행 중…" : pricing.isFree ? "무료로 발행하기" : "앱에서 스토어 결제 필요"}
               </button>
               {!pricing.isFree ? (
                 <p className="ops-note" style={{ marginTop: "12px" }}>

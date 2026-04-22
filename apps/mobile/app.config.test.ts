@@ -1,6 +1,17 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 const ORIGINAL_ENV = { ...process.env };
+const PRODUCTION_ENV = {
+  EXPO_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+  EXPO_PUBLIC_SUPABASE_ANON_KEY: "anon-key",
+  EXPO_PUBLIC_WEB_BASE_URL: "https://invitehub.co.kr",
+  EXPO_PUBLIC_IAP_PRODUCT_ID_IOS: "publish.credit.ios",
+  EXPO_PUBLIC_IAP_PRODUCT_ID_ANDROID: "publish.credit.android",
+  EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID: "web-client-id",
+  EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID: "ios-client-id",
+  GOOGLE_IOS_URL_SCHEME: "com.googleusercontent.apps.example",
+  EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY: "kakao-native-key"
+};
 
 async function loadConfig(envPatch: Record<string, string | undefined>) {
   vi.resetModules();
@@ -9,8 +20,8 @@ async function loadConfig(envPatch: Record<string, string | undefined>) {
     ...envPatch
   };
 
-  const module = await import("./app.config");
-  return module.default as {
+  const configModule = await import("./app.config");
+  return configModule.default as {
     ios: { bundleIdentifier: string };
     android: { package: string };
   };
@@ -24,6 +35,7 @@ afterEach(() => {
 describe("mobile app config", () => {
   it("uses production identifiers for production EAS builds", async () => {
     const config = await loadConfig({
+      ...PRODUCTION_ENV,
       APP_VARIANT: undefined,
       EAS_BUILD_PROFILE: "production"
     });

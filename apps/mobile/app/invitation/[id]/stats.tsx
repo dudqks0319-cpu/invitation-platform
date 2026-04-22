@@ -119,17 +119,17 @@ export default function InvitationStatsScreen() {
       ) : null}
       <Card eyebrow="초안 기준" title={draft?.payload.title || "초대장"}>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-          <Pill active={Boolean(draft?.serverId)} label={draft?.serverId ? "원격 연결" : "로컬 전용"} />
+          <Pill active={Boolean(draft?.serverId)} label={draft?.serverId ? "서버 저장됨" : "앱 저장"} />
           <Pill active={Boolean(draft?.isDirty)} label={draft?.isDirty ? "동기화 필요" : "동기화 안정"} />
         </View>
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
           현재 갤러리 장수: {draft?.payload.photos.gallery.length ?? 0}
         </Text>
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
-          pending photo uploads: {draft?.pendingPhotos.length ?? 0}
+          업로드 대기 사진: {draft?.pendingPhotos.length ?? 0}
         </Text>
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
-          sync status: {draft?.syncStatus ?? "-"}
+          저장 상태: {draft?.syncStatus ?? "-"}
         </Text>
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
           방문 수: {visitCount}

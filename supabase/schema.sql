@@ -68,15 +68,34 @@ create table if not exists public.rsvps (
   guest_phone text,
   attending boolean not null default true,
   guests integer not null default 1 check (guests between 0 and 20),
+  side text not null default 'shared' check (side in ('groom', 'bride', 'shared')),
+  meal_preference text not null default 'undecided' check (meal_preference in ('yes', 'no', 'undecided')),
+  shuttle_needed boolean not null default false,
+  companion_names text check (companion_names is null or char_length(companion_names) <= 120),
   memo text check (memo is null or char_length(memo) <= 300),
   created_at timestamptz not null default now()
 );
+
+alter table public.rsvps add column if not exists side text not null default 'shared';
+alter table public.rsvps add column if not exists meal_preference text not null default 'undecided';
+alter table public.rsvps add column if not exists shuttle_needed boolean not null default false;
+alter table public.rsvps add column if not exists companion_names text;
 
 create table if not exists public.guestbook_entries (
   id uuid primary key default gen_random_uuid(),
   invitation_id uuid not null references public.invitations(id) on delete cascade,
   nickname text not null check (char_length(nickname) between 1 and 30),
   message text not null check (char_length(message) between 1 and 300),
+  approved boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.memory_photos (
+  id uuid primary key default gen_random_uuid(),
+  invitation_id uuid not null references public.invitations(id) on delete cascade,
+  nickname text not null check (char_length(nickname) between 1 and 30),
+  message text check (message is null or char_length(message) <= 200),
+  storage_path text not null check (char_length(storage_path) between 1 and 500),
   approved boolean not null default false,
   created_at timestamptz not null default now()
 );
@@ -178,6 +197,7 @@ alter table public.payments enable row level security;
 alter table public.payment_audit_logs enable row level security;
 alter table public.rsvps enable row level security;
 alter table public.guestbook_entries enable row level security;
+alter table public.memory_photos enable row level security;
 alter table public.view_logs enable row level security;
 alter table public.rate_limits enable row level security;
 
@@ -296,6 +316,57 @@ with check (
   )
 );
 
+drop policy if exists "owners can read memory photos" on public.memory_photos;
+create policy "owners can read memory photos"
+on public.memory_photos
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.invitations
+    where invitations.id = memory_photos.invitation_id
+      and invitations.user_id = auth.uid()
+  )
+);
+
+drop policy if exists "public can read approved memory photos for published invitations" on public.memory_photos;
+create policy "public can read approved memory photos for published invitations"
+on public.memory_photos
+for select
+to anon, authenticated
+using (
+  approved = true
+  and exists (
+    select 1
+    from public.invitations
+    where invitations.id = memory_photos.invitation_id
+      and invitations.status = 'published'
+  )
+);
+
+drop policy if exists "owners can moderate memory photos" on public.memory_photos;
+create policy "owners can moderate memory photos"
+on public.memory_photos
+for update
+to authenticated
+using (
+  exists (
+    select 1
+    from public.invitations
+    where invitations.id = memory_photos.invitation_id
+      and invitations.user_id = auth.uid()
+  )
+)
+with check (
+  exists (
+    select 1
+    from public.invitations
+    where invitations.id = memory_photos.invitation_id
+      and invitations.user_id = auth.uid()
+  )
+);
+
 drop policy if exists "public can insert view logs for published invitations" on public.view_logs;
 create policy "public can insert view logs for published invitations"
 on public.view_logs
@@ -336,6 +407,7 @@ create unique index if not exists idx_payments_approve_nonce
 create index if not exists idx_payment_audit_logs_payment_id on public.payment_audit_logs(payment_id);
 create index if not exists idx_rsvps_invitation_id on public.rsvps(invitation_id);
 create index if not exists idx_guestbook_invitation_id on public.guestbook_entries(invitation_id);
+create index if not exists idx_memory_photos_invitation_id on public.memory_photos(invitation_id);
 create index if not exists idx_view_logs_invitation_id on public.view_logs(invitation_id);
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)

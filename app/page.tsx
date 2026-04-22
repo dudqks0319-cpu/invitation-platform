@@ -1,198 +1,167 @@
+/* eslint-disable @next/next/no-img-element */
+
 import Link from "next/link";
 import { TemplateBrowser } from "@/components/landing/template-browser";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { SiteHeader } from "@/components/shared/site-header";
+import {
+  builderFlow,
+  dashboardSignals,
+  platformPillars,
+  priorityCategories
+} from "@/lib/platform-playbook";
 
-const features = [
-  {
-    title: "기본 청첩장은 무료",
-    description:
-      "현재 공개된 템플릿은 무료로 만들고 미리보기할 수 있어 부담 없이 초대장을 시작할 수 있습니다."
-  },
-  {
-    title: "사진까지 담고 싶다면 3,300원",
-    description:
-      "사진 포함 발행권 한 번이면 프로필 사진, 배경 사진, 갤러리 사진까지 모두 담아 완성할 수 있습니다."
-  },
-  {
-    title: "참석 여부와 방명록까지",
-    description:
-      "링크를 보낸 뒤에는 참석 여부와 축하 메시지까지 한 번에 받을 수 있습니다."
-  },
-  {
-    title: "링크 하나로 공유",
-    description:
-      "카카오톡, 문자, SNS 어디든. 링크 하나로 초대장, 지도, 계좌 안내, 방명록까지 함께 전달됩니다."
-  }
-];
-
-const processSteps = [
-  {
-    step: "01",
-    title: "디자인 선택",
-    description: "현재 공개된 무료 디자인 중 마음에 드는 템플릿을 고르면 바로 시작됩니다."
-  },
-  {
-    step: "02",
-    title: "내용 입력",
-    description: "이름, 장소, 문구를 채우고 사진이 필요하면 사진 포함 발행권으로 한 번에 준비합니다."
-  },
-  {
-    step: "03",
-    title: "바로 발행 · 공유",
-    description: "기본 구성은 무료로 발행하고, 사진이 포함되면 3,300원 발행권으로 마무리해 링크로 보낼 수 있습니다."
-  }
-];
-
-const pricing = [
-  {
-    badge: "무료",
-    title: "기본 청첩장",
-    price: "무료",
-    items: [
-      "현재 공개 템플릿 전부 무료",
-      "링크 공유 · 참석 여부 · 방명록 포함",
-      "사진 없이 바로 발행 가능"
-    ]
-  },
-  {
-    badge: "유료",
-    title: "사진 포함 발행권",
-    price: "₩3,300",
-    popular: true,
-    items: [
-      "프로필 사진 포함",
-      "배경 사진 포함",
-      "갤러리 사진 전체 포함",
-      "한 번 구매로 초대장 1건 발행"
-    ]
-  }
-];
+const landingCriticalCss = `
+.invite-redesign{--invite-ink:#2b2824;--invite-muted:#6d6257;--invite-paper:#fffdf9;--invite-line:#e8e0d7;--invite-gold:#c6a46e;--invite-charcoal:#282726;--invite-shadow:0 18px 46px rgba(62,49,37,.09);background:radial-gradient(circle at 4% 8%,rgba(141,152,120,.11) 0,transparent 23%),radial-gradient(circle at 90% 4%,rgba(215,170,162,.15) 0,transparent 24%),#f6f2ed;color:var(--invite-ink);overflow-x:hidden}.invite-redesign .site-header{background:rgba(246,242,237,.88);border-bottom:1px solid rgba(232,224,215,.78);box-shadow:none}.invite-redesign .logo{color:var(--invite-ink);font-family:var(--font-serif),"Noto Serif KR",serif;font-weight:500;letter-spacing:0}.invite-redesign .logo-icon{color:var(--invite-gold)}.invite-primary,.invite-redesign .btn-primary{display:inline-flex;min-height:44px;align-items:center;justify-content:center;border-radius:8px;background:var(--invite-charcoal);color:#fffaf4;padding:0 24px;font-size:.92rem;font-weight:700;box-shadow:none}.invite-secondary,.invite-redesign .btn-outline{display:inline-flex;min-height:44px;align-items:center;justify-content:center;border:1px solid #d8cec2;border-radius:8px;background:rgba(255,253,249,.72);color:var(--invite-ink);padding:0 22px;font-size:.92rem;font-weight:700}.invite-overline{color:#9a7d56;font-size:.74rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase}.invite-hero{min-height:calc(100svh - 68px);display:grid;grid-template-columns:minmax(0,.9fr) minmax(340px,1.1fr);gap:clamp(28px,5vw,72px);align-items:center;max-width:1220px;margin:0 auto;padding:118px 24px 64px;position:relative}.invite-hero::before,.invite-template-board-inner>h2::before,.invite-template-board-inner>h2::after{content:"";width:48px;height:78px;background:radial-gradient(ellipse at 55% 18%,rgba(141,152,120,.72) 0 21%,transparent 22%),radial-gradient(ellipse at 35% 42%,rgba(141,152,120,.56) 0 17%,transparent 18%),linear-gradient(70deg,transparent 47%,rgba(141,152,120,.64) 48% 51%,transparent 52%);opacity:.9}.invite-hero::before{position:absolute;top:112px;left:4px;transform:rotate(-28deg)}.invite-hero-copy{max-width:520px}.invite-hero-copy h1{margin-top:18px;color:var(--invite-ink);font-family:var(--font-serif),"Noto Serif KR",serif;font-size:clamp(2.6rem,5.4vw,5.2rem);font-weight:500;line-height:1.14;text-wrap:balance}.invite-hero-copy p:not(.invite-overline){margin-top:24px;max-width:480px;color:var(--invite-muted);font-size:1.03rem;line-height:1.85}.invite-hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:30px}.invite-hero-stage{position:relative;min-height:640px}.invite-phone{position:absolute;left:48%;top:50%;width:min(100%,330px);min-height:660px;transform:translate(-50%,-50%);border:1px solid rgba(232,224,215,.92);border-radius:38px;background:#fffdf9;box-shadow:0 26px 70px rgba(50,40,32,.16);overflow:hidden;padding:18px 14px 16px}.invite-statusbar,.invite-phone-head{display:flex;align-items:center;justify-content:space-between;color:#171512}.invite-statusbar{padding:0 10px 18px;font-size:.72rem;font-weight:800}.invite-phone-head{padding:0 10px 18px}.invite-phone-head strong{font-family:var(--font-display),var(--font-serif),serif;font-size:1.45rem;font-weight:500}.invite-menu-line,.invite-menu-line::before,.invite-menu-line::after{display:block;width:16px;height:1px;background:#1f1f1f}.invite-menu-line{position:relative}.invite-menu-line::before,.invite-menu-line::after{content:"";position:absolute;left:0}.invite-menu-line::before{top:-5px}.invite-menu-line::after{top:5px}.invite-bell{font-size:1.1rem}.invite-phone-hero-card{min-height:170px;display:flex;align-items:center;overflow:hidden;border-radius:8px;background:linear-gradient(90deg,rgba(247,243,238,.96) 0%,rgba(247,243,238,.76) 45%,rgba(247,243,238,.12) 100%),url("/images/generated/wedding/wedding-premium-flower-garden.png") center/cover;padding:28px 26px}.invite-phone-hero-card p{color:#42352a;font-size:1.04rem;font-weight:600;line-height:1.6}.invite-phone-hero-card span{display:inline-flex;margin-top:18px;border-radius:6px;background:#282726;color:#fffaf4;padding:10px 15px;font-size:.78rem;font-weight:800}.invite-category-row{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;padding:22px 2px 18px}.invite-category-row div{display:grid;justify-items:center;gap:7px;min-width:0}.invite-category-row span{width:42px;height:42px;border:6px solid #ded8cf;border-radius:50%;background:#f4f0e8}.invite-category-row small{max-width:54px;color:#4f473f;font-size:.69rem;font-weight:800;line-height:1.25;text-align:center;word-break:keep-all}.invite-mini-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.invite-mini-grid img{width:100%;aspect-ratio:.88;display:block;border-radius:8px;object-fit:cover}.invite-phone-share-strip{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;margin-top:12px;border:1px solid var(--invite-line);border-radius:10px;background:rgba(255,253,249,.86);padding:11px 12px}.invite-phone-share-strip span{grid-column:1/-1;color:#9a7d56;font-size:.68rem;font-weight:900}.invite-phone-share-strip strong{min-width:0;overflow:hidden;color:#2b2824;font-size:.82rem;text-overflow:ellipsis;white-space:nowrap}.invite-phone-share-strip em{border-radius:999px;background:#282726;color:#fffaf4;font-size:.68rem;font-style:normal;font-weight:900;padding:5px 9px}.invite-bottom-nav{position:absolute;right:0;bottom:0;left:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));height:56px;align-items:center;border-top:1px solid var(--invite-line);background:#fffdf9}.invite-bottom-nav span{color:#6d6257;font-size:.67rem;font-weight:800;text-align:center}.invite-bottom-nav span:nth-child(3){width:38px;height:38px;display:grid;place-items:center;justify-self:center;border-radius:50%;background:#282726;color:#fffaf4;font-size:1.05rem}.invite-floating-card{position:absolute;right:7%;bottom:24px;width:175px;border-radius:10px;background:#fffdf9;box-shadow:0 22px 56px rgba(55,43,35,.18);transform:rotate(3deg)}.invite-floating-card img{width:100%;aspect-ratio:.66;display:block;border-radius:7px;object-fit:cover}.invite-template-intro,.invite-featured-templates,.invite-template-board,.invite-reference-section,.invite-builder-flow-section,.invite-ops-section,.invite-final-cta{background:#f6f2ed}.invite-template-intro,.invite-reference-section,.invite-builder-flow-section,.invite-ops-section{border-top:1px solid rgba(232,224,215,.72);padding:72px 0}.invite-template-intro-inner,.invite-reference-inner,.invite-app-inner,.invite-ops-inner{display:grid;grid-template-columns:minmax(260px,.82fr) minmax(340px,1.18fr);gap:44px;align-items:center}.invite-template-copy .section-title,.invite-reference-copy h2,.invite-builder-flow-head h2,.invite-app-inner h2,.invite-ops-inner h2{margin-top:12px;color:var(--invite-ink);font-family:var(--font-serif),"Noto Serif KR",serif;font-size:clamp(1.9rem,3.6vw,3.8rem);font-weight:500;line-height:1.2;text-wrap:balance}.invite-template-copy .section-sub,.invite-reference-copy p:not(.invite-overline),.invite-app-inner p:not(.invite-overline),.invite-template-board-inner>p{margin-top:14px;color:var(--invite-muted);line-height:1.75}.invite-category-list,.invite-reference-grid,.invite-builder-flow,.invite-ops-grid,.invite-app-moments{display:grid;gap:12px}.invite-category-list a,.invite-reference-grid article,.invite-builder-flow article,.invite-ops-grid article,.invite-app-moments article{border:1px solid var(--invite-line);border-radius:10px;background:rgba(255,253,249,.78);box-shadow:0 12px 28px rgba(62,49,37,.06)}.invite-category-list a{min-height:68px;display:grid;grid-template-columns:42px minmax(86px,.4fr) minmax(0,1fr);gap:14px;align-items:center;padding:12px 16px}.invite-category-list span,.invite-category-icon{width:42px;height:42px;display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:#f0e9e2;color:#b68f5e}.invite-category-list strong,.template-board-meta strong,.invite-template-category h3{color:var(--invite-ink)}.invite-category-list small,.invite-template-category header p,.invite-reference-grid p,.invite-builder-flow p,.invite-ops-grid p,.invite-app-moments p{color:var(--invite-muted);line-height:1.55}.invite-featured-templates,.invite-template-board{padding:58px 0 74px}.invite-featured-row{display:grid;grid-template-columns:repeat(5,minmax(180px,1fr));gap:20px;margin-top:26px}.invite-featured-item>p{margin-bottom:12px;color:#34302b;text-align:center;font-size:1rem;font-weight:800}.template-board-card{display:grid;gap:12px;width:100%;cursor:pointer;text-align:left}.template-board-thumb{overflow:hidden;border:1px solid rgba(216,206,194,.92);border-radius:8px;background:#fffdf9;box-shadow:var(--invite-shadow)}.template-board-image,.template-board-thumb .tmpl-card-image{width:100%;aspect-ratio:.66;display:block;height:auto;object-fit:cover}.template-board-meta{min-height:74px;display:grid;grid-template-columns:1fr auto;gap:4px 10px;align-items:center}.template-board-meta span{color:#8a806f;font-size:.74rem;font-weight:700}.template-board-meta button{grid-row:1/span 2;grid-column:2;min-height:36px;border:1px solid var(--invite-line);border-radius:7px;background:rgba(255,253,249,.82);color:#4b4640;padding:0 12px;font-size:.78rem;font-weight:800}.invite-template-board-inner>h2{display:flex;align-items:center;justify-content:center;gap:22px;margin:0;color:var(--invite-ink);font-family:var(--font-serif),"Noto Serif KR",serif;font-size:clamp(2rem,3.3vw,3.4rem);font-weight:500;text-align:center}.invite-template-sections{display:grid;gap:36px}.invite-template-category header{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:12px}.invite-template-category header>div{display:flex;align-items:center;gap:10px}.invite-category-module-list{display:flex;flex-wrap:wrap;gap:6px;margin:-2px 0 14px}.invite-category-module-list span{min-height:30px;display:inline-flex;align-items:center;border:1px solid rgba(198,164,110,.32);border-radius:999px;background:rgba(255,253,249,.68);color:#7b6444;padding:0 10px;font-size:.74rem;font-weight:800}.invite-template-strip{display:grid;grid-template-columns:repeat(6,minmax(132px,1fr));gap:12px}.invite-reference-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.invite-builder-flow{grid-template-columns:repeat(5,minmax(0,1fr))}.invite-ops-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.invite-app-moments{grid-template-columns:repeat(4,minmax(0,1fr))}.invite-reference-grid article,.invite-builder-flow article,.invite-ops-grid article,.invite-app-moments article{padding:18px}.invite-reference-grid span,.invite-builder-flow span,.invite-ops-grid span,.invite-app-moments span{color:#9a7d56;font-size:.74rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.invite-reference-grid strong,.invite-builder-flow strong,.invite-ops-grid strong,.invite-app-moments strong{display:block;margin-top:12px;color:var(--invite-ink);font-size:1rem;line-height:1.45}.invite-ops-grid strong,.invite-app-moments strong{font-family:var(--font-serif),"Noto Serif KR",serif;font-size:1.55rem;font-weight:500}.invite-final-cta{display:flex;gap:20px;align-items:center;justify-content:center;border-top:1px solid var(--invite-line);padding:50px 24px}.invite-final-cta p{color:var(--invite-ink);font-size:1rem;font-weight:700}@media (max-width:1180px){.invite-featured-row,.invite-reference-grid,.invite-builder-flow{grid-template-columns:repeat(3,minmax(0,1fr))}.invite-template-strip{grid-template-columns:repeat(4,minmax(130px,1fr))}}@media (max-width:900px){.invite-hero,.invite-template-intro-inner,.invite-reference-inner,.invite-app-inner,.invite-ops-inner{grid-template-columns:1fr}.invite-hero{min-height:auto;padding-top:96px}.invite-hero-copy{margin:0 auto;text-align:center}.invite-hero-copy p:not(.invite-overline){margin-left:auto;margin-right:auto}.invite-hero-actions{justify-content:center}.invite-hero-stage{min-height:620px}.invite-phone{left:50%}.invite-featured-row,.invite-reference-grid,.invite-builder-flow,.invite-ops-grid,.invite-app-moments{grid-template-columns:repeat(2,minmax(0,1fr))}.invite-template-strip{grid-template-columns:repeat(3,minmax(120px,1fr))}}@media (max-width:640px){.invite-redesign .site-header{position:sticky}.invite-hero{padding:42px 18px 46px}.invite-hero-copy h1{font-size:clamp(2rem,10vw,2.65rem);line-height:1.18}.invite-hero-copy p:not(.invite-overline){font-size:.98rem}.invite-hero-stage{min-height:auto;margin-top:24px}.invite-phone{position:relative;top:auto;left:auto;width:min(100%,318px);min-height:610px;margin:0 auto;transform:none}.invite-floating-card,.invite-template-board-inner>h2::before,.invite-template-board-inner>h2::after{display:none}.invite-category-row small{font-size:.64rem}.invite-featured-row,.invite-reference-grid,.invite-builder-flow,.invite-ops-grid,.invite-app-moments{grid-template-columns:1fr}.invite-template-strip{grid-template-columns:repeat(2,minmax(0,1fr))}.invite-template-category header{display:block}.invite-template-category header p{margin-top:4px}.invite-final-cta{display:grid;text-align:center}}`;
 
 export default function HomePage() {
   return (
-    <main className="app-shell">
+    <main className="app-shell invite-redesign">
+      <style dangerouslySetInnerHTML={{ __html: landingCriticalCss }} />
       <SiteHeader />
 
-      <section className="hero">
-        <div className="hero-content">
-          <p className="hero-badge">기본 청첩장은 무료</p>
-          <h1 className="hero-title">
-            무료로 만들고,
+      <section className="invite-hero">
+        <div className="invite-hero-copy">
+          <p className="invite-overline">모바일 초대장</p>
+          <h1>
+            소중한 순간을
             <br />
-            사진까지 담으면 3,300원
+            특별한 초대장으로
           </h1>
-          <p className="hero-subtitle">
-            기본 청첩장은 무료로 만들고 미리보기할 수 있어요.
-            <br />
-            사진이 포함된 초대장을 발행할 때만 3,300원 발행권이 필요합니다.
+          <p>
+            결혼식, 돌잔치, 브라이덜샤워, 집들이, 환갑까지. 어울리는 템플릿을 고르고 초대의 마음을
+            바로 전해보세요.
           </p>
-          <div className="hero-proof-list">
-            <span>기본 청첩장 무료</span>
-            <span>사진 포함 발행권 3,300원</span>
-            <span>링크 공유 · 참석 여부 · 방명록</span>
-          </div>
-          <div className="hero-btns">
-            <Link className="btn-hero-primary" href="/builder">
-              무료로 시작하기
+          <div className="invite-hero-actions">
+            <Link className="invite-primary" href="/builder">
+              초대장 만들기
             </Link>
-            <a className="btn-hero-outline" href="#templates">
-              디자인 둘러보기
+            <a className="invite-secondary" href="#templates">
+              템플릿 보기
             </a>
           </div>
         </div>
-        <div className="hero-preview">
-          <div className="phone-mock">
-            <div className="phone-screen">
-              <div
-                className="wedding-preview"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(180deg, rgba(251,245,238,0.72), rgba(244,235,226,0.9)), url(/images/genspark/cncrue0H.jpg)"
-                }}
-              >
-                <p className="preview-sub">Wedding Invitation</p>
-                <p className="preview-title font-display">Minjun &amp; Sua</p>
-                <p className="preview-msg">소중한 분들을 초대합니다</p>
-                <div className="preview-chip-row">
-                  <span>2026. 05. 10</span>
-                  <span>서울 더파인홀</span>
-                </div>
+
+        <div className="invite-hero-stage" aria-hidden="true">
+          <div className="invite-phone">
+            <div className="invite-statusbar">
+              <span>9:41</span>
+              <span>●●●</span>
+            </div>
+            <div className="invite-phone-head">
+              <span className="invite-menu-line" />
+              <strong>invite</strong>
+              <span className="invite-bell">♡</span>
+            </div>
+            <div className="invite-phone-hero-card">
+              <div>
+                <p>당신의 특별한 순간을</p>
+                <p>초대장으로 전하세요.</p>
+                <span>초대장 만들기</span>
               </div>
             </div>
+            <div className="invite-category-row">
+              {priorityCategories.map((item) => (
+                <div key={item.key}>
+                  <span />
+                  <small>{item.key === "bridal" ? "샤워" : item.label}</small>
+                </div>
+              ))}
+            </div>
+            <div className="invite-mini-grid">
+              {[
+                "/images/generated/wedding/wedding-premium-romantic-arch.png",
+                "/images/generated/dol/dol-teddy-balloon.png",
+                "/images/generated/bridal/bridal-pink-ribbon.png",
+                "/images/generated/housewarming/housewarming-green-home.png",
+                "/images/generated/hwangap/hwangap-floral-classic.png"
+              ].map((src) => (
+                <img alt="" key={src} src={src} />
+              ))}
+            </div>
+            <div className="invite-phone-share-strip">
+              <span>공유 링크</span>
+              <strong>invitehub.kr/i/junseo-eunjae</strong>
+              <em>복사</em>
+            </div>
+            <div className="invite-bottom-nav">
+              <span>홈</span>
+              <span>내 초대장</span>
+              <span>＋</span>
+              <span>템플릿</span>
+              <span>마이</span>
+            </div>
+          </div>
+          <div className="invite-floating-card">
+            <img alt="" src="/images/generated/wedding/wedding-premium-flower-garden.png" />
           </div>
         </div>
       </section>
 
       <TemplateBrowser />
 
-      <section className="features-section" id="features">
-        <div className="section-inner">
-          <p className="section-kicker">가볍게 시작하세요</p>
-          <h2 className="section-title">
-            기본은 무료,
-            <br />
-            사진까지 담고 싶다면 3,300원
-          </h2>
-          <p className="section-sub">
-            기본 청첩장은 무료로 만들고, 사진이 포함된 초대장을 발행할 때만 3,300원 발행권을 사용합니다.
-          </p>
-          <div className="features-grid">
-            {features.map((feature, index) => (
-              <article className="feature-card" key={feature.title}>
-                <div className="feature-icon">{String(index + 1).padStart(2, "0")}</div>
-                <h3>{feature.title}</h3>
-                <p>{feature.description}</p>
+      <section className="invite-app-section" id="app-preview">
+        <div className="section-inner invite-app-inner">
+          <div>
+            <p className="invite-overline">플랫폼 구성</p>
+            <h2>만들고, 보내고, 마음을 확인하세요</h2>
+            <p>
+              공개 링크, 하객 응답, 방명록, 사진 승인 기능을 초대장 흐름 안에 자연스럽게 넣었습니다.
+            </p>
+          </div>
+          <div className="invite-app-moments">
+            {platformPillars.map((pillar) => (
+              <article key={pillar.label}>
+                <span>{pillar.label}</span>
+                <strong>{pillar.title}</strong>
+                <p>{pillar.body}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="process-section">
+      <section className="invite-builder-flow-section">
         <div className="section-inner">
-          <p className="section-kicker">이렇게 진행돼요</p>
-          <h2 className="section-title">디자인 고르고, 내용 넣고, 바로 발행</h2>
-          <div className="process-grid">
-            {processSteps.map((step) => (
-              <article className="process-card" key={step.step}>
-                <span>{step.step}</span>
-                <strong>{step.title}</strong>
-                <p>{step.description}</p>
+          <div className="invite-builder-flow-head">
+            <p className="invite-overline">만드는 순서</p>
+            <h2>처음 만들어도 차근차근 완성됩니다</h2>
+          </div>
+          <div className="invite-builder-flow">
+            {builderFlow.map((item, index) => (
+              <article key={item.id}>
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <strong>{item.title}</strong>
+                <p>{item.body}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="pricing-section" id="pricing">
-        <div className="section-inner">
-          <p className="section-kicker">요금 안내</p>
-          <h2 className="section-title">무료로 시작하고, 사진이 들어가면 3,300원</h2>
-          <p className="section-sub">사진이 포함된 초대장을 발행할 때만 3,300원 발행권이 필요하며, 프로필·배경·갤러리 사진이 모두 포함됩니다.</p>
-          <div className="pricing-grid">
-            {pricing.map((plan) => (
-              <article className={`price-card ${plan.popular ? "popular" : ""}`} key={plan.title}>
-                <div className={`price-badge ${plan.popular ? "popular-badge" : "free"}`}>
-                  {plan.badge}
-                </div>
-                <h3>{plan.title}</h3>
-                <div className="price">{plan.price}</div>
-                <ul>
-                  {plan.items.map((item) => (
-                    <li key={item}>
-                      <span>•</span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <Link className="btn-price" href="/builder">
-                  시작하기
-                </Link>
+      <section className="invite-ops-section">
+        <div className="section-inner invite-ops-inner">
+          <div>
+            <p className="invite-overline">내 초대장</p>
+            <h2>초대한 뒤에도 한눈에 확인하세요</h2>
+          </div>
+          <div className="invite-ops-grid">
+            {dashboardSignals.map((signal) => (
+              <article key={signal.label}>
+                <span>{signal.label}</span>
+                <strong>{signal.metric}</strong>
+                <p>{signal.body}</p>
               </article>
             ))}
           </div>
         </div>
+      </section>
+
+      <section className="invite-final-cta">
+        <p>특별한 날을 고르고, 어울리는 템플릿으로 바로 시작하세요.</p>
+        <Link className="invite-primary" href="/builder">
+          새 초대장 만들기
+        </Link>
       </section>
 
       <SiteFooter />

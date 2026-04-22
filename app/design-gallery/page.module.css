@@ -1,0 +1,478 @@
+.page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 5%, rgba(214, 190, 163, 0.28), transparent 28rem),
+    radial-gradient(circle at 95% 18%, rgba(215, 170, 162, 0.2), transparent 26rem),
+    #f5f0eb;
+  color: #2c2824;
+  padding-bottom: 72px;
+}
+
+.header {
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.logo {
+  color: #2c2824;
+  font-family: var(--font-serif), serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.headerAction {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #d8cec2;
+  border-radius: 8px;
+  background: rgba(255, 253, 249, 0.82);
+  color: #2c2824;
+  padding: 0 18px;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.hero {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 72px 24px 46px;
+  text-align: center;
+}
+
+.hero p {
+  margin: 0 0 14px;
+  color: #9a7d56;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  max-width: 800px;
+  margin: 0 auto;
+  color: #2c2824;
+  font-family: var(--font-serif), serif;
+  font-size: clamp(2.4rem, 5vw, 4.6rem);
+  font-weight: 500;
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+.hero span {
+  display: block;
+  max-width: 640px;
+  margin: 22px auto 0;
+  color: #6d6257;
+  font-size: 1.02rem;
+  line-height: 1.8;
+}
+
+.grid {
+  display: grid;
+  gap: 28px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.card {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.82fr) minmax(320px, 1.18fr);
+  gap: 34px;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(216, 206, 194, 0.95);
+  border-radius: 22px;
+  background: rgba(255, 253, 249, 0.86);
+  box-shadow: 0 20px 54px rgba(67, 54, 42, 0.09);
+  padding: 28px;
+  scroll-margin-top: 18px;
+}
+
+.visual {
+  min-height: 540px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(255, 250, 244, 0.92), rgba(238, 227, 216, 0.55)),
+    radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.9), transparent 11rem);
+}
+
+.copy span {
+  color: #9a7d56;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.copy h2 {
+  margin: 10px 0 12px;
+  color: #2c2824;
+  font-family: var(--font-serif), serif;
+  font-size: clamp(1.8rem, 3vw, 3rem);
+  font-weight: 500;
+}
+
+.copy p {
+  color: #6d6257;
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+.copy ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.copy li {
+  border: 1px solid rgba(198, 164, 110, 0.32);
+  border-radius: 999px;
+  background: rgba(255, 253, 249, 0.74);
+  color: #7b6444;
+  padding: 7px 12px;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 28px;
+}
+
+.actions a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 0 18px;
+  font-size: 0.9rem;
+  font-weight: 900;
+}
+
+.actions a:first-child {
+  background: #282726;
+  color: #fffaf4;
+}
+
+.actions a:last-child {
+  border: 1px solid #d8cec2;
+  color: #2c2824;
+}
+
+.phoneScreen {
+  position: relative;
+  width: 255px;
+  min-height: 500px;
+  overflow: hidden;
+  border: 1px solid rgba(232, 224, 215, 0.92);
+  border-radius: 28px;
+  background: #fffdf9;
+  box-shadow: 0 26px 60px rgba(50, 40, 32, 0.16);
+  padding: 18px 14px;
+}
+
+.phoneTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #171512;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.phoneTop b {
+  font-family: var(--font-serif), serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+}
+
+.floralCard,
+.heroImage,
+.studioHero {
+  margin-top: 18px;
+  border-radius: 14px;
+  background:
+    linear-gradient(180deg, rgba(255, 253, 249, 0.42), rgba(255, 253, 249, 0.72)),
+    url("/images/generated/wedding/wedding-peony-arch.png") center/cover;
+}
+
+.floralCard {
+  min-height: 276px;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  color: #4e3f36;
+  text-align: center;
+}
+
+.floralCard p,
+.script {
+  color: #c99d80;
+  font-family: var(--font-serif), serif;
+  font-size: 0.86rem;
+  font-style: italic;
+}
+
+.floralCard h3,
+.openingScreen h3 {
+  margin: 16px 0 0;
+  font-family: var(--font-serif), serif;
+  font-size: 1.45rem;
+  font-weight: 500;
+  line-height: 1.65;
+}
+
+.actionRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 14px 0;
+}
+
+.actionRow span,
+.infoRows p {
+  border: 1px solid #ece4dc;
+  border-radius: 9px;
+  background: #fff;
+  color: #4f473f;
+  padding: 10px 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.darkButton {
+  width: 100%;
+  min-height: 38px;
+  border: 0;
+  border-radius: 8px;
+  background: #282726;
+  color: #fffaf4;
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.shareLine {
+  margin-top: 12px;
+  overflow: hidden;
+  color: #8a806f;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.studioHero {
+  min-height: 116px;
+  display: grid;
+  align-content: center;
+  padding: 20px;
+}
+
+.studioHero p {
+  color: #9a7d56;
+  font-size: 0.72rem;
+  font-weight: 900;
+}
+
+.studioHero strong {
+  margin-top: 8px;
+  color: #2c2824;
+  font-size: 1.1rem;
+  line-height: 1.4;
+}
+
+.stepTabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin: 14px 0;
+}
+
+.stepTabs span {
+  border-radius: 999px;
+  background: #f2ece5;
+  color: #6d6257;
+  padding: 8px 0;
+  font-size: 0.68rem;
+  font-weight: 900;
+  text-align: center;
+}
+
+.editorBlock {
+  display: grid;
+  gap: 8px;
+}
+
+.editorBlock i {
+  height: 34px;
+  border-radius: 8px;
+  background: #f2ece5;
+}
+
+.livePreview {
+  margin-top: 14px;
+  border-radius: 12px;
+  background: #2c2824;
+  color: #fffaf4;
+  padding: 18px;
+}
+
+.livePreview em,
+.livePreview span {
+  color: #d9b98a;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.livePreview strong {
+  display: block;
+  margin: 7px 0;
+  font-family: var(--font-serif), serif;
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 18px 0;
+}
+
+.metricGrid div {
+  border-radius: 12px;
+  background: #f5efe8;
+  padding: 14px 8px;
+  text-align: center;
+}
+
+.metricGrid b {
+  display: block;
+  color: #2c2824;
+  font-size: 1.35rem;
+}
+
+.metricGrid span {
+  color: #8a806f;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.guestList {
+  display: grid;
+  gap: 8px;
+}
+
+.guestList p {
+  display: flex;
+  justify-content: space-between;
+  border: 1px solid #ece4dc;
+  border-radius: 10px;
+  background: #fff;
+  color: #4f473f;
+  padding: 11px;
+  font-size: 0.77rem;
+  font-weight: 800;
+}
+
+.guestList span {
+  color: #b28458;
+}
+
+.openingScreen {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  background:
+    linear-gradient(180deg, rgba(255, 248, 240, 0.8), rgba(255, 253, 249, 0.96)),
+    url("/images/generated/bridal/bridal-pink-ribbon.png") center/cover;
+  text-align: center;
+}
+
+.envelope {
+  width: 185px;
+  height: 130px;
+  display: grid;
+  align-content: center;
+  border: 1px solid #d8bfa9;
+  border-radius: 8px;
+  background: rgba(255, 253, 249, 0.82);
+}
+
+.envelope span {
+  color: #c99d80;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+}
+
+.envelope strong {
+  margin-top: 8px;
+  font-family: var(--font-serif), serif;
+  font-size: 1.35rem;
+  font-weight: 500;
+}
+
+.heroImage {
+  min-height: 260px;
+}
+
+.classicCopy {
+  padding: 18px 0 14px;
+  text-align: center;
+}
+
+.classicCopy span {
+  color: #c99d80;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+}
+
+.classicCopy h3 {
+  margin: 10px 0;
+  font-family: var(--font-serif), serif;
+  font-size: 1.32rem;
+  font-weight: 500;
+}
+
+.classicCopy p {
+  color: #6d6257;
+  font-size: 0.78rem;
+}
+
+.infoRows {
+  display: grid;
+  gap: 7px;
+}
+
+@media (max-width: 820px) {
+  .card {
+    grid-template-columns: 1fr;
+  }
+
+  .visual {
+    min-height: auto;
+    padding: 22px 0;
+  }
+
+  .headerAction {
+    display: none;
+  }
+}

@@ -3,7 +3,14 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useState } from "react";
-import { TemplateMarkup } from "@/components/landing/template-markup";
+import { NaverMapEmbed } from "@/components/invitations/naver-map-embed";
+import {
+  buildKakaoMapSearchUrl,
+  buildKakaoSharePayload,
+  getNaverMapLink,
+  resolveKakaoJavaScriptKey,
+  type KakaoDefaultSharePayload
+} from "@/lib/korean-invitation-features";
 import {
   LOCAL_GUESTBOOK_KEY,
   LOCAL_RSVP_KEY,
@@ -12,32 +19,23 @@ import {
   formatVenue,
   type GuestbookEntry,
   type InvitationDraftPayload,
+  type MemoryPhotoEntry,
   type RsvpEntry
 } from "@/lib/invitation-payload";
 import {
   getInvitationAccountEntries,
   getInvitationCategoryMeta,
-  getInvitationContactLines,
   getInvitationHeroSubtitle,
   getInvitationHeroTitle,
   getInvitationPersonLines,
   getPublicShareUrl
 } from "@/lib/invitation-presentation";
-import { templates } from "@/lib/templates";
 
 type KakaoShareApi = {
   isInitialized(): boolean;
   init(key: string): void;
   Share: {
-    sendDefault(payload: {
-      objectType: "text";
-      text: string;
-      link: {
-        mobileWebUrl: string;
-        webUrl: string;
-      };
-      buttonTitle: string;
-    }): void;
+    sendDefault(payload: KakaoDefaultSharePayload): void;
   };
 };
 
@@ -52,11 +50,100 @@ type InvitationViewProps = {
   payload: InvitationDraftPayload;
   shareUrl: string;
   initialGuestbookEntries?: GuestbookEntry[];
+  initialMemoryPhotoEntries?: MemoryPhotoEntry[];
   mode: "preview" | "public";
 };
 
 function normalizeUrl(value: string) {
   return /^https?:\/\//i.test(value) ? value : "";
+}
+
+const fallbackGalleryByCategory: Record<string, string[]> = {
+  wedding: [
+    "/images/generated/wedding/wedding-peony-arch.png",
+    "/images/generated/wedding/wedding-white-botanical.png",
+    "/images/generated/wedding/wedding-green-wreath.png",
+    "/images/generated/wedding/wedding-gold-formal.png",
+    "/images/generated/wedding/wedding-premium-romantic-arch.png",
+    "/images/generated/wedding/wedding-chapel-sketch.png"
+  ],
+  dol: [
+    "/images/generated/dol/dol-teddy-balloon.png",
+    "/images/generated/dol/dol-baby-crown-character.png",
+    "/images/generated/dol/dol-pastel-cake-balloons.png",
+    "/images/generated/dol/dol-blue-ribbon-check.png"
+  ],
+  bridal: [
+    "/images/generated/bridal/bridal-pink-ribbon.png",
+    "/images/generated/bridal/bridal-boho-dried-flower.png",
+    "/images/generated/bridal/bridal-mint-fresh.png",
+    "/images/generated/bridal/bridal-vanity-floral.png"
+  ],
+  housewarming: [
+    "/images/generated/housewarming/housewarming-green-home.png",
+    "/images/genspark/6XcxVcVH.jpg"
+  ],
+  hwangap: [
+    "/images/generated/hwangap/hwangap-floral-classic.png",
+    "/images/generated/hwangap/hwangap-green-traditional.png",
+    "/images/generated/hwangap/hwangap-navy-gold.png",
+    "/images/generated/hwangap/hwangap-crane-pine.png"
+  ]
+};
+
+function InvitationSectionTitle({ en, ko }: { en: string; ko: string }) {
+  return (
+    <div className="scroll-invite-section-title">
+      <span>{en}</span>
+      <h2>{ko}</h2>
+      <i />
+    </div>
+  );
+}
+
+function getEventDate(value: string) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function getCalendarCells(eventDate: Date | null) {
+  const fallback = new Date("2026-10-24T13:00:00");
+  const date = eventDate ?? fallback;
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  return {
+    monthLabel: `${year}. ${String(month + 1).padStart(2, "0")}`,
+    selectedDay: date.getDate(),
+    cells: [
+      ...Array.from({ length: firstDay }, (_, index) => ({ key: `empty-${index}`, day: 0 })),
+      ...Array.from({ length: daysInMonth }, (_, index) => ({ key: `day-${index + 1}`, day: index + 1 }))
+    ]
+  };
+}
+
+function getDDayLabel(eventDate: Date | null) {
+  if (!eventDate) {
+    return "날짜를 입력해 주세요.";
+  }
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(eventDate);
+  target.setHours(0, 0, 0, 0);
+  const diff = Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+  if (diff > 0) {
+    return `${diff}일 남았습니다.`;
+  }
+
+  if (diff === 0) {
+    return "오늘입니다.";
+  }
+
+  return "소중한 날을 함께해 주셔서 감사합니다.";
 }
 
 let kakaoScriptPromise: Promise<KakaoShareApi | null> | null = null;
@@ -104,24 +191,27 @@ export function InvitationView({
   payload,
   shareUrl,
   initialGuestbookEntries = [],
+  initialMemoryPhotoEntries = [],
   mode
 }: InvitationViewProps) {
   const [rsvpEntries, setRsvpEntries] = useState<RsvpEntry[]>([]);
   const [guestbookEntries, setGuestbookEntries] = useState<GuestbookEntry[]>(initialGuestbookEntries);
+  const [memoryPhotoEntries, setMemoryPhotoEntries] = useState<MemoryPhotoEntry[]>(initialMemoryPhotoEntries);
   const [rsvpMessage, setRsvpMessage] = useState("");
   const [rsvpError, setRsvpError] = useState("");
   const [guestbookMessage, setGuestbookMessage] = useState("");
   const [guestbookError, setGuestbookError] = useState("");
+  const [memoryMessage, setMemoryMessage] = useState("");
+  const [memoryError, setMemoryError] = useState("");
   const [shareMessage, setShareMessage] = useState("");
   const [pending, setPending] = useState(false);
-  const selectedTemplate = templates.find((template) => template.id === payload.templateId) ?? templates[0];
   const categoryMeta = getInvitationCategoryMeta(payload);
   const personLines = getInvitationPersonLines(payload);
-  const contactLines = getInvitationContactLines(payload);
   const accountEntries = getInvitationAccountEntries(payload);
   const heroTitle = getInvitationHeroTitle(payload);
   const heroSubtitle = getInvitationHeroSubtitle(payload);
-  const kakaoJsKey = payload.kakaoJsKey.trim();
+  const kakaoJsKey = resolveKakaoJavaScriptKey(payload.kakaoJsKey, process.env.NEXT_PUBLIC_KAKAO_JS_KEY);
+  const naverMapClientId = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID || "";
   const resolvedShareUrl = getPublicShareUrl(
     shareUrl,
     typeof window === "undefined" ? process.env.NEXT_PUBLIC_SITE_URL : window.location.origin
@@ -158,6 +248,10 @@ export function InvitationView({
       guestPhone: String(formData.get("guestPhone") || ""),
       attending: String(formData.get("attending") || "yes") === "yes",
       guests: Number(formData.get("guests") || 1),
+      side: String(formData.get("side") || "shared") as RsvpEntry["side"],
+      mealPreference: String(formData.get("mealPreference") || "undecided") as RsvpEntry["mealPreference"],
+      shuttleNeeded: String(formData.get("shuttleNeeded") || "no") === "yes",
+      companionNames: String(formData.get("companionNames") || ""),
       memo: String(formData.get("memo") || ""),
       createdAt: new Date().toISOString()
     };
@@ -178,6 +272,10 @@ export function InvitationView({
           guestPhone: nextEntry.guestPhone,
           attending: nextEntry.attending ? "yes" : "no",
           guests: nextEntry.guests,
+          side: nextEntry.side,
+          mealPreference: nextEntry.mealPreference,
+          shuttleNeeded: nextEntry.shuttleNeeded ? "yes" : "no",
+          companionNames: nextEntry.companionNames,
           memo: nextEntry.memo,
           website: String(formData.get("website") || "")
         });
@@ -185,12 +283,12 @@ export function InvitationView({
       } else {
         const current = JSON.parse(window.localStorage.getItem(LOCAL_RSVP_KEY) || "[]") as RsvpEntry[];
         window.localStorage.setItem(LOCAL_RSVP_KEY, JSON.stringify([nextEntry, ...current]));
-        setRsvpMessage("데모 모드에서 RSVP를 저장했습니다.");
+        setRsvpMessage("데모 모드에서 참석 응답을 저장했습니다.");
       }
 
       setRsvpEntries((current) => [nextEntry, ...current]);
     } catch (submissionError) {
-      setRsvpError(submissionError instanceof Error ? submissionError.message : "RSVP 저장에 실패했습니다.");
+      setRsvpError(submissionError instanceof Error ? submissionError.message : "참석 응답 저장에 실패했습니다.");
     } finally {
       setPending(false);
     }
@@ -238,313 +336,377 @@ export function InvitationView({
     }
   }
 
+  async function handleMemoryPhotoSubmit(formData: FormData) {
+    const file = formData.get("file");
+    const nickname = String(formData.get("nickname") || "").trim();
+    const message = String(formData.get("message") || "").trim();
+
+    if (!nickname) {
+      setMemoryError("사진을 남긴 분의 이름을 입력해 주세요.");
+      return;
+    }
+
+    if (!(file instanceof File) || file.size === 0) {
+      setMemoryError("업로드할 사진을 선택해 주세요.");
+      return;
+    }
+
+    setPending(true);
+    setMemoryError("");
+    setMemoryMessage("");
+
+    try {
+      if (mode === "public" && slug) {
+        await fetch(`/api/public/${slug}/memory`, {
+          method: "POST",
+          body: formData
+        }).then(async (response) => {
+          const result = (await response.json().catch(() => ({}))) as { message?: string };
+          if (!response.ok) {
+            throw new Error(result.message || "사진 업로드에 실패했습니다.");
+          }
+          return result;
+        });
+        setMemoryMessage("사진이 접수되었습니다. 호스트 확인 후 공개됩니다.");
+      } else {
+        const imageUrl = URL.createObjectURL(file);
+        setMemoryPhotoEntries((current) => [
+          {
+            id: crypto.randomUUID(),
+            nickname,
+            message,
+            imageUrl,
+            approved: true,
+            createdAt: new Date().toISOString()
+          },
+          ...current
+        ]);
+        setMemoryMessage("미리보기에서 사진을 추가했습니다.");
+      }
+    } catch (submissionError) {
+      setMemoryError(submissionError instanceof Error ? submissionError.message : "사진 업로드에 실패했습니다.");
+    } finally {
+      setPending(false);
+    }
+  }
+
   const kakaoPayLink = normalizeUrl(payload.kakaoPayLink);
   const videoUrl = normalizeUrl(payload.videoUrl);
   const backgroundMusicUrl = normalizeUrl(payload.backgroundMusicUrl);
-  const mapQuery = encodeURIComponent(payload.mapAddress || payload.venueAddress || payload.venueName);
-  const mapLink =
-    normalizeUrl(payload.naverMapLink) ||
-    `https://map.naver.com/p/search/${mapQuery}`;
-  const kakaoMapLink = `https://map.kakao.com/link/search/${mapQuery}`;
+  const mapLink = getNaverMapLink(payload);
+  const kakaoMapLink = buildKakaoMapSearchUrl(payload);
+  const addressForCopy = payload.mapAddress || payload.venueAddress || payload.venueName;
+
+  const eventDate = getEventDate(payload.eventDateTime);
+  const calendar = getCalendarCells(eventDate);
+  const galleryImages = payload.galleryImages.length
+    ? payload.galleryImages
+    : fallbackGalleryByCategory[payload.category] ?? fallbackGalleryByCategory.wedding;
+  const coverImage = payload.mainImageUrl || payload.backgroundImageUrl || galleryImages[0] || "/images/generated/wedding/wedding-white-botanical.png";
+  const groomParentLine = [payload.groomFatherName, payload.groomMotherName].filter(Boolean).join(" · ");
+  const brideParentLine = [payload.brideFatherName, payload.brideMotherName].filter(Boolean).join(" · ");
 
   return (
-    <main className="invitation-main">
-      <section
-        className="invitation-hero"
-        style={payload.backgroundImageUrl ? { backgroundImage: `url(${payload.backgroundImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
-      >
-        {!payload.backgroundImageUrl ? (
-          <div className="invitation-template-backdrop">
-            <TemplateMarkup template={selectedTemplate} />
-          </div>
-        ) : null}
-        <div className="invitation-hero-overlay" />
-        <div className="invitation-hero-inner">
-          {payload.mainImageUrl ? (
-            <div className="invitation-main-image-wrap">
-              <img alt="초대장 메인 이미지" src={payload.mainImageUrl} style={{ display: "block" }} />
-            </div>
-          ) : null}
-          <div className="invitation-hero-copy">
-            <p className="invitation-category">{categoryMeta.badgeText}</p>
-            <h1 className="invitation-names">{heroTitle}</h1>
-            {heroSubtitle ? <p className="invitation-subtitle">{heroSubtitle}</p> : null}
-            <p className="invitation-date">{formatEventDateTime(payload.eventDateTime)}</p>
-            <p className="invitation-venue">{formatVenue(payload)}</p>
-            <p className="invitation-message">{payload.message}</p>
-          </div>
+    <main className="scroll-invite-main">
+      <section className="scroll-invite-cover">
+        <img alt="초대장 커버 이미지" src={coverImage} />
+        <div className="scroll-invite-cover-copy">
+          <p>{categoryMeta.badgeText}</p>
+          <h1>{heroTitle}</h1>
+          {heroSubtitle ? <span>{heroSubtitle}</span> : null}
+          <small>
+            {formatEventDateTime(payload.eventDateTime)}
+            <br />
+            {formatVenue(payload)}
+          </small>
         </div>
       </section>
 
-      <section className="invitation-content">
-        <article className="invitation-card">
-          <h2>{categoryMeta.personSectionTitle}</h2>
-          <p style={{ whiteSpace: "pre-line" }}>
-            {personLines.length ? personLines.join("\n") : "행사 정보를 입력해 주세요."}
-          </p>
-        </article>
+      <section className="scroll-invite-letter">
+        <InvitationSectionTitle en="INVITATION" ko="모시는 글" />
+        <p>{payload.message}</p>
+        <div className="scroll-invite-parents">
+          {groomParentLine ? (
+            <p><b>{groomParentLine}</b><span>의 아들</span><strong>{payload.groomName}</strong></p>
+          ) : null}
+          {brideParentLine ? (
+            <p><b>{brideParentLine}</b><span>의 딸</span><strong>{payload.brideName}</strong></p>
+          ) : null}
+          {!groomParentLine && !brideParentLine && personLines.length ? (
+            <p className="scroll-invite-plain-line">{personLines.join("\n")}</p>
+          ) : null}
+        </div>
+        <div className="scroll-invite-contact-row">
+          <a href={payload.groomPhone ? `tel:${payload.groomPhone}` : "#"}>신랑측 전화</a>
+          <a href={payload.bridePhone ? `sms:${payload.bridePhone}` : "#"}>신부측 문자</a>
+        </div>
+      </section>
 
-        <article className="invitation-card">
-          <h2>{categoryMeta.contactTitle}</h2>
-          <p style={{ whiteSpace: "pre-line" }}>
-            {contactLines.length ? contactLines.join("\n") : "연락처를 입력해 주세요."}
-          </p>
-        </article>
+      <section className="scroll-invite-gallery">
+        <InvitationSectionTitle en="GALLERY" ko="우리의 순간" />
+        <div>
+          {galleryImages.slice(0, 6).map((imageUrl, index) => (
+            <img alt={`초대장 갤러리 이미지 ${index + 1}`} key={`${imageUrl}-${index}`} src={imageUrl} />
+          ))}
+        </div>
+      </section>
 
-        <article className="invitation-card">
-          <h2>{categoryMeta.accountTitle}</h2>
-          <p style={{ whiteSpace: "pre-line" }}>
-            {accountEntries.length ? accountEntries.map((entry) => entry.value).join("\n") : "계좌 정보를 입력해 주세요."}
-          </p>
-          {accountEntries.length ? (
-            <div className="invitation-inline-actions">
-              {accountEntries.map((entry) => (
+      <section className="scroll-invite-calendar">
+        <InvitationSectionTitle en="CALENDAR" ko="예식일" />
+        <h3>{calendar.monthLabel}</h3>
+        <div className="scroll-invite-calendar-grid">
+          {["일", "월", "화", "수", "목", "금", "토"].map((day, index) => (
+            <b className={index === 0 ? "is-sunday" : ""} key={day}>{day}</b>
+          ))}
+          {calendar.cells.map((cell) => (
+            <span className={cell.day === calendar.selectedDay ? "is-event-day" : ""} key={cell.key}>
+              {cell.day || ""}
+            </span>
+          ))}
+        </div>
+        <p>
+          {heroTitle}의 날이
+          <br />
+          <strong>{getDDayLabel(eventDate)}</strong>
+        </p>
+      </section>
+
+      <section className="scroll-invite-location">
+        <InvitationSectionTitle en="LOCATION" ko="오시는 길" />
+        <h3>{payload.venueName || "행사장 이름을 입력해 주세요."}</h3>
+        <p>{payload.mapAddress || payload.venueAddress || "주소를 입력해 주세요."}</p>
+        <div className="scroll-invite-map">
+          <NaverMapEmbed clientId={naverMapClientId} payload={payload} />
+          <span>네이버/카카오 지도 연동</span>
+        </div>
+        <div className="scroll-invite-action-row">
+          <button
+            onClick={async () => {
+              await copyToClipboard(addressForCopy);
+            }}
+            type="button"
+          >
+            주소 복사
+          </button>
+          <a href={kakaoMapLink} rel="noreferrer noopener" target="_blank">카카오맵 열기</a>
+        </div>
+        <dl>
+          <dt>위치 안내</dt>
+          <dd>{payload.transportNote || "대중교통과 주차 안내를 입력해 주세요."}</dd>
+          <dt>네이버 지도</dt>
+          <dd><a href={mapLink} rel="noreferrer noopener" target="_blank">네이버 지도 열기</a></dd>
+        </dl>
+      </section>
+
+      <section className="scroll-invite-gift">
+        <InvitationSectionTitle en="GIFT" ko="마음 전하실 곳" />
+        <p>
+          참석이 어려우신 분들을 위해
+          <br />
+          계좌번호를 기재하였습니다.
+        </p>
+        {accountEntries.length ? (
+          accountEntries.map((entry) => (
+            <details key={entry.label}>
+              <summary>{entry.label}</summary>
+              <div>
+                <span>{entry.value}</span>
                 <button
-                  className="btn-outline invitation-small-btn"
-                  key={entry.copyLabel}
-                  onClick={() => copyToClipboard(entry.copyValue)}
+                  onClick={async () => {
+                    await copyToClipboard(entry.copyValue);
+                  }}
                   type="button"
                 >
-                  {entry.copyLabel}
+                  복사
                 </button>
-              ))}
-            </div>
-          ) : null}
-          <a className={`btn-primary invitation-wide-btn ${kakaoPayLink ? "" : "is-disabled"}`} href={kakaoPayLink || "#"} rel="noreferrer noopener" target="_blank">
-            카카오페이 송금 링크 열기
-          </a>
-        </article>
+              </div>
+            </details>
+          ))
+        ) : (
+          <p>계좌 정보를 입력해 주세요.</p>
+        )}
+        <a className={kakaoPayLink ? "" : "is-disabled"} href={kakaoPayLink || "#"} rel="noreferrer noopener" target="_blank">
+          카카오페이 송금 링크 열기
+        </a>
+      </section>
 
-        <article className="invitation-card">
-          <h2>위치</h2>
-          <p>{payload.mapAddress || payload.venueAddress || "위치 정보를 입력해 주세요."}</p>
-          <p className="invitation-transport">{payload.transportNote}</p>
-          <div className="invitation-inline-actions">
-            <a className="btn-primary invitation-small-btn" href={mapLink} rel="noreferrer noopener" target="_blank">
-              네이버 지도 열기
-            </a>
-            <a className="btn-outline invitation-small-btn" href={kakaoMapLink} rel="noreferrer noopener" target="_blank">
-              카카오맵 열기
-            </a>
+      {videoUrl ? (
+        <section className="scroll-invite-card-section">
+          <InvitationSectionTitle en="VIDEO" ko="식전 영상" />
+          <p>예식 전 함께 보실 수 있는 영상을 준비했습니다.</p>
+          <a href={videoUrl} rel="noreferrer noopener" target="_blank">영상 보기</a>
+        </section>
+      ) : null}
+
+      {backgroundMusicUrl ? (
+        <section className="scroll-invite-card-section">
+          <InvitationSectionTitle en="MUSIC" ko="배경음악" />
+          <audio controls preload="none" src={backgroundMusicUrl} />
+        </section>
+      ) : null}
+
+      <section className="scroll-invite-card-section">
+        <InvitationSectionTitle en="REPLY" ko="참석 응답" />
+        <form
+          action={async (formData) => {
+            await handleRsvpSubmit(formData);
+          }}
+          className="scroll-invite-form"
+        >
+          <input autoComplete="off" name="website" style={{ display: "none" }} tabIndex={-1} type="text" />
+          <label>이름<input name="guestName" required type="text" /></label>
+          <label>연락처<input name="guestPhone" type="text" /></label>
+          <label>
+            참석 여부
+            <select defaultValue="yes" name="attending">
+              <option value="yes">참석</option>
+              <option value="no">불참</option>
+            </select>
+          </label>
+          <label>동행 인원<input defaultValue={1} max={20} min={0} name="guests" type="number" /></label>
+          <label>
+            하객 구분
+            <select defaultValue="shared" name="side">
+              <option value="shared">함께 아는 하객</option>
+              <option value="groom">신랑측 하객</option>
+              <option value="bride">신부측 하객</option>
+            </select>
+          </label>
+          <label>
+            식사 예정
+            <select defaultValue="undecided" name="mealPreference">
+              <option value="undecided">아직 미정</option>
+              <option value="yes">식사 예정</option>
+              <option value="no">식사 안 함</option>
+            </select>
+          </label>
+          <label>메모<textarea name="memo" rows={3} /></label>
+          <button disabled={pending} type="submit">참석 응답 보내기</button>
+        </form>
+        {rsvpMessage ? <p className="form-message success">{rsvpMessage}</p> : null}
+        {rsvpError ? <p className="form-message error">{rsvpError}</p> : null}
+        {rsvpEntries.length ? <p>최근 응답 {rsvpEntries.length}건이 이 세션에 기록되었습니다.</p> : null}
+      </section>
+
+      <section className="scroll-invite-card-section">
+        <InvitationSectionTitle en="PHOTO" ko="하객 사진 남기기" />
+        <p>예식 당일의 순간을 사진으로 남겨 주세요. 접수된 사진은 호스트 확인 후 추억 앨범에 공개됩니다.</p>
+        <form
+          action={async (formData) => {
+            await handleMemoryPhotoSubmit(formData);
+          }}
+          className="scroll-invite-form"
+        >
+          <input autoComplete="off" name="website" style={{ display: "none" }} tabIndex={-1} type="text" />
+          <label>이름<input name="nickname" required type="text" /></label>
+          <label>사진 설명<input maxLength={200} name="message" placeholder="예: 신부대기실에서 남긴 사진" type="text" /></label>
+          <label>사진<input accept="image/jpeg,image/png,image/webp" name="file" required type="file" /></label>
+          <button disabled={pending} type="submit">사진 남기기</button>
+        </form>
+        {memoryMessage ? <p className="form-message success">{memoryMessage}</p> : null}
+        {memoryError ? <p className="form-message error">{memoryError}</p> : null}
+        {memoryPhotoEntries.length ? (
+          <div className="scroll-invite-memory-grid">
+            {memoryPhotoEntries.map((entry) => (
+              <figure key={entry.id}>
+                <img alt={`${entry.nickname}님이 남긴 사진`} src={entry.imageUrl} />
+                <figcaption>
+                  <strong>{entry.nickname}</strong>
+                  {entry.message ? <p>{entry.message}</p> : null}
+                </figcaption>
+              </figure>
+            ))}
           </div>
-        </article>
-
-        {payload.galleryImages.length ? (
-          <article className="invitation-card">
-            <h2>갤러리</h2>
-            <div
-              style={{
-                display: "grid",
-                gap: 12,
-                gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))"
-              }}
-            >
-              {payload.galleryImages.map((imageUrl, index) => (
-                <div
-                  key={`${imageUrl}-${index}`}
-                  style={{
-                    borderRadius: 18,
-                    overflow: "hidden",
-                    minHeight: 140,
-                    background: "#f5efe8"
-                  }}
-                >
-                  <img
-                    alt={`초대장 갤러리 이미지 ${index + 1}`}
-                    src={imageUrl}
-                    style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                </div>
-              ))}
-            </div>
-          </article>
-        ) : null}
-
-        {videoUrl ? (
-          <article className="invitation-card">
-            <h2>식전 영상</h2>
-            <p>예식 전 함께 보실 수 있는 영상을 준비했습니다.</p>
-            <a className="btn-primary invitation-wide-btn" href={videoUrl} rel="noreferrer noopener" target="_blank">
-              영상 보기
-            </a>
-          </article>
-        ) : null}
-
-        {backgroundMusicUrl ? (
-          <article className="invitation-card">
-            <h2>배경음악</h2>
-            <p>초대장과 함께 준비한 음악을 재생해 보세요.</p>
-            <audio controls preload="none" src={backgroundMusicUrl} style={{ width: "100%", marginTop: 12 }} />
-          </article>
-        ) : null}
-
-        <article className="invitation-card">
-          <h2>RSVP</h2>
-          <form
-            action={async (formData) => {
-              await handleRsvpSubmit(formData);
-            }}
-            className="invitation-guestbook-form"
-          >
-            <input autoComplete="off" name="website" style={{ display: "none" }} tabIndex={-1} type="text" />
-            <label>
-              이름
-              <input name="guestName" required type="text" />
-            </label>
-            <label>
-              연락처
-              <input name="guestPhone" type="text" />
-            </label>
-            <label>
-              참석 여부
-              <select className="modal-input" defaultValue="yes" name="attending">
-                <option value="yes">참석</option>
-                <option value="no">불참</option>
-              </select>
-            </label>
-            <label>
-              동행 인원
-              <input defaultValue={1} max={20} min={0} name="guests" type="number" />
-            </label>
-            <label>
-              메모
-              <textarea name="memo" rows={3} />
-            </label>
-            <button className="btn-primary invitation-wide-btn" disabled={pending} type="submit">
-              RSVP 보내기
-            </button>
-          </form>
-          {rsvpMessage ? <p className="form-message success">{rsvpMessage}</p> : null}
-          {rsvpError ? <p className="form-message error">{rsvpError}</p> : null}
-          {rsvpEntries.length ? <p>최근 응답 {rsvpEntries.length}건이 이 세션에 기록되었습니다.</p> : null}
-        </article>
-
-        <article className="invitation-card">
-          <h2>카카오톡으로 보내기</h2>
-          {shareDisabled ? (
-            <p className="form-message error" id="invitationShareHint">
-              미리보기 단계에서는 나만 볼 수 있습니다. 하객에게 보낼 링크는 발행 후 공개 링크를 사용해 주세요.
-            </p>
-          ) : (
-            <p id="invitationShareHint">카카오 JavaScript 키를 입력하면 카카오톡 공유창으로 바로 보낼 수 있습니다.</p>
-          )}
-          <div className="invitation-inline-actions">
-            <button
-              className="btn-primary invitation-small-btn"
-              disabled={shareDisabled}
-              onClick={async () => {
-                try {
-                  const kakao = await ensureKakaoSdk(kakaoJsKey);
-
-                  if (kakao) {
-                    kakao.Share.sendDefault({
-                      objectType: "text",
-                      text: `${payload.title}\n${payload.message}`,
-                      link: {
-                        mobileWebUrl: resolvedShareUrl,
-                        webUrl: resolvedShareUrl
-                      },
-                      buttonTitle: "초대장 보기"
-                    });
-                    setShareMessage("카카오톡 공유창을 열었습니다.");
-                    return;
-                  }
-                } catch {
-                  // fallback below
-                }
-
-                if (navigator.share) {
-                  await navigator.share({ title: payload.title, text: payload.message, url: resolvedShareUrl });
-                  return;
-                }
-
-                await copyToClipboard(resolvedShareUrl);
-                setShareMessage("공유 링크를 복사했습니다. 카카오톡 대화창에 붙여넣어 보내 주세요.");
-              }}
-              type="button"
-            >
-              카카오톡 공유
-            </button>
-            <button
-              className="btn-outline invitation-small-btn"
-              disabled={shareDisabled}
-              onClick={async () => {
-                if (navigator.share) {
-                  await navigator.share({ title: payload.title, text: payload.message, url: resolvedShareUrl });
-                  return;
-                }
-
-                await copyToClipboard(resolvedShareUrl);
-                setShareMessage("공유 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요.");
-              }}
-              type="button"
-            >
-              기본 공유
-            </button>
-            <button
-              className="btn-outline invitation-small-btn"
-              disabled={shareDisabled}
-              onClick={async () => {
-                await copyToClipboard(resolvedShareUrl);
-                setShareMessage("공유 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요.");
-              }}
-              type="button"
-            >
-              링크 복사
-            </button>
-          </div>
-          {shareMessage ? <p className="form-message success">{shareMessage}</p> : null}
-        </article>
-
-        <article className="invitation-card">
-          <h2>방명록</h2>
-          <form
-            action={async (formData) => {
-              await handleGuestbookSubmit(formData);
-            }}
-            className="invitation-guestbook-form"
-          >
-            <input autoComplete="off" name="website" style={{ display: "none" }} tabIndex={-1} type="text" />
-            <label>
-              이름
-              <input name="nickname" required type="text" />
-            </label>
-            <label>
-              메시지
-              <textarea name="guestbookMessage" required rows={3} />
-            </label>
-            <button className="btn-primary invitation-wide-btn" disabled={pending} type="submit">
-              방명록 남기기
-            </button>
-          </form>
-          {mode === "public" ? (
-            <p className="form-message">방명록은 관리자 승인 후 공개됩니다. 작성 직후 목록에 보이지 않아도 정상입니다.</p>
-          ) : null}
-          {guestbookMessage ? <p className="form-message success">{guestbookMessage}</p> : null}
-          {guestbookError ? <p className="form-message error">{guestbookError}</p> : null}
-          <ul className="list-box invitation-guestbook-list">
-            {guestbookEntries.length ? (
-              guestbookEntries.map((entry) => (
-                <li key={entry.id}>
-                  <div className="meta">
-                    {formatTimestampLabel(entry.createdAt)} · {entry.nickname}
-                  </div>
-                  <div className="value">{entry.message}</div>
-                </li>
-              ))
-            ) : (
-              <li className="meta">첫 번째 축하 메시지를 남겨 주세요.</li>
-            )}
-          </ul>
-        </article>
-
-        {payload.thankYouMessage ? (
-          <article className="invitation-card">
-            <h2>감사 인사</h2>
-            <p style={{ whiteSpace: "pre-line" }}>{payload.thankYouMessage}</p>
-          </article>
         ) : null}
       </section>
+
+      <section className="scroll-invite-card-section">
+        <InvitationSectionTitle en="MESSAGE" ko="방명록" />
+        <form
+          action={async (formData) => {
+            await handleGuestbookSubmit(formData);
+          }}
+          className="scroll-invite-form"
+        >
+          <input autoComplete="off" name="website" style={{ display: "none" }} tabIndex={-1} type="text" />
+          <label>이름<input name="nickname" required type="text" /></label>
+          <label>메시지<textarea name="guestbookMessage" required rows={3} /></label>
+          <button disabled={pending} type="submit">방명록 남기기</button>
+        </form>
+        {mode === "public" ? (
+          <p className="form-message">방명록은 관리자 승인 후 공개됩니다. 작성 직후 목록에 보이지 않아도 정상입니다.</p>
+        ) : null}
+        {guestbookMessage ? <p className="form-message success">{guestbookMessage}</p> : null}
+        {guestbookError ? <p className="form-message error">{guestbookError}</p> : null}
+        <ul className="list-box invitation-guestbook-list">
+          {guestbookEntries.length ? (
+            guestbookEntries.map((entry) => (
+              <li key={entry.id}>
+                <div className="meta">{formatTimestampLabel(entry.createdAt)} · {entry.nickname}</div>
+                <div className="value">{entry.message}</div>
+              </li>
+            ))
+          ) : (
+            <li className="meta">첫 번째 축하 메시지를 남겨 주세요.</li>
+          )}
+        </ul>
+      </section>
+
+      <footer className="scroll-invite-footer">
+        <p>{heroTitle}</p>
+        <div>
+          <button
+            disabled={shareDisabled}
+            onClick={async () => {
+              try {
+                const kakao = await ensureKakaoSdk(kakaoJsKey);
+
+                if (kakao) {
+                  kakao.Share.sendDefault(buildKakaoSharePayload(payload, resolvedShareUrl));
+                  setShareMessage("카카오톡 공유창을 열었습니다.");
+                  return;
+                }
+              } catch {
+                // fallback below
+              }
+
+              if (navigator.share) {
+                await navigator.share({ title: payload.title, text: payload.message, url: resolvedShareUrl });
+                return;
+              }
+
+              await copyToClipboard(resolvedShareUrl);
+              setShareMessage("공유 링크를 복사했습니다. 카카오톡 대화창에 붙여넣어 보내 주세요.");
+            }}
+            type="button"
+          >
+            카카오톡 공유
+          </button>
+          <button
+            disabled={shareDisabled}
+            onClick={async () => {
+              await copyToClipboard(resolvedShareUrl);
+              setShareMessage("공유 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요.");
+            }}
+            type="button"
+          >
+            링크 복사
+          </button>
+        </div>
+        {shareDisabled ? (
+          <small>미리보기 단계에서는 나만 볼 수 있습니다. 하객에게 보낼 링크는 발행 후 공개 링크를 사용해 주세요.</small>
+        ) : (
+          <small>공유 링크 · {resolvedShareUrl}</small>
+        )}
+        {shareMessage ? <p className="form-message success">{shareMessage}</p> : null}
+      </footer>
+
+      {payload.thankYouMessage ? (
+        <section className="scroll-invite-card-section">
+          <InvitationSectionTitle en="THANKS" ko="감사 인사" />
+          <p style={{ whiteSpace: "pre-line" }}>{payload.thankYouMessage}</p>
+        </section>
+      ) : null}
     </main>
   );
 }

@@ -22,7 +22,7 @@ export default function Loading() {
               margin: "0 auto 16px"
             }}
           />
-          <p style={{ color: "#8B7355", fontSize: "0.9rem" }}>불러오는 중...</p>
+          <p style={{ color: "#8B7355", fontSize: "0.9rem" }}>불러오는 중…</p>
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       </section>

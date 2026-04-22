@@ -33,7 +33,7 @@ export default async function SignInPage({
             초대장을 이어서 완성하세요
           </h1>
           <p className="hero-subtitle">
-            발행한 초대장 관리, RSVP 확인, 방명록 검토, 수정 이력을
+            발행한 초대장 관리, 하객 응답 확인, 방명록 검토, 수정 이력을
             <br />
             한 곳에서 관리할 수 있습니다.
           </p>

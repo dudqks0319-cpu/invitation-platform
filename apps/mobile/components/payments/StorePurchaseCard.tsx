@@ -39,7 +39,7 @@ export function StorePurchaseCard({
             ? connected
               ? "스토어 상품을 불러오는 중입니다."
               : "스토어 연결을 준비 중입니다."
-            : "환경변수에 스토어 상품 ID를 설정하면 실제 구매 버튼이 활성화됩니다."}
+            : "결제 준비가 아직 완료되지 않았습니다."}
       </Text>
       {message ? (
         <Text style={{ color: theme.colors.success, lineHeight: 22, marginTop: 10 }}>{message}</Text>
@@ -64,7 +64,7 @@ export function StorePurchaseCard({
             ? "결제 전 준비 필요"
             : canPurchase
               ? "스토어 결제로 발행권 구매"
-              : "스토어 상품 설정 필요"}
+              : "결제 준비 중"}
       </Button>
     </Card>
   );

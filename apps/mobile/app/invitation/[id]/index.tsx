@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react";
 import { Link, useLocalSearchParams } from "expo-router";
-import { Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { Image, Text, View } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ErrorView } from "@/components/ui/ErrorView";
 import { Loading } from "@/components/ui/Loading";
 import { Pill } from "@/components/ui/Pill";
 import { Screen } from "@/components/ui/Screen";
+import { theme } from "@/components/ui/theme";
 import type { MobileInvitationDraft } from "@/lib/drafts";
 import { deleteDraft, loadDraft, saveDraft } from "@/lib/drafts";
 import { deleteRemoteInvitation, loadRemoteInvitation, saveDraftToSupabase } from "@/lib/invitations";
 import { getPublicInvitationUrl, openInvitationPublicPage, openWebBuilder, shareInvitationLink } from "@/lib/share";
+import { getBundledTemplatePreviewSource } from "@/lib/template-preview-source";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function InvitationDetailScreen() {
@@ -23,6 +26,8 @@ export default function InvitationDetailScreen() {
   const { configMessage, configured, status, user } = useAuth();
   const publicUrl = draft?.payload.share.slug ? getPublicInvitationUrl(draft.payload.share.slug) : "";
   const shareSlug = draft?.payload.share.slug ?? "";
+  const remoteSetupNotice = "링크 발행과 웹 연동을 준비 중입니다. 초대장 내용은 앱에서 계속 확인하고 수정할 수 있습니다.";
+  const developerConfigHint = __DEV__ && !configured ? configMessage : "";
 
   useEffect(() => {
     let mounted = true;
@@ -68,6 +73,9 @@ export default function InvitationDetailScreen() {
 
   const title = draft?.payload.title || "제목 없는 초대장";
   const names = `${draft?.payload.eventData.groom.name || "신랑"} ♡ ${draft?.payload.eventData.bride.name || "신부"}`;
+  const previewSource = draft?.payload.templateId
+    ? getBundledTemplatePreviewSource(draft.payload.templateId)
+    : getBundledTemplatePreviewSource("wedding-rose-gold");
 
   return (
     <Screen subtitle="앱 안에서는 공개 페이지 복제가 아니라 운영 대시보드 경험을 제공합니다." title="초대장 운영">
@@ -78,20 +86,77 @@ export default function InvitationDetailScreen() {
           <Text style={{ color: "#6a5645", lineHeight: 22 }}>{message}</Text>
         </Card>
       ) : null}
-      <Card eyebrow={draft?.syncStatus || "draft"} title={title}>
-        <Text style={{ color: "#5b4a3b", lineHeight: 22 }}>{names}</Text>
-        <Text style={{ color: "#6a5645", lineHeight: 22, marginTop: 6 }}>
-          {draft?.payload.eventDateTime || "행사 일시 미입력"}
-        </Text>
-        <Text style={{ color: "#6a5645", lineHeight: 22, marginTop: 6 }}>
-          {[draft?.payload.venueName, draft?.payload.venueAddress].filter(Boolean).join(" · ") || "장소 미입력"}
-        </Text>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
-          <Pill active={Boolean(draft?.serverId)} label={draft?.serverId ? "원격 저장됨" : "로컬 초안"} />
-          <Pill active={Boolean(draft?.isDirty)} label={draft?.isDirty ? "미저장 변경" : "동기화 안정"} />
-          <Pill active={Boolean(draft?.payload.isPublished)} label={draft?.payload.isPublished ? "공개 중" : "비공개"} />
+      <View
+        style={{
+          borderRadius: 8,
+          overflow: "hidden",
+          backgroundColor: theme.colors.surface,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
+          shadowColor: theme.shadow.card.shadowColor,
+          shadowOffset: theme.shadow.card.shadowOffset,
+          shadowOpacity: theme.shadow.card.shadowOpacity,
+          shadowRadius: theme.shadow.card.shadowRadius,
+          elevation: theme.shadow.card.elevation
+        }}
+      >
+        <View style={{ minHeight: 430, backgroundColor: "#FBF1E8", alignItems: "center", justifyContent: "center" }}>
+          {previewSource ? (
+            <Image alt="" source={previewSource} style={{ position: "absolute", width: "100%", height: "100%" }} resizeMode="cover" />
+          ) : null}
+          <View
+            style={{
+              backgroundColor: "rgba(255,253,249,0.78)",
+              paddingHorizontal: 26,
+              paddingVertical: 30,
+              alignItems: "center",
+              width: "78%"
+            }}
+          >
+            <Text style={{ color: "#C6977D", fontSize: 17, fontStyle: "italic" }}>We are getting married</Text>
+            <Text style={{ color: theme.colors.text, fontSize: 30, lineHeight: 46, fontWeight: "500", textAlign: "center", marginTop: 18 }}>
+              {names}
+            </Text>
+            <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 22, textAlign: "center", marginTop: 18 }}>
+              {draft?.payload.eventDateTime || "행사 일시 미입력"}{"\n"}
+              {draft?.payload.venueName || "장소 미입력"}
+            </Text>
+          </View>
         </View>
-      </Card>
+        <View style={{ padding: 16, gap: 14 }}>
+          <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "800", textAlign: "center" }}>{title}</Text>
+          <Text style={{ color: theme.colors.muted, fontSize: 14, lineHeight: 24, textAlign: "center" }}>
+            {draft?.payload.message || "초대의 글을 입력해 주세요."}
+          </Text>
+          <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
+            {[
+              ["call-outline", "전화하기"],
+              ["location-outline", "길찾기"],
+              ["calendar-outline", "일정저장"]
+            ].map(([icon, label]) => (
+              <View
+                key={label}
+                style={{
+                  flex: 1,
+                  alignItems: "center",
+                  gap: 6,
+                  borderRadius: 8,
+                  backgroundColor: theme.colors.surfaceSoft,
+                  paddingVertical: 12
+                }}
+              >
+                <Ionicons color={theme.colors.text} name={icon as keyof typeof Ionicons.glyphMap} size={20} />
+                <Text style={{ color: theme.colors.text, fontSize: 12 }}>{label}</Text>
+              </View>
+            ))}
+          </View>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            <Pill active={Boolean(draft?.serverId)} label={draft?.serverId ? "원격 저장됨" : "로컬 초안"} />
+            <Pill active={Boolean(draft?.isDirty)} label={draft?.isDirty ? "미저장 변경" : "동기화 안정"} />
+            <Pill active={Boolean(draft?.payload.isPublished)} label={draft?.payload.isPublished ? "공개 중" : "비공개"} />
+          </View>
+        </View>
+      </View>
       <Card eyebrow="공유 준비" title="공개 링크 · 계좌 · 지도">
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
           공유 주소: {draft?.payload.share.slug || "(발행 전)"}
@@ -109,9 +174,12 @@ export default function InvitationDetailScreen() {
           업로드 대기 사진: {draft?.pendingPhotos.length ?? 0}장
         </Text>
         {!configured ? (
-          <Text style={{ color: "#8d5a2b", lineHeight: 22 }}>
-            원격 기능 안내: {configMessage}
-          </Text>
+          <>
+            <Text style={{ color: "#8d5a2b", lineHeight: 22 }}>{remoteSetupNotice}</Text>
+            {developerConfigHint ? (
+              <Text style={{ color: "#6a5645", lineHeight: 20, marginTop: 6 }}>{developerConfigHint}</Text>
+            ) : null}
+          </>
         ) : null}
       </Card>
       <Card eyebrow="빠른 작업" title="자주 쓰는 작업">
@@ -256,7 +324,7 @@ export default function InvitationDetailScreen() {
             variant="outline"
           >
             {!configured
-              ? "Supabase 설정 필요"
+              ? "앱 저장만 가능"
               : configured && status === "authenticated"
                 ? "서버 저장"
                 : "로그인 후 서버 저장"}

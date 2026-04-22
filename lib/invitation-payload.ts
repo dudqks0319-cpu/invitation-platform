@@ -56,6 +56,8 @@ const legacyInvitationPayloadSchema = z
     shareUrl: z.string().trim().optional(),
     kakaoJsKey: z.string().trim().optional(),
     mapAddress: z.string().trim().optional(),
+    mapLatitude: z.string().trim().optional(),
+    mapLongitude: z.string().trim().optional(),
     naverMapLink: z.string().trim().optional(),
     transportNote: z.string().trim().optional(),
     mainImageUrl: imageReferenceSchema.optional(),
@@ -103,6 +105,8 @@ export const invitationDraftPayloadSchema = legacyInvitationPayloadSchema.transf
   shareUrl: raw.shareUrl || "",
   kakaoJsKey: raw.kakaoJsKey || "",
   mapAddress: raw.mapAddress || raw.venueAddress || "서울 강남구 테헤란로 123",
+  mapLatitude: raw.mapLatitude || "",
+  mapLongitude: raw.mapLongitude || "",
   naverMapLink: raw.naverMapLink || "",
   transportNote: raw.transportNote || "",
   mainImageUrl: raw.mainImageUrl || raw.mainImageData || "",
@@ -137,6 +141,10 @@ export type RsvpEntry = {
   guestPhone: string;
   attending: boolean;
   guests: number;
+  side: "groom" | "bride" | "shared";
+  mealPreference: "yes" | "no" | "undecided";
+  shuttleNeeded: boolean;
+  companionNames: string;
   memo: string;
   createdAt: string;
 };
@@ -145,6 +153,15 @@ export type GuestbookEntry = {
   id: string;
   nickname: string;
   message: string;
+  approved?: boolean;
+  createdAt: string;
+};
+
+export type MemoryPhotoEntry = {
+  id: string;
+  nickname: string;
+  message: string;
+  imageUrl: string;
   approved?: boolean;
   createdAt: string;
 };

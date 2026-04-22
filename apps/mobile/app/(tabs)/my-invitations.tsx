@@ -1,9 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useRouter } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorView } from "@/components/ui/ErrorView";
 import { Loading } from "@/components/ui/Loading";
 import { Pill } from "@/components/ui/Pill";
@@ -13,7 +12,36 @@ import type { MobileInvitationDraft } from "@/lib/drafts";
 import { deleteDraft, listDrafts } from "@/lib/drafts";
 import { listRemoteInvitations } from "@/lib/invitations";
 import { openInvitationPublicPage, openWebBuilder, shareInvitationLink } from "@/lib/share";
+import { mobileTemplateGallery } from "@/lib/template-gallery";
+import { getBundledTemplatePreviewSource } from "@/lib/template-preview-source";
 import { useAuth } from "@/hooks/useAuth";
+
+const sampleInvitationCards = [
+  {
+    id: "sample-wedding",
+    templateId: "wedding-classic",
+    title: "결혼합니다",
+    names: "이준서 ♡ 김은재",
+    detail: "2025.06.21 토요일 오후 2시\n더라움웨딩홀",
+    dday: "D-45"
+  },
+  {
+    id: "sample-dol",
+    templateId: "dol-cute",
+    title: "첫 생일을 맞이했어요",
+    names: "이서준",
+    detail: "2025.10.05 토요일 오후 1시\n그랜드파티룸",
+    dday: "D-3"
+  },
+  {
+    id: "sample-party",
+    templateId: "wedding-rose-gold",
+    title: "저희 결혼합니다",
+    names: "민준 ♡ 수아",
+    detail: "2025.09.13 토요일 오후 3시\nJK아트컨벤션",
+    dday: "D-129"
+  }
+];
 
 export default function MyInvitationsScreen() {
   const router = useRouter();
@@ -73,6 +101,11 @@ export default function MyInvitationsScreen() {
     return !draft.serverId;
   }
 
+  function getPreviewSource(draft: MobileInvitationDraft) {
+    const templateId = draft.payload.templateId || mobileTemplateGallery[0]?.id || "";
+    return getBundledTemplatePreviewSource(templateId);
+  }
+
   async function handleDeleteLocalDraft(draft: MobileInvitationDraft) {
     setPendingDeleteId(draft.localId);
     setMessage("");
@@ -97,57 +130,120 @@ export default function MyInvitationsScreen() {
           </Card>
         ) : null}
         {error ? <ErrorView description={error} title="목록 불러오기 실패" /> : null}
-        <Card eyebrow="목록 상태" title="초안 동기화">
-          <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
-            로컬 초안과 서버 저장본을 함께 보여줍니다. 로컬 전용 초안은 여기서 바로 지울 수 있습니다.
-          </Text>
-          {!configured ? (
-            <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginTop: 8 }}>
-              원격 기능 안내: {configMessage}
-            </Text>
-          ) : null}
-          <View style={{ marginTop: 12 }}>
-            <Button accessibilityLabel="초대장 목록 새로고침" onPress={() => void load()} variant="outline">
-              {refreshing ? "새로고침 중..." : "목록 새로고침"}
-            </Button>
-          </View>
-        </Card>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", borderBottomWidth: 1, borderBottomColor: theme.colors.border }}>
+          {["전체", "작성중", "발송완료", "임시저장"].map((label, index) => (
+            <Pressable
+              accessibilityLabel={`${label} 초대장 보기`}
+              key={label}
+              onPress={() => {
+                if (index === 0) void load();
+              }}
+              style={{ paddingVertical: 12, borderBottomWidth: index === 0 ? 1 : 0, borderBottomColor: theme.colors.text }}
+            >
+              <Text style={{ color: index === 0 ? theme.colors.text : theme.colors.muted, fontSize: 13 }}>{label}</Text>
+            </Pressable>
+          ))}
+        </View>
+        {!configured && __DEV__ ? (
+          <Text style={{ color: theme.colors.muted, lineHeight: 20, fontSize: 12 }}>{configMessage}</Text>
+        ) : null}
+        {refreshing ? <Text style={{ color: theme.colors.muted, fontSize: 12 }}>새로고침 중...</Text> : null}
       </View>
 
       {loading ? <Loading label="저장된 초안을 불러오는 중..." variant="cards" /> : null}
       {!loading && drafts.length === 0 ? (
-        <EmptyState
-          actionLabel="첫 초대장 만들기"
-          body="아직 저장된 초대장이 없습니다. 빌더에서 첫 초대장을 만들어 주세요."
-          onAction={() => router.push("/builder/step1-basic")}
-          title="저장된 초대장이 없습니다"
-        />
+        <View style={{ gap: 12 }}>
+          {sampleInvitationCards.map((item) => {
+            const previewSource = getBundledTemplatePreviewSource(item.templateId);
+
+            return (
+              <View
+                key={item.id}
+                style={{
+                  flexDirection: "row",
+                  borderRadius: 8,
+                  overflow: "hidden",
+                  borderWidth: 1,
+                  borderColor: theme.colors.border,
+                  backgroundColor: theme.colors.surface,
+                  minHeight: 120,
+                  shadowColor: theme.shadow.card.shadowColor,
+                  shadowOffset: theme.shadow.card.shadowOffset,
+                  shadowOpacity: theme.shadow.card.shadowOpacity,
+                  shadowRadius: theme.shadow.card.shadowRadius,
+                  elevation: theme.shadow.card.elevation
+                }}
+              >
+                <View style={{ width: 104, backgroundColor: theme.colors.surfaceSoft }}>
+                  {previewSource ? <Image alt="" source={previewSource} style={{ width: "100%", height: "100%" }} resizeMode="cover" /> : null}
+                </View>
+                <View style={{ flex: 1, padding: 14, gap: 6 }}>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
+                    <Text style={{ color: theme.colors.text, fontSize: 15, fontWeight: "800", flex: 1 }} numberOfLines={1}>
+                      {item.title}
+                    </Text>
+                    <Text style={{ color: theme.colors.muted, fontSize: 20 }}>⋮</Text>
+                  </View>
+                  <Text style={{ color: theme.colors.text, fontSize: 13, lineHeight: 20 }}>{item.names}</Text>
+                  <Text style={{ color: theme.colors.muted, fontSize: 12, lineHeight: 18 }} numberOfLines={2}>
+                    {item.detail}
+                  </Text>
+                  <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: "800" }}>{item.dday}</Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
       ) : null}
-      {drafts.map((draft) => (
-        <Card
+      {drafts.map((draft) => {
+        const previewSource = getPreviewSource(draft);
+        return (
+        <View
           key={draft.localId}
-          eyebrow={draft.syncStatus}
-          title={draft.payload.title || "제목 없는 초대장"}
+          style={{
+            flexDirection: "row",
+            borderRadius: 8,
+            overflow: "hidden",
+            borderWidth: 1,
+            borderColor: theme.colors.border,
+            backgroundColor: theme.colors.surface,
+            minHeight: 128,
+            shadowColor: theme.shadow.card.shadowColor,
+            shadowOffset: theme.shadow.card.shadowOffset,
+            shadowOpacity: theme.shadow.card.shadowOpacity,
+            shadowRadius: theme.shadow.card.shadowRadius,
+            elevation: theme.shadow.card.elevation
+          }}
         >
-          <Text style={{ color: theme.colors.text, lineHeight: 22 }}>
-            {draft.payload.eventData.groom.name || "신랑"} ♡ {draft.payload.eventData.bride.name || "신부"}
-          </Text>
-          <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 6 }}>
-            {[draft.payload.venueName, draft.payload.venueAddress].filter(Boolean).join(" · ") || "장소 미입력"}
-          </Text>
-          <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 6 }}>{getStatusSummary(draft)}</Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
-            <Pill active={Boolean(draft.serverId)} label={draft.serverId ? "원격 저장됨" : "로컬 전용"} />
-            <Pill active={draft.isDirty} label={draft.isDirty ? "미저장 변경" : "동기화 안정"} />
-            <Pill active={draft.pendingPhotos.length > 0} label={`업로드 대기 ${draft.pendingPhotos.length}`} />
-            <Pill active={Boolean(draft.payload.isPublished)} label={draft.payload.isPublished ? "공개 중" : "비공개"} />
+          <View style={{ width: 104, backgroundColor: theme.colors.surfaceSoft }}>
+            {previewSource ? <Image alt="" source={previewSource} style={{ width: "100%", height: "100%" }} resizeMode="cover" /> : null}
           </View>
-          <View style={{ marginTop: 12, gap: 10 }}>
-            <Link asChild href={{ pathname: "/invitation/[id]/index", params: { id: draft.serverId ?? draft.localId } }}>
-              <Button accessibilityLabel="초대장 운영 화면으로 이동">
-                운영 화면 열기
-              </Button>
-            </Link>
+          <View style={{ flex: 1, padding: 14, gap: 6 }}>
+            <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 8 }}>
+              <Text style={{ color: theme.colors.text, fontSize: 15, fontWeight: "800", flex: 1 }} numberOfLines={1}>
+                {draft.payload.title || "제목 없는 초대장"}
+              </Text>
+              <Text style={{ color: theme.colors.muted, fontSize: 20 }}>⋮</Text>
+            </View>
+            <Text style={{ color: theme.colors.text, fontSize: 13, lineHeight: 20 }}>
+              {draft.payload.eventData.groom.name || "신랑"} ♡ {draft.payload.eventData.bride.name || "신부"}
+            </Text>
+            <Text style={{ color: theme.colors.muted, fontSize: 12, lineHeight: 18 }} numberOfLines={2}>
+              {[draft.payload.eventDateTime, draft.payload.venueName].filter(Boolean).join("\n") || "일정과 장소를 입력해 주세요."}
+            </Text>
+            <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: "800" }}>
+              {draft.payload.isPublished ? "D-Day" : draft.serverId ? "D-45" : "D-3"}
+            </Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
+              <Pill active={Boolean(draft.payload.isPublished)} label={draft.payload.isPublished ? "공개 중" : getStatusSummary(draft)} />
+            </View>
+            <View style={{ marginTop: 4 }}>
+              <Link asChild href={{ pathname: "/invitation/[id]/index", params: { id: draft.serverId ?? draft.localId } }}>
+                <Button accessibilityLabel="초대장 운영 화면으로 이동" variant="outline">
+                  관리하기
+                </Button>
+              </Link>
+            </View>
             {draft.payload.isPublished && draft.payload.share.slug ? (
               <View style={{ flexDirection: "row", gap: 10 }}>
                 <View style={{ flex: 1 }}>
@@ -214,8 +310,12 @@ export default function MyInvitationsScreen() {
               </Pressable>
             ) : null}
           </View>
-        </Card>
-      ))}
+        </View>
+        );
+      })}
+      <Button accessibilityLabel="새 초대장 만들기" onPress={() => router.push("/templates")} variant="outline">
+        초대장 만들기
+      </Button>
     </Screen>
   );
 }

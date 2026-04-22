@@ -1,21 +1,18 @@
 import { useState } from "react";
 import { Link } from "expo-router";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Platform, Pressable, SafeAreaView, ScrollView, Text, TextInput, View } from "react-native";
 import { Button } from "@/components/ui/Button";
-import { Card } from "@/components/ui/Card";
 import { ErrorView } from "@/components/ui/ErrorView";
 import { Loading } from "@/components/ui/Loading";
-import { Screen } from "@/components/ui/Screen";
-import { SocialSignInButton } from "@/components/ui/SocialSignInButton";
 import { theme } from "@/components/ui/theme";
 import { useAuth } from "@/hooks/useAuth";
 
 const inputStyle = {
   minHeight: 48,
-  borderRadius: 14,
+  borderRadius: 8,
   borderWidth: 1,
   borderColor: theme.colors.border,
-  backgroundColor: "#fff",
+  backgroundColor: theme.colors.surface,
   paddingHorizontal: 14,
   color: theme.colors.text
 } as const;
@@ -26,15 +23,52 @@ type AuthActionResult = {
   data?: { session?: unknown; user?: unknown } | { provider?: unknown; url?: string | null } | null;
 };
 
+function SocialCircle({
+  disabled,
+  label,
+  onPress,
+  tone
+}: {
+  disabled: boolean;
+  label: string;
+  onPress: () => void;
+  tone: "green" | "yellow" | "white";
+}) {
+  const backgroundColor = tone === "green" ? "#35C96F" : tone === "yellow" ? "#F4D64B" : "#FFFFFF";
+  const textColor = tone === "green" ? "#FFFFFF" : "#2B2824";
+
+  return (
+    <Pressable
+      accessibilityLabel={`${label}로 로그인`}
+      disabled={disabled}
+      onPress={disabled ? undefined : onPress}
+      style={{
+        width: 52,
+        height: 52,
+        borderRadius: 26,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor,
+        borderWidth: tone === "white" ? 1 : 0,
+        borderColor: theme.colors.border,
+        opacity: disabled ? 0.45 : 1,
+        shadowColor: theme.shadow.card.shadowColor,
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.9,
+        shadowRadius: 18,
+        elevation: 3
+      }}
+    >
+      <Text style={{ color: textColor, fontSize: 18, fontWeight: "900" }}>{label}</Text>
+    </Pressable>
+  );
+}
+
 export default function LoginScreen() {
   const {
-    configMessage,
-    configMissingKeys,
     configured,
     hasFullAccount,
     isAnonymousSession,
-    nativeGoogleConfigured,
-    nativeKakaoConfigured,
     signInWithGoogle,
     signInWithApple,
     signInWithKakao,
@@ -50,7 +84,9 @@ export default function LoginScreen() {
   const [pendingAction, setPendingAction] = useState<"" | ActionKey>("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const hasEmailCredentials = email.trim().length > 0 && password.trim().length > 0;
-  const showDebugInfo = __DEV__;
+  const isWebPreview = Platform.OS === "web";
+  const authActionsEnabled = configured && pendingAction === "" && !isWebPreview;
+  const visualAuthEnabled = pendingAction === "" && (authActionsEnabled || isWebPreview);
 
   async function runAction(actionKey: ActionKey, action: () => Promise<AuthActionResult>) {
     if ((actionKey === "email-sign-in" || actionKey === "email-sign-up") && !hasEmailCredentials) {
@@ -70,25 +106,18 @@ export default function LoginScreen() {
       if (nextError) {
         const nextMessage = nextError instanceof Error ? nextError.message : nextError.message ?? "로그인에 실패했습니다.";
         setError(nextMessage);
-      } else {
+      } else if (actionKey === "email-sign-up") {
         const hasSession =
           result?.data && typeof result.data === "object" && "session" in result.data && Boolean(result.data.session);
-
-        if (actionKey === "email-sign-up") {
-          setMessage(
-            hasSession
-              ? "계정을 만들고 바로 로그인했습니다."
-              : "계정을 만들었습니다. 이메일 인증이 필요하다면 메일함을 확인해 주세요."
-          );
-        } else if (actionKey === "google") {
-          setMessage("Google 인증 창을 열었습니다. 인증을 마치고 앱으로 돌아오면 연결됩니다.");
-        } else if (actionKey === "kakao") {
-          setMessage("Kakao 인증 창을 열었습니다. 인증을 마치고 앱으로 돌아오면 연결됩니다.");
-        } else if (actionKey === "apple") {
-          setMessage("Apple 로그인을 처리했습니다. 세션이 연결되면 내 초대장 화면으로 이동할 수 있습니다.");
-        } else {
-          setMessage("로그인 요청을 처리했습니다.");
-        }
+        setMessage(hasSession ? "계정을 만들고 바로 로그인했습니다." : "계정을 만들었습니다. 메일함을 확인해 주세요.");
+      } else if (actionKey === "google") {
+        setMessage("Google 인증 창을 열었습니다.");
+      } else if (actionKey === "kakao") {
+        setMessage("Kakao 인증 창을 열었습니다.");
+      } else if (actionKey === "apple") {
+        setMessage("Apple 로그인을 처리했습니다.");
+      } else {
+        setMessage("로그인 요청을 처리했습니다.");
       }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "로그인 중 오류가 발생했습니다.");
@@ -98,200 +127,180 @@ export default function LoginScreen() {
   }
 
   return (
-    <Screen
-      subtitle="작성자는 앱에서 초대장을 만들고 관리합니다. 공개 초대장은 웹 링크로 공유됩니다."
-      title="로그인"
-    >
-      {status === "loading" ? <Loading label="세션 상태를 확인하는 중..." /> : null}
-      {!configured ? (
-        <ErrorView description={configMessage} />
-      ) : null}
-      {error ? <ErrorView description={error} title="로그인 실패" /> : null}
-      {message ? (
-        <Card eyebrow="상태" title="인증 진행 중">
-          <Text style={{ color: "#6a5645", lineHeight: 22 }}>{message}</Text>
-        </Card>
-      ) : null}
-      <Card eyebrow="현재 세션" title={hasFullAccount ? "로그인됨" : isAnonymousSession ? "게스트 모드" : "로그인이 필요합니다"}>
-        <Text style={{ color: "#5b4a3b", lineHeight: 22 }}>
-          {hasFullAccount
-            ? user?.email ?? "사용자 정보 없음"
-            : isAnonymousSession
-              ? "무료 기능은 게스트 모드로 사용할 수 있습니다."
-            : configured
-              ? "아직 연결된 계정이 없습니다. 이메일 또는 소셜 로그인을 선택해 주세요."
-              : "Supabase 설정이 없어서 현재는 둘러보기 전용 상태입니다."}
-        </Text>
-        <Text style={{ color: "#766452", lineHeight: 22, marginTop: 8 }}>
-          현재 상태: {hasFullAccount ? "원격 저장과 유료 발행 가능" : "무료 작성과 게스트 저장 가능"}
-        </Text>
-        {showDebugInfo ? (
-          <Text style={{ color: "#8d5a2b", lineHeight: 22, marginTop: 8 }}>
-            Native auth: Google {nativeGoogleConfigured ? "on" : "off"} / Kakao {nativeKakaoConfigured ? "on" : "off"}
-          </Text>
-        ) : null}
-        {showDebugInfo && !configured && configMissingKeys.length > 0 ? (
-          <Text style={{ color: "#8d5a2b", lineHeight: 22, marginTop: 8 }}>
-            누락된 환경변수: {configMissingKeys.join(", ")}
-          </Text>
-        ) : null}
-      </Card>
-
-      {hasFullAccount ? (
-        <Card eyebrow="다음 단계" title="이제 내 초대장을 관리할 수 있습니다">
-          <Text style={{ color: "#6a5645", lineHeight: 22 }}>
-            로그인 세션이 연결되었습니다. 내 초대장 화면에서 저장본과 RSVP, 방명록, 통계를 확인할 수 있습니다.
-          </Text>
-          <View style={{ marginTop: 12 }}>
-            <Link asChild href="/(tabs)/my-invitations">
-              <Pressable
-                accessibilityLabel="내 초대장으로 이동"
-                style={{
-                  minHeight: 48,
-                  borderRadius: 16,
-                  backgroundColor: theme.colors.accent,
-                  alignItems: "center",
-                  justifyContent: "center"
-                }}
-              >
-                <Text style={{ color: "#fff", fontWeight: "700" }}>내 초대장으로 이동</Text>
-              </Pressable>
-            </Link>
-          </View>
-        </Card>
-      ) : null}
-
-      {!hasFullAccount ? (
-        <Card eyebrow="이메일 로그인" title="기본 인증">
-          <TextInput
-            autoCapitalize="none"
-            keyboardType="email-address"
-            onChangeText={setEmail}
-            placeholder="example@email.com"
-            style={inputStyle}
-            value={email}
-          />
-          <View
-            style={[
-              inputStyle,
-              {
-                marginTop: 12,
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: 0
-              }
-            ]}
-          >
-            <TextInput
-              onChangeText={setPassword}
-              placeholder="비밀번호"
-              secureTextEntry={!passwordVisible}
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: "center",
+          paddingHorizontal: 26,
+          paddingVertical: 28
+        }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={{ alignItems: "center", gap: 20 }}>
+          <View style={{ alignItems: "center", gap: 10 }}>
+            <View
               style={{
-                flex: 1,
-                minHeight: 48,
-                paddingHorizontal: 14,
-                color: theme.colors.text
-              }}
-              value={password}
-            />
-            <Pressable
-              accessibilityLabel={passwordVisible ? "비밀번호 숨기기" : "비밀번호 보기"}
-              onPress={() => setPasswordVisible((current) => !current)}
-              style={{
-                minHeight: 48,
-                paddingHorizontal: 14,
+                width: 34,
+                height: 34,
+                borderRadius: 8,
+                borderWidth: 1,
+                borderColor: theme.colors.text,
                 alignItems: "center",
                 justifyContent: "center"
               }}
             >
-              <Text style={{ color: theme.colors.primaryDark, fontWeight: "700" }}>
-                {passwordVisible ? "숨기기" : "보기"}
-              </Text>
-            </Pressable>
+              <Text style={{ color: theme.colors.text, fontSize: 20 }}>♡</Text>
+            </View>
+            <Text style={{ color: theme.colors.text, fontSize: 28, fontWeight: "500", letterSpacing: 0 }}>
+              invite
+            </Text>
+            <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 22, textAlign: "center" }}>
+              소중한 순간을{"\n"}특별한 초대장으로
+            </Text>
           </View>
-          <View style={{ marginTop: 12 }}>
+
+          {status === "loading" ? <Loading label="계정 상태를 확인하는 중..." /> : null}
+          {!configured && !isWebPreview ? (
+            <ErrorView description="일부 온라인 기능을 준비 중입니다." title="로그인을 잠시 사용할 수 없어요" />
+          ) : null}
+          {error ? <ErrorView description={error} title="로그인을 완료하지 못했어요" /> : null}
+
+          <View style={{ width: "100%", gap: 12 }}>
+            <TextInput
+              autoCapitalize="none"
+              keyboardType="email-address"
+              onChangeText={setEmail}
+              placeholder="이메일을 입력해주세요"
+              placeholderTextColor={theme.colors.textLight}
+              style={inputStyle}
+              value={email}
+            />
+            <View style={[inputStyle, { flexDirection: "row", alignItems: "center", paddingHorizontal: 0 }]}>
+              <TextInput
+                onChangeText={setPassword}
+                placeholder="비밀번호를 입력해주세요"
+                placeholderTextColor={theme.colors.textLight}
+                secureTextEntry={!passwordVisible}
+                style={{ flex: 1, minHeight: 48, paddingHorizontal: 14, color: theme.colors.text }}
+                value={password}
+              />
+              <Pressable
+                accessibilityLabel={passwordVisible ? "비밀번호 숨기기" : "비밀번호 보기"}
+                onPress={() => setPasswordVisible((current) => !current)}
+                style={{ minHeight: 48, paddingHorizontal: 14, alignItems: "center", justifyContent: "center" }}
+              >
+                <Text style={{ color: theme.colors.textLight, fontWeight: "700" }}>
+                  {passwordVisible ? "숨기기" : "보기"}
+                </Text>
+              </Pressable>
+            </View>
             <Button
               accessibilityLabel="이메일로 로그인"
-              onPress={
-                configured && pendingAction === ""
-                  ? () => void runAction("email-sign-in", () => signInWithPassword(email, password))
-                  : undefined
-              }
-            >
-              {pendingAction === "email-sign-in" ? "로그인 중..." : "이메일로 로그인"}
-            </Button>
-          </View>
-          <View style={{ marginTop: 10 }}>
-            <Button
-              accessibilityLabel="이메일로 계정 생성"
-              onPress={
-                configured && pendingAction === ""
-                  ? () => void runAction("email-sign-up", () => signUpWithPassword(email, password))
-                  : undefined
-              }
-              variant="outline"
-            >
-              {pendingAction === "email-sign-up" ? "계정 생성 중..." : "이메일 계정 만들기"}
-            </Button>
-          </View>
-          <Text style={{ color: "#766452", lineHeight: 22, marginTop: 10 }}>
-            처음 사용하는 이메일이면 가입 버튼으로 계정을 만든 뒤 바로 로그인 상태를 확인합니다.
-          </Text>
-        </Card>
-      ) : null}
+              onPress={() => {
+                if (isWebPreview) {
+                  setError("");
+                  setMessage("브라우저 미리보기에서는 실제 로그인 대신 화면만 확인합니다.");
+                  return;
+                }
 
-      {!hasFullAccount ? (
-        <Card eyebrow="소셜 로그인" title="Google · Apple · Kakao">
-          <View style={{ gap: 12 }}>
-            <SocialSignInButton
-              accessibilityLabel="Google로 로그인"
-              loadingLabel={pendingAction === "google" ? "Google 로그인 중..." : "Google로 계속하기"}
-              onPress={
-                configured && pendingAction === ""
-                  ? () => void runAction("google", signInWithGoogle)
-                  : undefined
-              }
-              provider="google"
+                if (authActionsEnabled) {
+                  void runAction("email-sign-in", () => signInWithPassword(email, password));
+                }
+              }}
+            >
+              {pendingAction === "email-sign-in" ? "로그인 중..." : "로그인"}
+            </Button>
+
+            <View style={{ flexDirection: "row", justifyContent: "center", gap: 28 }}>
+              <Pressable accessibilityLabel="비밀번호 찾기" onPress={undefined}>
+                <Text style={{ color: theme.colors.muted, fontSize: 12 }}>비밀번호 찾기</Text>
+              </Pressable>
+              <Pressable
+                accessibilityLabel="회원가입"
+                onPress={
+                  visualAuthEnabled
+                    ? () => void runAction("email-sign-up", () => signUpWithPassword(email, password))
+                    : undefined
+                }
+              >
+                <Text style={{ color: theme.colors.muted, fontSize: 12 }}>
+                  {pendingAction === "email-sign-up" ? "가입 중..." : "회원가입"}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+
+          <View style={{ width: "100%", flexDirection: "row", alignItems: "center", gap: 12 }}>
+            <View style={{ flex: 1, height: 1, backgroundColor: theme.colors.border }} />
+            <Text style={{ color: theme.colors.muted, fontSize: 12 }}>또는 소셜 계정으로 로그인</Text>
+            <View style={{ flex: 1, height: 1, backgroundColor: theme.colors.border }} />
+          </View>
+
+          <View style={{ flexDirection: "row", justifyContent: "center", gap: 24 }}>
+            <SocialCircle
+              disabled={!visualAuthEnabled}
+              label="N"
+              onPress={() => {
+                if (isWebPreview) {
+                  setMessage("브라우저 미리보기에서는 실제 소셜 로그인을 실행하지 않습니다.");
+                  return;
+                }
+                void runAction("kakao", signInWithKakao);
+              }}
+              tone="green"
             />
-            <SocialSignInButton
-              accessibilityLabel="Apple로 로그인"
-              loadingLabel={pendingAction === "apple" ? "Apple 로그인 중..." : "Apple로 계속하기"}
-              onPress={
-                configured && pendingAction === ""
-                  ? () => void runAction("apple", signInWithApple)
-                  : undefined
-              }
-              provider="apple"
+            <SocialCircle
+              disabled={!visualAuthEnabled}
+              label="●"
+              onPress={() => {
+                if (isWebPreview) {
+                  setMessage("브라우저 미리보기에서는 실제 소셜 로그인을 실행하지 않습니다.");
+                  return;
+                }
+                void runAction("apple", signInWithApple);
+              }}
+              tone="yellow"
             />
-            <SocialSignInButton
-              accessibilityLabel="Kakao로 로그인"
-              loadingLabel={pendingAction === "kakao" ? "Kakao 로그인 중..." : "Kakao로 계속하기"}
-              onPress={
-                configured && pendingAction === ""
-                  ? () => void runAction("kakao", signInWithKakao)
-                  : undefined
-              }
-              provider="kakao"
+            <SocialCircle
+              disabled={!visualAuthEnabled}
+              label="G"
+              onPress={() => {
+                if (isWebPreview) {
+                  setMessage("브라우저 미리보기에서는 실제 소셜 로그인을 실행하지 않습니다.");
+                  return;
+                }
+                void runAction("google", signInWithGoogle);
+              }}
+              tone="white"
             />
           </View>
-          <Text style={{ color: "#766452", lineHeight: 22, marginTop: 10 }}>
-            Google, Apple, Kakao 인증 후 앱으로 돌아오면 내 초대장 탭으로 연결됩니다.
-          </Text>
-        </Card>
-      ) : null}
 
-      <Link asChild href="/(tabs)">
-        <Pressable
-          accessibilityLabel="앱 홈으로 돌아가기"
-          style={{
-            minHeight: 48,
-            alignItems: "center",
-            justifyContent: "center"
-          }}
-        >
-          <Text style={{ color: "#8d5a2b", fontWeight: "700" }}>둘러보기로 돌아가기</Text>
-        </Pressable>
-      </Link>
-    </Screen>
+          {message ? (
+            <Text style={{ color: theme.colors.accent, fontSize: 13, lineHeight: 21, textAlign: "center" }}>{message}</Text>
+          ) : null}
+          {hasFullAccount ? (
+            <View style={{ width: "100%", gap: 10 }}>
+              <Text style={{ color: theme.colors.muted, fontSize: 13, textAlign: "center" }}>
+                {user?.email ?? "계정 정보가 연결되었습니다."}
+              </Text>
+              <Link asChild href="/(tabs)/my-invitations">
+                <Button accessibilityLabel="내 초대장으로 이동">내 초대장으로 이동</Button>
+              </Link>
+            </View>
+          ) : null}
+          {isAnonymousSession ? (
+            <Text style={{ color: theme.colors.muted, fontSize: 12, lineHeight: 19, textAlign: "center" }}>
+              게스트 모드입니다. 계정을 연결하면 저장본과 발행 내역을 이어서 관리할 수 있어요.
+            </Text>
+          ) : null}
+          {isWebPreview ? (
+            <Text style={{ color: theme.colors.accent, fontSize: 12, lineHeight: 19, textAlign: "center" }}>
+              브라우저 미리보기에서는 로그인 버튼이 비활성화됩니다.
+            </Text>
+          ) : null}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }

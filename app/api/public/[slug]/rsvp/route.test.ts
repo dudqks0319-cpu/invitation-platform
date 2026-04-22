@@ -179,6 +179,10 @@ describe("POST /api/public/[slug]/rsvp", () => {
       guest_phone: "010-1111-2222",
       attending: false,
       guests: 0,
+      side: "shared",
+      meal_preference: "undecided",
+      shuttle_needed: false,
+      companion_names: null,
       memo: "사정이 생겼어요"
     });
     expect(result).toEqual({

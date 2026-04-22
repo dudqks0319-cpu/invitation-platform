@@ -10,6 +10,7 @@ import {
   normalizeDraft,
   type GuestbookEntry,
   type InvitationRecord,
+  type MemoryPhotoEntry,
   type RsvpEntry
 } from "@/lib/invitation-payload";
 
@@ -42,9 +43,10 @@ function getStatusLabel(status: DashboardItem["status"]) {
 export function DashboardShell() {
   const supabase = useMemo(() => createBrowserClient(), []);
   const [items, setItems] = useState<DashboardItem[]>([]);
-  const [message, setMessage] = useState("불러오는 중...");
+  const [message, setMessage] = useState("불러오는 중…");
   const [selectedInvitationId, setSelectedInvitationId] = useState<string>("");
   const [guestbookEntries, setGuestbookEntries] = useState<GuestbookEntry[]>([]);
+  const [memoryPhotoEntries, setMemoryPhotoEntries] = useState<MemoryPhotoEntry[]>([]);
   const [rsvpEntries, setRsvpEntries] = useState<RsvpEntry[]>([]);
 
   useEffect(() => {
@@ -156,17 +158,23 @@ export function DashboardShell() {
     async function loadGuestbookEntries() {
       if (!selectedInvitationId) {
         setGuestbookEntries([]);
+        setMemoryPhotoEntries([]);
         setRsvpEntries([]);
         return;
       }
 
       if (!supabase) {
         setGuestbookEntries([]);
+        setMemoryPhotoEntries([]);
         setRsvpEntries(selectedInvitationId === "demo-invitation" ? demoRsvps : []);
         return;
       }
 
-      const [{ data: guestbookData, error: guestbookError }, { data: rsvpData, error: rsvpError }] = await Promise.all([
+      const [
+        { data: guestbookData, error: guestbookError },
+        { data: rsvpData, error: rsvpError },
+        { data: memoryData, error: memoryError }
+      ] = await Promise.all([
         supabase
           .from("guestbook_entries")
           .select("*")
@@ -174,6 +182,11 @@ export function DashboardShell() {
           .order("created_at", { ascending: false }),
         supabase
           .from("rsvps")
+          .select("*")
+          .eq("invitation_id", selectedInvitationId)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("memory_photos")
           .select("*")
           .eq("invitation_id", selectedInvitationId)
           .order("created_at", { ascending: false })
@@ -203,7 +216,26 @@ export function DashboardShell() {
             guestPhone: entry.guest_phone ?? "",
             attending: entry.attending,
             guests: entry.guests,
+            side: entry.side ?? "shared",
+            mealPreference: entry.meal_preference ?? "undecided",
+            shuttleNeeded: entry.shuttle_needed ?? false,
+            companionNames: entry.companion_names ?? "",
             memo: entry.memo ?? "",
+            createdAt: entry.created_at
+          }))
+        );
+      }
+
+      if (memoryError) {
+        setMemoryPhotoEntries([]);
+      } else {
+        setMemoryPhotoEntries(
+          (memoryData ?? []).map((entry) => ({
+            id: entry.id,
+            nickname: entry.nickname,
+            message: entry.message ?? "",
+            imageUrl: entry.storage_path,
+            approved: entry.approved,
             createdAt: entry.created_at
           }))
         );
@@ -232,6 +264,27 @@ export function DashboardShell() {
       current.map((entry) => (entry.id === entryId ? { ...entry, approved } : entry))
     );
     setMessage(approved ? "방명록을 승인했습니다." : "방명록을 비공개 상태로 변경했습니다.");
+  }
+
+  async function updateMemoryPhotoModeration(entryId: string, approved: boolean) {
+    if (!supabase) {
+      return;
+    }
+
+    const { error } = await supabase
+      .from("memory_photos")
+      .update({ approved })
+      .eq("id", entryId);
+
+    if (error) {
+      setMessage("사진 공개 상태를 업데이트하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      return;
+    }
+
+    setMemoryPhotoEntries((current) =>
+      current.map((entry) => (entry.id === entryId ? { ...entry, approved } : entry))
+    );
+    setMessage(approved ? "하객 사진을 공개했습니다." : "하객 사진을 비공개 상태로 변경했습니다.");
   }
 
   async function copyPublicLink(item: DashboardItem) {
@@ -304,12 +357,18 @@ export function DashboardShell() {
   const rsvpSummary = useMemo(() => {
     const attending = rsvpEntries.filter((entry) => entry.attending);
     const declined = rsvpEntries.length - attending.length;
+    const groomSide = rsvpEntries.filter((entry) => entry.side === "groom").length;
+    const brideSide = rsvpEntries.filter((entry) => entry.side === "bride").length;
+    const shuttleRequests = attending.filter((entry) => entry.shuttleNeeded).length;
 
     return {
       totalResponses: rsvpEntries.length,
       attending: attending.length,
       declined,
-      totalGuests: attending.reduce((sum, entry) => sum + entry.guests, 0)
+      totalGuests: attending.reduce((sum, entry) => sum + entry.guests, 0),
+      groomSide,
+      brideSide,
+      shuttleRequests
     };
   }, [rsvpEntries]);
 
@@ -337,7 +396,7 @@ export function DashboardShell() {
             <p className="ops-note">공개 초대장 기준 집계</p>
           </article>
           <article className="ops-card">
-            <h3>누적 RSVP</h3>
+            <h3>누적 하객 응답</h3>
             <p className="ops-value">{dashboardSummary.totalRsvps}</p>
             <p className="ops-note">전체 응답 기준</p>
           </article>
@@ -359,7 +418,7 @@ export function DashboardShell() {
               <p className="ops-value">{getStatusLabel(item.status)}</p>
               <p className="ops-line">카테고리 <strong>{item.category}</strong></p>
               <p className="ops-line">템플릿 <strong>{item.templateId}</strong></p>
-              <p className="ops-line">조회 <strong>{item.viewCount ?? 0}</strong> · RSVP <strong>{item.rsvpCount ?? 0}</strong> · 방명록 <strong>{item.guestbookCount ?? 0}</strong></p>
+              <p className="ops-line">조회 <strong>{item.viewCount ?? 0}</strong> · 하객 응답 <strong>{item.rsvpCount ?? 0}</strong> · 방명록 <strong>{item.guestbookCount ?? 0}</strong></p>
               <p className="ops-note">
                 생성일 {new Date(item.createdAt).toLocaleDateString("ko-KR")}
                 <br />
@@ -400,16 +459,18 @@ export function DashboardShell() {
 
         <div className="ops-grid" style={{ marginTop: "24px" }}>
           <article className="ops-card">
-            <h3>RSVP 운영</h3>
+            <h3>하객 응답 운영</h3>
             <p className="ops-note">
               {selectedInvitation
-                ? `${selectedInvitation.title}의 RSVP 현황입니다.`
+                ? `${selectedInvitation.title}의 하객 응답 현황입니다.`
                 : "확인할 초대장을 선택해 주세요."}
             </p>
             <p className="ops-line">전체 응답 <strong>{rsvpSummary.totalResponses}</strong></p>
             <p className="ops-line">참석 <strong>{rsvpSummary.attending}</strong></p>
             <p className="ops-line">불참 <strong>{rsvpSummary.declined}</strong></p>
             <p className="ops-line">예상 총 인원 <strong>{rsvpSummary.totalGuests}</strong></p>
+            <p className="ops-line">신랑측 <strong>{rsvpSummary.groomSide}</strong> · 신부측 <strong>{rsvpSummary.brideSide}</strong></p>
+            <p className="ops-line">셔틀 요청 <strong>{rsvpSummary.shuttleRequests}</strong></p>
             <ul className="list-box">
               {rsvpEntries.length ? (
                 rsvpEntries.slice(0, 10).map((entry) => (
@@ -421,11 +482,20 @@ export function DashboardShell() {
                     <div className="value">
                       {entry.attending ? "참석" : "불참"} / 동행 {entry.guests}명
                     </div>
+                    <div className="value">
+                      {entry.side === "groom" ? "신랑측" : entry.side === "bride" ? "신부측" : "함께 아는 하객"} ·{" "}
+                      {entry.mealPreference === "yes"
+                        ? "식사 예정"
+                        : entry.mealPreference === "no"
+                          ? "식사 안 함"
+                          : "식사 미정"} · {entry.shuttleNeeded ? "셔틀 이용" : "셔틀 이용 안 함"}
+                    </div>
+                    {entry.companionNames ? <div className="value">동행자: {entry.companionNames}</div> : null}
                     {entry.memo ? <div className="value">메모: {entry.memo}</div> : null}
                   </li>
                 ))
               ) : (
-                <li className="meta">아직 RSVP 응답이 없습니다.</li>
+                <li className="meta">아직 하객 응답이 없습니다.</li>
               )}
             </ul>
           </article>
@@ -457,6 +527,38 @@ export function DashboardShell() {
                 ))
               ) : (
                 <li className="meta">대기 중인 방명록이 없습니다.</li>
+              )}
+            </ul>
+          </article>
+          <article className="ops-card" style={{ gridColumn: "1 / -1" }}>
+            <h3>하객 사진 모더레이션</h3>
+            <p className="ops-note">
+              {selectedInvitation
+                ? `${selectedInvitation.title}의 하객 사진을 검토 중입니다.`
+                : "사진을 검토할 초대장을 선택해 주세요."}
+            </p>
+            <ul className="list-box">
+              {memoryPhotoEntries.length ? (
+                memoryPhotoEntries.map((entry) => (
+                  <li key={entry.id}>
+                    <div className="meta">
+                      {new Date(entry.createdAt).toLocaleString("ko-KR")} · {entry.nickname}
+                    </div>
+                    <div className="value">{entry.message || "사진 설명 없음"}</div>
+                    <div className="value">저장 경로: {entry.imageUrl}</div>
+                    <div className="header-actions" style={{ marginTop: "12px" }}>
+                      <button className="btn-primary" onClick={() => updateMemoryPhotoModeration(entry.id, true)} type="button">
+                        공개
+                      </button>
+                      <button className="btn-outline" onClick={() => updateMemoryPhotoModeration(entry.id, false)} type="button">
+                        숨기기
+                      </button>
+                      <span className="auth-status">{entry.approved ? "공개중" : "승인 대기"}</span>
+                    </div>
+                  </li>
+                ))
+              ) : (
+                <li className="meta">대기 중인 하객 사진이 없습니다.</li>
               )}
             </ul>
           </article>

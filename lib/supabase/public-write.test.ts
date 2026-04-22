@@ -12,6 +12,25 @@ describe("public write validation", () => {
     expect(result.success).toBe(false);
   });
 
+  it("accepts extended RSVP fields and normalizes defaults", () => {
+    const result = publicRsvpSchema.safeParse({
+      guestName: "박하객",
+      attending: "yes",
+      guests: 2,
+      side: "groom",
+      mealPreference: "yes",
+      shuttleNeeded: "yes",
+      companionNames: "김친구, 이친구"
+    });
+
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.side).toBe("groom");
+    expect(result.data.mealPreference).toBe("yes");
+    expect(result.data.shuttleNeeded).toBe(true);
+    expect(result.data.companionNames).toBe("김친구, 이친구");
+  });
+
   it("defaults guestbook entries to moderated flow inputs only", () => {
     const result = publicGuestbookSchema.safeParse({
       nickname: "친구1",

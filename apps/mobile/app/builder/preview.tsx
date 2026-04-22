@@ -58,6 +58,8 @@ export default function BuilderPreviewScreen() {
     .filter((item) => item.amount > 0)
     .map((item) => `${item.label} ${item.amount.toLocaleString("ko-KR")}원`);
   const statusLabel = draft?.payload.isPublished ? "공개 중" : requiresPurchase ? "스토어 결제 후 발행" : "비공개 초안";
+  const remoteSetupNotice = "링크 발행과 웹 연동을 준비 중입니다. 작성한 내용은 이 기기에 안전하게 저장됩니다.";
+  const developerConfigHint = __DEV__ && !configured ? configMessage : "";
   const publishGuide = draft?.payload.isPublished
     ? "지금 공유 가능한 링크가 준비되어 있습니다."
     : requiresPurchase
@@ -107,7 +109,8 @@ export default function BuilderPreviewScreen() {
 
   async function handleSave(nextStatus: "draft" | "published") {
     if (!configured) {
-      setError(configMessage);
+      setError("");
+      setMessage(nextStatus === "draft" ? "작성한 내용은 이 기기에 저장됩니다." : remoteSetupNotice);
       return;
     }
 
@@ -537,8 +540,11 @@ export default function BuilderPreviewScreen() {
         ) : null}
       </Card>
       {!configured ? (
-        <Card eyebrow="원격 기능 안내" title="현재는 로컬 프리뷰 모드">
-          <Text style={{ color: theme.colors.primaryDark, lineHeight: 22 }}>{configMessage}</Text>
+        <Card eyebrow="연결 상태" title="링크 발행 준비 중">
+          <Text style={{ color: theme.colors.primaryDark, lineHeight: 22 }}>{remoteSetupNotice}</Text>
+          {developerConfigHint ? (
+            <Text style={{ color: theme.colors.muted, lineHeight: 20, marginTop: 8 }}>{developerConfigHint}</Text>
+          ) : null}
         </Card>
       ) : null}
       <View style={{ gap: 12 }}>
@@ -547,7 +553,7 @@ export default function BuilderPreviewScreen() {
             accessToken={canUsePaidAccount ? session?.access_token : ""}
             disabledReason={
               !configured
-                ? configMessage
+                ? remoteSetupNotice
                 : paidPublishBlockReason
                   ? paidPublishBlockReason
                   : !publishReadiness.canPublish
@@ -574,12 +580,12 @@ export default function BuilderPreviewScreen() {
           >
             <Button
               accessibilityLabel="공개 링크 발행"
-              onPress={remoteAccessMode === "loading" ? undefined : () => void handleSave("published")}
+              onPress={!configured || remoteAccessMode === "loading" ? undefined : () => void handleSave("published")}
             >
               {pending === "publish"
                 ? "발행 중..."
                 : !configured
-                  ? "Supabase 설정 필요"
+                  ? "링크 준비 중"
                   : remoteAccessMode === "loading"
                     ? "세션 확인 중..."
                   : draft?.payload.isPublished
@@ -603,7 +609,7 @@ export default function BuilderPreviewScreen() {
               {pending === "save"
                 ? "저장 중..."
                 : !configured
-                  ? "설정 필요"
+                  ? "이 기기에 저장"
                   : remoteAccessMode === "loading"
                     ? "세션 확인 중..."
                   : "초안 저장"}
@@ -642,15 +648,17 @@ export default function BuilderPreviewScreen() {
             </Button>
           </View>
         </View>
-        <Link
-          asChild
-          href={{
-            pathname: "/invitation/[id]/index",
-            params: { id: localId ?? "demo" }
-          }}
-        >
-          <Button accessibilityLabel="운영 화면 예시로 이동" variant="outline">운영 화면 보기</Button>
-        </Link>
+        {configured ? (
+          <Link
+            asChild
+            href={{
+              pathname: "/invitation/[id]/index",
+              params: { id: localId ?? "demo" }
+            }}
+          >
+            <Button accessibilityLabel="초대장 관리 화면으로 이동" variant="outline">초대장 관리 보기</Button>
+          </Link>
+        ) : null}
       </View>
     </Screen>
   );

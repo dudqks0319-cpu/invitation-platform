@@ -8,6 +8,10 @@ export const publicRsvpSchema = z.object({
   guestPhone: z.string().trim().max(30).optional().default(""),
   attending: z.enum(["yes", "no"]).transform((value) => value === "yes"),
   guests: z.coerce.number().int().min(0).max(20),
+  side: z.enum(["groom", "bride", "shared"]).optional().default("shared"),
+  mealPreference: z.enum(["yes", "no", "undecided"]).optional().default("undecided"),
+  shuttleNeeded: z.enum(["yes", "no"]).optional().default("no").transform((value) => value === "yes"),
+  companionNames: z.string().trim().max(120).optional().default(""),
   memo: z.string().trim().max(300).optional().default(""),
   website: z.string().trim().max(0).optional().default("")
 });

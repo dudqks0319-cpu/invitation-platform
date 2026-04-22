@@ -89,7 +89,7 @@ describe("public invitation page helpers", () => {
     const reset = vi.fn();
     const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => undefined);
     document.body.innerHTML = renderToStaticMarkup(createElement(Loading));
-    expect(document.body.textContent).toContain("불러오는 중...");
+    expect(document.body.textContent).toContain("불러오는 중…");
 
     document.body.innerHTML = renderToStaticMarkup(createElement(GlobalError, { error: new Error("boom"), reset }));
     expect(document.body.textContent).toContain("앗, 문제가 발생했어요");

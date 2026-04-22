@@ -1,4 +1,4 @@
-import { Text, View } from "react-native";
+import { Platform, Text, View } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { Pill } from "@/components/ui/Pill";
 import { theme } from "@/components/ui/theme";
@@ -16,6 +16,8 @@ const proofChips = [
 ];
 
 export function HeroSection({ onBrowse, onStart }: HeroSectionProps) {
+  const isWeb = Platform.OS === "web";
+
   return (
     <View
       style={{
@@ -24,48 +26,60 @@ export function HeroSection({ onBrowse, onStart }: HeroSectionProps) {
     >
       <View
         style={{
-          alignSelf: "flex-start",
-          backgroundColor: theme.colors.primaryLight,
-          borderRadius: 999,
-          paddingHorizontal: 16,
-          paddingVertical: 8
+          flexDirection: isWeb ? "row" : "column",
+          alignItems: isWeb ? "center" : "stretch",
+          gap: isWeb ? 36 : 20
         }}
       >
-        <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700" }}>
-          지금 있는 디자인, 전부 무료
-        </Text>
-      </View>
+        <View style={{ flex: 1, gap: 20 }}>
+          <View
+            style={{
+              alignSelf: "flex-start",
+              backgroundColor: theme.colors.primaryLight,
+              borderRadius: 999,
+              paddingHorizontal: 16,
+              paddingVertical: 8
+            }}
+          >
+            <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700" }}>
+              지금 있는 디자인, 전부 무료
+            </Text>
+          </View>
 
-      <View style={{ gap: 12 }}>
-        <Text
-          style={{
-            color: theme.colors.text,
-            fontSize: 30,
-            fontWeight: "700",
-            lineHeight: 40
-          }}
-        >
-          예쁜 초대장,
-          {"\n"}
-          지금은 무료로 시작
-        </Text>
-        <Text style={{ color: theme.colors.muted, fontSize: 16, lineHeight: 26 }}>
-          현재 공개된 디자인은 모두 무료예요. 필요한 경우에만 사진 옵션을 더해, 부담 없이 시작하고 정성껏 완성해 보세요.
-        </Text>
-      </View>
+          <View style={{ gap: 12 }}>
+            <Text
+              style={{
+                color: theme.colors.text,
+                fontSize: isWeb ? 38 : 30,
+                fontWeight: "700",
+                lineHeight: isWeb ? 48 : 40
+              }}
+            >
+              예쁜 초대장,
+              {"\n"}
+              지금은 무료로 시작
+            </Text>
+            <Text style={{ color: theme.colors.muted, fontSize: 16, lineHeight: 26 }}>
+              현재 공개된 디자인은 모두 무료예요. 필요한 경우에만 사진 옵션을 더해, 부담 없이 시작하고 정성껏 완성해 보세요.
+            </Text>
+          </View>
 
-      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-        {proofChips.map((chip, index) => (
-          <Pill active={index === 0} key={chip} label={chip} />
-        ))}
-      </View>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {proofChips.map((chip, index) => (
+              <Pill active={index === 0} key={chip} label={chip} />
+            ))}
+          </View>
 
-      <View style={{ gap: 12 }}>
-        <Button accessibilityLabel="무료로 시작하기" onPress={onStart}>무료로 시작하기</Button>
-        <Button accessibilityLabel="디자인 둘러보기" onPress={onBrowse} variant="outline">디자인 둘러보기</Button>
-      </View>
+          <View style={{ gap: 12 }}>
+            <Button accessibilityLabel="무료로 시작하기" onPress={onStart}>무료로 시작하기</Button>
+            <Button accessibilityLabel="디자인 둘러보기" onPress={onBrowse} variant="outline">디자인 둘러보기</Button>
+          </View>
+        </View>
 
-      <PhoneMock />
+        <View style={{ width: isWeb ? 360 : "100%", alignItems: "center" }}>
+          <PhoneMock />
+        </View>
+      </View>
     </View>
   );
 }

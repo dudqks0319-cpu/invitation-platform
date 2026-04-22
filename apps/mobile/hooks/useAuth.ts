@@ -1,7 +1,6 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+
 import { useEffect, useMemo, useState } from "react";
-import * as AppleAuthentication from "expo-apple-authentication";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import { login as loginWithKakaoNative, logout as logoutFromKakaoNative } from "@react-native-kakao/user";
 import * as WebBrowser from "expo-web-browser";
 import type { Session, User } from "@supabase/supabase-js";
 import { Platform } from "react-native";
@@ -15,12 +14,51 @@ import {
 import { hasFullAccount as userHasFullAccount, isAnonymousUser } from "@/lib/auth-access";
 import { isNativeGoogleConfigured, isNativeKakaoConfigured, nativeAuthConfig } from "@/lib/auth-native-config";
 
-WebBrowser.maybeCompleteAuthSession();
-
 type AuthStatus = "loading" | "anonymous" | "authenticated";
+const isWeb = Platform.OS === "web";
+
+if (isWeb) {
+  WebBrowser.maybeCompleteAuthSession();
+}
 
 function createNonce() {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
+function getGoogleSignin() {
+  if (isWeb) {
+    return null;
+  }
+
+  try {
+    return require("@react-native-google-signin/google-signin").GoogleSignin;
+  } catch {
+    return null;
+  }
+}
+
+function getKakaoUserModule() {
+  if (isWeb) {
+    return null;
+  }
+
+  try {
+    return require("@react-native-kakao/user");
+  } catch {
+    return null;
+  }
+}
+
+function getAppleAuthentication() {
+  if (isWeb) {
+    return null;
+  }
+
+  try {
+    return require("expo-apple-authentication");
+  } catch {
+    return null;
+  }
 }
 
 export function useAuth() {
@@ -57,17 +95,6 @@ export function useAuth() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!isNativeGoogleConfigured()) {
-      return;
-    }
-
-    GoogleSignin.configure({
-      iosClientId: nativeAuthConfig.googleIosClientId || undefined,
-      webClientId: nativeAuthConfig.googleWebClientId || undefined
-    });
-  }, []);
-
   return useMemo(
     () => ({
       configured: isSupabaseConfigured,
@@ -77,22 +104,46 @@ export function useAuth() {
           return { error: new Error("Supabase 환경 변수가 없어 Google 로그인을 시작할 수 없습니다.") };
         }
 
+        if (isWeb) {
+          return { error: new Error("웹 미리보기에서는 Google 간편 로그인을 사용할 수 없습니다.") };
+        }
+
         if (!isNativeGoogleConfigured()) {
           return {
             error: new Error("Google 네이티브 로그인을 사용하려면 Google 클라이언트 ID 설정이 필요합니다.")
           };
         }
 
-        if (Platform.OS === "android") {
-          await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+        const googleSignin = getGoogleSignin();
+        if (!googleSignin) {
+          return { error: new Error("Google 로그인 모듈을 불러오지 못했습니다.") };
         }
 
-        const result = await GoogleSignin.signIn();
+        try {
+          googleSignin.configure({
+            iosClientId: nativeAuthConfig.googleIosClientId || undefined,
+            webClientId: nativeAuthConfig.googleWebClientId || undefined
+          });
+        } catch (caught) {
+          return {
+            error: new Error(
+              caught instanceof Error
+                ? `Google 로그인 준비에 실패했습니다. ${caught.message}`
+                : "Google 로그인 준비에 실패했습니다."
+            )
+          };
+        }
+
+        if (Platform.OS === "android") {
+          await googleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+        }
+
+        const result = await googleSignin.signIn();
         if (result.type !== "success") {
           return { error: new Error("Google 로그인이 취소되었습니다.") };
         }
 
-        const tokens = await GoogleSignin.getTokens();
+        const tokens = await googleSignin.getTokens();
         return supabase.auth.signInWithIdToken({
           provider: "google",
           token: tokens.idToken,
@@ -104,17 +155,26 @@ export function useAuth() {
           return { error: new Error("Supabase 환경 변수가 없어 Apple 로그인을 시작할 수 없습니다.") };
         }
 
-        const available = await AppleAuthentication.isAvailableAsync();
+        if (isWeb) {
+          return { error: new Error("웹 미리보기에서는 Apple 로그인을 사용할 수 없습니다.") };
+        }
+
+        const appleAuthentication = getAppleAuthentication();
+        if (!appleAuthentication) {
+          return { error: new Error("Apple 로그인 모듈을 불러오지 못했습니다.") };
+        }
+
+        const available = await appleAuthentication.isAvailableAsync();
         if (!available) {
           return { error: new Error("현재 환경에서는 Apple 로그인을 사용할 수 없습니다.") };
         }
 
         const nonce = createNonce();
-        const credential = await AppleAuthentication.signInAsync({
+        const credential = await appleAuthentication.signInAsync({
           nonce,
           requestedScopes: [
-            AppleAuthentication.AppleAuthenticationScope.EMAIL,
-            AppleAuthentication.AppleAuthenticationScope.FULL_NAME
+            appleAuthentication.AppleAuthenticationScope.EMAIL,
+            appleAuthentication.AppleAuthenticationScope.FULL_NAME
           ]
         });
 
@@ -133,13 +193,22 @@ export function useAuth() {
           return { error: new Error("Supabase 환경 변수가 없어 Kakao 로그인을 시작할 수 없습니다.") };
         }
 
+        if (isWeb) {
+          return { error: new Error("웹 미리보기에서는 Kakao 간편 로그인을 사용할 수 없습니다.") };
+        }
+
         if (!isNativeKakaoConfigured()) {
           return {
             error: new Error("Kakao 네이티브 로그인을 사용하려면 Kakao Native App Key 설정이 필요합니다.")
           };
         }
 
-        const result = await loginWithKakaoNative();
+        const kakaoUser = getKakaoUserModule();
+        if (!kakaoUser?.login) {
+          return { error: new Error("Kakao 로그인 모듈을 불러오지 못했습니다.") };
+        }
+
+        const result = await kakaoUser.login();
         if (!result.idToken) {
           return { error: new Error("카카오 ID 토큰을 받지 못했습니다.") };
         }
@@ -187,9 +256,11 @@ export function useAuth() {
           return { error: null };
         }
 
+        const googleSignin = getGoogleSignin();
+        const kakaoUser = getKakaoUserModule();
         await Promise.allSettled([
-          GoogleSignin.signOut(),
-          logoutFromKakaoNative()
+          googleSignin?.signOut?.() ?? Promise.resolve(),
+          kakaoUser?.logout?.() ?? Promise.resolve()
         ]);
         return supabase.auth.signOut();
       },

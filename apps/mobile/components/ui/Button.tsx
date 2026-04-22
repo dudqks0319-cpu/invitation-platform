@@ -25,7 +25,7 @@ export function Button({
       onPress={onPress}
       style={{
         minHeight: 50,
-        borderRadius: theme.radius.pill,
+        borderRadius: theme.radius.sm,
         borderWidth: isPrimary ? 0 : 2,
         borderColor: config.borderColor,
         backgroundColor: config.backgroundColor,

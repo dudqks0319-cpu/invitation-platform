@@ -722,7 +722,7 @@ export function BuilderStudio({
           <div className="builder-step-copy">
             <p className="builder-step-kicker">빌더 진행</p>
             <h3>{`STEP ${currentStepMeta.index + 1}. ${currentStepMeta.title}`}</h3>
-            <p className="builder-help">모바일 앱과 같은 5단계 흐름으로 나눠서 작성할 수 있습니다.</p>
+            <p className="builder-help">{currentStepMeta.helper}</p>
           </div>
           <div className="builder-step-progress" aria-hidden="true">
             <div className="builder-step-progress-bar">
@@ -862,7 +862,7 @@ export function BuilderStudio({
                 <span className="builder-upload-filename">
                   {pendingMainImageFile?.name || (payload.mainImageUrl ? "현재 메인 사진이 연결되어 있습니다." : "선택된 파일 없음")}
                 </span>
-                <span className="builder-upload-button">메인 사진 선택</span>
+                <span className="builder-upload-button">메인 선택</span>
                 <input className="builder-hidden-file" accept="image/*" onChange={(event) => handleImageSelection("main", event.target.files?.[0] ?? null)} type="file" />
               </div>
             </label>
@@ -872,7 +872,7 @@ export function BuilderStudio({
                 <span className="builder-upload-filename">
                   {pendingBackgroundImageFile?.name || (payload.backgroundImageUrl ? "현재 배경 사진이 연결되어 있습니다." : "선택된 파일 없음")}
                 </span>
-                <span className="builder-upload-button">배경 사진 선택</span>
+                <span className="builder-upload-button">배경 선택</span>
                 <input className="builder-hidden-file" accept="image/*" onChange={(event) => handleImageSelection("background", event.target.files?.[0] ?? null)} type="file" />
               </div>
             </label>
@@ -886,7 +886,7 @@ export function BuilderStudio({
                       ? `현재 ${payload.galleryImages.length}장 연결됨`
                       : "선택된 파일 없음"}
                 </span>
-                <span className="builder-upload-button">갤러리 사진 선택</span>
+                <span className="builder-upload-button">갤러리 선택</span>
                 <input
                   className="builder-hidden-file"
                   accept="image/*"
@@ -907,7 +907,7 @@ export function BuilderStudio({
               }}
               type="button"
             >
-              메인 사진 제거
+              메인 제거
             </button>
             <button
               className="btn-outline"
@@ -919,7 +919,7 @@ export function BuilderStudio({
               }}
               type="button"
             >
-              배경 사진 제거
+              배경 제거
             </button>
             <button
               className="btn-outline"
@@ -986,10 +986,23 @@ export function BuilderStudio({
 
         <div className="builder-form-section" hidden={currentStep !== 4}>
           <h3>5. 오시는 길</h3>
+          <p className="builder-help">
+            지도 주소는 네이버/카카오 길찾기 링크에 사용됩니다. 위도와 경도를 함께 입력하면 공개 초대장에 네이버 지도를 바로 표시할 수 있습니다.
+          </p>
           <label>
             지도 주소
             <input className={inputClassName} value={payload.mapAddress} onChange={(event) => updateField("mapAddress", event.target.value)} />
           </label>
+          <div className="form-two-col">
+            <label>
+              지도 위도
+              <input className={inputClassName} inputMode="decimal" placeholder="37.5665" value={payload.mapLatitude} onChange={(event) => updateField("mapLatitude", event.target.value)} />
+            </label>
+            <label>
+              지도 경도
+              <input className={inputClassName} inputMode="decimal" placeholder="126.9780" value={payload.mapLongitude} onChange={(event) => updateField("mapLongitude", event.target.value)} />
+            </label>
+          </div>
           <label>
             네이버 지도 링크
             <input className={inputClassName} value={payload.naverMapLink} onChange={(event) => updateField("naverMapLink", event.target.value)} />
@@ -998,6 +1011,13 @@ export function BuilderStudio({
             교통 안내 메모
             <textarea className={inputClassName} rows={3} value={payload.transportNote} onChange={(event) => updateField("transportNote", event.target.value)} />
           </label>
+          <label>
+            카카오 JavaScript 키
+            <input className={inputClassName} value={payload.kakaoJsKey} onChange={(event) => updateField("kakaoJsKey", event.target.value)} />
+          </label>
+          <p className="builder-help">
+            운영 환경에 NEXT_PUBLIC_KAKAO_JS_KEY와 NEXT_PUBLIC_NAVER_MAP_CLIENT_ID가 있으면 초대장별 키를 비워도 공유와 지도가 동작합니다.
+          </p>
         </div>
 
         <div className="builder-step-actions">
@@ -1007,7 +1027,7 @@ export function BuilderStudio({
             onClick={() => moveStep(-1)}
             type="button"
           >
-            이전 단계
+            이전
           </button>
           <button
             className="btn-primary"
@@ -1015,12 +1035,12 @@ export function BuilderStudio({
             onClick={() => moveStep(1)}
             type="button"
           >
-            다음 단계
+            다음
           </button>
         </div>
 
         <button className="btn-primary form-submit" disabled={pending} type="submit">
-          {pending ? "저장 중..." : "초안 저장"}
+          {pending ? "저장 중…" : "초안 저장"}
         </button>
         {currentStep === lastStepIndex ? (
           <>
@@ -1033,7 +1053,7 @@ export function BuilderStudio({
               }}
               type="button"
             >
-              실제 화면 보기
+              미리보기
             </button>
             <button
               className="btn-outline form-submit"
@@ -1057,11 +1077,11 @@ export function BuilderStudio({
               }}
               type="button"
             >
-              {meta.status === "published" ? "공개 상태 다시 저장" : "무료 발행 페이지로 이동"}
+              {meta.status === "published" ? "공개 저장" : "무료 발행"}
             </button>
           </>
         ) : (
-          <p className="builder-help">마지막 단계에서 실제 화면 보기와 무료 발행을 진행할 수 있습니다.</p>
+          <p className="builder-help">마지막 단계에서 미리보기와 무료 발행을 진행할 수 있습니다.</p>
         )}
         {meta.status && meta.status !== "draft" && meta.status !== "published" ? (
           <p className="form-message error">
@@ -1109,7 +1129,7 @@ export function BuilderStudio({
                 </p>
                 <p className="builder-preview-message">{payload.message || "소중한 자리에 함께해 주세요"}</p>
                 <p className="builder-preview-note">
-                  실제 화면 보기에서 전체 초대장 레이아웃을 확인할 수 있습니다.
+                  미리보기에서 전체 초대장 레이아웃을 확인할 수 있습니다.
                 </p>
               </div>
             </div>

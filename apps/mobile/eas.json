@@ -62,9 +62,29 @@
       "ios": {
         "resourceClass": "m-medium"
       }
+    },
+    "testflight": {
+      "extends": "base",
+      "distribution": "store",
+      "autoIncrement": true,
+      "channel": "development",
+      "env": {
+        "APP_VARIANT": "development",
+        "APP_BUNDLE_ID": "com.invitehub.app.dev",
+        "APP_ANDROID_PACKAGE": "com.invitehub.app.dev"
+      },
+      "ios": {
+        "buildConfiguration": "TestFlight",
+        "resourceClass": "m-medium"
+      }
     }
   },
   "submit": {
-    "production": {}
+    "production": {},
+    "testflight": {
+      "ios": {
+        "ascAppId": "6761149001"
+      }
+    }
   }
 }

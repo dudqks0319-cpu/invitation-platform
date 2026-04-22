@@ -1,22 +1,26 @@
 export const theme = {
   colors: {
-    primary: "#C9935A",
-    primaryLight: "#F0DEC8",
-    primaryDark: "#A5743D",
-    accent: "#8B7355",
-    bgCream: "#FDF8F3",
-    bgLight: "#FAF7F4",
-    background: "#FDF8F3",
-    surface: "#FFFFFF",
-    surfaceSoft: "#FAF7F4",
-    border: "#E8DDD3",
-    text: "#2C2C2C",
-    muted: "#666666",
-    textLight: "#999999",
-    blush: "rgba(201,147,90,0.12)",
-    eucalyptus: "rgba(201,147,90,0.08)",
+    primary: "#2B2824",
+    primaryLight: "#EFE8DF",
+    primaryDark: "#2B2824",
+    accent: "#9A7D56",
+    bgCream: "#F6F2ED",
+    bgLight: "#F8F5F0",
+    background: "#F6F2ED",
+    surface: "#FFFDF9",
+    surfaceSoft: "#F0EAE2",
+    border: "#E4D9CE",
+    text: "#2B2824",
+    muted: "#6D6257",
+    textLight: "#9B9085",
+    blush: "rgba(215,170,162,0.18)",
+    eucalyptus: "rgba(141,152,120,0.16)",
     success: "#547A61",
-    shadow: "rgba(0,0,0,0.08)"
+    shadow: "rgba(62,49,37,0.09)",
+    flower: "#D7AAA2",
+    leaf: "#8D9878",
+    gold: "#C6A46E",
+    charcoal: "#282726"
   },
   spacing: {
     xs: 6,
@@ -27,24 +31,24 @@ export const theme = {
   },
   radius: {
     sm: 8,
-    md: 16,
-    lg: 24,
+    md: 12,
+    lg: 18,
     pill: 50
   },
   shadow: {
     card: {
-      shadowColor: "rgba(0,0,0,0.08)",
-      shadowOffset: { width: 0, height: 4 },
+      shadowColor: "rgba(62,49,37,0.09)",
+      shadowOffset: { width: 0, height: 12 },
       shadowOpacity: 1,
-      shadowRadius: 24,
+      shadowRadius: 26,
       elevation: 4
     },
     heroButton: {
-      shadowColor: "rgba(201,147,90,0.4)",
-      shadowOffset: { width: 0, height: 6 },
+      shadowColor: "rgba(43,40,36,0.18)",
+      shadowOffset: { width: 0, height: 8 },
       shadowOpacity: 1,
-      shadowRadius: 20,
-      elevation: 5
+      shadowRadius: 18,
+      elevation: 4
     }
   }
 } as const;

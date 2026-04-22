@@ -53,6 +53,10 @@ export const demoRsvps: RsvpEntry[] = [
     guestPhone: "010-0000-0001",
     attending: true,
     guests: 2,
+    side: "groom",
+    mealPreference: "yes",
+    shuttleNeeded: true,
+    companionNames: "이하객",
     memo: "축하드려요!",
     createdAt: new Date("2026-03-04T04:00:00.000Z").toISOString()
   }

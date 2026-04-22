@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.invitehub.app.dev'
+    namespace 'com.invitehub.app'
     defaultConfig {
-        applicationId 'com.invitehub.app.dev'
+        applicationId 'com.invitehub.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

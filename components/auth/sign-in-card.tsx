@@ -157,28 +157,40 @@ export function SignInCard({
       </button>
       <div className="modal-or"><span>또는</span></div>
       <form onSubmit={handleSubmit}>
-        <input
-          className="modal-input"
-          type="email"
-          placeholder="이메일 주소"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          disabled={!isConfigured || pending}
-          required
-        />
-        <input
-          className="modal-input"
-          type="password"
-          placeholder="비밀번호"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          disabled={!isConfigured || pending}
-          minLength={6}
-          required
-        />
+        <label className="auth-field">
+          <span>이메일 주소</span>
+          <input
+            autoComplete="email"
+            className="modal-input"
+            disabled={!isConfigured || pending}
+            inputMode="email"
+            name="email"
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="example@email.com"
+            required
+            spellCheck={false}
+            type="email"
+            value={email}
+          />
+        </label>
+        <label className="auth-field">
+          <span>비밀번호</span>
+          <input
+            autoComplete={mode === "signin" ? "current-password" : "new-password"}
+            className="modal-input"
+            disabled={!isConfigured || pending}
+            minLength={6}
+            name="password"
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="6자 이상 입력"
+            required
+            type="password"
+            value={password}
+          />
+        </label>
         <div className="auth-mode-actions">
           <button className="btn-primary auth-mode-btn" disabled={!isConfigured || pending} type="submit">
-            {pending ? "처리 중..." : mode === "signin" ? "로그인" : "회원가입"}
+            {pending ? "처리 중…" : mode === "signin" ? "로그인" : "회원가입"}
           </button>
           <button
             className="btn-outline auth-mode-btn"

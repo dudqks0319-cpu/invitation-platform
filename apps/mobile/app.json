@@ -5,6 +5,7 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "invitehub",
+    "newArchEnabled": false,
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.invitehub.app.dev",

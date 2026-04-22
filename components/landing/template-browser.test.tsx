@@ -1,34 +1,30 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { TemplateBrowser } from "@/components/landing/template-browser";
-
-const pushMock = vi.fn();
-
-vi.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: pushMock
-  })
-}));
 
 describe("TemplateBrowser", () => {
   beforeEach(() => {
-    pushMock.mockReset();
     document.body.innerHTML = "";
   });
 
   it("shows only category and template sections with user-facing copy", () => {
     document.body.innerHTML = renderToStaticMarkup(<TemplateBrowser />);
 
-    expect(document.body.textContent).toContain("행사별 디자인");
-    expect(document.body.textContent).toContain("인기 디자인");
+    expect(document.body.textContent).toContain("핵심 카테고리");
+    expect(document.body.textContent).toContain("대표 디자인");
+    expect(document.body.textContent).toContain("브라이덜샤워");
+    expect(document.body.textContent).toContain("참석 응답");
+    expect(document.body.textContent).toContain("참석 확인");
+    expect(document.body.textContent).toContain("집들이");
+    expect(document.body.textContent).not.toContain(["R", "SVP"].join(""));
     expect(document.body.textContent).not.toContain("FULL GENSPARK ARCHIVE");
     expect(document.body.textContent).not.toContain("ART DIRECTION");
     expect(document.body.textContent).not.toContain("Genspark");
   });
 
-  it("opens the builder when a template card is clicked", async () => {
+  it("uses semantic links for template selection", async () => {
     const container = document.createElement("div");
     document.body.appendChild(container);
     const root = createRoot(container);
@@ -37,14 +33,14 @@ describe("TemplateBrowser", () => {
       root.render(<TemplateBrowser />);
     });
 
-    const cardButton = container.querySelector('[aria-label="로즈 프레임 템플릿 선택"]');
-    expect(cardButton).not.toBeNull();
+    const templateLink = container.querySelector<HTMLAnchorElement>('a[aria-label="플라워 보더 템플릿 선택"]');
+    expect(templateLink).not.toBeNull();
+    expect(templateLink?.getAttribute("href")).toBe("/builder?template=wedding-classic");
+    expect(templateLink?.getAttribute("role")).toBeNull();
 
-    await act(async () => {
-      cardButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    expect(pushMock).toHaveBeenCalledWith("/builder?template=wedding-classic");
+    const previewImage = templateLink?.querySelector<HTMLImageElement>("img.template-board-image");
+    expect(previewImage?.getAttribute("width")).toBe("320");
+    expect(previewImage?.getAttribute("height")).toBe("485");
 
     await act(async () => {
       root.unmount();
@@ -64,13 +60,14 @@ describe("TemplateBrowser", () => {
       (button) => button.textContent === "미리보기"
     );
     expect(previewButton).not.toBeUndefined();
+    expect(previewButton?.closest("a")).toBeNull();
 
     await act(async () => {
       previewButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
-    expect(pushMock).not.toHaveBeenCalled();
-    expect(container.textContent).toContain("로즈 프레임");
+    expect(container.textContent).toContain("플라워 보더");
+    expect(container.querySelector('button[aria-label="미리보기 닫기"]')).not.toBeNull();
 
     await act(async () => {
       root.unmount();

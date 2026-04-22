@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { Platform } from "react-native";
 
 function renderTabIcon(name: keyof typeof Ionicons.glyphMap) {
   const TabIcon = ({ color, size }: { color: string; size: number }) => (
@@ -12,27 +13,28 @@ function renderTabIcon(name: keyof typeof Ionicons.glyphMap) {
 }
 
 export default function TabsLayout() {
+  const isWeb = Platform.OS === "web";
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#C9935A",
-        tabBarInactiveTintColor: "#8B7355",
+        tabBarActiveTintColor: "#2B2824",
+        tabBarInactiveTintColor: "#9B9085",
         tabBarStyle: {
-          backgroundColor: "#FFFFFF",
-          borderTopColor: "#E8DDD3",
-          height: 72,
-          paddingBottom: 12,
-          paddingTop: 10,
-          shadowColor: "rgba(0,0,0,0.08)",
+          backgroundColor: "#FFFDF9",
+          borderTopColor: "#E4D9CE",
+          height: isWeb ? 58 : 72,
+          paddingBottom: isWeb ? 8 : 12,
+          paddingTop: isWeb ? 8 : 10,
+          shadowColor: "rgba(62,49,37,0.09)",
           shadowOffset: { width: 0, height: -2 },
           shadowOpacity: 1,
           shadowRadius: 12
         },
         tabBarLabelStyle: {
           fontSize: 12,
-          fontWeight: "600",
-          letterSpacing: 0.5
+          fontWeight: "600"
         }
       }}
     >

@@ -10,6 +10,12 @@ export default defineConfig({
     ],
     include: [
       "**/*.{test,spec}.{ts,tsx}"
+    ],
+    exclude: [
+      "**/.claude/**",
+      "**/.next/**",
+      "**/dist/**",
+      "**/node_modules/**"
     ]
   },
   resolve: {

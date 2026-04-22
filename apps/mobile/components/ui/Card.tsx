@@ -12,10 +12,10 @@ export function Card({ children, eyebrow, title }: CardProps) {
     <View
       style={{
         backgroundColor: theme.colors.surface,
-        borderRadius: theme.radius.md,
+        borderRadius: theme.radius.sm,
         borderWidth: 1,
         borderColor: theme.colors.border,
-        padding: theme.spacing.lg,
+        padding: theme.spacing.md,
         gap: theme.spacing.sm,
         shadowColor: theme.shadow.card.shadowColor,
         shadowOffset: theme.shadow.card.shadowOffset,
@@ -37,7 +37,7 @@ export function Card({ children, eyebrow, title }: CardProps) {
           {eyebrow}
         </Text>
       ) : null}
-      <Text style={{ color: "#58432f", fontSize: 18, fontWeight: "700", lineHeight: 26 }}>{title}</Text>
+      <Text style={{ color: theme.colors.text, fontSize: 17, fontWeight: "700", lineHeight: 25 }}>{title}</Text>
       {children}
     </View>
   );

@@ -96,7 +96,7 @@ export default function MyPageScreen() {
           {isAuthenticated ? user?.email ?? "이메일 정보 없음" : isGuestMode ? "무료 기능을 게스트 모드로 사용 중입니다." : "아직 연결된 계정이 없습니다."}
         </Text>
         <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>
-          Supabase 설정: {configured ? "활성" : "비활성"}
+          연결 상태: {configured ? "준비됨" : "준비 중"}
         </Text>
         <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>
           계정 상태: {isAuthenticated ? "원격 저장 · RSVP · 방명록 관리 가능" : isGuestMode ? "무료 초대장 저장 · 발행 가능" : "로컬 초안만 관리"}
@@ -108,11 +108,20 @@ export default function MyPageScreen() {
               ? "유료 발행과 계정 삭제는 이메일 또는 소셜 로그인 후 사용할 수 있습니다."
               : "로그인하면 유료 발행과 계정 관리를 사용할 수 있습니다."}
         </Text>
-        <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>{configMessage}</Text>
-        {!configured && configMissingKeys.length > 0 ? (
-          <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginTop: 8 }}>
-            누락된 환경변수: {configMissingKeys.join(", ")}
+        {!configured ? (
+          <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>
+            링크 발행과 웹 연동을 준비 중입니다. 작성한 내용은 앱에서 계속 확인하고 수정할 수 있습니다.
           </Text>
+        ) : null}
+        {__DEV__ && !configured ? (
+          <>
+            <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>{configMessage}</Text>
+            {configMissingKeys.length > 0 ? (
+              <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginTop: 8 }}>
+                누락된 환경변수: {configMissingKeys.join(", ")}
+              </Text>
+            ) : null}
+          </>
         ) : null}
       </Card>
 

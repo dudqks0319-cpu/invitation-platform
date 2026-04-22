@@ -1,8 +1,13 @@
-node_modules
-.next
+# Dependencies
+node_modules/
+
+# Environment and local secrets
 .env
 .env.*
 !.env.example
+.env.local
+.env.*.local
+.env*.local
 backend/.env
 backend/.env.*
 !backend/.env.example
@@ -12,16 +17,53 @@ backend/.env.*
 *.p12
 *.jks
 *.mobileprovision
-.env.local
-.env.*.local
 /supabase/config.toml
-tsconfig.tsbuildinfo
-.omx
+
+# Build and test outputs
+.next/
+dist/
+build/
+coverage/
+out/
 output/
 test-results/
-public
+playwright-report/
+tsconfig.tsbuildinfo
+*.tsbuildinfo
+apps/mobile/dist/
+apps/mobile/.expo/
+
+# Local orchestration, worktrees, and logs
+.omx/
+.worktrees/
+.claude/worktrees/
+.artifacts/
+artifacts/
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Generated image scratch directories
+apps/mobile/assets/template-previews/genspark/
+apps/mobile/assets/template-previews/reference/
+
+# Deployment/local platform state
+.vercel/
+
+# Existing generated/public exceptions
 !app/api/public/
 !app/api/public/**
+!public/images/generated/
+!public/images/generated/**
 src
-.vercel
-.env*.local

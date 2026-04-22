@@ -92,6 +92,10 @@ export async function POST(
     guest_phone: guestPhone,
     attending: parsed.data.attending,
     guests: parsed.data.guests,
+    side: parsed.data.side,
+    meal_preference: parsed.data.mealPreference,
+    shuttle_needed: parsed.data.shuttleNeeded,
+    companion_names: parsed.data.companionNames || null,
     memo: parsed.data.memo || null
   };
 

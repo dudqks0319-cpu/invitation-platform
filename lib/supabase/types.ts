@@ -115,6 +115,10 @@ export type Database = {
           guest_phone: string | null;
           attending: boolean;
           guests: number;
+          side: "groom" | "bride" | "shared";
+          meal_preference: "yes" | "no" | "undecided";
+          shuttle_needed: boolean;
+          companion_names: string | null;
           memo: string | null;
           created_at: string;
         };
@@ -125,6 +129,10 @@ export type Database = {
           guest_phone?: string | null;
           attending?: boolean;
           guests?: number;
+          side?: "groom" | "bride" | "shared";
+          meal_preference?: "yes" | "no" | "undecided";
+          shuttle_needed?: boolean;
+          companion_names?: string | null;
           memo?: string | null;
           created_at?: string;
         };
@@ -149,6 +157,28 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["guestbook_entries"]["Insert"]>;
+        Relationships: [];
+      };
+      memory_photos: {
+        Row: {
+          id: string;
+          invitation_id: string;
+          nickname: string;
+          message: string | null;
+          storage_path: string;
+          approved: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          invitation_id: string;
+          nickname: string;
+          message?: string | null;
+          storage_path: string;
+          approved?: boolean;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["memory_photos"]["Insert"]>;
         Relationships: [];
       };
       rate_limits: {

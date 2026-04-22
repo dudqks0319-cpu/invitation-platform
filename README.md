@@ -16,6 +16,9 @@
 - 데이터 저장 경로
   - 환경 변수가 없으면 로컬 데모 모드
   - Supabase 환경 변수가 있으면 실제 저장/발행/RSVP/방명록 사용 가능
+- 한국형 공개 초대장 기능
+  - 네이버 지도 링크와 좌표 기반 지도 임베드
+  - 카카오톡 공유 SDK 또는 기본 공유/링크 복사 fallback
 
 ## 기술 스택
 
@@ -46,6 +49,8 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
 NEXT_PUBLIC_SITE_URL=
+NEXT_PUBLIC_KAKAO_JS_KEY=
+NEXT_PUBLIC_NAVER_MAP_CLIENT_ID=
 APPLE_APP_STORE_ISSUER_ID=
 APPLE_APP_STORE_KEY_ID=
 APPLE_APP_STORE_PRIVATE_KEY=
@@ -57,6 +62,8 @@ STORE_PUBLISH_PRODUCT_IDS_ANDROID=
 ```
 
 그리고 `supabase/schema.sql`을 SQL Editor에서 실행합니다.
+
+카카오톡 공유는 `NEXT_PUBLIC_KAKAO_JS_KEY`가 있으면 플랫폼 키를 우선 사용하고, 없으면 빌더에 입력한 초대장별 JavaScript 키를 사용합니다. 네이버 지도 임베드는 `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID`와 초대장별 위도/경도가 모두 있을 때 활성화되며, 값이 부족하면 네이버 지도 검색 링크로 대체됩니다.
 
 ## 인수인계 / 외부 서비스 설정
 
@@ -99,7 +106,6 @@ css/main.css
 
 ## 남은 확장 포인트
 
-- 이미지 업로드를 Supabase Storage로 전환
 - 카카오/네이버 OAuth
 - 결제
 - 운영용 guestbook moderation UI

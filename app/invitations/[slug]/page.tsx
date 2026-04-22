@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { InvitationView } from "@/components/invitations/invitation-view";
 import { SiteHeader } from "@/components/shared/site-header";
 import { findDemoInvitationBySlug } from "@/lib/demo-data";
-import { buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
+import { buildPublishedAssetUrl, buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
 import { getPublicShareUrl } from "@/lib/invitation-presentation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
@@ -200,13 +200,23 @@ export default async function PublicInvitationPage({
       await logInvitationView(admin, invitation.id, headerList.get("user-agent") || "");
     }
 
-    const { data: guestbookEntries } = await (admin ?? createSupabaseAdminClient())!
+    const db = (admin ?? createSupabaseAdminClient())!;
+    const [{ data: guestbookEntries }, { data: memoryPhotoEntries }] = await Promise.all([
+      db
       .from("guestbook_entries")
       .select("*")
       .eq("invitation_id", invitation.id)
       .eq("approved", true)
       .order("created_at", { ascending: false })
-      .limit(20);
+        .limit(20),
+      db
+        .from("memory_photos")
+        .select("*")
+        .eq("invitation_id", invitation.id)
+        .eq("approved", true)
+        .order("created_at", { ascending: false })
+        .limit(24)
+    ]);
 
     return (
       <>
@@ -217,6 +227,14 @@ export default async function PublicInvitationPage({
               id: entry.id,
               nickname: entry.nickname,
               message: entry.message,
+              approved: entry.approved,
+              createdAt: entry.created_at
+            }))}
+            initialMemoryPhotoEntries={(memoryPhotoEntries ?? []).map((entry) => ({
+              id: entry.id,
+              nickname: entry.nickname,
+              message: entry.message ?? "",
+              imageUrl: buildPublishedAssetUrl(invitation.slug, entry.storage_path),
               approved: entry.approved,
               createdAt: entry.created_at
             }))}

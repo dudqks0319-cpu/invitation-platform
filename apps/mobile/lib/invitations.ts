@@ -4,6 +4,7 @@ export { getPublishAccess } from "./publish-access";
 import { supabase } from "./supabase";
 import type { MobileInvitationDraft } from "./drafts";
 import { getPublicInvitationUrl } from "./share";
+import { getInviteHubBaseUrl } from "./web-links";
 
 type RemoteInvitationRow = {
   id: string;

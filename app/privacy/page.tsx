@@ -38,7 +38,7 @@ export default function PrivacyPage() {
               수집될 수 있습니다.
             </p>
             <p style={{ marginBottom: 16 }}>
-              RSVP 제출 시 하객 이름, 연락처(선택), 참석 여부, 동행 인원, 메모를 수집합니다.
+              참석 응답 제출 시 하객 이름, 연락처(선택), 참석 여부, 동행 인원, 메모를 수집합니다.
             </p>
             <p style={{ marginBottom: 24 }}>
               방명록 작성 시 닉네임과 축하 메시지를 수집합니다.
@@ -48,7 +48,7 @@ export default function PrivacyPage() {
               2. 개인정보 이용 목적
             </h2>
             <p style={{ marginBottom: 24 }}>
-              수집한 개인정보는 초대장 생성 및 발행, 결제 처리 및 환불, RSVP 집계, 방명록
+              수집한 개인정보는 초대장 생성 및 발행, 결제 처리 및 환불, 하객 응답 집계, 방명록
               운영, 서비스 개선 및 통계 분석 목적으로만 사용됩니다.
             </p>
 
@@ -64,7 +64,7 @@ export default function PrivacyPage() {
               4. 개인정보의 제3자 제공
             </h2>
             <p style={{ marginBottom: 24 }}>
-              서비스는 이용자의 동의 없이 개인정보를 제3자에게 제공하지 않습니다. 다만 RSVP
+              서비스는 이용자의 동의 없이 개인정보를 제3자에게 제공하지 않습니다. 다만 참석 응답
               정보와 방명록 정보는 해당 초대장 소유자에게 전달됩니다.
             </p>
 
