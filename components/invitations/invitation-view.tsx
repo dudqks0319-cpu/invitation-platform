@@ -51,8 +51,28 @@ type InvitationViewProps = {
   shareUrl: string;
   initialGuestbookEntries?: GuestbookEntry[];
   initialMemoryPhotoEntries?: MemoryPhotoEntry[];
+  platformKakaoJsKey?: string;
+  platformNaverMapClientId?: string;
   mode: "preview" | "public";
 };
+
+export function resolveInvitationPlatformConfig({
+  draftKakaoJsKey,
+  platformKakaoJsKey,
+  platformNaverMapClientId
+}: {
+  draftKakaoJsKey: string;
+  platformKakaoJsKey?: string;
+  platformNaverMapClientId?: string;
+}) {
+  return {
+    kakaoJsKey: resolveKakaoJavaScriptKey(
+      draftKakaoJsKey,
+      platformKakaoJsKey ?? process.env.NEXT_PUBLIC_KAKAO_JS_KEY
+    ),
+    naverMapClientId: platformNaverMapClientId ?? process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID ?? ""
+  };
+}
 
 function normalizeUrl(value: string) {
   return /^https?:\/\//i.test(value) ? value : "";
@@ -192,6 +212,8 @@ export function InvitationView({
   shareUrl,
   initialGuestbookEntries = [],
   initialMemoryPhotoEntries = [],
+  platformKakaoJsKey,
+  platformNaverMapClientId,
   mode
 }: InvitationViewProps) {
   const [rsvpEntries, setRsvpEntries] = useState<RsvpEntry[]>([]);
@@ -210,8 +232,11 @@ export function InvitationView({
   const accountEntries = getInvitationAccountEntries(payload);
   const heroTitle = getInvitationHeroTitle(payload);
   const heroSubtitle = getInvitationHeroSubtitle(payload);
-  const kakaoJsKey = resolveKakaoJavaScriptKey(payload.kakaoJsKey, process.env.NEXT_PUBLIC_KAKAO_JS_KEY);
-  const naverMapClientId = process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID || "";
+  const { kakaoJsKey, naverMapClientId } = resolveInvitationPlatformConfig({
+    draftKakaoJsKey: payload.kakaoJsKey,
+    platformKakaoJsKey,
+    platformNaverMapClientId
+  });
   const resolvedShareUrl = getPublicShareUrl(
     shareUrl,
     typeof window === "undefined" ? process.env.NEXT_PUBLIC_SITE_URL : window.location.origin

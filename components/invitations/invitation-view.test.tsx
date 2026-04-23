@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { InvitationView } from "@/components/invitations/invitation-view";
+import { InvitationView, resolveInvitationPlatformConfig } from "@/components/invitations/invitation-view";
 import { defaultInvitationDraft, normalizeDraft } from "@/lib/invitation-payload";
 
 describe("InvitationView", () => {
@@ -58,5 +58,14 @@ describe("InvitationView", () => {
     expect(document.body.textContent).toContain("카카오맵 열기");
     expect(document.body.textContent).toContain("주소 복사");
     expect(document.body.innerHTML).toContain("id=\"naver-map-embed\"");
+  });
+
+  it("prefers a server-provided Kakao platform key over client env lookup", () => {
+    const config = resolveInvitationPlatformConfig({
+      draftKakaoJsKey: "",
+      platformKakaoJsKey: "server-kakao-key"
+    });
+
+    expect(config.kakaoJsKey).toBe("server-kakao-key");
   });
 });
