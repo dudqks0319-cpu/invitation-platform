@@ -44,25 +44,25 @@ const bundledTemplatePreviewSource: Record<string, ImageSourcePropType> = {
   "birthday-city-bus": require("../assets/template-previews/custom/birthday/birthday-07.jpeg"),
   "birthday-hero-star": require("../assets/template-previews/custom/birthday/birthday-08.jpeg"),
   "birthday-safari-jungle": require("../assets/template-previews/custom/birthday/birthday-09.jpeg"),
-  "house-warm": require("../assets/template-previews/genspark/6XcxVcVH.jpg"),
-  "baby-shower": require("../assets/template-previews/genspark/zIB8bEWC.jpg"),
-  graduation: require("../assets/template-previews/genspark/Xdz6nHcL.jpg"),
-  business: require("../assets/template-previews/genspark/xpx0zLPW.jpg")
+  "house-warm": require("../assets/template-previews/highres/wedding/flower-garden.png"),
+  "baby-shower": require("../assets/template-previews/custom/dol/dol-card-02.jpeg"),
+  graduation: require("../assets/template-previews/custom/birthday/birthday-08.jpeg"),
+  business: require("../assets/template-previews/custom/hwangap/hwangap-02.jpeg")
 };
 
 const extendedTemplatePreviewSource: Record<string, ImageSourcePropType> = {
-  "anniversary-tulip": require("../assets/template-previews/genspark/78rOyfxL.jpg"),
-  "anniversary-photo": require("../assets/template-previews/genspark/7W1rqztu.jpg"),
-  "anniversary-heart": require("../assets/template-previews/genspark/AZJKCYaG.jpg"),
-  "anniversary-night": require("../assets/template-previews/genspark/DJVxKvNl.jpg"),
-  "anniversary-branch": require("../assets/template-previews/genspark/EFRNlJ6k.jpg"),
-  "anniversary-paris": require("../assets/template-previews/genspark/EJf1yoDr.jpg"),
-  "other-moving": require("../assets/template-previews/genspark/FeLszYGF.jpg"),
-  "other-graduation": require("../assets/template-previews/genspark/IWM0Xjom.jpg"),
-  "other-baby-shower": require("../assets/template-previews/genspark/J2t3Q3VC.jpg"),
-  "other-retirement": require("../assets/template-previews/genspark/JpRqNMCV.jpg"),
-  "other-teacher": require("../assets/template-previews/genspark/KIvCzl5p.jpg"),
-  "other-worship": require("../assets/template-previews/genspark/LGIpWzz2.jpg")
+  "anniversary-tulip": require("../assets/template-previews/highres/wedding/soft-pastel.png"),
+  "anniversary-photo": require("../assets/template-previews/highres/wedding/watercolor-bloom.png"),
+  "anniversary-heart": require("../assets/template-previews/highres/wedding/ribbon-frame.png"),
+  "anniversary-night": require("../assets/template-previews/highres/wedding/starry-garden.png"),
+  "anniversary-branch": require("../assets/template-previews/highres/wedding/flower-garden.png"),
+  "anniversary-paris": require("../assets/template-previews/highres/wedding/minimal-line.png"),
+  "other-moving": require("../assets/template-previews/highres/wedding/flower-garden.png"),
+  "other-graduation": require("../assets/template-previews/custom/birthday/birthday-08.jpeg"),
+  "other-baby-shower": require("../assets/template-previews/custom/dol/dol-card-02.jpeg"),
+  "other-retirement": require("../assets/template-previews/custom/hwangap/hwangap-01.jpeg"),
+  "other-teacher": require("../assets/template-previews/custom/birthday/birthday-07.jpeg"),
+  "other-worship": require("../assets/template-previews/custom/hwangap/hwangap-05.jpeg")
 };
 
 export function hasBundledTemplatePreview(templateId: string) {
