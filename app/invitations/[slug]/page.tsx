@@ -189,6 +189,7 @@ export default async function PublicInvitationPage({
   const decodedSlug = decodeURIComponent(slug);
   const headerList = await headers();
   const origin = resolveRequestOrigin(headerList);
+  const platformKakaoJsKey = process.env.NEXT_PUBLIC_KAKAO_JS_KEY ?? "";
   const { admin, invitation } = await loadPublishedInvitation(decodedSlug);
 
   if (invitation) {
@@ -222,6 +223,7 @@ export default async function PublicInvitationPage({
             }))}
             mode="public"
             payload={payload}
+            platformKakaoJsKey={platformKakaoJsKey}
             shareUrl={getPublicShareUrl(`/invitations/${invitation.slug}`, origin)}
             slug={invitation.slug}
           />
@@ -243,6 +245,7 @@ export default async function PublicInvitationPage({
         <InvitationView
           mode="public"
           payload={demoInvitation.payload}
+          platformKakaoJsKey={platformKakaoJsKey}
           shareUrl={getPublicShareUrl(`/invitations/${demoInvitation.slug}`, origin)}
           slug={demoInvitation.slug}
         />

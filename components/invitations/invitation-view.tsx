@@ -52,8 +52,22 @@ type InvitationViewProps = {
   payload: InvitationDraftPayload;
   shareUrl: string;
   initialGuestbookEntries?: GuestbookEntry[];
+  platformKakaoJsKey?: string;
   mode: "preview" | "public";
 };
+
+export function resolveInvitationPlatformConfig({
+  draftKakaoJsKey,
+  platformKakaoJsKey
+}: {
+  draftKakaoJsKey: string;
+  platformKakaoJsKey?: string;
+}) {
+  return {
+    kakaoJsKey:
+      (platformKakaoJsKey ?? process.env.NEXT_PUBLIC_KAKAO_JS_KEY ?? "").trim() || draftKakaoJsKey.trim()
+  };
+}
 
 function normalizeUrl(value: string) {
   return /^https?:\/\//i.test(value) ? value : "";
@@ -104,6 +118,7 @@ export function InvitationView({
   payload,
   shareUrl,
   initialGuestbookEntries = [],
+  platformKakaoJsKey,
   mode
 }: InvitationViewProps) {
   const [rsvpEntries, setRsvpEntries] = useState<RsvpEntry[]>([]);
@@ -121,7 +136,10 @@ export function InvitationView({
   const accountEntries = getInvitationAccountEntries(payload);
   const heroTitle = getInvitationHeroTitle(payload);
   const heroSubtitle = getInvitationHeroSubtitle(payload);
-  const kakaoJsKey = payload.kakaoJsKey.trim();
+  const { kakaoJsKey } = resolveInvitationPlatformConfig({
+    draftKakaoJsKey: payload.kakaoJsKey,
+    platformKakaoJsKey
+  });
   const resolvedShareUrl = getPublicShareUrl(
     shareUrl,
     typeof window === "undefined" ? process.env.NEXT_PUBLIC_SITE_URL : window.location.origin

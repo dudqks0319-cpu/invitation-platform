@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { InvitationView } from "@/components/invitations/invitation-view";
+import { InvitationView, resolveInvitationPlatformConfig } from "@/components/invitations/invitation-view";
 import { defaultInvitationDraft } from "@/lib/invitation-payload";
 
 describe("InvitationView", () => {
@@ -37,5 +37,13 @@ describe("InvitationView", () => {
     expect(document.body.innerHTML).not.toContain(
       "미리보기 단계에서는 나만 볼 수 있습니다."
     );
+  });
+  it("prefers a server-provided Kakao platform key over client env lookup", () => {
+    const config = resolveInvitationPlatformConfig({
+      draftKakaoJsKey: "",
+      platformKakaoJsKey: "server-kakao-key"
+    });
+
+    expect(config.kakaoJsKey).toBe("server-kakao-key");
   });
 });
