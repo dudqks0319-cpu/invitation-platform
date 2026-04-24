@@ -1,5 +1,7 @@
 .DS_Store
 .expo/
+.env.local
+.env.*.local
 coverage/
 dist/
 node_modules/
