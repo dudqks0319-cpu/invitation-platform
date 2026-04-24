@@ -21,16 +21,16 @@ import { getPublicInvitationUrl } from "@/lib/web-links";
 import { publishGuestInvitation } from "@/lib/invitations";
 import { getInvitationMapLinks, type InvitationMapLinks } from "@/lib/map-links";
 
-const templateAccents: Record<string, { background: string; border: string; accent: string; wash: string }> = {
-  wedding: { background: "#fff7f2", border: "#ead6cb", accent: "#bd8c75", wash: "rgba(242, 194, 188, 0.2)" },
-  dol: { background: "#fff9dd", border: "#eadb9f", accent: "#d4a542", wash: "rgba(255, 217, 116, 0.22)" },
-  hwangap: { background: "#fbf6ed", border: "#d9c4a0", accent: "#9c654d", wash: "rgba(201, 166, 107, 0.18)" },
-  bridal: { background: "#fff7fb", border: "#efd3dc", accent: "#c8849b", wash: "rgba(246, 193, 207, 0.22)" },
-  birthday: { background: "#f0fbff", border: "#b9dceb", accent: "#5faece", wash: "rgba(97, 185, 230, 0.18)" },
-  housewarming: { background: "#fbfaf5", border: "#d8dfc8", accent: "#778f69", wash: "rgba(141, 163, 122, 0.18)" },
-  baby: { background: "#f7fbff", border: "#cfddf3", accent: "#739aca", wash: "rgba(158, 199, 255, 0.2)" },
-  graduation: { background: "#f8f9fc", border: "#ccd6e8", accent: "#425b8f", wash: "rgba(32, 56, 99, 0.12)" },
-  business: { background: "#f5f7ff", border: "#cbd8f5", accent: "#2b62d9", wash: "rgba(43, 98, 217, 0.12)" }
+const templateAccents: Record<string, { background: string; border: string; accent: string; wash: string; motif: string; headline: string; surface: string }> = {
+  wedding: { background: "#fff7f2", border: "#ead6cb", accent: "#bd8c75", wash: "rgba(242, 194, 188, 0.2)", motif: "floral", headline: "We are getting married", surface: "rgba(255, 252, 247, 0.78)" },
+  dol: { background: "#fff9dd", border: "#eadb9f", accent: "#d4a542", wash: "rgba(255, 217, 116, 0.22)", motif: "confetti", headline: "First Birthday", surface: "rgba(255, 253, 240, 0.82)" },
+  hwangap: { background: "#fbf6ed", border: "#d9c4a0", accent: "#9c654d", wash: "rgba(201, 166, 107, 0.18)", motif: "hanji", headline: "With gratitude", surface: "rgba(255, 251, 242, 0.84)" },
+  bridal: { background: "#fff7fb", border: "#efd3dc", accent: "#c8849b", wash: "rgba(246, 193, 207, 0.22)", motif: "ribbon", headline: "Bridal Shower", surface: "rgba(255, 250, 253, 0.82)" },
+  birthday: { background: "#f0fbff", border: "#b9dceb", accent: "#5faece", wash: "rgba(97, 185, 230, 0.18)", motif: "confetti", headline: "Happy Birthday", surface: "rgba(249, 253, 255, 0.82)" },
+  housewarming: { background: "#fbfaf5", border: "#d8dfc8", accent: "#778f69", wash: "rgba(141, 163, 122, 0.18)", motif: "leaf", headline: "Welcome home", surface: "rgba(253, 252, 246, 0.82)" },
+  baby: { background: "#f7fbff", border: "#cfddf3", accent: "#739aca", wash: "rgba(158, 199, 255, 0.2)", motif: "ribbon", headline: "Baby Shower", surface: "rgba(250, 253, 255, 0.82)" },
+  graduation: { background: "#f8f9fc", border: "#ccd6e8", accent: "#425b8f", wash: "rgba(32, 56, 99, 0.12)", motif: "minimal", headline: "Graduation", surface: "rgba(250, 251, 255, 0.86)" },
+  business: { background: "#f5f7ff", border: "#cbd8f5", accent: "#2b62d9", wash: "rgba(43, 98, 217, 0.12)", motif: "minimal", headline: "You are invited", surface: "rgba(250, 252, 255, 0.88)" }
 };
 
 async function openMapUrl(url: string, fallbackUrl?: string) {
@@ -149,6 +149,58 @@ function LiveMapPanel({
         </Pressable>
       </View>
     </View>
+  );
+}
+
+function InvitationMotif({ accent, motif }: { accent: string; motif: string }) {
+  if (motif === "minimal") {
+    return (
+      <View pointerEvents="none" style={{ position: "absolute", left: 34, right: 34, top: 96, height: 1, backgroundColor: `${accent}33` }} />
+    );
+  }
+
+  if (motif === "hanji") {
+    return (
+      <>
+        <Text pointerEvents="none" style={{ position: "absolute", top: 72, right: 26, color: `${accent}22`, fontSize: 86, fontWeight: "900" }}>
+          壽
+        </Text>
+        <View pointerEvents="none" style={{ position: "absolute", left: 34, right: 34, bottom: 82, height: 1, backgroundColor: `${accent}22` }} />
+      </>
+    );
+  }
+
+  if (motif === "confetti") {
+    return (
+      <>
+        {["•", "✦", "•", "✧"].map((mark, index) => (
+          <Text
+            key={`${mark}-${index}`}
+            pointerEvents="none"
+            style={{
+              position: "absolute",
+              top: 84 + index * 28,
+              right: index % 2 ? 34 : 58,
+              color: `${accent}66`,
+              fontSize: index % 2 ? 18 : 24
+            }}
+          >
+            {mark}
+          </Text>
+        ))}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Text pointerEvents="none" style={{ position: "absolute", top: 74, left: 34, color: `${accent}66`, fontSize: 36 }}>
+        {motif === "ribbon" ? "〰" : "✿"}
+      </Text>
+      <Text pointerEvents="none" style={{ position: "absolute", bottom: 58, right: 34, color: `${accent}55`, fontSize: 42 }}>
+        {motif === "leaf" ? "⌇" : "✿"}
+      </Text>
+    </>
   );
 }
 
@@ -303,7 +355,7 @@ export default function BuilderPreviewScreen() {
   }
 
   return (
-    <Screen subtitle="실시간 폰 프리뷰를 이 화면의 시그니처로 키웁니다." title="미리보기">
+    <Screen subtitle="하객에게 공유될 실제 화면을 먼저 확인하세요." title="초대장 미리보기">
       {loading ? <Loading label="초안을 불러오는 중..." /> : null}
       {error ? <ErrorView description={error} title="작업 실패" /> : null}
       {message ? (
@@ -311,85 +363,6 @@ export default function BuilderPreviewScreen() {
           <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>{message}</Text>
         </Card>
       ) : null}
-      <Card eyebrow="발행 흐름" title="미리보기 → 스토어 결제 → 발행 완료">
-        <View style={{ flexDirection: "row", gap: 10 }}>
-          {flowState.steps.map((step, index) => {
-            const isCurrent = step.status === "current";
-            const isDone = step.status === "done";
-            const isSkipped = step.status === "skipped";
-
-            return (
-              <View
-                key={step.label}
-                style={{
-                  flex: 1,
-                  borderRadius: theme.radius.md,
-                  borderWidth: 1,
-                  borderColor: isCurrent
-                    ? theme.colors.primary
-                    : isDone
-                      ? "rgba(84,122,97,0.22)"
-                      : theme.colors.border,
-                  backgroundColor: isCurrent
-                    ? "rgba(201,147,90,0.14)"
-                    : isDone
-                      ? "rgba(84,122,97,0.1)"
-                      : theme.colors.surfaceSoft,
-                  paddingHorizontal: 10,
-                  paddingVertical: 12,
-                  gap: 6
-                }}
-              >
-                <Text
-                  style={{
-                    color: isCurrent
-                      ? theme.colors.primaryDark
-                      : isDone
-                        ? theme.colors.success
-                        : theme.colors.muted,
-                    fontSize: 12,
-                    fontWeight: "700"
-                  }}
-                >
-                  {`0${index + 1}`}
-                </Text>
-                <Text
-                  style={{
-                    color: isSkipped ? theme.colors.textLight : theme.colors.text,
-                    fontSize: 14,
-                    fontWeight: "700",
-                    lineHeight: 20
-                  }}
-                >
-                  {step.label}
-                </Text>
-                <Text
-                  style={{
-                    color: isCurrent
-                      ? theme.colors.primaryDark
-                      : isDone
-                        ? theme.colors.success
-                        : isSkipped
-                          ? theme.colors.textLight
-                          : theme.colors.muted,
-                    fontSize: 12,
-                    lineHeight: 18
-                  }}
-                >
-                  {isCurrent
-                    ? "진행 중"
-                    : isDone
-                      ? "완료"
-                      : isSkipped
-                        ? "건너뜀"
-                        : "대기"}
-                </Text>
-              </View>
-            );
-          })}
-        </View>
-        <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>{flowState.note}</Text>
-      </Card>
       <View
         style={{
           minHeight: 760,
@@ -470,12 +443,13 @@ export default function BuilderPreviewScreen() {
               opacity: 0.78
             }}
           />
+          <InvitationMotif accent={accent.accent} motif={accent.motif} />
 
           <View
             style={{
               flex: 1,
               borderRadius: 34,
-              backgroundColor: "rgba(255, 252, 247, 0.72)",
+              backgroundColor: accent.surface,
               borderWidth: 1,
               borderColor: "rgba(255,255,255,0.72)",
               paddingHorizontal: 24,
@@ -485,6 +459,9 @@ export default function BuilderPreviewScreen() {
               gap: 14
             }}
           >
+            <Text style={{ color: accent.accent, fontSize: 14, fontStyle: "italic", lineHeight: 20, textAlign: "center" }}>
+              {accent.headline}
+            </Text>
             <Text style={{ color: accent.accent, fontSize: 12, fontWeight: "800", textAlign: "center" }}>
               {selectedTemplate?.badge || "초대장"}
             </Text>
@@ -550,6 +527,85 @@ export default function BuilderPreviewScreen() {
           </View>
         </ImageBackground>
       </View>
+      <Card eyebrow="발행 흐름" title="검수 → 결제 확인 → 링크 공유">
+        <View style={{ flexDirection: "row", gap: 10 }}>
+          {flowState.steps.map((step, index) => {
+            const isCurrent = step.status === "current";
+            const isDone = step.status === "done";
+            const isSkipped = step.status === "skipped";
+
+            return (
+              <View
+                key={step.label}
+                style={{
+                  flex: 1,
+                  borderRadius: theme.radius.md,
+                  borderWidth: 1,
+                  borderColor: isCurrent
+                    ? theme.colors.primary
+                    : isDone
+                      ? "rgba(84,122,97,0.22)"
+                      : theme.colors.border,
+                  backgroundColor: isCurrent
+                    ? "rgba(201,147,90,0.14)"
+                    : isDone
+                      ? "rgba(84,122,97,0.1)"
+                      : theme.colors.surfaceSoft,
+                  paddingHorizontal: 10,
+                  paddingVertical: 12,
+                  gap: 6
+                }}
+              >
+                <Text
+                  style={{
+                    color: isCurrent
+                      ? theme.colors.primaryDark
+                      : isDone
+                        ? theme.colors.success
+                        : theme.colors.muted,
+                    fontSize: 12,
+                    fontWeight: "700"
+                  }}
+                >
+                  {`0${index + 1}`}
+                </Text>
+                <Text
+                  style={{
+                    color: isSkipped ? theme.colors.textLight : theme.colors.text,
+                    fontSize: 14,
+                    fontWeight: "700",
+                    lineHeight: 20
+                  }}
+                >
+                  {step.label}
+                </Text>
+                <Text
+                  style={{
+                    color: isCurrent
+                      ? theme.colors.primaryDark
+                      : isDone
+                        ? theme.colors.success
+                        : isSkipped
+                          ? theme.colors.textLight
+                          : theme.colors.muted,
+                    fontSize: 12,
+                    lineHeight: 18
+                  }}
+                >
+                  {isCurrent
+                    ? "진행 중"
+                    : isDone
+                      ? "완료"
+                      : isSkipped
+                        ? "건너뜀"
+                        : "대기"}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+        <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>{flowState.note}</Text>
+      </Card>
       <Card eyebrow="발행 요약" title={statusLabel}>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
           <View

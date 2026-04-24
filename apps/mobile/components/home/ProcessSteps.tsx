@@ -4,18 +4,18 @@ import { theme } from "@/components/ui/theme";
 const processCards = [
   {
     step: "01",
-    title: "디자인 선택",
-    body: "마음에 드는 무료 디자인을 고르면 바로 빌더가 시작됩니다."
+    title: "완성 예시 선택",
+    body: "결혼식, 돌잔치, 환갑처럼 행사에 맞는 무드를 먼저 고릅니다."
   },
   {
     step: "02",
-    title: "내용 입력",
-    body: "이름, 장소, 문구를 채우고 필요하면 사진 옵션만 더해 완성도를 높입니다."
+    title: "핵심 정보 입력",
+    body: "이름, 날짜, 장소, 안내 문구를 채우면 초대장에 바로 반영됩니다."
   },
   {
     step: "03",
-    title: "바로 발행 · 공유",
-    body: "완성한 초대장은 링크로 공유하고, 응답과 방명록도 함께 받을 수 있습니다."
+    title: "검수 후 공유",
+    body: "지도, RSVP, 방명록까지 확인한 뒤 링크로 전달합니다."
   }
 ];
 
@@ -45,10 +45,10 @@ function Surface({ children }: { children: React.ReactNode }) {
 export function ProcessSteps() {
   return (
     <View style={{ gap: 12 }}>
-      <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700", letterSpacing: 1.6, textAlign: "center" }}>
-        이렇게 진행돼요
+      <Text style={{ color: theme.colors.gold, fontSize: 12, fontWeight: "800", letterSpacing: 1.6, textAlign: "center" }}>
+        SIMPLE BUILDER
       </Text>
-      <Text style={{ color: theme.colors.text, fontSize: 24, fontWeight: "700", textAlign: "center" }}>디자인 고르고, 내용 넣고, 원하는 옵션만</Text>
+      <Text style={{ color: theme.colors.ink, fontSize: 24, fontWeight: "800", textAlign: "center" }}>고르고, 바꾸고, 공유하기</Text>
       <View style={{ gap: 12 }}>
         {processCards.map((item) => (
           <Surface key={item.step}>

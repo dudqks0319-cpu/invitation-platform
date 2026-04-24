@@ -2,9 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "expo-router";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Button } from "@/components/ui/Button";
 import { Pill } from "@/components/ui/Pill";
 import { theme } from "@/components/ui/theme";
 import { useAuth } from "@/hooks/useAuth";
@@ -33,8 +32,10 @@ function getTemplatePreviewSource(template: MobileTemplateGalleryItem) {
 export default function TemplatesScreen() {
   const router = useRouter();
   const { status, user } = useAuth();
+  const { width } = useWindowDimensions();
   const draftOwnerId = getDraftOwnerId(status === "authenticated" ? user : null);
   const [category, setCategory] = useState<string>(mobileTemplateCategories[0].key);
+  const cardWidth = Math.max(148, Math.floor((width - 54) / 2));
 
   const filteredTemplates = useMemo(
     () => mobileTemplateGallery.filter((template) => template.category === category),
@@ -82,7 +83,7 @@ export default function TemplatesScreen() {
         </View>
 
         <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24 }}>
-          앱 안에서 템플릿을 비교하고, 마음에 드는 디자인으로 바로 시작할 수 있습니다.
+          실제 공유 화면처럼 보이는 완성 예시를 먼저 고르세요. 선택 후 이름, 날짜, 장소만 바꾸면 됩니다.
         </Text>
 
         <ScrollView
@@ -103,16 +104,19 @@ export default function TemplatesScreen() {
           ))}
         </ScrollView>
 
-        <View style={{ gap: 18 }}>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
           {filteredTemplates.map((template) => {
             const previewSource = getTemplatePreviewSource(template);
             const isDarkFallback = template.id === "business-dark";
             return (
-              <View
+              <Pressable
+                accessibilityLabel={`${template.name} 템플릿으로 시작`}
                 key={template.id}
+                onPress={() => void handleUseTemplate(template)}
                 style={{
+                  width: cardWidth,
                   backgroundColor: "#fff",
-                  borderRadius: 28,
+                  borderRadius: 24,
                   borderWidth: 1,
                   borderColor: theme.colors.border,
                   overflow: "hidden",
@@ -125,9 +129,9 @@ export default function TemplatesScreen() {
               >
                 <View
                   style={{
-                    height: 440,
-                    backgroundColor: "#f4ece2",
-                    padding: 18,
+                    height: 236,
+                    backgroundColor: "#F7EFE6",
+                    padding: 10,
                     alignItems: "center",
                     justifyContent: "center"
                   }}
@@ -137,7 +141,7 @@ export default function TemplatesScreen() {
                       accessibilityIgnoresInvertColors
                       accessibilityLabel={`${template.name} 템플릿 미리보기`}
                       source={previewSource}
-                      style={{ width: "100%", height: "100%", borderRadius: 22 }}
+                      style={{ width: "100%", height: "100%", borderRadius: 18 }}
                       resizeMode="contain"
                     />
                   ) : (
@@ -179,7 +183,7 @@ export default function TemplatesScreen() {
                   )}
                 </View>
 
-                <View style={{ padding: 22, gap: 12 }}>
+                <View style={{ padding: 14, gap: 9 }}>
                   <View
                     style={{
                       alignSelf: "flex-start",
@@ -191,10 +195,12 @@ export default function TemplatesScreen() {
                   >
                     <Text style={{ color: theme.colors.primaryDark, fontSize: 12, fontWeight: "700" }}>{template.badge}</Text>
                   </View>
-                  <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: "700" }}>{template.name}</Text>
-                  <Text style={{ color: theme.colors.muted, fontSize: 16, lineHeight: 26 }}>{template.desc}</Text>
+                  <Text style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "800", lineHeight: 23 }}>{template.name}</Text>
+                  <Text numberOfLines={2} style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 19 }}>
+                    {template.desc}
+                  </Text>
                   <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                    {template.tags.map((tag) => (
+                    {template.tags.slice(0, 2).map((tag) => (
                       <View
                         key={tag}
                         style={{
@@ -208,11 +214,8 @@ export default function TemplatesScreen() {
                       </View>
                     ))}
                   </View>
-                  <Button accessibilityLabel={`${template.name} 템플릿으로 시작`} onPress={() => void handleUseTemplate(template)}>
-                    이 템플릿으로 시작하기
-                  </Button>
                 </View>
-              </View>
+              </Pressable>
             );
           })}
         </View>

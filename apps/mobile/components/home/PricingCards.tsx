@@ -53,16 +53,16 @@ function Surface({ children }: { children: React.ReactNode }) {
 export function PricingCards() {
   return (
     <View style={{ gap: 12 }}>
-      <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "700", letterSpacing: 1.6, textAlign: "center" }}>
-        요금 안내
+      <Text style={{ color: theme.colors.gold, fontSize: 12, fontWeight: "800", letterSpacing: 1.6, textAlign: "center" }}>
+        PUBLISH OPTION
       </Text>
-      <Text style={{ color: theme.colors.text, fontSize: 24, fontWeight: "700", lineHeight: 34, textAlign: "center" }}>
-        기본은 무료,
+      <Text style={{ color: theme.colors.ink, fontSize: 24, fontWeight: "800", lineHeight: 34, textAlign: "center" }}>
+        먼저 만들고,
         {"\n"}
-        사진까지 담고 싶다면 3,300원
+        사진이 필요할 때만 선택
       </Text>
       <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24, textAlign: "center" }}>
-        기본 청첩장은 무료로 만들고, 사진이 포함된 초대장을 발행할 때만 3,300원 발행권을 사용합니다.
+        가격 안내는 짧게 유지하고, 사용자가 완성 화면을 먼저 판단할 수 있게 했습니다.
       </Text>
       <View style={{ gap: 12 }}>
         {pricingCards.map((item, index) => (
