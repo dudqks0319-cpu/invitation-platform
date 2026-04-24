@@ -30,7 +30,7 @@
         <key>CFBundleURLSchemes</key>
         <array>
           <string>invitehub</string>
-          <string>com.invitehub.app.dev</string>
+          <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
         </array>
       </dict>
     </array>
@@ -42,7 +42,7 @@
       <string>kakaolink</string>
     </array>
     <key>LSMinimumSystemVersion</key>
-    <string>12.0</string>
+    <string>15.1</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>NSAppTransportSecurity</key>

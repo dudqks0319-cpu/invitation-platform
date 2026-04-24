@@ -995,6 +995,10 @@ export function BuilderStudio({
             <input className={inputClassName} value={payload.naverMapLink} onChange={(event) => updateField("naverMapLink", event.target.value)} />
           </label>
           <label>
+            카카오 지도 링크
+            <input className={inputClassName} value={payload.kakaoMapLink} onChange={(event) => updateField("kakaoMapLink", event.target.value)} />
+          </label>
+          <label>
             교통 안내 메모
             <textarea className={inputClassName} rows={3} value={payload.transportNote} onChange={(event) => updateField("transportNote", event.target.value)} />
           </label>

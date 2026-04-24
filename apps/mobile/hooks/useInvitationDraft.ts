@@ -110,6 +110,7 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
 
   const updateLocation = useCallback((patch: Partial<{
     naverMapUrl: string;
+    kakaoMapUrl: string;
     transportNote: string;
   }>) => {
     persist((current) => withMeta({
@@ -146,6 +147,20 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
     });
   }, [persist]);
 
+  const removePhoto = useCallback((slot: "main" | "background") => {
+    persist((current) => withMeta({
+      ...current,
+      pendingPhotos: current.pendingPhotos.filter((photo) => photo.slot !== slot),
+      payload: {
+        ...current.payload,
+        photos: {
+          ...current.payload.photos,
+          ...(slot === "main" ? { mainUri: "" } : { backgroundUri: "" })
+        }
+      }
+    }));
+  }, [persist]);
+
   const addGalleryPhoto = useCallback((localUri: string) => {
     persist((current) => {
       const nextOrder = current.payload.photos.gallery.length;
@@ -179,7 +194,18 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
   const removeGalleryPhoto = useCallback((order: number) => {
     persist((current) => withMeta({
       ...current,
-      pendingPhotos: current.pendingPhotos.filter((photo) => !(photo.slot === "gallery" && photo.order === order)),
+      pendingPhotos: current.pendingPhotos
+        .filter((photo) => !(photo.slot === "gallery" && photo.order === order))
+        .map((photo) => {
+          if (photo.slot !== "gallery" || photo.order === undefined || photo.order < order) {
+            return photo;
+          }
+
+          return {
+            ...photo,
+            order: photo.order - 1
+          };
+        }),
       payload: {
         ...current.payload,
         photos: {
@@ -257,6 +283,7 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
     publicUrl,
     publishReadiness,
     removeGalleryPhoto,
+    removePhoto,
     saveToCloud,
     updateAccounts,
     updateBasics,

@@ -58,6 +58,7 @@ export type InvitationPayload = {
   };
   location: {
     naverMapUrl: string;
+    kakaoMapUrl?: string;
     transportNote: string;
   };
   share: {
@@ -130,6 +131,7 @@ export function createEmptyInvitationDraft(ownerId: string): InvitationDraft {
       },
       location: {
         naverMapUrl: "",
+        kakaoMapUrl: "",
         transportNote: ""
       },
       share: {

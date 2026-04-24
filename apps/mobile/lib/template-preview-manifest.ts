@@ -23,7 +23,11 @@ export const bundledTemplatePreviewIds = [
   "birthday-elegant",
   "birthday-kids",
   "house-warm",
+  "house-modern",
   "baby-shower",
+  "baby-pink",
   "graduation",
-  "business"
+  "graduation-warm",
+  "business",
+  "business-dark"
 ] as const;

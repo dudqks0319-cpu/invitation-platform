@@ -17,6 +17,7 @@ export const FREE_EDIT_FIELDS = [
   "bridePhone",
   "mapAddress",
   "naverMapLink",
+  "kakaoMapLink",
   "transportNote"
 ] as const;
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocalSearchParams } from "expo-router";
-import { Text, View } from "react-native";
+import { Linking, Pressable, Text, View } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ErrorView } from "@/components/ui/ErrorView";
@@ -12,6 +12,19 @@ import { deleteDraft, loadDraft, saveDraft } from "@/lib/drafts";
 import { deleteRemoteInvitation, loadRemoteInvitation, saveDraftToSupabase } from "@/lib/invitations";
 import { getPublicInvitationUrl, openInvitationPublicPage, openWebBuilder, shareInvitationLink } from "@/lib/share";
 import { useAuth } from "@/hooks/useAuth";
+import { getInvitationMapLinks } from "@/lib/map-links";
+
+async function openMapUrl(url: string, fallbackUrl?: string) {
+  if (!url) return;
+
+  try {
+    await Linking.openURL(url);
+  } catch {
+    if (fallbackUrl) {
+      await Linking.openURL(fallbackUrl);
+    }
+  }
+}
 
 export default function InvitationDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -23,6 +36,7 @@ export default function InvitationDetailScreen() {
   const { configMessage, configured, status, user } = useAuth();
   const publicUrl = draft?.payload.share.slug ? getPublicInvitationUrl(draft.payload.share.slug) : "";
   const shareSlug = draft?.payload.share.slug ?? "";
+  const mapLinks = draft ? getInvitationMapLinks(draft.payload) : null;
 
   useEffect(() => {
     let mounted = true;
@@ -103,8 +117,46 @@ export default function InvitationDetailScreen() {
           카카오페이: {draft?.payload.accounts.kakaoPayLink || "미입력"}
         </Text>
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
-          지도: {draft?.payload.location.naverMapUrl || "미입력"}
+          지도: {draft?.payload.location.kakaoMapUrl || draft?.payload.location.naverMapUrl || (mapLinks?.query ? "주소 검색 링크 자동 생성" : "미입력")}
         </Text>
+        <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
+          <Pressable
+            accessibilityLabel="카카오 지도 열기"
+            accessibilityRole="button"
+            onPress={mapLinks?.kakaoUrl ? () => void openMapUrl(mapLinks.kakaoUrl) : undefined}
+            style={{
+              flex: 1,
+              minHeight: 42,
+              borderRadius: 999,
+              backgroundColor: mapLinks?.kakaoUrl ? "#FEE500" : "#eee8df",
+              alignItems: "center",
+              justifyContent: "center",
+              paddingHorizontal: 12
+            }}
+          >
+            <Text style={{ color: mapLinks?.kakaoUrl ? "#332800" : "#8b8175", fontSize: 13, fontWeight: "800" }}>
+              카카오 지도
+            </Text>
+          </Pressable>
+          <Pressable
+            accessibilityLabel="네이버 지도 열기"
+            accessibilityRole="button"
+            onPress={mapLinks?.naverUrl ? () => void openMapUrl(mapLinks.naverUrl, mapLinks.naverFallbackUrl) : undefined}
+            style={{
+              flex: 1,
+              minHeight: 42,
+              borderRadius: 999,
+              backgroundColor: mapLinks?.naverUrl ? "#03C75A" : "#eee8df",
+              alignItems: "center",
+              justifyContent: "center",
+              paddingHorizontal: 12
+            }}
+          >
+            <Text style={{ color: mapLinks?.naverUrl ? "#fff" : "#8b8175", fontSize: 13, fontWeight: "800" }}>
+              네이버 지도
+            </Text>
+          </Pressable>
+        </View>
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
           업로드 대기 사진: {draft?.pendingPhotos.length ?? 0}장
         </Text>

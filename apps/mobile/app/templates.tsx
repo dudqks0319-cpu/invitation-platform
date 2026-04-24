@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "expo-router";
-import { Image, Pressable, SafeAreaView, ScrollView, Text, View } from "react-native";
+import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/ui/Button";
 import { Pill } from "@/components/ui/Pill";
 import { theme } from "@/components/ui/theme";
@@ -90,7 +91,13 @@ export default function TemplatesScreen() {
           contentContainerStyle={{ gap: 10, paddingRight: 8 }}
         >
           {mobileTemplateCategories.map((item) => (
-            <Pressable key={item.key} onPress={() => setCategory(item.key)}>
+            <Pressable
+              key={item.key}
+              accessibilityLabel={`${item.label} 템플릿 보기`}
+              accessibilityRole="button"
+              accessibilityState={{ selected: item.key === category }}
+              onPress={() => setCategory(item.key)}
+            >
               <Pill active={item.key === category} label={`${item.emoji} ${item.label}`} />
             </Pressable>
           ))}
@@ -99,6 +106,7 @@ export default function TemplatesScreen() {
         <View style={{ gap: 18 }}>
           {filteredTemplates.map((template) => {
             const previewSource = getTemplatePreviewSource(template);
+            const isDarkFallback = template.id === "business-dark";
             return (
               <View
                 key={template.id}
@@ -126,9 +134,11 @@ export default function TemplatesScreen() {
                 >
                   {previewSource ? (
                     <Image
+                      accessibilityIgnoresInvertColors
+                      accessibilityLabel={`${template.name} 템플릿 미리보기`}
                       source={previewSource}
                       style={{ width: "100%", height: "100%", borderRadius: 22 }}
-                      resizeMode="cover"
+                      resizeMode="contain"
                     />
                   ) : (
                     <View
@@ -136,20 +146,27 @@ export default function TemplatesScreen() {
                         width: "72%",
                         aspectRatio: 0.58,
                         borderRadius: 28,
-                        backgroundColor: "rgba(255,250,244,0.92)",
+                        backgroundColor: isDarkFallback ? "#111827" : "rgba(255,250,244,0.92)",
                         borderWidth: 1,
-                        borderColor: "rgba(172,137,102,0.12)",
+                        borderColor: isDarkFallback ? "rgba(214,179,106,0.42)" : "rgba(172,137,102,0.12)",
                         alignItems: "center",
                         justifyContent: "center",
                         paddingHorizontal: 18
                       }}
                     >
-                      <Text style={{ color: "#b28a5f", fontSize: 12, letterSpacing: 3, textAlign: "center" }}>
-                        INVITATION
+                      <Text
+                        style={{
+                          color: isDarkFallback ? "#D6B36A" : "#b28a5f",
+                          fontSize: 12,
+                          letterSpacing: 0,
+                          textAlign: "center"
+                        }}
+                      >
+                        {isDarkFallback ? "PREMIUM EVENT" : "INVITATION"}
                       </Text>
                       <Text
                         style={{
-                          color: "#7d5d42",
+                          color: isDarkFallback ? "#F5E7C8" : "#7d5d42",
                           fontSize: 28,
                           fontStyle: "italic",
                           marginTop: 12,

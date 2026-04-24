@@ -263,7 +263,9 @@ export function InvitationView({
   const mapLink =
     normalizeUrl(payload.naverMapLink) ||
     `https://map.naver.com/p/search/${mapQuery}`;
-  const kakaoMapLink = `https://map.kakao.com/link/search/${mapQuery}`;
+  const kakaoMapLink =
+    normalizeUrl(payload.kakaoMapLink) ||
+    `https://map.kakao.com/link/search/${mapQuery}`;
 
   return (
     <main className="invitation-main">

@@ -4,6 +4,7 @@ export { getPublishAccess } from "./publish-access";
 import { supabase } from "./supabase";
 import type { MobileInvitationDraft } from "./drafts";
 import { getPublicInvitationUrl } from "./share";
+import { getInviteHubBaseUrl } from "./web-links";
 
 type RemoteInvitationRow = {
   id: string;
@@ -86,6 +87,7 @@ export function toLegacyInvitationPayload(payload: InvitationPayload) {
     shareUrl: payload.share.slug,
     mapAddress: payload.venueAddress,
     naverMapLink: payload.location.naverMapUrl || "",
+    kakaoMapLink: payload.location.kakaoMapUrl || "",
     transportNote: payload.location.transportNote || "",
     mainImageUrl: payload.photos.mainUri || "",
     backgroundImageUrl: payload.photos.backgroundUri || ""
@@ -350,6 +352,7 @@ function toSharedInvitationPayload(row: RemoteInvitationRow, ownerId: string): I
     },
     location: {
       naverMapUrl: String(payload.naverMapLink ?? ""),
+      kakaoMapUrl: String(payload.kakaoMapLink ?? ""),
       transportNote: String(payload.transportNote ?? "")
     },
     share: {

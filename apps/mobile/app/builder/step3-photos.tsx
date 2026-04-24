@@ -37,9 +37,51 @@ async function pickPreparedImage() {
   return manipulated.uri;
 }
 
+function UploadedPhotoPreview({
+  height,
+  label,
+  onRemove,
+  uri
+}: {
+  height: number;
+  label: string;
+  onRemove: () => void;
+  uri: string;
+}) {
+  return (
+    <View style={{ marginBottom: 12, position: "relative" }}>
+      <Image
+        accessibilityIgnoresInvertColors
+        accessibilityLabel={label}
+        source={{ uri }}
+        style={{ width: "100%", height, borderRadius: 16 }}
+      />
+      <Pressable
+        accessibilityLabel={`${label} 삭제`}
+        accessibilityRole="button"
+        onPress={onRemove}
+        style={{
+          position: "absolute",
+          top: 10,
+          right: 10,
+          minWidth: 58,
+          minHeight: 40,
+          borderRadius: 999,
+          backgroundColor: "rgba(44,44,44,0.78)",
+          alignItems: "center",
+          justifyContent: "center",
+          paddingHorizontal: 14
+        }}
+      >
+        <Text style={{ color: "#fff", fontSize: 13, fontWeight: "800" }}>삭제</Text>
+      </Pressable>
+    </View>
+  );
+}
+
 export default function BuilderStep3PhotosScreen() {
   const { localId } = useLocalSearchParams<{ localId?: string }>();
-  const { addGalleryPhoto, draft, removeGalleryPhoto, updatePhoto } = useInvitationDraft("local-preview-owner", localId);
+  const { addGalleryPhoto, draft, removeGalleryPhoto, removePhoto, updatePhoto } = useInvitationDraft("local-preview-owner", localId);
   const [pendingSlot, setPendingSlot] = useState<"" | "main" | "background" | "gallery">("");
   const [error, setError] = useState("");
 
@@ -69,9 +111,11 @@ export default function BuilderStep3PhotosScreen() {
       <StepIndicator current={3} title="사진 설정" />
       <Card eyebrow="메인 사진" title="대표 사진">
         {draft?.payload.photos.mainUri ? (
-          <Image
-            source={{ uri: draft.payload.photos.mainUri }}
-            style={{ width: "100%", height: 180, borderRadius: 16, marginBottom: 12 }}
+          <UploadedPhotoPreview
+            height={180}
+            label="대표 사진 미리보기"
+            onRemove={() => removePhoto("main")}
+            uri={draft.payload.photos.mainUri}
           />
         ) : null}
         <Pressable
@@ -108,9 +152,11 @@ export default function BuilderStep3PhotosScreen() {
       </Card>
       <Card eyebrow="배경 사진" title="커버 배경">
         {draft?.payload.photos.backgroundUri ? (
-          <Image
-            source={{ uri: draft.payload.photos.backgroundUri }}
-            style={{ width: "100%", height: 140, borderRadius: 16, marginBottom: 12 }}
+          <UploadedPhotoPreview
+            height={140}
+            label="배경 사진 미리보기"
+            onRemove={() => removePhoto("background")}
+            uri={draft.payload.photos.backgroundUri}
           />
         ) : null}
         <Pressable

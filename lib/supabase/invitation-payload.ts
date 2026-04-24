@@ -35,6 +35,7 @@ const payloadSchema = z.object({
   kakaoJsKey: z.string().default(""),
   mapAddress: z.string().default(""),
   naverMapLink: z.string().default(""),
+  kakaoMapLink: z.string().default(""),
   transportNote: z.string().default(""),
   mainImageUrl: z.string().default(""),
   mainImagePath: z.string().default(""),

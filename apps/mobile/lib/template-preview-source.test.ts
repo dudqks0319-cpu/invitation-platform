@@ -1,15 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { mobileTemplateGallery } from "./template-gallery";
 import { bundledTemplatePreviewIds } from "./template-preview-manifest";
 
 describe("template-preview-source", () => {
-  it("bundles local previews for shipped mobile templates", () => {
-    expect(bundledTemplatePreviewIds).toContain("wedding-classic");
-    expect(bundledTemplatePreviewIds).toContain("house-warm");
-    expect(bundledTemplatePreviewIds).toContain("business");
-  });
+  it("includes every mobileTemplateGallery item in bundledTemplatePreviewIds", () => {
+    const bundledIds = new Set<string>(bundledTemplatePreviewIds);
+    const galleryIds = mobileTemplateGallery.map((template) => template.id);
+    const missingBundledPreviewIds = galleryIds.filter((id) => !bundledIds.has(id));
 
-  it("returns false for templates without a bundled image", () => {
-    expect(bundledTemplatePreviewIds).not.toContain("house-modern");
-    expect(bundledTemplatePreviewIds).not.toContain("business-dark");
+    expect(missingBundledPreviewIds).toEqual([]);
   });
 });
