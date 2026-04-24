@@ -221,18 +221,6 @@ export function InvitationPreviewCard({ compact = false, payload }: { compact?: 
         elevation: 7
       }}
     >
-      <View
-        style={{
-          position: "absolute",
-          top: 8,
-          alignSelf: "center",
-          width: 120,
-          height: compact ? 0 : 28,
-          borderRadius: 14,
-          backgroundColor: compact ? "transparent" : "#1a1a1a",
-          zIndex: 2
-        }}
-      />
       <ImageBackground
         imageStyle={{
           resizeMode: "cover",
@@ -243,7 +231,7 @@ export function InvitationPreviewCard({ compact = false, payload }: { compact?: 
           flex: 1,
           backgroundColor: accent.background,
           paddingHorizontal: compact ? 18 : 22,
-          paddingTop: compact ? 24 : 58,
+          paddingTop: compact ? 24 : 34,
           paddingBottom: 28,
           justifyContent: "flex-start"
         }}
@@ -285,9 +273,6 @@ export function InvitationPreviewCard({ compact = false, payload }: { compact?: 
           </Text>
           <Text style={{ color: accent.accent, fontSize: 12, fontWeight: "800", textAlign: "center" }}>
             {selectedTemplate?.badge || "초대장"}
-          </Text>
-          <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: "800", textAlign: "center" }}>
-            {selectedTemplate?.name || "초대장 미리보기"}
           </Text>
           {payload.photos.mainUri ? (
             <Image

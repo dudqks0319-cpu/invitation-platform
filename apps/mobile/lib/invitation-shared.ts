@@ -81,6 +81,15 @@ export type InvitationDraft = {
 
 const INVITATION_SCHEMA_VERSION = 2;
 const DEFAULT_EVENT_TYPE = "wedding";
+export const DEFAULT_WEDDING_SAMPLE = {
+  title: "우리 결혼합니다",
+  eventDateTime: "2026.09.20 SUN 12:30",
+  venueName: "라비에벨 가든홀",
+  venueAddress: "서울 강남구 테헤란로 123",
+  message: "서로의 계절이 되어 걸어온 두 사람이 이제 하나의 길을 함께 걸으려 합니다. 소중한 날, 귀한 발걸음으로 축복해 주세요.",
+  groomName: "이준서",
+  brideName: "김은재"
+} as const;
 
 function createLocalId() {
   return `draft-${Math.random().toString(36).slice(2, 10)}`;

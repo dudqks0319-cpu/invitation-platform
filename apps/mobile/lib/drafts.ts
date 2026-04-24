@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
+  DEFAULT_WEDDING_SAMPLE,
   createEmptyInvitationDraft,
   type InvitationDraft,
   type PendingPhotoUpload
@@ -10,6 +11,7 @@ export type MobileInvitationDraft = InvitationDraft & {
 };
 
 const DRAFT_STORAGE_KEY = "invitehub:mobile:drafts";
+const PREVIEW_OWNER_ID = "local-preview-owner";
 
 type DraftMap = Record<string, MobileInvitationDraft>;
 
@@ -24,6 +26,52 @@ async function writeDraftMap(drafts: DraftMap) {
 
 export function createLocalDraft(ownerId: string): MobileInvitationDraft {
   return createEmptyInvitationDraft(ownerId);
+}
+
+function createPreviewSampleDraft(ownerId: string, localId?: string): MobileInvitationDraft {
+  const draft = createEmptyInvitationDraft(ownerId);
+  return {
+    ...draft,
+    localId: localId ?? draft.localId,
+    payload: {
+      ...draft.payload,
+      title: DEFAULT_WEDDING_SAMPLE.title,
+      eventDateTime: DEFAULT_WEDDING_SAMPLE.eventDateTime,
+      venueName: DEFAULT_WEDDING_SAMPLE.venueName,
+      venueAddress: DEFAULT_WEDDING_SAMPLE.venueAddress,
+      message: DEFAULT_WEDDING_SAMPLE.message,
+      eventData: {
+        ...draft.payload.eventData,
+        groom: {
+          ...draft.payload.eventData.groom,
+          name: DEFAULT_WEDDING_SAMPLE.groomName
+        },
+        bride: {
+          ...draft.payload.eventData.bride,
+          name: DEFAULT_WEDDING_SAMPLE.brideName
+        }
+      }
+    },
+    isDirty: false
+  };
+}
+
+function needsPreviewSampleReset(draft: MobileInvitationDraft) {
+  const searchable = [
+    draft.payload.title,
+    draft.payload.eventDateTime,
+    draft.payload.venueName,
+    draft.payload.venueAddress,
+    draft.payload.message,
+    draft.payload.eventData.groom.name,
+    draft.payload.eventData.bride.name
+  ].join(" ");
+
+  return (
+    !draft.payload.eventData.groom.name.trim() ||
+    !draft.payload.eventData.bride.name.trim() ||
+    /ㅇ|ㄹ|2026-04-24T|로즈 프레임/.test(searchable)
+  );
 }
 
 export async function listDrafts() {
@@ -54,10 +102,17 @@ export async function ensureDraft(ownerId: string, localId?: string) {
     .sort((a, b) => b.localUpdatedAt.localeCompare(a.localUpdatedAt))[0];
 
   if (latest) {
+    if (ownerId === PREVIEW_OWNER_ID && needsPreviewSampleReset(latest)) {
+      const sample = createPreviewSampleDraft(ownerId, latest.localId);
+      drafts[sample.localId] = sample;
+      await writeDraftMap(drafts);
+      return sample;
+    }
+
     return latest;
   }
 
-  const created = createLocalDraft(ownerId);
+  const created = ownerId === PREVIEW_OWNER_ID ? createPreviewSampleDraft(ownerId) : createLocalDraft(ownerId);
   drafts[created.localId] = created;
   await writeDraftMap(drafts);
   return created;
