@@ -4,6 +4,7 @@ import { Linking, Pressable, Text, View } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ErrorView } from "@/components/ui/ErrorView";
+import { InvitationPreviewCard } from "@/components/invitation/InvitationPreviewCard";
 import { Loading } from "@/components/ui/Loading";
 import { Pill } from "@/components/ui/Pill";
 import { Screen } from "@/components/ui/Screen";
@@ -84,12 +85,17 @@ export default function InvitationDetailScreen() {
   const names = `${draft?.payload.eventData.groom.name || "신랑"} ♡ ${draft?.payload.eventData.bride.name || "신부"}`;
 
   return (
-    <Screen subtitle="앱 안에서는 공개 페이지 복제가 아니라 운영 대시보드 경험을 제공합니다." title="초대장 운영">
+    <Screen subtitle="공유될 초대장과 운영 상태를 한 화면에서 점검합니다." title="초대장 운영">
       {loading ? <Loading label="초대장 데이터를 불러오는 중..." variant="cards" /> : null}
       {error ? <ErrorView description={error} title="작업 실패" /> : null}
       {message ? (
         <Card eyebrow="상태" title="작업 완료">
           <Text style={{ color: "#6a5645", lineHeight: 22 }}>{message}</Text>
+        </Card>
+      ) : null}
+      {draft ? (
+        <Card eyebrow="공유 전 검수" title="하객에게 보이는 초대장">
+          <InvitationPreviewCard compact payload={draft.payload} />
         </Card>
       ) : null}
       <Card eyebrow={draft?.syncStatus || "draft"} title={title}>
