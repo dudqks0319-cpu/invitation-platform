@@ -1,0 +1,6 @@
+.DS_Store
+.expo/
+dist/
+logs/
+assets/template-previews/genspark/
+assets/template-previews/reference/
