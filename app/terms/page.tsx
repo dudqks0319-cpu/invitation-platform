@@ -38,15 +38,26 @@ export default function TermsPage() {
             </p>
 
             <h2 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "28px 0 12px" }}>
-              제3조 (무료 제공 범위)
+              제3조 (요금 및 결제)
             </h2>
             <p style={{ marginBottom: 24 }}>
-              현재 제출 버전의 서비스는 무료로 제공됩니다. 향후 유료 기능이 추가되는 경우
-              앱 내 고지 및 약관 개정을 통해 별도로 안내합니다.
+              템플릿 선택, 초안 작성, 미리보기, 사진이 포함되지 않은 공개 링크 발행은 무료로
+              제공됩니다. 프로필 사진, 배경 사진, 갤러리 사진 등 사진이 포함된 초대장 발행은
+              앱 스토어 인앱결제를 통해 제공되며, 결제 금액과 상품 내용은 결제 화면에 표시된
+              기준을 따릅니다.
             </p>
 
             <h2 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "28px 0 12px" }}>
-              제4조 (이용자의 의무)
+              제4조 (환불 및 결제 취소)
+            </h2>
+            <p style={{ marginBottom: 24 }}>
+              앱 스토어 인앱결제의 환불은 Apple App Store 또는 Google Play의 환불 정책과
+              절차를 따릅니다. 서비스 내 오류로 발행권 사용에 문제가 발생한 경우 지원 페이지를
+              통해 확인을 요청할 수 있습니다.
+            </p>
+
+            <h2 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "28px 0 12px" }}>
+              제5조 (이용자의 의무)
             </h2>
             <p style={{ marginBottom: 24 }}>
               이용자는 타인의 권리를 침해하는 콘텐츠를 업로드해서는 안 됩니다. 불법적 또는
@@ -54,14 +65,14 @@ export default function TermsPage() {
             </p>
 
             <h2 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "28px 0 12px" }}>
-              제5조 (서비스 중단)
+              제6조 (서비스 중단)
             </h2>
             <p style={{ marginBottom: 24 }}>
               시스템 유지보수, 장애 대응 등의 사유로 서비스가 일시 중단될 수 있습니다.
             </p>
 
             <h2 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "28px 0 12px" }}>
-              제6조 (면책)
+              제7조 (면책)
             </h2>
             <p style={{ marginBottom: 24 }}>
               서비스는 이용자가 작성한 콘텐츠의 정확성 및 적법성에 대해 책임지지 않으며,

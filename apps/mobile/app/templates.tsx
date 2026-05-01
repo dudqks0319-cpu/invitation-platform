@@ -66,9 +66,9 @@ export default function TemplatesScreen() {
             accessibilityLabel="뒤로가기"
             onPress={() => router.back()}
             style={{
-              width: 42,
-              height: 42,
-              borderRadius: 21,
+              width: 44,
+              height: 44,
+              borderRadius: 22,
               backgroundColor: "rgba(255,255,255,0.92)",
               alignItems: "center",
               justifyContent: "center",
@@ -79,11 +79,11 @@ export default function TemplatesScreen() {
             <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "700" }}>‹</Text>
           </Pressable>
           <Text style={{ color: theme.colors.text, fontSize: 24, fontWeight: "700" }}>디자인 둘러보기</Text>
-          <View style={{ width: 42 }} />
+          <View style={{ width: 44 }} />
         </View>
 
         <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24 }}>
-          실제 공유 화면처럼 보이는 완성 예시를 먼저 고르세요. 선택 후 이름, 날짜, 장소만 바꾸면 됩니다.
+          분위기에 맞는 디자인을 고르면 편집 화면에서 이름, 날짜, 장소만 바꾸면 됩니다.
         </Text>
 
         <ScrollView

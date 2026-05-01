@@ -502,6 +502,254 @@ ul { list-style: none; }
   line-height: 1.5;
 }
 .is-hidden { display: none !important; }
+
+/* ===== ADMIN TEMPLATE STUDIO ===== */
+.admin-page {
+  min-height: 100vh;
+  background: #f7f2ec;
+}
+.admin-page-hero {
+  padding: 122px 0 42px;
+  background: #fffaf4;
+  border-bottom: 1px solid var(--border);
+}
+.admin-page-hero h1 {
+  font-size: clamp(1.9rem, 3vw, 2.7rem);
+  color: #2f2418;
+}
+.admin-page-hero p {
+  max-width: 760px;
+  margin-top: 12px;
+  color: #6f5f4c;
+  line-height: 1.75;
+}
+.admin-page-body {
+  padding: 34px 0 86px;
+}
+.admin-template-studio {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 390px);
+  gap: 24px;
+  align-items: start;
+}
+.admin-template-form,
+.admin-preview-panel,
+.admin-denied {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px;
+  box-shadow: 0 14px 38px rgba(80, 59, 40, 0.06);
+}
+.admin-template-form {
+  display: grid;
+  gap: 18px;
+}
+.admin-form-section {
+  display: grid;
+  gap: 10px;
+}
+.admin-form-section h2,
+.admin-preview-panel h2,
+.admin-template-list h3 {
+  color: #33271d;
+  font-size: 1.05rem;
+}
+.admin-form-section p {
+  color: var(--text-mid);
+  line-height: 1.65;
+  font-size: 0.9rem;
+}
+.admin-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.admin-form-grid label,
+.admin-form-section label,
+.admin-slider-grid label {
+  display: grid;
+  gap: 7px;
+  color: #4b3b2e;
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+.admin-form-grid input,
+.admin-form-grid select,
+.admin-form-section input,
+.admin-form-section select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fffdfb;
+  color: var(--text-dark);
+  font: inherit;
+  padding: 11px 12px;
+}
+.admin-form-grid input[type="color"] {
+  height: 44px;
+  padding: 4px;
+}
+.admin-wide {
+  grid-column: 1 / -1;
+}
+.admin-slider-grid {
+  display: grid;
+  gap: 12px;
+}
+.admin-slider-grid input {
+  accent-color: var(--primary);
+}
+.admin-message {
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.admin-message.success {
+  background: #eef8f1;
+  color: #236f36;
+}
+.admin-message.error {
+  background: #fff0f0;
+  color: #9b2525;
+}
+.admin-save-button {
+  min-height: 48px;
+  border-radius: 10px;
+  background: #2c2a2a;
+  color: #fff;
+  font-weight: 800;
+}
+.admin-save-button:disabled {
+  opacity: 0.55;
+  cursor: progress;
+}
+.admin-preview-panel {
+  position: sticky;
+  top: 92px;
+  display: grid;
+  gap: 16px;
+}
+.admin-preview-card {
+  position: relative;
+  width: min(100%, 340px);
+  aspect-ratio: 9 / 16;
+  margin: 0 auto;
+  background-position: center;
+  background-size: cover;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid rgba(86, 64, 48, 0.18);
+  box-shadow: 0 18px 48px rgba(46, 34, 26, 0.14);
+}
+.admin-preview-safe-area {
+  position: absolute;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(6px, 1.6vw, 13px);
+  overflow: hidden;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.admin-preview-safe-area p {
+  font-family: var(--font-serif), "Noto Serif KR", serif;
+  font-size: clamp(0.8rem, 2.8vw, 1.08rem);
+  font-style: italic;
+  line-height: 1.2;
+}
+.admin-preview-safe-area h3 {
+  max-width: 100%;
+  font-family: var(--font-serif), "Noto Serif KR", serif;
+  font-size: clamp(1.7rem, 7vw, 2.35rem);
+  font-weight: 500;
+  line-height: 1.22;
+}
+.admin-preview-safe-area strong {
+  max-width: 100%;
+  font-family: var(--font-serif), "Noto Serif KR", serif;
+  font-size: clamp(1.15rem, 4.6vw, 1.55rem);
+  font-weight: 500;
+  line-height: 1.25;
+}
+.admin-preview-safe-area small,
+.admin-preview-safe-area em {
+  max-width: 100%;
+  font-size: clamp(0.72rem, 2.7vw, 0.95rem);
+  line-height: 1.35;
+}
+.admin-preview-safe-area em {
+  margin-top: clamp(4px, 1vw, 10px);
+  font-family: var(--font-serif), "Noto Serif KR", serif;
+  font-style: normal;
+}
+.admin-preview-divider {
+  display: flex;
+  width: min(150px, 82%);
+  align-items: center;
+  gap: 8px;
+}
+.admin-preview-divider span {
+  flex: 1;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.55;
+}
+.admin-preview-divider b {
+  font-size: 0.7rem;
+}
+.admin-template-list {
+  display: grid;
+  max-height: 320px;
+  gap: 10px;
+  overflow: auto;
+  padding-right: 4px;
+}
+.admin-template-row {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px;
+}
+.admin-template-row-thumb {
+  width: 48px;
+  aspect-ratio: 9 / 16;
+  border-radius: 6px;
+  background-position: center;
+  background-size: cover;
+}
+.admin-template-row strong,
+.admin-template-row span {
+  display: block;
+}
+.admin-template-row strong {
+  color: var(--text-dark);
+  font-size: 0.88rem;
+}
+.admin-template-row span {
+  margin-top: 3px;
+  color: var(--text-mid);
+  font-size: 0.76rem;
+}
+.admin-denied {
+  max-width: 560px;
+}
+.admin-denied h2 {
+  margin-bottom: 10px;
+}
+.admin-denied p {
+  margin-bottom: 18px;
+  color: var(--text-mid);
+  line-height: 1.6;
+}
+
 .builder-section {
   background: #f7f2ec;
   padding: 80px 0;
@@ -1748,6 +1996,12 @@ ul { list-style: none; }
   .builder-page-main {
     padding-top: 68px;
   }
+  .admin-template-studio {
+    grid-template-columns: 1fr;
+  }
+  .admin-preview-panel {
+    position: static;
+  }
   .builder-grid-extended {
     grid-template-columns: 1fr;
   }
@@ -1809,6 +2063,17 @@ ul { list-style: none; }
   }
   .templates-grid { grid-template-columns: 1fr; gap: 16px; }
   .template-thumb { height: 260px; }
+  .admin-page-hero {
+    padding: 96px 0 32px;
+  }
+  .admin-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-template-form,
+  .admin-preview-panel,
+  .admin-denied {
+    padding: 16px;
+  }
   .process-grid { grid-template-columns: 1fr; }
   .tmpl-wedding-classic, .tmpl-wedding-modern, .tmpl-wedding-floral, .tmpl-wedding-minimal,
   .tmpl-wedding-nature, .tmpl-dol-cute, .tmpl-dol-pastel, .tmpl-dol-blue, .tmpl-dol-nature,

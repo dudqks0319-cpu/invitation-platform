@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const storageMimeTypes = ["image/jpeg", "image/png", "image/webp"] as const;
 export const maxUploadBytes = 5 * 1024 * 1024;
+export const maxJsonBodyBytes = 64 * 1024;
 
 export const publicRsvpSchema = z.object({
   guestName: z.string().trim().min(1).max(40),
@@ -23,7 +24,16 @@ export function ensureJsonRequest(request: Request) {
   return contentType.includes("application/json");
 }
 
-export async function readJsonBody(request: Request) {
+export async function readJsonBody(request: Request, maxBytes = maxJsonBodyBytes) {
+  const contentLength = Number(request.headers.get("content-length") ?? "0");
+
+  if (Number.isFinite(contentLength) && contentLength > maxBytes) {
+    return {
+      ok: false as const,
+      message: "요청 본문이 너무 큽니다."
+    };
+  }
+
   try {
     return {
       ok: true as const,

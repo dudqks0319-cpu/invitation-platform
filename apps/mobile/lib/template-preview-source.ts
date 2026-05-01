@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 import type { ImageSourcePropType } from "react-native";
-import { bundledTemplatePreviewIds } from "./template-preview-manifest";
+import { bundledTemplateCanvasIds, bundledTemplatePreviewIds } from "./template-preview-manifest";
 
 type BundledTemplatePreviewId = (typeof bundledTemplatePreviewIds)[number];
+type BundledTemplateCanvasId = (typeof bundledTemplateCanvasIds)[number];
 
 const bundledTemplatePreviewSource: Record<BundledTemplatePreviewId, ImageSourcePropType> = {
   "wedding-classic": require("../assets/template-previews/generated/wedding/wedding-classic.jpg"),
@@ -39,6 +40,40 @@ const bundledTemplatePreviewSource: Record<BundledTemplatePreviewId, ImageSource
   "business-dark": require("../assets/template-previews/generated/business/business-dark.jpg")
 };
 
+const bundledTemplateCanvasSource: Record<BundledTemplateCanvasId, ImageSourcePropType> = {
+  "wedding-classic": require("../assets/template-previews/custom/wedding/wedding-01.jpeg"),
+  "wedding-modern": require("../assets/template-previews/custom/wedding/wedding-02.jpeg"),
+  "wedding-floral": require("../assets/template-previews/custom/wedding/wedding-03.jpeg"),
+  "wedding-minimal": require("../assets/template-previews/custom/wedding/wedding-04.jpeg"),
+  "wedding-nature": require("../assets/template-previews/custom/wedding/wedding-05.jpeg"),
+  "wedding-rose-gold": require("../assets/template-previews/custom/wedding/wedding-06.jpeg"),
+  "dol-cute": require("../assets/template-previews/custom/dol/dol-card-01.jpeg"),
+  "dol-pastel": require("../assets/template-previews/custom/dol/dol-card-02.jpeg"),
+  "dol-blue": require("../assets/template-previews/custom/dol/dol-card-03.jpeg"),
+  "dol-nature": require("../assets/template-previews/custom/dol/dol-card-04.jpeg"),
+  "dol-gold": require("../assets/template-previews/custom/dol/dol-cake-01.jpeg"),
+  "hwangap-classic": require("../assets/template-previews/custom/hwangap/hwangap-01.jpeg"),
+  "hwangap-modern": require("../assets/template-previews/custom/hwangap/hwangap-02.jpeg"),
+  "hwangap-red": require("../assets/template-previews/custom/hwangap/hwangap-03.jpeg"),
+  "hwangap-floral": require("../assets/template-previews/custom/hwangap/hwangap-04.jpeg"),
+  "hwangap-hanja": require("../assets/template-previews/custom/hwangap/hwangap-05.jpeg"),
+  "bridal-pink": require("../assets/template-previews/custom/bridal/bridal-01.jpeg"),
+  "bridal-boho": require("../assets/template-previews/custom/bridal/bridal-02.jpeg"),
+  "bridal-modern": require("../assets/template-previews/custom/bridal/bridal-03.jpeg"),
+  "bridal-mint": require("../assets/template-previews/custom/bridal/bridal-04.jpeg"),
+  "birthday-fun": require("../assets/template-previews/custom/birthday/birthday-01.jpeg"),
+  "birthday-elegant": require("../assets/template-previews/custom/birthday/birthday-02.jpeg"),
+  "birthday-kids": require("../assets/template-previews/custom/birthday/birthday-03.jpeg"),
+  "house-warm": require("../assets/template-previews/custom/other/house-warm.jpeg"),
+  "house-modern": require("../assets/template-previews/custom/other/house-modern.jpeg"),
+  "baby-shower": require("../assets/template-previews/custom/other/baby-shower.jpeg"),
+  "baby-pink": require("../assets/template-previews/custom/other/baby-pink.jpeg"),
+  graduation: require("../assets/template-previews/custom/other/graduation.jpeg"),
+  "graduation-warm": require("../assets/template-previews/custom/other/graduation-warm.jpeg"),
+  business: require("../assets/template-previews/custom/other/business.jpeg"),
+  "business-dark": require("../assets/template-previews/custom/other/business-dark.jpeg")
+};
+
 export function hasBundledTemplatePreview(templateId: string): templateId is BundledTemplatePreviewId {
   return bundledTemplatePreviewIds.includes(templateId as BundledTemplatePreviewId);
 }
@@ -49,4 +84,12 @@ export function getBundledTemplatePreviewSource(templateId: string) {
   }
 
   return bundledTemplatePreviewSource[templateId];
+}
+
+export function getBundledTemplateCanvasSource(templateId: string) {
+  if (!bundledTemplateCanvasIds.includes(templateId as BundledTemplateCanvasId)) {
+    return null;
+  }
+
+  return bundledTemplateCanvasSource[templateId as BundledTemplateCanvasId];
 }

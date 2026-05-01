@@ -3,7 +3,7 @@ import { formatInviteDateTime, mergeInviteDateTimePart } from "./date-time";
 
 describe("invite date time helpers", () => {
   it("formats ISO datetime for display", () => {
-    expect(formatInviteDateTime("2026-05-23T14:00")).toContain("2026년 5월 23일");
+    expect(formatInviteDateTime("2026-05-23T14:00")).toBe("2026년 5월 23일 오후 2:00");
   });
 
   it("preserves time when replacing the date part", () => {

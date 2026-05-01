@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
-  DEFAULT_WEDDING_SAMPLE,
   createEmptyInvitationDraft,
+  getDefaultInvitationSample,
   type InvitationDraft,
   type PendingPhotoUpload
 } from "@/lib/invitation-shared";
@@ -28,27 +28,30 @@ export function createLocalDraft(ownerId: string): MobileInvitationDraft {
   return createEmptyInvitationDraft(ownerId);
 }
 
-function createPreviewSampleDraft(ownerId: string, localId?: string): MobileInvitationDraft {
+function createSampleDraft(ownerId: string, localId?: string, eventType?: string): MobileInvitationDraft {
   const draft = createEmptyInvitationDraft(ownerId);
+  const sample = getDefaultInvitationSample(eventType);
   return {
     ...draft,
     localId: localId ?? draft.localId,
     payload: {
       ...draft.payload,
-      title: DEFAULT_WEDDING_SAMPLE.title,
-      eventDateTime: DEFAULT_WEDDING_SAMPLE.eventDateTime,
-      venueName: DEFAULT_WEDDING_SAMPLE.venueName,
-      venueAddress: DEFAULT_WEDDING_SAMPLE.venueAddress,
-      message: DEFAULT_WEDDING_SAMPLE.message,
+      eventType: eventType ?? draft.payload.eventType,
+      title: sample.title,
+      eventDateTime: sample.eventDateTime,
+      venueName: sample.venueName,
+      venueAddress: sample.venueAddress,
+      message: sample.message,
       eventData: {
         ...draft.payload.eventData,
+        type: eventType ?? draft.payload.eventData.type,
         groom: {
           ...draft.payload.eventData.groom,
-          name: DEFAULT_WEDDING_SAMPLE.groomName
+          name: sample.groomName
         },
         bride: {
           ...draft.payload.eventData.bride,
-          name: DEFAULT_WEDDING_SAMPLE.brideName
+          name: sample.brideName
         }
       }
     },
@@ -103,7 +106,7 @@ export async function ensureDraft(ownerId: string, localId?: string) {
 
   if (latest) {
     if (ownerId === PREVIEW_OWNER_ID && needsPreviewSampleReset(latest)) {
-      const sample = createPreviewSampleDraft(ownerId, latest.localId);
+      const sample = createSampleDraft(ownerId, latest.localId, latest.payload.eventType);
       drafts[sample.localId] = sample;
       await writeDraftMap(drafts);
       return sample;
@@ -112,7 +115,7 @@ export async function ensureDraft(ownerId: string, localId?: string) {
     return latest;
   }
 
-  const created = ownerId === PREVIEW_OWNER_ID ? createPreviewSampleDraft(ownerId) : createLocalDraft(ownerId);
+  const created = ownerId === PREVIEW_OWNER_ID ? createSampleDraft(ownerId) : createLocalDraft(ownerId);
   drafts[created.localId] = created;
   await writeDraftMap(drafts);
   return created;
@@ -123,7 +126,8 @@ export async function createAndPersistDraft(
   options?: { eventType?: string; templateId?: string; title?: string }
 ) {
   const drafts = await readDraftMap();
-  const created = createLocalDraft(ownerId);
+  const shouldSeedSample = Boolean(options?.templateId || options?.eventType);
+  const created = shouldSeedSample ? createSampleDraft(ownerId, undefined, options?.eventType) : createLocalDraft(ownerId);
   if (options?.templateId) {
     created.payload.templateId = options.templateId;
   }
@@ -131,7 +135,7 @@ export async function createAndPersistDraft(
     created.payload.eventType = options.eventType;
     created.payload.eventData.type = options.eventType;
   }
-  if (options?.title) {
+  if (options?.title && !shouldSeedSample) {
     created.payload.title = options.title;
   }
   drafts[created.localId] = created;

@@ -31,3 +31,37 @@ export const bundledTemplatePreviewIds = [
   "business",
   "business-dark"
 ] as const;
+
+export const bundledTemplateCanvasIds = [
+  "wedding-classic",
+  "wedding-modern",
+  "wedding-floral",
+  "wedding-minimal",
+  "wedding-nature",
+  "wedding-rose-gold",
+  "dol-cute",
+  "dol-pastel",
+  "dol-blue",
+  "dol-nature",
+  "dol-gold",
+  "hwangap-classic",
+  "hwangap-modern",
+  "hwangap-red",
+  "hwangap-floral",
+  "hwangap-hanja",
+  "bridal-pink",
+  "bridal-boho",
+  "bridal-modern",
+  "bridal-mint",
+  "birthday-fun",
+  "birthday-elegant",
+  "birthday-kids",
+  "house-warm",
+  "house-modern",
+  "baby-shower",
+  "baby-pink",
+  "graduation",
+  "graduation-warm",
+  "business",
+  "business-dark"
+] as const;

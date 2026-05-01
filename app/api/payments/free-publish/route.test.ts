@@ -23,6 +23,14 @@ function createRequest(invitationId = "invitation-1") {
   });
 }
 
+function createTextRequest() {
+  return new Request("https://invitehub.test/api/payments/free-publish", {
+    method: "POST",
+    headers: { "Content-Type": "text/plain" },
+    body: "invitation-1"
+  });
+}
+
 function createServerClient(userId: string | null) {
   return {
     auth: {
@@ -100,5 +108,16 @@ describe("POST /api/payments/free-publish", () => {
 
     expect(response.status).toBe(409);
     expect(payload.message).toContain("유료 항목");
+  });
+
+  it("rejects non-json publish requests", async () => {
+    createServerSupabaseClientMock.mockResolvedValue(createServerClient("user-1"));
+    createSupabaseAdminClientMock.mockReturnValue(createAdminClient(false));
+
+    const response = await POST(createTextRequest());
+    const payload = await response.json();
+
+    expect(response.status).toBe(415);
+    expect(payload.message).toContain("JSON");
   });
 });

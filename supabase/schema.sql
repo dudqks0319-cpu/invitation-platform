@@ -96,6 +96,29 @@ create table if not exists public.rate_limits (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.invitation_templates (
+  id text primary key check (id ~ '^[a-z0-9-]{2,80}$'),
+  title text not null check (char_length(title) between 1 and 60),
+  category text not null check (category in ('wedding', 'firstBirthday', 'birthday', 'anniversary')),
+  subtitle text not null default '' check (char_length(subtitle) <= 100),
+  badge text not null default 'NEW' check (char_length(badge) <= 20),
+  background_hex text not null default '#FFF9F4' check (background_hex ~ '^#[0-9A-Fa-f]{6}$'),
+  accent_hex text not null default '#D8B8AA' check (accent_hex ~ '^#[0-9A-Fa-f]{6}$'),
+  typography text not null default 'serif' check (typography in ('serif', 'sans')),
+  ornament text not null default 'imageBackground' check (ornament = 'imageBackground'),
+  background_image_url text not null check (background_image_url like '/%' or background_image_url like 'https://%'),
+  background_image_path text,
+  text_area_top numeric not null default 0.28 check (text_area_top between 0.08 and 0.42),
+  text_area_bottom numeric not null default 0.24 check (text_area_bottom between 0.08 and 0.42),
+  text_area_horizontal numeric not null default 0.14 check (text_area_horizontal between 0.08 and 0.24),
+  primary_text_hex text not null default '#2C2A2A' check (primary_text_hex ~ '^#[0-9A-Fa-f]{6}$'),
+  secondary_text_hex text not null default '#8B7D73' check (secondary_text_hex ~ '^#[0-9A-Fa-f]{6}$'),
+  is_active boolean not null default true,
+  created_by uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create or replace function public.set_timestamp()
 returns trigger
 language plpgsql
@@ -172,6 +195,12 @@ before update on public.invitations
 for each row
 execute procedure public.set_timestamp();
 
+drop trigger if exists invitation_templates_set_timestamp on public.invitation_templates;
+create trigger invitation_templates_set_timestamp
+before update on public.invitation_templates
+for each row
+execute procedure public.set_timestamp();
+
 alter table public.profiles enable row level security;
 alter table public.invitations enable row level security;
 alter table public.payments enable row level security;
@@ -180,6 +209,7 @@ alter table public.rsvps enable row level security;
 alter table public.guestbook_entries enable row level security;
 alter table public.view_logs enable row level security;
 alter table public.rate_limits enable row level security;
+alter table public.invitation_templates enable row level security;
 
 drop policy if exists "profiles self access" on public.profiles;
 create policy "profiles self access"
@@ -296,6 +326,13 @@ with check (
   )
 );
 
+drop policy if exists "public can read active invitation templates" on public.invitation_templates;
+create policy "public can read active invitation templates"
+on public.invitation_templates
+for select
+to anon, authenticated
+using (is_active = true);
+
 drop policy if exists "public can insert view logs for published invitations" on public.view_logs;
 create policy "public can insert view logs for published invitations"
 on public.view_logs
@@ -337,6 +374,8 @@ create index if not exists idx_payment_audit_logs_payment_id on public.payment_a
 create index if not exists idx_rsvps_invitation_id on public.rsvps(invitation_id);
 create index if not exists idx_guestbook_invitation_id on public.guestbook_entries(invitation_id);
 create index if not exists idx_view_logs_invitation_id on public.view_logs(invitation_id);
+create index if not exists idx_invitation_templates_category_active
+  on public.invitation_templates(category, is_active);
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (

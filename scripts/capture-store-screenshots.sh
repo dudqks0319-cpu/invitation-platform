@@ -6,7 +6,12 @@ IOS_WORKSPACE="$ROOT/apps/mobile/ios"
 IOS_APP="$HOME/Library/Developer/Xcode/DerivedData/InviteHub-hevapvaabsdjcdfsxondvdutghav/Build/Products/Release-iphonesimulator/InviteHub.app"
 DEVICE_NAME="${DEVICE_NAME:-iPhone 17}"
 OUTPUT_DIR="${1:-$ROOT/output/store-screenshots}"
-BUNDLE_ID="${APP_BUNDLE_ID:-com.invitehub.app.dev}"
+BUNDLE_ID="${APP_BUNDLE_ID:-com.invitehub.app}"
+APP_SCHEME="${APP_SCHEME:-invitehub}"
+DEV_BUNDLE_IDS=(
+  "com.invitehub.app.dev"
+  "com.invitehub.app.dev-default"
+)
 
 mkdir -p "$OUTPUT_DIR"
 
@@ -19,29 +24,37 @@ fi
 
 echo "Using device: $DEVICE_NAME ($DEVICE_ID)"
 
+for candidate in "$BUNDLE_ID" "${DEV_BUNDLE_IDS[@]}"; do
+  /usr/bin/xcrun simctl terminate "$DEVICE_ID" "$candidate" >/dev/null 2>&1 || true
+done
+
+for candidate in "${DEV_BUNDLE_IDS[@]}"; do
+  /usr/bin/xcrun simctl uninstall "$DEVICE_ID" "$candidate" >/dev/null 2>&1 || true
+done
+
 /usr/bin/xcrun simctl install "$DEVICE_ID" "$IOS_APP" >/dev/null
 /usr/bin/xcrun simctl terminate "$DEVICE_ID" "$BUNDLE_ID" >/dev/null 2>&1 || true
 /usr/bin/xcrun simctl launch "$DEVICE_ID" "$BUNDLE_ID" >/dev/null
 sleep 1
 /usr/bin/xcrun simctl io "$DEVICE_ID" screenshot "$OUTPUT_DIR/01-home.png" >/dev/null
 
-/usr/bin/xcrun simctl openurl "$DEVICE_ID" 'invitehub:///templates' >/dev/null
+/usr/bin/xcrun simctl openurl "$DEVICE_ID" "$APP_SCHEME:///templates" >/dev/null
 sleep 1
 /usr/bin/xcrun simctl io "$DEVICE_ID" screenshot "$OUTPUT_DIR/02-templates.png" >/dev/null
 
-/usr/bin/xcrun simctl openurl "$DEVICE_ID" 'invitehub:///builder/step1-basic' >/dev/null
+/usr/bin/xcrun simctl openurl "$DEVICE_ID" "$APP_SCHEME:///builder/step1-basic" >/dev/null
 sleep 1
 /usr/bin/xcrun simctl io "$DEVICE_ID" screenshot "$OUTPUT_DIR/03-builder-step1.png" >/dev/null
 
-/usr/bin/xcrun simctl openurl "$DEVICE_ID" 'invitehub:///builder/step3-photos' >/dev/null
+/usr/bin/xcrun simctl openurl "$DEVICE_ID" "$APP_SCHEME:///builder/step3-photos" >/dev/null
 sleep 1
 /usr/bin/xcrun simctl io "$DEVICE_ID" screenshot "$OUTPUT_DIR/04-builder-step3.png" >/dev/null
 
-/usr/bin/xcrun simctl openurl "$DEVICE_ID" 'invitehub:///builder/preview' >/dev/null
+/usr/bin/xcrun simctl openurl "$DEVICE_ID" "$APP_SCHEME:///builder/preview" >/dev/null
 sleep 1
 /usr/bin/xcrun simctl io "$DEVICE_ID" screenshot "$OUTPUT_DIR/05-preview.png" >/dev/null
 
-/usr/bin/xcrun simctl openurl "$DEVICE_ID" 'invitehub:///mypage' >/dev/null
+/usr/bin/xcrun simctl openurl "$DEVICE_ID" "$APP_SCHEME:///mypage" >/dev/null
 sleep 1
 /usr/bin/xcrun simctl io "$DEVICE_ID" screenshot "$OUTPUT_DIR/06-mypage.png" >/dev/null
 
@@ -56,6 +69,10 @@ Automatic captures:
   04-builder-step3.png
   05-preview.png
   06-mypage.png
+
+Important:
+  simctl openurl may show an iOS "Open in InviteHub" confirmation prompt.
+  Do not use any screenshot that contains that prompt for App Store submission.
 
 Manual captures still recommended:
   - public invitation page

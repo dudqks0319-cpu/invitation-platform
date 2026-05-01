@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import {
   isAppleStoreVerificationEnabled,
   isGooglePlayVerificationEnabled
@@ -15,16 +16,17 @@ import {
 import { buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
+import { ensureJsonRequest, readJsonBody } from "@/lib/supabase/public-write";
 
-type StoreVerifyBody = {
-  provider?: "apple_iap" | "google_play";
-  productId?: string;
-  invitationId?: string;
-  purchaseToken?: string;
-  receiptData?: string;
-  transactionId?: string;
-  environment?: "sandbox" | "production";
-};
+const storeVerifySchema = z.object({
+  provider: z.enum(["apple_iap", "google_play"]),
+  productId: z.string().trim().min(1).max(120),
+  invitationId: z.string().trim().min(1).max(120),
+  purchaseToken: z.string().trim().min(1).max(4096).optional(),
+  receiptData: z.string().trim().min(1).max(65536).optional(),
+  transactionId: z.string().trim().min(1).max(512).optional(),
+  environment: z.enum(["sandbox", "production"]).optional()
+});
 
 function getBearerToken(request: Request) {
   const authorization = request.headers.get("authorization") ?? "";
@@ -63,7 +65,6 @@ async function getAuthenticatedUser(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => null)) as StoreVerifyBody | null;
   const admin = createSupabaseAdminClient();
   const { user } = await getAuthenticatedUser(request);
 
@@ -75,9 +76,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: "스토어 결제 서버 설정이 완료되지 않았습니다." }, { status: 503 });
   }
 
-  if (!body?.provider || !body.productId || !body.invitationId) {
+  if (!ensureJsonRequest(request)) {
+    return NextResponse.json({ success: false, message: "JSON 요청만 허용됩니다." }, { status: 415 });
+  }
+
+  const json = await readJsonBody(request, 80 * 1024);
+  if (!json.ok) {
+    return NextResponse.json({ success: false, message: json.message }, { status: 400 });
+  }
+
+  const parsed = storeVerifySchema.safeParse(json.body);
+  if (!parsed.success) {
     return NextResponse.json({ success: false, message: "스토어 결제 검증 정보가 누락되었습니다." }, { status: 400 });
   }
+
+  const body = parsed.data;
 
   if (!isAllowedStoreProductId(body.provider, body.productId)) {
     return NextResponse.json({ success: false, message: "허용되지 않은 스토어 상품입니다." }, { status: 400 });

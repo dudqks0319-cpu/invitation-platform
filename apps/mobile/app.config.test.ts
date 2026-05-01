@@ -9,8 +9,9 @@ async function loadConfig(envPatch: Record<string, string | undefined>) {
     ...envPatch
   };
 
-  const module = await import("./app.config");
-  return module.default as {
+  const configModule = await import("./app.config");
+  return configModule.default as {
+    scheme: string;
     ios: { bundleIdentifier: string };
     android: { package: string };
   };
@@ -30,6 +31,7 @@ describe("mobile app config", () => {
 
     expect(config.ios.bundleIdentifier).toBe("com.invitehub.app");
     expect(config.android.package).toBe("com.invitehub.app");
+    expect(config.scheme).toBe("invitehub");
   });
 
   it("keeps dev identifiers outside production builds", async () => {
@@ -40,5 +42,6 @@ describe("mobile app config", () => {
 
     expect(config.ios.bundleIdentifier).toBe("com.invitehub.app.dev");
     expect(config.android.package).toBe("com.invitehub.app.dev");
+    expect(config.scheme).toBe("invitehub-dev");
   });
 });

@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
 import { getInvitationPricing } from "@/lib/payments/pricing";
+import { ensureJsonRequest, readJsonBody } from "@/lib/supabase/public-write";
 
 type FreePublishRequest = {
   invitationId?: string;
@@ -25,7 +26,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: "로그인이 필요합니다." }, { status: 401 });
   }
 
-  const body = (await request.json().catch(() => null)) as FreePublishRequest | null;
+  if (!ensureJsonRequest(request)) {
+    return NextResponse.json({ success: false, message: "JSON 요청만 허용됩니다." }, { status: 415 });
+  }
+
+  const json = await readJsonBody(request);
+  if (!json.ok) {
+    return NextResponse.json({ success: false, message: json.message }, { status: 400 });
+  }
+
+  const body = json.body as FreePublishRequest | null;
 
   if (!body?.invitationId) {
     return NextResponse.json({ success: false, message: "초대장 정보가 누락되었습니다." }, { status: 400 });

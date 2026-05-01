@@ -14,6 +14,13 @@ export type MobileTemplateGalleryItem = {
   previewPath?: string;
 };
 
+export type HomeTemplateSection = {
+  key: string;
+  title: string;
+  subtitle: string;
+  templateIds: string[];
+};
+
 export const mobileTemplateCategories: MobileTemplateCategory[] = [
   { key: "wedding", label: "결혼식", emoji: "💍" },
   { key: "dol", label: "돌잔치", emoji: "🎂" },
@@ -59,3 +66,71 @@ export const mobileTemplateGallery: MobileTemplateGalleryItem[] = [
   { id: "business", category: "business", name: "비즈니스 블루", badge: "비즈니스", desc: "신뢰와 전문성을 담은 비즈니스 행사 초대장.", tags: ["#비즈니스", "#전문", "#행사"], previewPath: "/images/genspark/xpx0zLPW.jpg" },
   { id: "business-dark", category: "business", name: "다크 프리미엄", badge: "비즈니스", desc: "블랙 배경의 프리미엄 비즈니스 행사 초대장.", tags: ["#다크", "#프리미엄", "#비즈니스"] }
 ];
+
+export const featuredMobileTemplateIds = [
+  "wedding-rose-gold",
+  "wedding-nature",
+  "wedding-classic",
+  "wedding-modern",
+  "wedding-minimal",
+  "wedding-floral",
+  "dol-nature",
+  "hwangap-floral"
+] as const;
+
+export const homeTemplateSections: HomeTemplateSection[] = [
+  {
+    key: "wedding",
+    title: "청첩장 템플릿",
+    subtitle: "로맨틱하고 단정한 웨딩 디자인",
+    templateIds: ["wedding-rose-gold", "wedding-nature", "wedding-classic"]
+  },
+  {
+    key: "dol",
+    title: "돌잔치 템플릿",
+    subtitle: "아기 사진과 잘 어울리는 밝은 디자인",
+    templateIds: ["dol-nature", "dol-cute", "dol-pastel"]
+  },
+  {
+    key: "bridal",
+    title: "브라이덜샤워 템플릿",
+    subtitle: "친구들과 나누기 좋은 화사한 디자인",
+    templateIds: ["bridal-pink", "bridal-modern", "bridal-mint"]
+  },
+  {
+    key: "hwangap",
+    title: "환갑잔치 템플릿",
+    subtitle: "격식과 따뜻함을 담은 초대장",
+    templateIds: ["hwangap-floral", "hwangap-classic", "hwangap-red"]
+  },
+  {
+    key: "party",
+    title: "파티 초대장",
+    subtitle: "생일, 집들이, 베이비샤워까지",
+    templateIds: ["birthday-fun", "house-warm", "baby-shower"]
+  }
+];
+
+export function getMobileTemplateById(templateId: string) {
+  return mobileTemplateGallery.find((template) => template.id === templateId) ?? null;
+}
+
+export function getMobileTemplatesByCategory(category: string) {
+  return mobileTemplateGallery.filter((template) => template.category === category);
+}
+
+export function getFeaturedMobileTemplates(limit = featuredMobileTemplateIds.length) {
+  return featuredMobileTemplateIds
+    .map((templateId) => getMobileTemplateById(templateId))
+    .filter((template): template is MobileTemplateGalleryItem => Boolean(template))
+    .slice(0, limit);
+}
+
+export function getHomeTemplateSections() {
+  return homeTemplateSections.map((section) => ({
+    ...section,
+    templates: section.templateIds
+      .map((templateId) => getMobileTemplateById(templateId))
+      .filter((template): template is MobileTemplateGalleryItem => Boolean(template))
+  }));
+}

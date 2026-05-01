@@ -1,5 +1,8 @@
 node_modules
 .next
+.DS_Store
+.artifacts/
+.claude/worktrees/
 .env
 .env.*
 !.env.example
@@ -19,9 +22,12 @@ tsconfig.tsbuildinfo
 .omx
 output/
 test-results/
+logs/
 public
 !app/api/public/
 !app/api/public/**
 src
 .vercel
 .env*.local
+apps/mobile/dist/
+supabase/.temp/

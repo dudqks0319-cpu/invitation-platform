@@ -50,6 +50,17 @@ function createRequest(body: Record<string, unknown>, accessToken = "access-toke
   });
 }
 
+function createTextRequest(accessToken = "access-token") {
+  return new Request("https://invitehub.test/api/payments/store/verify", {
+    method: "POST",
+    headers: {
+      "Content-Type": "text/plain",
+      ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+    },
+    body: "not-json"
+  });
+}
+
 function createAuthClient(userId: string | null) {
   return {
     auth: {
@@ -349,6 +360,31 @@ describe("POST /api/payments/store/verify", () => {
 
     expect(response.status).toBe(400);
     expect(payload.message).toContain("상품");
+    expect(verifyAppleTransactionMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects non-json verification requests", async () => {
+    createSupabaseAdminClientMock.mockReturnValue(createAdminDouble().client);
+
+    const response = await POST(createTextRequest());
+    const payload = await response.json();
+
+    expect(response.status).toBe(415);
+    expect(payload.message).toContain("JSON");
+  });
+
+  it("rejects malformed verification payloads before store calls", async () => {
+    createSupabaseAdminClientMock.mockReturnValue(createAdminDouble().client);
+    isAppleStoreVerificationEnabledMock.mockReturnValue(true);
+
+    const response = await POST(
+      createRequest({
+        invitationId: "invitation-1",
+        provider: "apple_iap"
+      })
+    );
+
+    expect(response.status).toBe(400);
     expect(verifyAppleTransactionMock).not.toHaveBeenCalled();
   });
 

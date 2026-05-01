@@ -35,11 +35,15 @@ export default function SupportPage() {
             </div>
             <div>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 12 }}>계정 및 데이터</h2>
-              <p>계정 삭제와 개인정보 처리 요청은 앱의 마이페이지에서 직접 진행할 수 있습니다.</p>
+              <p>계정 삭제와 개인정보 처리 요청은 앱의 마이페이지에서 직접 진행할 수 있습니다. 앱을 사용할 수 없는 경우 support@invitehub.co.kr로 계정 이메일과 요청 내용을 보내 주세요.</p>
             </div>
             <div>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 12 }}>현재 서비스 범위</h2>
-              <p>현재 제출 버전은 무료 초대장을 로그인 없이 시작할 수 있고, 사진이 포함된 유료 발행은 앱 스토어 결제로 진행합니다.</p>
+              <p>현재 제출 버전은 템플릿 선택, 초안 작성, 미리보기, 사진 없는 공개 링크 발행을 무료로 제공합니다. 사진이 포함된 발행은 앱 스토어 결제로 진행합니다.</p>
+            </div>
+            <div>
+              <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 12 }}>지도와 장소 안내</h2>
+              <p>초대장에는 장소명과 주소가 표시되고, 카카오맵과 네이버지도 검색 링크로 연결됩니다. 앱 내부 지도 API 키가 없어도 길찾기 링크는 사용할 수 있습니다.</p>
             </div>
           </div>
         </section>

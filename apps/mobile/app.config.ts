@@ -13,6 +13,7 @@ const variant = process.env.APP_VARIANT ?? (buildProfile === "production" ? "pro
 const isProduction = variant === "production";
 const bundleId = process.env.APP_BUNDLE_ID || (isProduction ? "com.invitehub.app" : "com.invitehub.app.dev");
 const androidPackage = process.env.APP_ANDROID_PACKAGE || (isProduction ? "com.invitehub.app" : "com.invitehub.app.dev");
+const scheme = process.env.APP_SCHEME || (isProduction ? "invitehub" : "invitehub-dev");
 const googleIosUrlScheme = process.env.GOOGLE_IOS_URL_SCHEME ?? "";
 const kakaoNativeAppKey = process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY ?? "";
 const basePlugins = (Array.isArray(baseConfig.plugins) ? baseConfig.plugins : []) as ExpoPlugin[];
@@ -62,6 +63,7 @@ const mergedPlugins: ExpoPlugin[] = [
 
 const appConfig = {
   ...baseConfig,
+  scheme,
   icon: "./assets/icon.png",
   splash: {
     image: "./assets/splash.png",

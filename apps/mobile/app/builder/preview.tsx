@@ -171,7 +171,7 @@ export default function BuilderPreviewScreen() {
           <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>{message}</Text>
         </Card>
       ) : null}
-      {draft ? <InvitationPreviewCard payload={draft.payload} /> : null}
+      {draft ? <InvitationPreviewCard fitToViewport payload={draft.payload} /> : null}
       <Card eyebrow="발행 흐름" title="검수 → 결제 확인 → 링크 공유">
         <View style={{ flexDirection: "row", gap: 10 }}>
           {flowState.steps.map((step, index) => {

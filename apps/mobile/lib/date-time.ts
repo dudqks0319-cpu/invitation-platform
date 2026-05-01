@@ -18,13 +18,10 @@ export function formatInviteDateTime(value: string) {
     return "";
   }
 
-  return new Intl.DateTimeFormat("ko-KR", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit"
-  }).format(date);
+  const period = date.getHours() < 12 ? "오전" : "오후";
+  const hour12 = date.getHours() % 12 || 12;
+
+  return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 ${period} ${hour12}:${pad(date.getMinutes())}`;
 }
 
 export function mergeInviteDateTimePart(currentValue: string, selectedDate: Date, mode: "date" | "time") {

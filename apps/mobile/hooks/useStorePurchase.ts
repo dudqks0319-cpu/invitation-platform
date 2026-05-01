@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Platform } from "react-native";
 import { type Product, type Purchase, useIAP } from "react-native-iap";
 import { getInviteHubBaseUrl } from "@/lib/web-links";
@@ -36,7 +36,11 @@ export function useStorePurchase(options: StorePurchaseOptions = {}) {
   const [message, setMessage] = useState("");
   const [pendingPurchase, setPendingPurchase] = useState(false);
   const [pendingFinishPurchase, setPendingFinishPurchase] = useState<Purchase | null>(null);
-  const [resolvedInvitationId, setResolvedInvitationId] = useState(options.invitationId ?? "");
+  const resolvedInvitationIdRef = useRef(options.invitationId ?? "");
+  const accessToken = options.accessToken;
+  const optionInvitationId = options.invitationId ?? "";
+  const onBeforePurchase = options.onBeforePurchase;
+  const onVerified = options.onVerified;
 
   const { connected, products, fetchProducts, finishTransaction, requestPurchase } = useIAP({
     onError: (caught) => {
@@ -62,8 +66,8 @@ export function useStorePurchase(options: StorePurchaseOptions = {}) {
   }, [connected, fetchProducts, productIds]);
 
   useEffect(() => {
-    setResolvedInvitationId(options.invitationId ?? "");
-  }, [options.invitationId]);
+    resolvedInvitationIdRef.current = optionInvitationId;
+  }, [optionInvitationId]);
 
   const product = useMemo<Product | null>(() => {
     if (productIds.length === 0) {
@@ -79,69 +83,67 @@ export function useStorePurchase(options: StorePurchaseOptions = {}) {
     }
 
     let active = true;
-    const invitationId = resolvedInvitationId || options.invitationId || "";
-    const purchase = pendingFinishPurchase as Purchase & {
+    const purchaseToFinish = pendingFinishPurchase;
+    const invitationId = resolvedInvitationIdRef.current || optionInvitationId;
+    const purchase = purchaseToFinish as Purchase & {
       productId?: string;
       purchaseToken?: string | null;
       transactionId?: string;
       transactionReceipt?: string | null;
     };
 
-    if (!options.accessToken) {
-      setPendingPurchase(false);
-      setPendingFinishPurchase(null);
-      setError("로그인 후 스토어 결제를 연결할 수 있습니다.");
-      return;
+    async function verifyPendingPurchase() {
+      if (!accessToken) {
+        throw new Error("로그인 후 스토어 결제를 연결할 수 있습니다.");
+      }
+
+      if (!provider || !invitationId) {
+        throw new Error("결제할 초대장을 먼저 서버에 저장해 주세요.");
+      }
+
+      const verificationBody = buildStoreVerifyBody({
+        invitationId,
+        provider,
+        purchase: {
+          productId: purchase.productId ?? product?.id ?? productIds[0],
+          purchaseToken: purchase.purchaseToken ?? undefined,
+          transactionId: purchase.transactionId,
+          transactionReceipt: purchase.transactionReceipt ?? undefined
+        },
+        environment: provider === "apple_iap" ? (__DEV__ ? "sandbox" : "production") : undefined
+      });
+
+      const response = await fetch(`${getInviteHubBaseUrl()}/api/payments/store/verify`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`
+        },
+        body: JSON.stringify(verificationBody)
+      });
+
+      const result = (await response.json().catch(() => ({}))) as {
+        success?: boolean;
+        message?: string;
+        invitationId?: string;
+        slug?: string;
+      };
+
+      if (!response.ok || !result.success || !result.invitationId || !result.slug) {
+        throw new Error(result.message || "스토어 결제 검증에 실패했습니다.");
+      }
+
+      await finishTransaction({ purchase: purchaseToFinish, isConsumable: true });
+
+      if (!active) return;
+      onVerified?.({
+        invitationId: result.invitationId,
+        slug: result.slug
+      });
+      setMessage("스토어 결제가 완료되어 초대장을 발행했습니다.");
     }
 
-    if (!provider || !invitationId) {
-      setPendingPurchase(false);
-      setPendingFinishPurchase(null);
-      setError("결제할 초대장을 먼저 서버에 저장해 주세요.");
-      return;
-    }
-
-    const verificationBody = buildStoreVerifyBody({
-      invitationId,
-      provider,
-      purchase: {
-        productId: purchase.productId ?? product?.id ?? productIds[0],
-        purchaseToken: purchase.purchaseToken ?? undefined,
-        transactionId: purchase.transactionId,
-        transactionReceipt: purchase.transactionReceipt ?? undefined
-      },
-      environment: provider === "apple_iap" ? (__DEV__ ? "sandbox" : "production") : undefined
-    });
-
-    void fetch(`${getInviteHubBaseUrl()}/api/payments/store/verify`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${options.accessToken}`
-      },
-      body: JSON.stringify(verificationBody)
-    })
-      .then(async (response) => {
-        const result = (await response.json().catch(() => ({}))) as {
-          success?: boolean;
-          message?: string;
-          invitationId?: string;
-          slug?: string;
-        };
-
-        if (!response.ok || !result.success || !result.invitationId || !result.slug) {
-          throw new Error(result.message || "스토어 결제 검증에 실패했습니다.");
-        }
-
-        await finishTransaction({ purchase: pendingFinishPurchase, isConsumable: false });
-
-        if (!active) return;
-        options.onVerified?.({
-          invitationId: result.invitationId,
-          slug: result.slug
-        });
-        setMessage("스토어 결제가 완료되어 초대장을 발행했습니다.");
-      })
+    void verifyPendingPurchase()
       .catch((caught) => {
         if (!active) return;
         setError(caught instanceof Error ? caught.message : "스토어 결제 마무리에 실패했습니다.");
@@ -156,29 +158,30 @@ export function useStorePurchase(options: StorePurchaseOptions = {}) {
       active = false;
     };
   }, [
+    accessToken,
     finishTransaction,
-    options,
+    onVerified,
+    optionInvitationId,
     pendingFinishPurchase,
     product,
     productIds,
-    provider,
-    resolvedInvitationId
+    provider
   ]);
 
   async function purchase() {
-    if (!options.accessToken) {
+    if (!accessToken) {
       setError("로그인 후 스토어 결제를 사용할 수 있습니다.");
       return;
     }
 
-    let invitationId = resolvedInvitationId || options.invitationId || "";
+    let invitationId = resolvedInvitationIdRef.current || optionInvitationId;
 
-    if (!invitationId && options.onBeforePurchase) {
+    if (!invitationId && onBeforePurchase) {
       try {
-        const prepared = await options.onBeforePurchase();
+        const prepared = await onBeforePurchase();
         invitationId = prepared?.invitationId ?? "";
         if (invitationId) {
-          setResolvedInvitationId(invitationId);
+          resolvedInvitationIdRef.current = invitationId;
         }
       } catch (caught) {
         setError(caught instanceof Error ? caught.message : "결제 준비용 초안을 저장하지 못했습니다.");
