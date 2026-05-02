@@ -123,7 +123,8 @@ node scripts/verify-app-store-packet.mjs
 For final active-goal completion, use the stricter completion verifier. It is
 expected to return `blocked` until Apple-side evidence is captured in
 `docs/app-store-external-evidence.json` with `status`, `capturedAt`,
-`evidence`, and `artifact` fields:
+`evidence`, and `artifact` fields. `artifact` must be an `https://` URL,
+existing local file path, or `user-confirmation:` reference:
 
 ```bash
 node scripts/verify-goal-completion.mjs

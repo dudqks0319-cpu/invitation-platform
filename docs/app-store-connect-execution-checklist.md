@@ -284,7 +284,9 @@ Before calling the active goal complete, copy
 `docs/app-store-external-evidence.json`, set each `status` to `true` only after
 the corresponding Apple-side evidence exists, and fill `capturedAt`,
 `evidence`, and `artifact` with the screenshot path, App Store Connect URL, or
-user-confirmed device evidence. Then run:
+user-confirmed device evidence. `artifact` must be one of: an `https://` URL, an
+existing local file path, or a `user-confirmation:` reference that names the
+thread/user confirmation. Then run:
 
 ```bash
 node scripts/verify-goal-completion.mjs

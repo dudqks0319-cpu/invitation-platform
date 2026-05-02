@@ -214,7 +214,9 @@ Manual Apple-side confirmation path:
 - Goal completion verifier:
   `node scripts/verify-goal-completion.mjs` returns `blocked` until
   `docs/app-store-external-evidence.json` exists and every Apple-side evidence
-  item has `status: true`, `capturedAt`, `evidence`, and `artifact` fields.
+  item has `status: true`, a `capturedAt` date, `evidence`, and an `artifact`
+  that is an `https://` URL, existing local file path, or `user-confirmation:`
+  reference.
 - Paid-publish fallback verification on 2026-05-02 13:38 KST:
   - `npm run test -- apps/mobile/lib/release-flags.test.ts apps/mobile/lib/preview-flow.test.ts apps/mobile/lib/payments/pricing.test.ts apps/mobile/lib/invitations.test.ts lib/release-flags.test.ts --exclude='**/.claude/**'`: 5 files / 14 tests passed.
   - `npm --prefix apps/mobile run typecheck`: passed.

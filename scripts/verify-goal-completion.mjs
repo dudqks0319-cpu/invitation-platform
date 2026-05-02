@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 
 const root = process.cwd();
 const evidencePath = "docs/app-store-external-evidence.json";
@@ -67,6 +67,41 @@ function hasMeaningfulText(value) {
   return typeof value === "string" && value.trim().length >= 8;
 }
 
+function hasCapturedAt(value) {
+  return typeof value === "string" && /^\d{4}-\d{2}-\d{2}/.test(value.trim());
+}
+
+function isHttpUrl(value) {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "https:" || parsed.protocol === "http:";
+  } catch {
+    return false;
+  }
+}
+
+function isExistingLocalPath(value) {
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return false;
+  }
+
+  const path = isAbsolute(trimmed) ? trimmed : join(root, trimmed);
+  return existsSync(path);
+}
+
+function isUserConfirmationRef(value) {
+  return value.trim().startsWith("user-confirmation:") && value.trim().length >= 32;
+}
+
+function hasValidArtifact(value) {
+  return (
+    typeof value === "string" &&
+    (isHttpUrl(value.trim()) || isExistingLocalPath(value) || isUserConfirmationRef(value))
+  );
+}
+
 function validateEvidenceEntry(evidence, key, label) {
   const entry = evidence[key];
 
@@ -84,16 +119,16 @@ function validateEvidenceEntry(evidence, key, label) {
     blockers.push(`${evidencePath}: ${key}.status is not true`);
   }
 
-  if (!hasMeaningfulText(entry.capturedAt)) {
-    blockers.push(`${evidencePath}: ${key}.capturedAt is missing`);
+  if (!hasCapturedAt(entry.capturedAt)) {
+    blockers.push(`${evidencePath}: ${key}.capturedAt must start with YYYY-MM-DD`);
   }
 
   if (!hasMeaningfulText(entry.evidence)) {
     blockers.push(`${evidencePath}: ${key}.evidence is missing`);
   }
 
-  if (!hasMeaningfulText(entry.artifact)) {
-    blockers.push(`${evidencePath}: ${key}.artifact is missing`);
+  if (!hasValidArtifact(entry.artifact)) {
+    blockers.push(`${evidencePath}: ${key}.artifact must be an http(s) URL, existing local file path, or user-confirmation: reference`);
   }
 }
 
