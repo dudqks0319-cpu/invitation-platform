@@ -1,7 +1,7 @@
 # InviteHub Goal Completion Audit - 90점 Release Readiness
 
 Date: 2026-05-01
-Latest update: 2026-05-02 13:58 KST
+Latest update: 2026-05-02 14:28 KST
 
 ## Objective
 
@@ -44,7 +44,7 @@ InviteHub 앱을 App Store 제출 기준으로 프론트엔드, 백엔드, UI/UX
 | Store config 90+ | `apps/mobile/app.config.ts`, `apps/mobile/eas.json`, native project | Production bundle id is `com.invitehub.app`; production scheme is `invitehub`; dev scheme is `invitehub-dev`; Xcode is 26.3. | Pass |
 | Harness 90+ | `.claude/skills/invitehub-app-builder/skill.md`, `docs/invitehub-app-harness.md`, `scripts/invitehub-release-gate.sh` | Release gate covers lint, typecheck, tests, high audit, iOS Release simulator build. | Pass |
 | Role harness coverage | `.claude/agents/*.md`, `.claude/skills/invitehub-app-builder/skill.md` | Verified agents exist: product-manager, marketing-copywriter, template-image-art-director, ux-designer, mobile-frontend-engineer, mobile-backend-engineer, api-integrator, security-engineer, qa-engineer, store-manager. | Pass |
-| Verification evidence | Release gate output, simulator screenshots | `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh` passed web lint, web typecheck, 52-file web/API suite, mobile lint, mobile typecheck, and focused 9-file mobile/API tests. Escalated iOS Release build also passed separately. Screenshots: `/private/tmp/invitehub-release-home-current.png`, `/private/tmp/invitehub-preview-fit-to-viewport.png`. Screenshot size verifier passed for `output/store-screenshots-verified/05-preview-fit-to-viewport.png`. | Pass with audit caveat |
+| Verification evidence | Release gate output, simulator screenshots | `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh` passed again on 2026-05-02 14:28 KST: web/mobile lint, web/mobile typecheck, 54-file web/API suite with 158 tests, and focused 9-file mobile/API suite with 30 tests. Escalated iOS Release build also passed separately. Screenshots: `/private/tmp/invitehub-release-home-current.png`, `/private/tmp/invitehub-preview-fit-to-viewport.png`. Screenshot size verifier passed for `output/store-screenshots-verified/05-preview-fit-to-viewport.png`. | Pass with audit caveat |
 | App Store privacy/IAP map | `app/privacy/page.tsx`, `app/support/page.tsx`, `app/terms/page.tsx`, `app/faq/page.tsx`, `docs/app-store-readiness-90.md`, `docs/store-submission-metadata.md` | Bundle ID, production scheme, IAP product ID, privacy-label basis, support/privacy/terms URL content, map-link behavior, and env mapping are documented. | Pass |
 | Current EAS/TestFlight evidence | EAS build list, EAS submission state, App Store Connect TestFlight page | EAS iOS build 37 (`4d995997-e952-4ada-83bf-bc6a929be412`) finished, EAS submission `bb2999db-8820-42a7-9bdf-fb2bfd7f6d21` finished, and App Store Connect shows `1.0.0 (37)` upload status `완료` for app id `6763630299`. Build 37 is assigned to internal group `TE Team (Expo)` and the group build tab shows `1.0.0 (37)` status `테스트 중`, expiring in 90 days. | Pass for internal TestFlight |
 | App Store Connect execution checklist | `docs/app-store-connect-execution-checklist.md`, `docs/store-screenshot-plan.md` | Official Apple submission/privacy/upcoming-requirements pages checked on 2026-05-01; EAS, TestFlight, IAP, privacy labels, screenshots, and review notes are mapped to required evidence. | Pass |
@@ -90,8 +90,9 @@ Do not mark the goal complete until:
 ## Latest Local Evidence
 
 - `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`:
-  web lint, web typecheck, 52-file web/API test suite, mobile lint, mobile
-  typecheck, and focused 9-file mobile/API tests passed.
+  passed again on 2026-05-02 14:28 KST. It ran web lint, web typecheck, 54-file
+  web/API test suite with 158 tests, mobile lint, mobile typecheck, and focused
+  9-file mobile/API test suite with 30 tests.
 - Escalated iOS Release simulator build:
   `npm --prefix apps/mobile run ios -- --device "iPhone 17" --configuration Release --no-bundler`;
   passed with 0 errors and 2 warnings; installed and opened `com.invitehub.app`
@@ -172,6 +173,11 @@ Do not mark the goal complete until:
     by DNS, while `https://invitation-platform-youngbeens-projects.vercel.app`
     `/privacy`, `/terms`, and `/support` return HTTP 200. EAS production env has
     `EXPO_PUBLIC_WEB_BASE_URL` set to that Vercel URL.
+- Live URL recheck on 2026-05-02 14:26 KST:
+  `https://invitation-platform-youngbeens-projects.vercel.app/privacy`,
+  `/terms`, and `/support` all returned HTTP 200. `https://invitehub.co.kr/privacy`
+  still failed DNS resolution, so App Store Connect metadata must use the
+  verified Vercel URLs until DNS is connected.
 - Paid-publish fallback verification on 2026-05-02 13:38 KST:
   - `npm run test -- apps/mobile/lib/release-flags.test.ts apps/mobile/lib/preview-flow.test.ts apps/mobile/lib/payments/pricing.test.ts apps/mobile/lib/invitations.test.ts lib/release-flags.test.ts --exclude='**/.claude/**'`: 5 files / 14 tests passed.
   - `npm --prefix apps/mobile run typecheck`: passed.
@@ -187,12 +193,14 @@ Do not mark the goal complete until:
 
 ## Current Blocker
 
-The current blocker is no longer EAS upload, export compliance, or internal
-TestFlight group assignment. Build 37 is visible to the internal group in App
-Store Connect.
+The current blocker is no longer EAS build/upload. Build 38 has been uploaded
+through EAS Submit and contains the paid-publish fallback, but App Store Connect
+processing, export compliance for build 38 if prompted, and internal TestFlight
+group assignment still need console confirmation.
 
 The remaining blocker for marking the broader App Store readiness goal complete
-is direct iPhone TestFlight install/launch evidence plus final App Store Connect
-submission surfaces: app name/subtitle/category/age rating, version metadata,
-version build selection, privacy URL and privacy labels, screenshots, review
-notes, and IAP product state.
+is direct iPhone TestFlight install/launch evidence for build 38 plus final App
+Store Connect submission surfaces: app name/subtitle/category/age rating,
+version metadata, version build selection, privacy URL and privacy labels,
+screenshots, review notes, and IAP product state or verified paid-feature
+fallback.

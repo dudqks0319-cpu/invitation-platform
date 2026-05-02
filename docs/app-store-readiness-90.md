@@ -75,6 +75,12 @@ Latest local evidence after the fixed-template preview update:
   build, and screenshot size check for
   `output/store-screenshots-fallback/01-home-paid-disabled.png` and
   `02-step3-paid-disabled.png`.
+- Fast release gate recheck passed on 2026-05-02 14:28 KST with web/mobile
+  lint, web/mobile typecheck, 54-file web/API tests with 158 tests, and focused
+  9-file mobile/API tests with 30 tests.
+- Live URL recheck on 2026-05-02 14:26 KST: the Vercel `/privacy`, `/terms`,
+  and `/support` URLs returned HTTP 200. `https://invitehub.co.kr/privacy` still
+  failed DNS resolution.
 
 ## Required Command
 

@@ -59,6 +59,9 @@ Read-only final-submission audit from 2026-05-02 13:21 KST:
   `https://invitation-platform-youngbeens-projects.vercel.app`.
 - EAS production env contains
   `EXPO_PUBLIC_WEB_BASE_URL=https://invitation-platform-youngbeens-projects.vercel.app`.
+- Live URL recheck on 2026-05-02 14:26 KST: the Vercel `/privacy`, `/terms`,
+  and `/support` URLs returned HTTP 200; `https://invitehub.co.kr/privacy`
+  still failed DNS resolution.
 - Local fallback verification on 2026-05-02: paid photo publishing defaults
   disabled in web/mobile code until `*_ENABLE_PAID_PUBLISH=true`; targeted tests,
   web/mobile typecheck, web/mobile lint, and an iPhone 17 Release simulator build
@@ -74,8 +77,9 @@ Current local evidence:
 
 - `xcodebuild -version`: Xcode 26.3.
 - `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`:
-  web lint, web typecheck, 52-file web/API tests, mobile lint, mobile typecheck,
-  and focused 9-file mobile/API tests passed.
+  passed again on 2026-05-02 14:28 KST. It ran web lint, web typecheck, 54-file
+  web/API tests with 158 tests, mobile lint, mobile typecheck, and focused
+  9-file mobile/API tests with 30 tests.
 - Escalated iOS Release simulator build: 0 errors, 2 warnings.
 - Bundle opened on iPhone 17 as `com.invitehub.app`.
 - Release home screenshot: `/private/tmp/invitehub-release-home-current.png`.
