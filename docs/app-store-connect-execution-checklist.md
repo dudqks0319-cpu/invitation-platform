@@ -11,18 +11,22 @@ Official sources checked:
 - Apple privacy details: `https://developer.apple.com/app-store/app-privacy-details/`
 - Apple upcoming requirements: `https://developer.apple.com/news/upcoming-requirements/`
 
-## Current External Blocker
+## Current External Status
 
-Build 37 is uploaded and processed in App Store Connect, but it is not yet
-available to testers because the TestFlight row shows
-`수출 규정 관련 문서 누락`.
+Build 37 is uploaded, processed, and assigned to the internal TestFlight group
+`TE Team (Expo)`.
 
-The App Store Connect modal for build 37 asks:
+Current App Store Connect evidence from 2026-05-02:
 
-> 앱에서 구현하는 암호화 알고리즘의 유형은 무엇입니까?
+- Build upload row: `1.0.0 (37)` status `완료`, created `May 2, 2026 12:46 PM`.
+- Version build row: build 37 status `제출 준비 완료`, expiring in 90 days.
+- Internal group page: `Team (Expo)` shows `내부 그룹 ∙ 1명의 테스터 ∙ 1개의 빌드`.
+- Internal group build tab: `1.0.0 (37)` status `테스트 중`, platform `iOS`.
+- Internal group tester tab: `dudqks2@gmail.com` / `정영빈` status `초대됨`,
+  dated `2026년 5월 2일`.
 
-Saving this answer is a legal/export compliance action. Do not save it without
-explicit user confirmation.
+The export-compliance prompt for build 37 was saved after explicit user approval
+using `위에 언급된 알고리즘에 모두 해당하지 않음`.
 
 ## 1. Build Requirement
 
@@ -70,10 +74,17 @@ Current evidence:
   EAS submission error.
 - Artifact is associated with App Store Connect app id `6763630299`.
 
-Required evidence before marking the store area complete:
+Current external evidence:
 
 - App Store Connect export compliance is saved for build 37.
-- Build 37 is available to internal testers.
+- Build 37 is available to internal group `TE Team (Expo)`.
+- One internal tester is invited.
+
+Required evidence before marking the store area complete:
+
+- Real iPhone install/launch evidence from TestFlight.
+- Final App Store Connect metadata, privacy labels, screenshots, review notes,
+  and IAP product state are saved or verified.
 
 ## 3. TestFlight
 
@@ -81,6 +92,7 @@ Required evidence:
 
 - The new build is visible in App Store Connect TestFlight.
 - The build no longer shows `수출 규정 관련 문서 누락`.
+- The build is assigned to internal group `TE Team (Expo)`.
 - The build can be installed by an internal tester.
 - Launch smoke test passes.
 - Home template gallery opens.

@@ -40,7 +40,7 @@ Local security controls are materially in place. A fresh network-enabled
 
 | Risk | Owner | Due |
 | --- | --- | --- |
-| App Store Connect export compliance for build 37 is not saved yet, so the uploaded TestFlight build is blocked from tester availability. | Store Manager / Release owner | Before internal TestFlight install |
+| Real-device TestFlight install/launch evidence for build 37 has not been captured in this run. | Store Manager / Release owner | Before final release readiness sign-off |
 | App Store Connect privacy labels, IAP approval, review notes, and screenshots are not externally verified. | Store Manager / Release owner | Before final App Store submission |
 
 ## Latest Audit Evidence
@@ -57,11 +57,11 @@ downgrades for Next/Expo dependency chains.
 
 ## Current External Gate
 
-EAS iOS build 37 and its App Store Connect submission have completed. The
-remaining gate is the App Store Connect encryption/export compliance prompt for
-the current build. The project now includes `ITSAppUsesNonExemptEncryption=false`
-for future builds, but build 37 still requires the App Store Connect answer to
-be saved manually.
+EAS iOS build 37 and its App Store Connect submission have completed.
+Export compliance for build 37 was saved after explicit user approval, and App
+Store Connect now shows build `1.0.0 (37)` as `테스트 중` inside internal group
+`TE Team (Expo)`.
 
-Saving the App Store Connect answer is a legal/export compliance action and
-requires explicit user confirmation.
+The remaining external gates are real-device TestFlight install/launch evidence
+and final App Store Connect submission surfaces: privacy labels, IAP approval or
+feature-flag fallback, screenshots, metadata, and review notes.
