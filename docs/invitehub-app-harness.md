@@ -131,6 +131,13 @@ evidence file is gitignored; commit only the template:
 node scripts/verify-goal-completion.mjs
 ```
 
+To fill the ignored evidence manifest safely:
+
+```bash
+node scripts/record-app-store-evidence.mjs --list
+node scripts/record-app-store-evidence.mjs --key <evidence-key> --evidence "<what was verified>" --artifact "<https-url-or-local-file-or-user-confirmation>" --capturedAt <YYYY-MM-DDTHH:mm:ss+09:00>
+```
+
 The score cannot be reported as 90+ unless each role signs off:
 
 | Role | 90+ Standard |

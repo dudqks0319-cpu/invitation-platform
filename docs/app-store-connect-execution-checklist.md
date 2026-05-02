@@ -293,3 +293,14 @@ run:
 ```bash
 node scripts/verify-goal-completion.mjs
 ```
+
+To record one evidence item without hand-editing JSON:
+
+```bash
+node scripts/record-app-store-evidence.mjs --list
+node scripts/record-app-store-evidence.mjs \
+  --key appStoreConnectBuild38Processed \
+  --capturedAt 2026-05-02T15:30:00+09:00 \
+  --evidence "App Store Connect TestFlight shows 1.0.0 (38) processed." \
+  --artifact "https://appstoreconnect.apple.com/apps/6763630299/testflight/ios"
+```
