@@ -120,6 +120,13 @@ For a fast store-manager-only packet check:
 node scripts/verify-app-store-packet.mjs
 ```
 
+For final active-goal completion, use the stricter completion verifier. It is
+expected to return `blocked` until Apple-side evidence is captured:
+
+```bash
+node scripts/verify-goal-completion.mjs
+```
+
 The score cannot be reported as 90+ unless each role signs off:
 
 | Role | 90+ Standard |
@@ -142,3 +149,6 @@ External console checks still required before final App Store submission:
 - Screenshot set uploaded for required device sizes.
 - In-app purchase products approved or paid claims removed from metadata.
 - Review notes include the login path, no-login draft path, publish path, and support contact.
+
+Do not mark the broader goal complete until
+`node scripts/verify-goal-completion.mjs` passes with external evidence.

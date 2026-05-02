@@ -57,6 +57,9 @@ Read-only final-submission audit from 2026-05-02 13:21 KST:
   by DNS from the release machine. The Vercel deployment URL from the current
   environment does return HTTP 200 for `/privacy`, `/terms`, and `/support`:
   `https://invitation-platform-youngbeens-projects.vercel.app`.
+- DNS recheck on 2026-05-02 14:47 KST returned no A/NS/MX records for
+  `invitehub.co.kr`; do not use `support@invitehub.co.kr` as the App Review
+  contact until DNS/MX and mailbox receipt are confirmed.
 - EAS production env contains
   `EXPO_PUBLIC_WEB_BASE_URL=https://invitation-platform-youngbeens-projects.vercel.app`.
 - Live URL recheck on 2026-05-02 14:26 KST: the Vercel `/privacy`, `/terms`,
@@ -77,9 +80,10 @@ Current local evidence:
 
 - `xcodebuild -version`: Xcode 26.3.
 - `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`:
-  passed again on 2026-05-02 14:28 KST. It ran web lint, web typecheck, 54-file
-  web/API tests with 158 tests, mobile lint, mobile typecheck, and focused
-  9-file mobile/API tests with 30 tests.
+  passed again on 2026-05-02 14:56 KST. It ran web lint, web typecheck, 55-file
+  web/API tests with 160 tests, mobile lint, mobile typecheck, focused
+  9-file mobile/API tests with 30 tests, and the 36-check App Store packet
+  verifier.
 - Escalated iOS Release simulator build: 0 errors, 2 warnings.
 - Bundle opened on iPhone 17 as `com.invitehub.app`.
 - Release home screenshot: `/private/tmp/invitehub-release-home-current.png`.
@@ -176,6 +180,9 @@ Required fields:
 - Keywords are Korean and do not claim unavailable features.
 - Support URL, privacy URL, and terms URL open successfully. Use the Vercel URL
   unless `invitehub.co.kr` DNS is connected before submission.
+- App Review contact email must be a verified mailbox. Mirror it to
+  `NEXT_PUBLIC_SUPPORT_EMAIL`; do not use `support@invitehub.co.kr` until
+  DNS/MX and mailbox receipt are confirmed.
 - FAQ/support copy explains that maps open through Kakao/Naver search links
   without an embedded map tile API requirement.
 - Age rating is completed in App Store Connect.
@@ -263,10 +270,20 @@ Include:
 - Current first-submission build provides photo-less free publishing.
 - Photo-included paid publishing is hidden until the App Store Connect IAP
   product is ready.
-- Support contact: `support@invitehub.co.kr`.
+- Support contact: use the verified App Review contact mailbox. Do not use
+  `support@invitehub.co.kr` until DNS/MX and mailbox receipt are confirmed.
 - Privacy URL and terms URL.
 
 ## Completion Rule
 
 Do not mark the active goal complete until EAS/TestFlight evidence and App Store
 Connect save evidence exist for every section above.
+
+Before calling the active goal complete, copy
+`docs/app-store-external-evidence.template.json` to
+`docs/app-store-external-evidence.json`, set each field to `true` only after the
+corresponding Apple-side evidence exists, and run:
+
+```bash
+node scripts/verify-goal-completion.mjs
+```

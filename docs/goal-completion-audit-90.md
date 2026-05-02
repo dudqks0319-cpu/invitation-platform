@@ -102,9 +102,10 @@ Manual Apple-side confirmation path:
 ## Latest Local Evidence
 
 - `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`:
-  passed again on 2026-05-02 14:28 KST. It ran web lint, web typecheck, 54-file
-  web/API test suite with 158 tests, mobile lint, mobile typecheck, and focused
-  9-file mobile/API test suite with 30 tests.
+  passed again on 2026-05-02 14:56 KST. It ran web lint, web typecheck, 55-file
+  web/API test suite with 160 tests, mobile lint, mobile typecheck, focused
+  9-file mobile/API test suite with 30 tests, and the 36-check App Store packet
+  verifier.
 - Escalated iOS Release simulator build:
   `npm --prefix apps/mobile run ios -- --device "iPhone 17" --configuration Release --no-bundler`;
   passed with 0 errors and 2 warnings; installed and opened `com.invitehub.app`
