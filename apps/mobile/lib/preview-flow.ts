@@ -2,9 +2,10 @@ export type PreviewFlowStepStatus = "current" | "done" | "upcoming" | "skipped";
 
 export function getPreviewFlowState(options: {
   isPublished: boolean;
+  purchaseUnavailable?: boolean;
   requiresPurchase: boolean;
 }) {
-  const { isPublished, requiresPurchase } = options;
+  const { isPublished, purchaseUnavailable = false, requiresPurchase } = options;
 
   if (isPublished) {
     return {
@@ -15,6 +16,17 @@ export function getPreviewFlowState(options: {
         { label: "미리보기", status: "done" as const },
         { label: "결제", status: requiresPurchase ? ("done" as const) : ("skipped" as const) },
         { label: "발행 완료", status: "done" as const }
+      ]
+    };
+  }
+
+  if (purchaseUnavailable) {
+    return {
+      note: "현재 제출 버전에서는 사진 포함 발행 결제 단계가 열리지 않습니다. 사진을 제거하면 무료 발행으로 진행할 수 있습니다.",
+      steps: [
+        { label: "미리보기", status: "done" as const },
+        { label: "사진 제거", status: "current" as const },
+        { label: "무료 발행", status: "upcoming" as const }
       ]
     };
   }

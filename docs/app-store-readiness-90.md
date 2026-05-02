@@ -60,6 +60,15 @@ Latest local evidence after the fixed-template preview update:
   not selected for the App Store version, app privacy answers are not started,
   IAP product does not exist, app category/age rating are not set, and the app
   name still shows `InviteHub (40c8af)`.
+- First-submission paid-publish fallback is now represented in code: paid photo
+  publishing is disabled unless `NEXT_PUBLIC_ENABLE_PAID_PUBLISH=true` and
+  `EXPO_PUBLIC_ENABLE_PAID_PUBLISH=true` are set. The app and web copy avoid
+  exposing the IAP purchase flow while App Store Connect has no IAP product.
+- Verification for that fallback passed on 2026-05-02: targeted 5-file test
+  suite, web/mobile typecheck, web/mobile lint, iPhone 17 Release simulator
+  build, and screenshot size check for
+  `output/store-screenshots-fallback/01-home-paid-disabled.png` and
+  `02-step3-paid-disabled.png`.
 
 ## Required Command
 
@@ -83,12 +92,15 @@ These cannot be fully completed from code alone:
 - TestFlight build 37 is uploaded and assigned to internal group
   `TE Team (Expo)`. Real iPhone install/launch evidence is still needed.
 - App Privacy labels match collected data: account, invitations, RSVP, guestbook, photos, purchase records.
-- IAP product for photo-included publishing is created, priced, and approved.
+- IAP product for photo-included publishing is created, priced, and approved, or
+  the paid publish flag remains disabled and paid claims stay hidden.
 - Screenshots match the current simplified home and builder flow.
-- Review notes explain no-login draft creation, login-required publish management, and IAP publish flow.
+- Review notes explain no-login draft creation, login-required publish
+  management, and the current photo-less free publish path. Mention the IAP
+  publish flow only after the App Store Connect product exists.
 - Support, privacy, terms, and FAQ copy matches the actual pricing policy:
-  free template/draft/preview/photo-less publish, paid photo-included publish
-  through App Store billing.
+  free template/draft/preview/photo-less publish now, paid photo-included
+  publish only after store products are ready.
 - Public support/privacy/terms URLs are live. `invitehub.co.kr` currently does
   not resolve by DNS; the verified live fallback is
   `https://invitation-platform-youngbeens-projects.vercel.app`.
@@ -117,6 +129,8 @@ Use this map when entering the submission in App Store Connect:
 | IAP price target | 3,300원 |
 | Server allowlist env | `STORE_PUBLISH_PRODUCT_IDS_IOS=publish.credit.ios` |
 | Mobile product env | `EXPO_PUBLIC_IAP_PRODUCT_ID_IOS=publish.credit.ios` |
+| Web paid publish flag | `NEXT_PUBLIC_ENABLE_PAID_PUBLISH=false` until IAP is ready |
+| Mobile paid publish flag | `EXPO_PUBLIC_ENABLE_PAID_PUBLISH=false` until IAP is ready |
 
 Native privacy manifest status:
 
@@ -131,7 +145,7 @@ Suggested App Privacy label basis:
 | Contact info: email/name | account, invitation owner, RSVP contact | yes | no |
 | User content: invitation text/photos/guestbook | app functionality | yes | no |
 | Identifiers: user id, invitation id, transaction id | app functionality, purchase verification | yes | no |
-| Purchase history: product id/order or transaction reference | app functionality, fraud prevention | yes | no |
+| Purchase history: product id/order or transaction reference, if paid publishing is enabled | app functionality, fraud prevention | yes | no |
 | Usage data: basic view/count events if enabled | analytics/app functionality | yes if tied to account | no |
 
 If a production build excludes analytics/tracking SDKs, do not mark tracking. If analytics are added later, update this checklist and App Store Connect before submission.
@@ -144,4 +158,5 @@ Do not claim final submission readiness if any of these are missing:
 - App Store Connect app information, version metadata, build selection, and
   review-note save evidence.
 - Privacy label save evidence.
-- IAP product approval or a temporary feature flag that hides paid publishing.
+- IAP product approval, or a verified temporary feature flag state that hides
+  paid publishing from the submitted build.

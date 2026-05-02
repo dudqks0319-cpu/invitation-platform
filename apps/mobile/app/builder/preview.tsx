@@ -13,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getPaidPublishBlockReason, getRemoteAccessMode, hasFullAccount } from "@/lib/auth-access";
 import { getMobileInvitationPricing, requiresStorePurchase } from "@/lib/payments/pricing";
 import { getPreviewFlowState } from "@/lib/preview-flow";
+import { isPaidPublishingEnabled, PAID_PUBLISH_DISABLED_MESSAGE } from "@/lib/release-flags";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 import { openInvitationPublicPage, shareInvitationLink } from "@/lib/share";
 import { getPublicInvitationUrl } from "@/lib/web-links";
@@ -37,23 +38,34 @@ export default function BuilderPreviewScreen() {
   const hasMapSearchTarget = Boolean(draft?.payload.venueName || draft?.payload.venueAddress);
   const pricing = draft ? getMobileInvitationPricing(draft.payload) : { amount: 0, breakdown: [], isFree: true };
   const requiresPurchase = draft ? requiresStorePurchase(draft.payload) : false;
+  const paidPublishingEnabled = isPaidPublishingEnabled();
+  const paidPublishUnavailable = requiresPurchase && !paidPublishingEnabled;
   const remoteAccessMode = getRemoteAccessMode(status, user);
   const canUsePaidAccount = remoteAccessMode === "full-account";
   const paidPublishBlockReason = getPaidPublishBlockReason(status, user);
   const flowState = getPreviewFlowState({
     isPublished: Boolean(draft?.payload.isPublished),
+    purchaseUnavailable: paidPublishUnavailable,
     requiresPurchase
   });
   const addOnLines = pricing.breakdown
     .filter((item) => item.amount > 0)
     .map((item) => `${item.label} ${item.amount.toLocaleString("ko-KR")}원`);
-  const statusLabel = draft?.payload.isPublished ? "공개 중" : requiresPurchase ? "스토어 결제 후 발행" : "비공개 초안";
+  const statusLabel = draft?.payload.isPublished
+    ? "공개 중"
+    : paidPublishUnavailable
+      ? "사진 발행 준비 중"
+      : requiresPurchase
+        ? "스토어 결제 후 발행"
+        : "비공개 초안";
   const publishGuide = draft?.payload.isPublished
     ? "지금 공유 가능한 링크가 준비되어 있습니다."
-    : requiresPurchase
+    : paidPublishUnavailable
+      ? PAID_PUBLISH_DISABLED_MESSAGE
+      : requiresPurchase
       ? "유료 옵션이 포함되어 있어 이메일 또는 소셜 로그인 후 앱 스토어 결제를 완료해야 발행됩니다."
       : "필수 정보만 채우면 로그인 없이 게스트로 공개 링크를 발행할 수 있습니다.";
-  const urlGuide = publicUrl || (requiresPurchase ? "스토어 결제 완료 후 자동 생성" : "서버 저장 후 자동 생성");
+  const urlGuide = publicUrl || (paidPublishUnavailable ? "사진 제거 후 무료 발행 가능" : requiresPurchase ? "스토어 결제 완료 후 자동 생성" : "서버 저장 후 자동 생성");
   const missingItemsText = publishReadiness.missingFields.join(" · ");
 
   async function resolveRemoteUser(requireFullAccount = false) {
@@ -286,7 +298,11 @@ export default function BuilderPreviewScreen() {
                 fontWeight: "700"
               }}
             >
-              {requiresPurchase ? `${pricing.amount.toLocaleString("ko-KR")}원 앱 결제 필요` : "무료 발행 가능"}
+              {paidPublishUnavailable
+                ? "사진 제거 필요"
+                : requiresPurchase
+                  ? `${pricing.amount.toLocaleString("ko-KR")}원 앱 결제 필요`
+                  : "무료 발행 가능"}
             </Text>
           </View>
         </View>
@@ -377,11 +393,13 @@ export default function BuilderPreviewScreen() {
       </Card>
       <Card eyebrow="요금 안내" title={requiresPurchase ? "스토어 발행권" : "무료 발행"}>
         <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
-          {requiresPurchase
+          {paidPublishUnavailable
+            ? "현재 제출 버전에서는 사진 없는 무료 발행만 제공합니다. 사진 포함 발행권은 App Store 상품 준비 후 다시 활성화합니다."
+            : requiresPurchase
             ? `사진이 포함된 초대장은 iOS에서는 Apple IAP, Android에서는 Google Play Billing으로 ${pricing.amount.toLocaleString("ko-KR")}원 결제 후 발행됩니다.`
             : "지금 선택한 구성은 무료입니다. 공개 링크를 바로 발행할 수 있습니다."}
         </Text>
-        {addOnLines.length > 0 ? (
+        {addOnLines.length > 0 && !paidPublishUnavailable ? (
           <View style={{ gap: 6, marginTop: 10 }}>
             {addOnLines.map((line) => (
               <Text key={line} style={{ color: theme.colors.primaryDark, lineHeight: 22 }}>
@@ -398,25 +416,36 @@ export default function BuilderPreviewScreen() {
       ) : null}
       <View style={{ gap: 12 }}>
         {requiresPurchase ? (
-          <StorePurchaseCard
-            accessToken={canUsePaidAccount ? session?.access_token : ""}
-            disabledReason={
-              !configured
-                ? configMessage
-                : paidPublishBlockReason
-                  ? paidPublishBlockReason
-                  : !publishReadiness.canPublish
-                    ? `공개 전 필요 항목: ${publishReadiness.missingFields.join(", ")}`
-                    : ""
-            }
-            invitationId={draft?.serverId}
-            onBeforePurchase={ensureDraftForPurchase}
-            onVerified={({ invitationId, slug }) => {
-              applyRemotePublish(invitationId, slug);
-              setMessage(`스토어 결제가 완료되어 공개 링크를 발행했습니다.\n${getPublicInvitationUrl(slug)}`);
-              setError("");
-            }}
-          />
+          paidPublishUnavailable ? (
+            <Card eyebrow="사진 포함 발행" title="현재 제출 버전에서는 준비 중">
+              <Text style={{ color: theme.colors.primaryDark, lineHeight: 22 }}>
+                {PAID_PUBLISH_DISABLED_MESSAGE}
+              </Text>
+              <Link asChild href={{ pathname: "/builder/step3-photos", params: localId ? { localId } : {} }}>
+                <Button accessibilityLabel="사진 단계로 이동" variant="outline">사진 제거하러 가기</Button>
+              </Link>
+            </Card>
+          ) : (
+            <StorePurchaseCard
+              accessToken={canUsePaidAccount ? session?.access_token : ""}
+              disabledReason={
+                !configured
+                  ? configMessage
+                  : paidPublishBlockReason
+                    ? paidPublishBlockReason
+                    : !publishReadiness.canPublish
+                      ? `공개 전 필요 항목: ${publishReadiness.missingFields.join(", ")}`
+                      : ""
+              }
+              invitationId={draft?.serverId}
+              onBeforePurchase={ensureDraftForPurchase}
+              onVerified={({ invitationId, slug }) => {
+                applyRemotePublish(invitationId, slug);
+                setMessage(`스토어 결제가 완료되어 공개 링크를 발행했습니다.\n${getPublicInvitationUrl(slug)}`);
+                setError("");
+              }}
+            />
+          )
         ) : (
           <View
             style={{

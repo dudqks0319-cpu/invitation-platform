@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/Card";
 import { Screen } from "@/components/ui/Screen";
 import { theme } from "@/components/ui/theme";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
+import { isPaidPublishingEnabled, PAID_PUBLISH_DISABLED_MESSAGE } from "@/lib/release-flags";
 
 async function pickPreparedImage() {
   const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -84,9 +85,16 @@ export default function BuilderStep3PhotosScreen() {
   const { addGalleryPhoto, draft, removeGalleryPhoto, removePhoto, updatePhoto } = useInvitationDraft("local-preview-owner", localId);
   const [pendingSlot, setPendingSlot] = useState<"" | "main" | "background" | "gallery">("");
   const [error, setError] = useState("");
+  const paidPublishingEnabled = isPaidPublishingEnabled();
 
   async function handlePick(slot: "main" | "background" | "gallery") {
     setError("");
+
+    if (!paidPublishingEnabled) {
+      setError(PAID_PUBLISH_DISABLED_MESSAGE);
+      return;
+    }
+
     setPendingSlot(slot);
 
     try {
@@ -107,8 +115,25 @@ export default function BuilderStep3PhotosScreen() {
   }
 
   return (
-    <Screen subtitle="메인, 배경, 갤러리 사진을 로컬 초안에 연결합니다." title="초대장 만들기">
+    <Screen
+      subtitle={
+        paidPublishingEnabled
+          ? "메인, 배경, 갤러리 사진을 로컬 초안에 연결합니다."
+          : "현재 제출 버전에서는 사진 없는 무료 발행을 먼저 제공합니다."
+      }
+      title="초대장 만들기"
+    >
       <StepIndicator current={3} title="사진 설정" />
+      {!paidPublishingEnabled ? (
+        <Card eyebrow="출시 설정" title="사진 포함 발행 준비 중">
+          <Text style={{ color: theme.colors.primaryDark, lineHeight: 22 }}>
+            {PAID_PUBLISH_DISABLED_MESSAGE}
+          </Text>
+          <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>
+            이미 선택한 사진은 삭제할 수 있고, 사진을 모두 제거하면 무료 공개 링크 발행으로 이어집니다.
+          </Text>
+        </Card>
+      ) : null}
       <Card eyebrow="메인 사진" title="대표 사진">
         {draft?.payload.photos.mainUri ? (
           <UploadedPhotoPreview
@@ -120,13 +145,14 @@ export default function BuilderStep3PhotosScreen() {
         ) : null}
         <Pressable
           accessibilityLabel="메인 사진 선택"
+          disabled={!paidPublishingEnabled}
           onPress={() => void handlePick("main")}
           style={{
             borderWidth: 1,
             borderColor: pendingSlot === "main" ? theme.colors.primary : "rgba(143,111,82,0.18)",
             borderRadius: 14,
             padding: 12,
-            backgroundColor: "#fff",
+            backgroundColor: paidPublishingEnabled ? "#fff" : theme.colors.surfaceSoft,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
@@ -139,13 +165,17 @@ export default function BuilderStep3PhotosScreen() {
           <View
             style={{
               borderRadius: 999,
-              backgroundColor: pendingSlot === "main" ? theme.colors.primaryDark : "#C9935A",
+              backgroundColor: !paidPublishingEnabled
+                ? "rgba(143,111,82,0.24)"
+                : pendingSlot === "main"
+                  ? theme.colors.primaryDark
+                  : "#C9935A",
               paddingHorizontal: 14,
               paddingVertical: 8
             }}
           >
             <Text style={{ color: "#fff8f1", fontSize: 13, fontWeight: "700" }}>
-              {pendingSlot === "main" ? "처리 중" : "업로드"}
+              {!paidPublishingEnabled ? "준비 중" : pendingSlot === "main" ? "처리 중" : "업로드"}
             </Text>
           </View>
         </Pressable>
@@ -161,13 +191,14 @@ export default function BuilderStep3PhotosScreen() {
         ) : null}
         <Pressable
           accessibilityLabel="배경 사진 선택"
+          disabled={!paidPublishingEnabled}
           onPress={() => void handlePick("background")}
           style={{
             borderWidth: 1,
             borderColor: pendingSlot === "background" ? theme.colors.primary : "rgba(143,111,82,0.18)",
             borderRadius: 14,
             padding: 12,
-            backgroundColor: "#fff",
+            backgroundColor: paidPublishingEnabled ? "#fff" : theme.colors.surfaceSoft,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
@@ -180,13 +211,17 @@ export default function BuilderStep3PhotosScreen() {
           <View
             style={{
               borderRadius: 999,
-              backgroundColor: pendingSlot === "background" ? theme.colors.primaryDark : "#C9935A",
+              backgroundColor: !paidPublishingEnabled
+                ? "rgba(143,111,82,0.24)"
+                : pendingSlot === "background"
+                  ? theme.colors.primaryDark
+                  : "#C9935A",
               paddingHorizontal: 14,
               paddingVertical: 8
             }}
           >
             <Text style={{ color: "#fff8f1", fontSize: 13, fontWeight: "700" }}>
-              {pendingSlot === "background" ? "처리 중" : "업로드"}
+              {!paidPublishingEnabled ? "준비 중" : pendingSlot === "background" ? "처리 중" : "업로드"}
             </Text>
           </View>
         </Pressable>
@@ -232,13 +267,14 @@ export default function BuilderStep3PhotosScreen() {
         </View>
         <Pressable
           accessibilityLabel="갤러리 사진 추가"
+          disabled={!paidPublishingEnabled}
           onPress={() => void handlePick("gallery")}
           style={{
             borderWidth: 1,
             borderColor: pendingSlot === "gallery" ? theme.colors.primary : "rgba(143,111,82,0.18)",
             borderRadius: 14,
             padding: 12,
-            backgroundColor: "#fff",
+            backgroundColor: paidPublishingEnabled ? "#fff" : theme.colors.surfaceSoft,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
@@ -251,13 +287,17 @@ export default function BuilderStep3PhotosScreen() {
           <View
             style={{
               borderRadius: 999,
-              backgroundColor: pendingSlot === "gallery" ? theme.colors.primaryDark : "#C9935A",
+              backgroundColor: !paidPublishingEnabled
+                ? "rgba(143,111,82,0.24)"
+                : pendingSlot === "gallery"
+                  ? theme.colors.primaryDark
+                  : "#C9935A",
               paddingHorizontal: 14,
               paddingVertical: 8
             }}
           >
             <Text style={{ color: "#fff8f1", fontSize: 13, fontWeight: "700" }}>
-              {pendingSlot === "gallery" ? "처리 중" : "추가"}
+              {!paidPublishingEnabled ? "준비 중" : pendingSlot === "gallery" ? "처리 중" : "추가"}
             </Text>
           </View>
         </Pressable>

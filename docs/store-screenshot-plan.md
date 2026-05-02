@@ -44,6 +44,12 @@ App Store Connect accepts 1 to 10 screenshots per display set in `.png`,
   `/Users/jyb-m3max/Desktop/codex/invitation-platform/output/store-screenshots-verified`
 - `scripts/verify-store-screenshots.sh output/store-screenshots-verified`:
   1 PNG checked, `05-preview-fit-to-viewport.png` passed at `1206x2622`.
+- Paid-disabled fallback screenshot folder:
+  `/Users/jyb-m3max/Desktop/codex/invitation-platform/output/store-screenshots-fallback`
+- `scripts/verify-store-screenshots.sh output/store-screenshots-fallback`:
+  `01-home-paid-disabled.png` and `02-step3-paid-disabled.png` passed at
+  `1206x2622`. The Step 3 screenshot shows photo publishing disabled for the
+  first submission path and no IAP purchase button.
 - These are simulator evidence only. Final App Store screenshot assets still
   need to be captured/exported in the required App Store Connect sizes.
 
@@ -119,6 +125,6 @@ zsh /Users/jyb-m3max/Desktop/codex/invitation-platform/scripts/verify-store-scre
 로그인 없이 홈에서 템플릿을 선택하면 초대장 초안을 만들고 미리보기까지 확인할 수 있습니다.
 원격 저장, 공개 링크 발행, RSVP/방명록 운영은 로그인 후 사용할 수 있습니다.
 방명록은 하객 작성 직후 공개되지 않고 호스트가 대시보드에서 승인하거나 숨길 수 있습니다.
-사진이 포함된 발행은 iOS에서 Apple In-App Purchase 상품 publish.credit.ios를 사용합니다.
+현재 제출 버전은 사진 없는 무료 발행을 제공합니다. 사진 포함 발행은 스토어 상품 준비 후 다시 활성화합니다.
 문의: support@invitehub.co.kr
 ```

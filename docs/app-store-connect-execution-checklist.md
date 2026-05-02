@@ -42,12 +42,20 @@ Read-only final-submission audit from 2026-05-02 13:21 KST:
 - App privacy page has blank privacy URL, blank optional user privacy URL, no
   started data collection answers, and disabled publish.
 - In-app purchase page has no product yet; only the create action is visible.
+- First-submission fallback: keep paid photo publishing disabled with
+  `NEXT_PUBLIC_ENABLE_PAID_PUBLISH=false` and
+  `EXPO_PUBLIC_ENABLE_PAID_PUBLISH=false` until the IAP product exists.
 - `https://invitehub.co.kr` and its `/privacy` and `/terms` paths do not resolve
   by DNS from the release machine. The Vercel deployment URL from the current
   environment does return HTTP 200 for `/privacy`, `/terms`, and `/support`:
   `https://invitation-platform-youngbeens-projects.vercel.app`.
 - EAS production env contains
   `EXPO_PUBLIC_WEB_BASE_URL=https://invitation-platform-youngbeens-projects.vercel.app`.
+- Local fallback verification on 2026-05-02: paid photo publishing defaults
+  disabled in web/mobile code until `*_ENABLE_PAID_PUBLISH=true`; targeted tests,
+  web/mobile typecheck, web/mobile lint, and an iPhone 17 Release simulator build
+  passed. Screenshot evidence:
+  `output/store-screenshots-fallback/02-step3-paid-disabled.png`.
 
 ## 1. Build Requirement
 
@@ -76,6 +84,10 @@ Current local evidence:
 - Store screenshot size verifier:
   `scripts/verify-store-screenshots.sh output/store-screenshots-verified`
   passed for the verified preview PNGs at `1206x2622`.
+- Paid-disabled screenshot verifier:
+  `scripts/verify-store-screenshots.sh output/store-screenshots-fallback`
+  passed for `01-home-paid-disabled.png` and `02-step3-paid-disabled.png` at
+  `1206x2622`.
 - Fresh high-severity dependency audit:
   `npm audit --audit-level=high` exited 0 on 2026-05-01 18:06 KST with no high
   or critical findings.
@@ -140,7 +152,15 @@ Required fields:
 
 ## 5. In-App Purchase
 
-Required product:
+First-submission fallback:
+
+- Do not claim active paid publishing in App Store metadata, screenshots, or
+  review notes until the product below exists in App Store Connect.
+- Keep `NEXT_PUBLIC_ENABLE_PAID_PUBLISH=false` and
+  `EXPO_PUBLIC_ENABLE_PAID_PUBLISH=false`.
+- The app can be submitted with photo-less free publishing first.
+
+Future required product:
 
 - Product ID: `publish.credit.ios`.
 - Type: Consumable.
@@ -155,13 +175,14 @@ EXPO_PUBLIC_IAP_PRODUCT_ID_IOS=publish.credit.ios
 APPLE_BUNDLE_ID=com.invitehub.app
 ```
 
-Required evidence:
+Required evidence before enabling paid publishing:
 
 - Product exists in App Store Connect.
 - Product is approved or submitted with the app version.
-- Review notes mention the paid publish path.
+- Review notes mention the paid publish path only after the product exists.
 - If the product is not ready, paid claims must be hidden or removed before
-  submission.
+  submission. Current first-submission fallback is to keep paid publishing
+  disabled in web and mobile env.
 
 ## 6. App Privacy
 
@@ -208,8 +229,9 @@ Include:
 
 - No-login draft and preview path.
 - Login-required remote save, publish, RSVP, and guestbook management path.
-- IAP product ID `publish.credit.ios`.
-- Paid path uses Apple In-App Purchase on iOS.
+- Current first-submission build provides photo-less free publishing.
+- Photo-included paid publishing is hidden until the App Store Connect IAP
+  product is ready.
 - Support contact: `support@invitehub.co.kr`.
 - Privacy URL and terms URL.
 

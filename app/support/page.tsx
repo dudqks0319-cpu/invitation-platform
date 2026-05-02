@@ -1,11 +1,14 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/shared/site-header";
+import { isPaidPublishingEnabled } from "@/lib/release-flags";
 
 export const metadata = {
   title: "지원 - InviteHub"
 };
 
 export default function SupportPage() {
+  const paidPublishingEnabled = isPaidPublishingEnabled();
+
   return (
     <main className="app-shell">
       <SiteHeader />
@@ -39,7 +42,11 @@ export default function SupportPage() {
             </div>
             <div>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 12 }}>현재 서비스 범위</h2>
-              <p>현재 제출 버전은 템플릿 선택, 초안 작성, 미리보기, 사진 없는 공개 링크 발행을 무료로 제공합니다. 사진이 포함된 발행은 앱 스토어 결제로 진행합니다.</p>
+              <p>
+                {paidPublishingEnabled
+                  ? "현재 제출 버전은 템플릿 선택, 초안 작성, 미리보기, 사진 없는 공개 링크 발행을 무료로 제공합니다. 사진이 포함된 발행은 앱 스토어 결제로 진행합니다."
+                  : "현재 제출 버전은 템플릿 선택, 초안 작성, 미리보기, 사진 없는 공개 링크 발행을 무료로 제공합니다. 사진 포함 발행은 스토어 상품 준비 후 다시 제공합니다."}
+              </p>
             </div>
             <div>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 12 }}>지도와 장소 안내</h2>

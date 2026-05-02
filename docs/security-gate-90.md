@@ -43,6 +43,7 @@ Local security controls are materially in place. A fresh network-enabled
 | Real-device TestFlight install/launch evidence for build 37 has not been captured in this run. | Store Manager / Release owner | Before final release readiness sign-off |
 | App Store Connect app information, version metadata, build selection, privacy labels, IAP approval, review notes, and screenshots are verified incomplete. | Store Manager / Release owner | Before final App Store submission |
 | Custom domain `invitehub.co.kr` does not resolve by DNS; store URLs must use the verified Vercel deployment or DNS must be connected before submission. | Store Manager / Release owner | Before entering App Store metadata |
+| Paid photo publishing remains disabled by default until an App Store Connect IAP product is created and approved. | Store Manager / Release owner | Before enabling `*_ENABLE_PAID_PUBLISH=true` |
 
 ## Latest Audit Evidence
 
@@ -69,3 +70,9 @@ metadata, version build selection, privacy URL and privacy labels, IAP approval
 or feature-flag fallback, screenshots, and review notes. A 2026-05-02 read-only
 audit found those App Store submission surfaces incomplete even though the
 TestFlight build is available internally.
+
+The IAP feature-flag fallback is now implemented locally and defaults to off.
+Verification on 2026-05-02 passed targeted tests, web/mobile typecheck,
+web/mobile lint, and an iPhone 17 Release simulator build. This reduces the
+store-compliance risk while the App Store Connect IAP product does not exist,
+but the flag must stay disabled until the product is created and approved.

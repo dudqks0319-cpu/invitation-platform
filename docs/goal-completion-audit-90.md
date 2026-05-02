@@ -1,7 +1,7 @@
 # InviteHub Goal Completion Audit - 90점 Release Readiness
 
 Date: 2026-05-01
-Latest update: 2026-05-02 13:21 KST
+Latest update: 2026-05-02 13:38 KST
 
 ## Objective
 
@@ -51,6 +51,7 @@ InviteHub 앱을 App Store 제출 기준으로 프론트엔드, 백엔드, UI/UX
 | App Review metadata accuracy | `docs/apple-review.md`, `docs/store-submission-metadata.md`, `docs/store-screenshot-plan.md` | Review notes now avoid claiming unverified profanity filter/report/block features. They document the implemented path: rate-limited RSVP/guestbook, host-approved guestbook publishing, and dashboard hide/approve moderation. | Pass |
 | App Store Connect evidence | ASC TestFlight page, ASC export-compliance modal, ASC internal group page | Build 37 export compliance was saved after user approval using `위에 언급된 알고리즘에 모두 해당하지 않음`. The version build row now shows `제출 준비 완료`, and the internal group page shows `Team (Expo)` with 1 tester and 1 build. | Pass for TestFlight |
 | App Store Connect final submission surface | ASC distribution/version, app info, app privacy, IAP, review-submission pages | Read-only audit on 2026-05-02 13:21 KST found the App Store version still incomplete: iPhone screenshot set has 0 screenshots, version metadata fields are blank, build is not selected on the version page, app review submission list is empty, app privacy URL is blank and labels are not started, IAP list has no product, app subtitle/category/age rating are not set, and the app name still includes `InviteHub (40c8af)`. | Blocked externally |
+| Paid publish fallback | `apps/mobile/lib/release-flags.ts`, `lib/release-flags.ts`, `.env.example`, `apps/mobile/.env.example` | Paid photo publishing now defaults off unless web and mobile public env flags are explicitly enabled. Targeted tests passed, web/mobile typecheck and lint passed, and iPhone 17 Release simulator screenshots show the photo step disabled without an IAP purchase UI. | Pass locally |
 
 ## Completion Verdict
 
@@ -163,6 +164,18 @@ Do not mark the goal complete until:
     by DNS, while `https://invitation-platform-youngbeens-projects.vercel.app`
     `/privacy`, `/terms`, and `/support` return HTTP 200. EAS production env has
     `EXPO_PUBLIC_WEB_BASE_URL` set to that Vercel URL.
+- Paid-publish fallback verification on 2026-05-02 13:38 KST:
+  - `npm run test -- apps/mobile/lib/release-flags.test.ts apps/mobile/lib/preview-flow.test.ts apps/mobile/lib/payments/pricing.test.ts apps/mobile/lib/invitations.test.ts lib/release-flags.test.ts --exclude='**/.claude/**'`: 5 files / 14 tests passed.
+  - `npm --prefix apps/mobile run typecheck`: passed.
+  - `npm run typecheck`: passed.
+  - `npm --prefix apps/mobile run lint`: passed.
+  - `npm run lint`: passed.
+  - `npm --prefix apps/mobile run ios -- --device "iPhone 17" --configuration Release --no-bundler`: build succeeded with 0 errors and 5 warnings, installed and opened `com.invitehub.app`.
+  - New simulator evidence:
+    `output/store-screenshots-fallback/01-home-paid-disabled.png` and
+    `output/store-screenshots-fallback/02-step3-paid-disabled.png`, both
+    verified at `1206x2622`. The Step 3 screenshot shows "사진 포함 발행 준비 중"
+    and disabled photo buttons, with no store purchase button.
 
 ## Current Blocker
 

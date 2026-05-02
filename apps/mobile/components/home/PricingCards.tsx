@@ -2,6 +2,7 @@ import { Text, View } from "react-native";
 import { theme } from "@/components/ui/theme";
 import { Button } from "@/components/ui/Button";
 import { openWebBuilder } from "@/lib/share";
+import { isPaidPublishingEnabled } from "@/lib/release-flags";
 
 const pricingCards = [
   {
@@ -51,6 +52,9 @@ function Surface({ children }: { children: React.ReactNode }) {
 }
 
 export function PricingCards() {
+  const paidPublishingEnabled = isPaidPublishingEnabled();
+  const visiblePricingCards = paidPublishingEnabled ? pricingCards : pricingCards.slice(0, 1);
+
   return (
     <View style={{ gap: 12 }}>
       <Text style={{ color: theme.colors.gold, fontSize: 12, fontWeight: "800", letterSpacing: 1.6, textAlign: "center" }}>
@@ -62,10 +66,12 @@ export function PricingCards() {
         사진이 필요할 때만 선택
       </Text>
       <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24, textAlign: "center" }}>
-        가격 안내는 짧게 유지하고, 사용자가 완성 화면을 먼저 판단할 수 있게 했습니다.
+        {paidPublishingEnabled
+          ? "가격 안내는 짧게 유지하고, 사용자가 완성 화면을 먼저 판단할 수 있게 했습니다."
+          : "첫 제출 버전은 사진 없는 무료 발행에 집중합니다."}
       </Text>
       <View style={{ gap: 12 }}>
-        {pricingCards.map((item, index) => (
+        {visiblePricingCards.map((item, index) => (
           <View
             key={item.title}
             style={{
@@ -74,41 +80,46 @@ export function PricingCards() {
               borderRadius: 24
             }}
           >
-          <Surface>
-            <View
-              style={{
-                alignSelf: "flex-start",
-                backgroundColor: index === 1 ? "#C9935A" : "#e8f5e9",
-                borderRadius: 999,
-                paddingHorizontal: 12,
-                paddingVertical: 6
-              }}
-            >
-              <Text style={{ color: index === 1 ? "#fff" : "#2e7d32", fontSize: 12, fontWeight: "700" }}>
-                {item.badge}
-              </Text>
-            </View>
-            <Text style={{ color: theme.colors.text, fontSize: 20, fontWeight: "700" }}>{item.title}</Text>
-            <Text style={{ color: "#A5743D", fontSize: 32, fontWeight: "900" }}>{item.price}</Text>
-            <View style={{ gap: 8 }}>
-              {item.items.map((line) => (
-                <Text key={line} style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24 }}>
-                  • {line}
+            <Surface>
+              <View
+                style={{
+                  alignSelf: "flex-start",
+                  backgroundColor: index === 1 ? "#C9935A" : "#e8f5e9",
+                  borderRadius: 999,
+                  paddingHorizontal: 12,
+                  paddingVertical: 6
+                }}
+              >
+                <Text style={{ color: index === 1 ? "#fff" : "#2e7d32", fontSize: 12, fontWeight: "700" }}>
+                  {item.badge}
                 </Text>
-              ))}
-            </View>
-            <Button
-              accessibilityLabel={`${item.title} 시작하기`}
-              onPress={() => {
-                void openWebBuilder();
-              }}
-            >
-              시작하기
-            </Button>
-          </Surface>
+              </View>
+              <Text style={{ color: theme.colors.text, fontSize: 20, fontWeight: "700" }}>{item.title}</Text>
+              <Text style={{ color: "#A5743D", fontSize: 32, fontWeight: "900" }}>{item.price}</Text>
+              <View style={{ gap: 8 }}>
+                {item.items.map((line) => (
+                  <Text key={line} style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24 }}>
+                    • {line}
+                  </Text>
+                ))}
+              </View>
+              <Button
+                accessibilityLabel={`${item.title} 시작하기`}
+                onPress={() => {
+                  void openWebBuilder();
+                }}
+              >
+                시작하기
+              </Button>
+            </Surface>
           </View>
         ))}
       </View>
+      {!paidPublishingEnabled ? (
+        <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 21, textAlign: "center" }}>
+          사진 포함 발행권은 App Store 상품 준비 후 다시 활성화합니다.
+        </Text>
+      ) : null}
     </View>
   );
 }
