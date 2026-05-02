@@ -62,7 +62,9 @@ App Store Connect 입력 시 아래 항목을 기준으로 실제 운영 설정�
 - Tracking: 현재 제출 기준으로 추적 목적 사용 없음.
 
 ### Support
-- Email: support@invitehub.co.kr
+- Email: use the account holder's verified App Review contact email. Do not use
+  support@invitehub.co.kr until DNS/MX and mailbox receipt are confirmed.
+  Mirror the same verified mailbox in `NEXT_PUBLIC_SUPPORT_EMAIL`.
 - Current verified Support URL: https://invitation-platform-youngbeens-projects.vercel.app/support
 - Current verified Privacy URL: https://invitation-platform-youngbeens-projects.vercel.app/privacy
 - Current verified Terms URL: https://invitation-platform-youngbeens-projects.vercel.app/terms
@@ -88,6 +90,8 @@ InviteHub는 결혼식과 각종 행사 초대장을 모바일에서 쉽게 만�
 - 사진 포함 발행권: 스토어 상품 준비 후 활성화 예정
 
 ### Support
-- Email: support@invitehub.co.kr
+- Email: use the account holder's verified store-support email. Do not use
+  support@invitehub.co.kr until DNS/MX and mailbox receipt are confirmed.
+  Mirror the same verified mailbox in `NEXT_PUBLIC_SUPPORT_EMAIL`.
 - Privacy: https://invitation-platform-youngbeens-projects.vercel.app/privacy
 - Terms: https://invitation-platform-youngbeens-projects.vercel.app/terms

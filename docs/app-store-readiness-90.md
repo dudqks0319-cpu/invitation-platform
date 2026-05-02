@@ -52,6 +52,8 @@ Latest local evidence after the fixed-template preview update:
   paid-publish fallback build.
 - `node scripts/eas-build-submission-status.mjs d185dfc1-9110-4d81-b510-08e02f1ece7f`
   confirmed the linked EAS submission is `FINISHED` with no error.
+- The same EAS status command was re-run on 2026-05-02 14:47 KST and again
+  returned build 38 `FINISHED`, linked submission `FINISHED`, `error: null`.
 - App Store Connect TestFlight shows `1.0.0 (37)` upload status `완료` for app
   id `6763630299`.
 - Export compliance for build 37 was saved after explicit user approval. The
@@ -63,11 +65,11 @@ Latest local evidence after the fixed-template preview update:
 - Future builds declare `ITSAppUsesNonExemptEncryption=false` through Expo iOS
   config and the native `Info.plist`.
 - Read-only App Store Connect final-submission audit on 2026-05-02 13:21 KST
-  confirms the TestFlight path is ready, but the App Store version surface is
-  not ready: screenshots are 0, metadata/review fields are blank, build 37 is
-  not selected for the App Store version, app privacy answers are not started,
-  IAP product does not exist, app category/age rating are not set, and the app
-  name still shows `InviteHub (40c8af)`.
+  confirmed the build 37 TestFlight path was usable, but the current App Store
+  version surface was not ready: screenshots are 0, metadata/review fields are
+  blank, no current build is selected for the App Store version, app privacy
+  answers are not started, IAP product does not exist, app category/age rating
+  are not set, and the app name still shows `InviteHub (40c8af)`.
 - First-submission paid-publish fallback is now represented in code: paid photo
   publishing is disabled unless `NEXT_PUBLIC_ENABLE_PAID_PUBLISH=true` and
   `EXPO_PUBLIC_ENABLE_PAID_PUBLISH=true` are set. The app and web copy avoid
@@ -83,6 +85,12 @@ Latest local evidence after the fixed-template preview update:
 - Live URL recheck on 2026-05-02 14:26 KST: the Vercel `/privacy`, `/terms`,
   and `/support` URLs returned HTTP 200. `https://invitehub.co.kr/privacy` still
   failed DNS resolution.
+- DNS recheck on 2026-05-02 14:47 KST returned no A/NS/MX records for
+  `invitehub.co.kr`; do not use `support@invitehub.co.kr` as an App Review
+  contact until DNS/MX and mailbox receipt are confirmed.
+- The public support page now reads `NEXT_PUBLIC_SUPPORT_EMAIL` instead of
+  hardcoding the unverified mailbox. `lib/support-contact.test.ts`, web lint,
+  and web typecheck passed on 2026-05-02 14:52 KST.
 
 ## Required Command
 
@@ -119,6 +127,12 @@ These cannot be fully completed from code alone:
 - Public support/privacy/terms URLs are live. `invitehub.co.kr` currently does
   not resolve by DNS; the verified live fallback is
   `https://invitation-platform-youngbeens-projects.vercel.app`.
+- Build 38 App Store Connect entry values are consolidated in
+  `docs/app-store-connect-build38-packet.md`.
+- App Review contact email must be a currently verified mailbox. The
+  `support@invitehub.co.kr` address is not verified while the domain has no
+  DNS/MX records. Mirror the verified mailbox in `NEXT_PUBLIC_SUPPORT_EMAIL`
+  before relying on email text in the public support page.
 
 Simulator screenshot caveat:
 

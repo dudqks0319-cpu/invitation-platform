@@ -43,6 +43,7 @@ Local security controls are materially in place. A fresh network-enabled
 | Real-device TestFlight install/launch evidence for build 38 has not been captured in this run. | Store Manager / Release owner | Before final release readiness sign-off |
 | App Store Connect app information, version metadata, build selection, privacy labels, IAP approval, review notes, and screenshots are verified incomplete. | Store Manager / Release owner | Before final App Store submission |
 | Custom domain `invitehub.co.kr` does not resolve by DNS; store URLs must use the verified Vercel deployment or DNS must be connected before submission. | Store Manager / Release owner | Before entering App Store metadata |
+| `support@invitehub.co.kr` has no verified MX/DNS evidence; App Review contact must use a currently verified mailbox and `NEXT_PUBLIC_SUPPORT_EMAIL` until domain email is configured. | Store Manager / Release owner | Before entering App Review contact |
 | Paid photo publishing remains disabled by default until an App Store Connect IAP product is created and approved. | Store Manager / Release owner | Before enabling `*_ENABLE_PAID_PUBLISH=true` |
 
 ## Latest Audit Evidence
@@ -62,6 +63,9 @@ downgrades for Next/Expo dependency chains.
 EAS iOS build 38 completed and EAS Submit uploaded the binary to App Store
 Connect. It contains commit `d8ed82188b3233bebe7be90c173d434f36690581`, which
 keeps paid photo publishing disabled by default until an IAP product exists.
+`node scripts/eas-build-submission-status.mjs d185dfc1-9110-4d81-b510-08e02f1ece7f`
+was re-run on 2026-05-02 14:47 KST and returned build status `FINISHED`, linked
+submission status `FINISHED`, and `error: null`.
 Build 37 remains the last App Store Connect internal-group build that was
 visually confirmed as `테스트 중`; build 38 processing/group assignment still
 needs App Store Connect confirmation.
@@ -71,10 +75,16 @@ and final App Store Connect submission surfaces: app information, version
 metadata, version build selection, privacy URL and privacy labels, IAP approval
 or feature-flag fallback, screenshots, and review notes. A 2026-05-02 read-only
 audit found those App Store submission surfaces incomplete even though the
-TestFlight build is available internally.
+previous build 37 TestFlight path had been made available internally.
 
 The IAP feature-flag fallback is now implemented locally and defaults to off.
 Verification on 2026-05-02 passed targeted tests, web/mobile typecheck,
 web/mobile lint, and an iPhone 17 Release simulator build. This reduces the
 store-compliance risk while the App Store Connect IAP product does not exist,
 but the flag must stay disabled until the product is created and approved.
+
+The public support page no longer hardcodes the unverified
+`support@invitehub.co.kr` mailbox. It reads `NEXT_PUBLIC_SUPPORT_EMAIL` and only
+renders a mail link when that value is syntactically valid. Verification on
+2026-05-02 14:52 KST passed `lib/support-contact.test.ts`, web lint, and web
+typecheck.

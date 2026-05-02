@@ -27,6 +27,7 @@ Official references checked:
 | Git commit in build | `d8ed82188b3233bebe7be90c173d434f36690581` |
 | EAS submission id | `77395141-a80b-48f9-8e43-c61114fafa25` |
 | EAS submission status | `FINISHED`, `error: null` |
+| Latest EAS status recheck | `2026-05-02 14:47 KST` |
 
 Verification command:
 
@@ -66,7 +67,10 @@ Use these values unless App Store Connect rejects name availability:
 | Terms URL | `https://invitation-platform-youngbeens-projects.vercel.app/terms` |
 
 Do not use `invitehub.co.kr` yet. DNS still does not resolve from the release
-machine.
+machine. `support@invitehub.co.kr` also has no verified MX/DNS evidence in this
+run, so do not use it as the App Review contact until the mailbox is confirmed.
+Set `NEXT_PUBLIC_SUPPORT_EMAIL` to the same verified mailbox before relying on
+email text in the public support page.
 
 ## Version Metadata
 
@@ -109,7 +113,7 @@ Keywords:
 지도는 앱 내부 지도 타일을 직접 표시하지 않고, 장소명/주소를 기준으로 카카오맵과 네이버지도 검색 링크를 엽니다.
 현재 제출 빌드에서는 사진 없는 무료 발행만 노출합니다.
 사진 포함 발행은 App Store Connect 인앱결제 상품 준비 후 EXPO_PUBLIC_ENABLE_PAID_PUBLISH=true로 다시 활성화합니다.
-문의: support@invitehub.co.kr
+문의는 App Review 연락처 필드에 입력한 이메일로 부탁드립니다.
 ```
 
 Review contact fields require the account holder's real contact information.

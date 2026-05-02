@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { SiteHeader } from "@/components/shared/site-header";
 import { isPaidPublishingEnabled } from "@/lib/release-flags";
+import { getSupportEmail } from "@/lib/support-contact";
 
 export const metadata = {
   title: "지원 - InviteHub"
@@ -8,6 +9,7 @@ export const metadata = {
 
 export default function SupportPage() {
   const paidPublishingEnabled = isPaidPublishingEnabled();
+  const supportEmail = getSupportEmail();
 
   return (
     <main className="app-shell">
@@ -38,7 +40,18 @@ export default function SupportPage() {
             </div>
             <div>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 12 }}>계정 및 데이터</h2>
-              <p>계정 삭제와 개인정보 처리 요청은 앱의 마이페이지에서 직접 진행할 수 있습니다. 앱을 사용할 수 없는 경우 support@invitehub.co.kr로 계정 이메일과 요청 내용을 보내 주세요.</p>
+              <p>
+                계정 삭제와 개인정보 처리 요청은 앱의 마이페이지에서 직접 진행할 수 있습니다.
+                {supportEmail ? (
+                  <>
+                    {" "}
+                    앱을 사용할 수 없는 경우{" "}
+                    <a href={`mailto:${supportEmail}`}>{supportEmail}</a>로 계정 이메일과 요청 내용을 보내 주세요.
+                  </>
+                ) : (
+                  " 앱을 사용할 수 없는 경우 App Store Connect에 등록된 지원 연락처로 문의해 주세요."
+                )}
+              </p>
             </div>
             <div>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 12 }}>현재 서비스 범위</h2>
