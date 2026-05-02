@@ -46,12 +46,18 @@ Latest local evidence after the fixed-template preview update:
   successfully after upgrading `expo-image-picker` to `55.0.19`.
 - EAS submission `bb2999db-8820-42a7-9bdf-fb2bfd7f6d21` finished with no
   reported submission error.
+- EAS iOS build 38 (`d185dfc1-9110-4d81-b510-08e02f1ece7f`) finished
+  successfully on 2026-05-02 and was uploaded to App Store Connect through EAS
+  Submit. It contains commit `d8ed82188b3233bebe7be90c173d434f36690581`, the
+  paid-publish fallback build.
 - App Store Connect TestFlight shows `1.0.0 (37)` upload status `완료` for app
   id `6763630299`.
 - Export compliance for build 37 was saved after explicit user approval. The
   version build row now shows `제출 준비 완료`.
 - Internal group `TE Team (Expo)` shows `1명의 테스터`, `1개의 빌드`, and build
   `1.0.0 (37)` status `테스트 중`.
+- Build 38 Apple processing and internal group assignment still need App Store
+  Connect confirmation before real-device TestFlight QA.
 - Future builds declare `ITSAppUsesNonExemptEncryption=false` through Expo iOS
   config and the native `Info.plist`.
 - Read-only App Store Connect final-submission audit on 2026-05-02 13:21 KST
@@ -89,8 +95,9 @@ SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh
 These cannot be fully completed from code alone:
 
 - App Store Connect app record points to bundle id `com.invitehub.app`.
-- TestFlight build 37 is uploaded and assigned to internal group
-  `TE Team (Expo)`. Real iPhone install/launch evidence is still needed.
+- TestFlight build 38 is uploaded through EAS Submit and contains the latest
+  release fallback. App Store Connect processing/group assignment and real
+  iPhone install/launch evidence are still needed.
 - App Privacy labels match collected data: account, invitations, RSVP, guestbook, photos, purchase records.
 - IAP product for photo-included publishing is created, priced, and approved, or
   the paid publish flag remains disabled and paid claims stay hidden.

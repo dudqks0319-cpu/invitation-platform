@@ -1,7 +1,7 @@
 # InviteHub Goal Completion Audit - 90점 Release Readiness
 
 Date: 2026-05-01
-Latest update: 2026-05-02 13:38 KST
+Latest update: 2026-05-02 13:58 KST
 
 ## Objective
 
@@ -52,6 +52,7 @@ InviteHub 앱을 App Store 제출 기준으로 프론트엔드, 백엔드, UI/UX
 | App Store Connect evidence | ASC TestFlight page, ASC export-compliance modal, ASC internal group page | Build 37 export compliance was saved after user approval using `위에 언급된 알고리즘에 모두 해당하지 않음`. The version build row now shows `제출 준비 완료`, and the internal group page shows `Team (Expo)` with 1 tester and 1 build. | Pass for TestFlight |
 | App Store Connect final submission surface | ASC distribution/version, app info, app privacy, IAP, review-submission pages | Read-only audit on 2026-05-02 13:21 KST found the App Store version still incomplete: iPhone screenshot set has 0 screenshots, version metadata fields are blank, build is not selected on the version page, app review submission list is empty, app privacy URL is blank and labels are not started, IAP list has no product, app subtitle/category/age rating are not set, and the app name still includes `InviteHub (40c8af)`. | Blocked externally |
 | Paid publish fallback | `apps/mobile/lib/release-flags.ts`, `lib/release-flags.ts`, `.env.example`, `apps/mobile/.env.example` | Paid photo publishing now defaults off unless web and mobile public env flags are explicitly enabled. Targeted tests passed, web/mobile typecheck and lint passed, and iPhone 17 Release simulator screenshots show the photo step disabled without an IAP purchase UI. | Pass locally |
+| Current paid-fallback TestFlight build | EAS build 38, EAS Submit | Build 38 (`d185dfc1-9110-4d81-b510-08e02f1ece7f`) finished and was uploaded to App Store Connect. It contains commit `d8ed82188b3233bebe7be90c173d434f36690581`. Apple processing and internal group assignment still need App Store Connect confirmation. | Pass for upload |
 
 ## Completion Verdict
 
@@ -72,9 +73,10 @@ The full active goal is not complete yet because:
 
 ## Next Required Action
 
-Open TestFlight on the target iPhone, accept the invitation for
-`dudqks2@gmail.com` if needed, install build `1.0.0 (37)`, and perform a launch
-smoke test.
+After Apple processing finishes, confirm build `1.0.0 (38)` is assigned to
+`TE Team (Expo)`. Then open TestFlight on the target iPhone, accept the
+invitation for `dudqks2@gmail.com` if needed, install build `1.0.0 (38)`, and
+perform a launch smoke test.
 
 Do not mark the goal complete until:
 
@@ -136,6 +138,12 @@ Do not mark the goal complete until:
 - EAS build 37 (`4d995997-e952-4ada-83bf-bc6a929be412`) finished successfully
   and EAS submission `bb2999db-8820-42a7-9bdf-fb2bfd7f6d21` finished with no
   reported submission error.
+- EAS build 38 (`d185dfc1-9110-4d81-b510-08e02f1ece7f`) finished successfully
+  and produced an IPA at
+  `https://expo.dev/artifacts/eas/rSC48xVHdYJGyV4nTs3ZdT.ipa`. EAS Submit
+  uploaded it to App Store Connect and Apple processing started. Submission
+  details:
+  `https://expo.dev/accounts/jyb1126/projects/invitehub/submissions/77395141-a80b-48f9-8e43-c61114fafa25`.
 - App Store Connect TestFlight shows `1.0.0 (37)` upload status `완료`, created
   `May 2, 2026 12:46 PM`, and version build row status
   `수출 규정 관련 문서 누락`.

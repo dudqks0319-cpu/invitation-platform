@@ -40,7 +40,7 @@ Local security controls are materially in place. A fresh network-enabled
 
 | Risk | Owner | Due |
 | --- | --- | --- |
-| Real-device TestFlight install/launch evidence for build 37 has not been captured in this run. | Store Manager / Release owner | Before final release readiness sign-off |
+| Real-device TestFlight install/launch evidence for build 38 has not been captured in this run. | Store Manager / Release owner | Before final release readiness sign-off |
 | App Store Connect app information, version metadata, build selection, privacy labels, IAP approval, review notes, and screenshots are verified incomplete. | Store Manager / Release owner | Before final App Store submission |
 | Custom domain `invitehub.co.kr` does not resolve by DNS; store URLs must use the verified Vercel deployment or DNS must be connected before submission. | Store Manager / Release owner | Before entering App Store metadata |
 | Paid photo publishing remains disabled by default until an App Store Connect IAP product is created and approved. | Store Manager / Release owner | Before enabling `*_ENABLE_PAID_PUBLISH=true` |
@@ -59,10 +59,12 @@ downgrades for Next/Expo dependency chains.
 
 ## Current External Gate
 
-EAS iOS build 37 and its App Store Connect submission have completed.
-Export compliance for build 37 was saved after explicit user approval, and App
-Store Connect now shows build `1.0.0 (37)` as `테스트 중` inside internal group
-`TE Team (Expo)`.
+EAS iOS build 38 completed and EAS Submit uploaded the binary to App Store
+Connect. It contains commit `d8ed82188b3233bebe7be90c173d434f36690581`, which
+keeps paid photo publishing disabled by default until an IAP product exists.
+Build 37 remains the last App Store Connect internal-group build that was
+visually confirmed as `테스트 중`; build 38 processing/group assignment still
+needs App Store Connect confirmation.
 
 The remaining external gates are real-device TestFlight install/launch evidence
 and final App Store Connect submission surfaces: app information, version

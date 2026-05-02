@@ -13,8 +13,10 @@ Official sources checked:
 
 ## Current External Status
 
-Build 37 is uploaded, processed, and assigned to the internal TestFlight group
-`TE Team (Expo)`.
+Build 38 is uploaded to Apple through EAS and contains the paid-publish fallback
+commit `d8ed821`. Apple processing and internal TestFlight group assignment must
+still be confirmed in App Store Connect. Build 37 remains the last visually
+confirmed internal TestFlight group build.
 
 Current App Store Connect evidence from 2026-05-02:
 
@@ -27,6 +29,12 @@ Current App Store Connect evidence from 2026-05-02:
 
 The export-compliance prompt for build 37 was saved after explicit user approval
 using `위에 언급된 알고리즘에 모두 해당하지 않음`.
+
+EAS build 38 (`d185dfc1-9110-4d81-b510-08e02f1ece7f`) finished successfully
+on 2026-05-02 and EAS Submit uploaded the binary to App Store Connect. App
+version: `1.0.0`; build number: `38`; git commit:
+`d8ed82188b3233bebe7be90c173d434f36690581`. Submission details:
+`https://expo.dev/accounts/jyb1126/projects/invitehub/submissions/77395141-a80b-48f9-8e43-c61114fafa25`.
 
 Read-only final-submission audit from 2026-05-02 13:21 KST:
 
@@ -106,6 +114,9 @@ Current evidence:
 - Submission `bb2999db-8820-42a7-9bdf-fb2bfd7f6d21` finished with no reported
   EAS submission error.
 - Artifact is associated with App Store Connect app id `6763630299`.
+- Build 38 (`d185dfc1-9110-4d81-b510-08e02f1ece7f`) finished successfully and
+  was uploaded to Apple by EAS Submit. This is the first TestFlight build that
+  contains the paid-publish fallback.
 
 Current external evidence:
 
@@ -115,6 +126,9 @@ Current external evidence:
 
 Required evidence before marking the store area complete:
 
+- App Store Connect processing completes for build 38.
+- App Store Connect export compliance is saved for build 38 if prompted.
+- Build 38 is available to internal group `TE Team (Expo)`.
 - Real iPhone install/launch evidence from TestFlight.
 - Final App Store Connect app info, version metadata, build selection, privacy
   labels, screenshots, review notes, and IAP product state are saved or verified.
