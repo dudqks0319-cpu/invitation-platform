@@ -150,6 +150,16 @@ Required evidence:
 - Selecting a template opens builder Step 1.
 - Preview path opens without crash.
 
+Build 38 confirmation steps:
+
+1. Open `https://appstoreconnect.apple.com/apps/6763630299/testflight/ios`.
+2. Confirm `1.0.0 (38)` is visible after Apple processing.
+3. If export compliance appears, answer consistently with
+   `ITSAppUsesNonExemptEncryption=false`.
+4. Add build `1.0.0 (38)` to internal group `TE Team (Expo)`.
+5. On the user's iPhone, open TestFlight, install/update InviteHub to build 38,
+   launch once, and record whether the home/template-first screen opens.
+
 ## 4. App Information
 
 Use `docs/store-submission-metadata.md`.

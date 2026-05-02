@@ -87,6 +87,16 @@ Do not mark the goal complete until:
   verified.
 - App Store Connect processing shows the build is available to internal testers.
 
+Manual Apple-side confirmation path:
+
+1. App Store Connect TestFlight URL:
+   `https://appstoreconnect.apple.com/apps/6763630299/testflight/ios`.
+2. Confirm `1.0.0 (38)` appears after Apple processing.
+3. Save export compliance for build 38 if prompted.
+4. Assign build 38 to internal group `TE Team (Expo)`.
+5. Install/update InviteHub from TestFlight on the user's iPhone and smoke test
+   home -> template selection -> builder Step 1 -> preview.
+
 ## Latest Local Evidence
 
 - `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`:

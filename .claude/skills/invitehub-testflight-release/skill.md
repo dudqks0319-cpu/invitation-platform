@@ -91,14 +91,45 @@ eas build:list --platform ios --limit 3
 eas build:view <build-id>
 ```
 
-When the build finishes, confirm submit status:
+When the build finishes, confirm submit status. Some EAS CLI versions do not
+provide `submit:list`; if it is unavailable, use the EAS build output,
+App Store Connect, TestFlight, and processing email as the evidence source:
 
 ```bash
 eas submit:list --platform ios --limit 5
 ```
 
-If EAS CLI lacks `submit:list`, use `eas build:view <build-id>` and App Store
-Connect/TestFlight as the evidence source.
+If EAS CLI lacks `submit:list`, do not treat that as a release failure. Record:
+
+- `eas build:view <build-id>` status, build number, bundle id, and git commit.
+- EAS submit URL printed by `eas build --auto-submit`.
+- App Store Connect TestFlight page state after Apple processing.
+- Any App Store Connect export-compliance prompt state.
+
+`eas metadata:pull` can inspect App Store metadata only after Apple Developer
+authentication. If it prompts for Apple ID/2FA, stop and ask for user handoff or
+explicit login approval; do not treat the prompt as permission.
+
+## Apple-Side Confirmation
+
+After EAS reports "Submitted your app to Apple App Store Connect", wait for
+Apple processing, then verify in App Store Connect:
+
+1. Open `https://appstoreconnect.apple.com/apps/6763630299/testflight/ios`.
+2. Confirm the uploaded build number is visible, for example `1.0.0 (38)`.
+3. If export compliance appears, answer consistently with the native config:
+   `ITSAppUsesNonExemptEncryption=false`.
+4. Assign the build to internal group `TE Team (Expo)`.
+5. Confirm tester `dudqks2@gmail.com` can see the build in TestFlight.
+
+On the iPhone:
+
+1. Open TestFlight.
+2. Install or update InviteHub to the target build number.
+3. Launch the app once.
+4. Capture or report the build number and whether the first screen opens.
+5. Smoke test: home template gallery -> select template -> builder Step 1 ->
+   preview.
 
 ## Handoff
 
