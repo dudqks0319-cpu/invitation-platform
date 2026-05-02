@@ -281,8 +281,10 @@ Connect save evidence exist for every section above.
 
 Before calling the active goal complete, copy
 `docs/app-store-external-evidence.template.json` to
-`docs/app-store-external-evidence.json`, set each field to `true` only after the
-corresponding Apple-side evidence exists, and run:
+`docs/app-store-external-evidence.json`, set each `status` to `true` only after
+the corresponding Apple-side evidence exists, and fill `capturedAt`,
+`evidence`, and `artifact` with the screenshot path, App Store Connect URL, or
+user-confirmed device evidence. Then run:
 
 ```bash
 node scripts/verify-goal-completion.mjs

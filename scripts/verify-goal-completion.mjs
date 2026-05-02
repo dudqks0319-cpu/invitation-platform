@@ -6,18 +6,18 @@ const root = process.cwd();
 const evidencePath = "docs/app-store-external-evidence.json";
 
 const requiredExternalEvidence = [
-  "appStoreConnectBuild38Processed",
-  "build38ExportComplianceSaved",
-  "build38AssignedToInternalGroup",
-  "realIphoneTestFlightInstallLaunchPassed",
-  "appInfoSaved",
-  "versionMetadataSaved",
-  "build38SelectedForVersion",
-  "privacyLabelsSaved",
-  "screenshotsUploaded",
-  "reviewNotesSaved",
-  "verifiedAppReviewContactSaved",
-  "iapStateVerifiedOrPaidFeaturesDisabled"
+  { key: "appStoreConnectBuild38Processed", label: "App Store Connect shows build 1.0.0 (38) processed/available" },
+  { key: "build38ExportComplianceSaved", label: "Build 38 export compliance is saved if prompted" },
+  { key: "build38AssignedToInternalGroup", label: "Build 38 is assigned to TE Team (Expo)" },
+  { key: "realIphoneTestFlightInstallLaunchPassed", label: "A real iPhone TestFlight install and launch smoke test passed" },
+  { key: "appInfoSaved", label: "App Information fields are saved" },
+  { key: "versionMetadataSaved", label: "Version metadata fields are saved" },
+  { key: "build38SelectedForVersion", label: "Build 38 is selected for the App Store version" },
+  { key: "privacyLabelsSaved", label: "App Privacy labels are saved" },
+  { key: "screenshotsUploaded", label: "Required screenshots are uploaded" },
+  { key: "reviewNotesSaved", label: "Review Notes are saved" },
+  { key: "verifiedAppReviewContactSaved", label: "Verified App Review contact is saved" },
+  { key: "iapStateVerifiedOrPaidFeaturesDisabled", label: "IAP state is verified or paid features are disabled" }
 ];
 
 const requiredLocalClaims = [
@@ -63,6 +63,40 @@ function read(relativePath) {
   return readFileSync(path, "utf8");
 }
 
+function hasMeaningfulText(value) {
+  return typeof value === "string" && value.trim().length >= 8;
+}
+
+function validateEvidenceEntry(evidence, key, label) {
+  const entry = evidence[key];
+
+  if (entry === true) {
+    blockers.push(`${evidencePath}: ${key} uses legacy boolean true; add capturedAt, evidence, and artifact`);
+    return;
+  }
+
+  if (!entry || typeof entry !== "object" || Array.isArray(entry)) {
+    blockers.push(`${evidencePath}: ${key} is missing object evidence for ${label}`);
+    return;
+  }
+
+  if (entry.status !== true) {
+    blockers.push(`${evidencePath}: ${key}.status is not true`);
+  }
+
+  if (!hasMeaningfulText(entry.capturedAt)) {
+    blockers.push(`${evidencePath}: ${key}.capturedAt is missing`);
+  }
+
+  if (!hasMeaningfulText(entry.evidence)) {
+    blockers.push(`${evidencePath}: ${key}.evidence is missing`);
+  }
+
+  if (!hasMeaningfulText(entry.artifact)) {
+    blockers.push(`${evidencePath}: ${key}.artifact is missing`);
+  }
+}
+
 for (const { file, snippets } of requiredLocalClaims) {
   const content = read(file);
 
@@ -85,10 +119,8 @@ if (!existsSync(join(root, evidencePath))) {
   }
 
   if (evidence) {
-    for (const key of requiredExternalEvidence) {
-      if (evidence[key] !== true) {
-        blockers.push(`${evidencePath}: ${key} is not true`);
-      }
+    for (const { key, label } of requiredExternalEvidence) {
+      validateEvidenceEntry(evidence, key, label);
     }
   }
 }

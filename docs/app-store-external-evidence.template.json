@@ -1,14 +1,74 @@
 {
-  "appStoreConnectBuild38Processed": false,
-  "build38ExportComplianceSaved": false,
-  "build38AssignedToInternalGroup": false,
-  "realIphoneTestFlightInstallLaunchPassed": false,
-  "appInfoSaved": false,
-  "versionMetadataSaved": false,
-  "build38SelectedForVersion": false,
-  "privacyLabelsSaved": false,
-  "screenshotsUploaded": false,
-  "reviewNotesSaved": false,
-  "verifiedAppReviewContactSaved": false,
-  "iapStateVerifiedOrPaidFeaturesDisabled": false
+  "appStoreConnectBuild38Processed": {
+    "status": false,
+    "capturedAt": "",
+    "evidence": "App Store Connect TestFlight shows 1.0.0 (38) processed/available.",
+    "artifact": ""
+  },
+  "build38ExportComplianceSaved": {
+    "status": false,
+    "capturedAt": "",
+    "evidence": "Build 38 export compliance is saved or App Store Connect did not request it.",
+    "artifact": ""
+  },
+  "build38AssignedToInternalGroup": {
+    "status": false,
+    "capturedAt": "",
+    "evidence": "Build 38 is assigned to internal group TE Team (Expo).",
+    "artifact": ""
+  },
+  "realIphoneTestFlightInstallLaunchPassed": {
+    "status": false,
+    "capturedAt": "",
+    "evidence": "A real iPhone installed build 38 from TestFlight and launched home -> template -> builder -> preview.",
+    "artifact": ""
+  },
+  "appInfoSaved": {
+    "status": false,
+    "capturedAt": "",
+    "evidence": "App name, subtitle, category, age rating, support/privacy URLs are saved.",
+    "artifact": ""
+  },
+  "versionMetadataSaved": {
+    "status": false,
+    "capturedAt": "",
+    "evidence": "Promotional text, description, keywords, support URL, copyright, and version metadata are saved.",
+    "artifact": ""
+  },
+  "build38SelectedForVersion": {
+    "status": false,
+    "capturedAt": "",
+    "evidence": "Build 1.0.0 (38) is selected for the App Store version.",
+    "artifact": ""
+  },
+  "privacyLabelsSaved": {
+    "status": false,
+    "capturedAt": "",
+    "evidence": "App Privacy URL and data collection labels are saved in App Store Connect.",
+    "artifact": ""
+  },
+  "screenshotsUploaded": {
+    "status": false,
+    "capturedAt": "",
+    "evidence": "Required iPhone screenshots are uploaded and match the current app/IAP state.",
+    "artifact": ""
+  },
+  "reviewNotesSaved": {
+    "status": false,
+    "capturedAt": "",
+    "evidence": "Review Notes describe no-login draft/preview, login publish/manage, map links, and paid fallback.",
+    "artifact": ""
+  },
+  "verifiedAppReviewContactSaved": {
+    "status": false,
+    "capturedAt": "",
+    "evidence": "App Review contact name, phone, and verified email are saved.",
+    "artifact": ""
+  },
+  "iapStateVerifiedOrPaidFeaturesDisabled": {
+    "status": false,
+    "capturedAt": "",
+    "evidence": "IAP product state is verified, or paid photo publishing remains disabled in submitted build metadata/UI.",
+    "artifact": ""
+  }
 }
