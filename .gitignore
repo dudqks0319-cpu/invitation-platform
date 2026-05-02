@@ -30,4 +30,5 @@ src
 .vercel
 .env*.local
 apps/mobile/dist/
+apps/mobile/package-lock.json
 supabase/.temp/
