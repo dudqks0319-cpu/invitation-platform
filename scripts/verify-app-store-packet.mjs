@@ -87,8 +87,8 @@ includes("docs/app-store-readiness-90.md", readiness, "Build 38 App Store Connec
 includes("docs/app-store-readiness-90.md", readiness, "NEXT_PUBLIC_SUPPORT_EMAIL");
 includes("docs/app-store-readiness-90.md", readiness, "returned build 38 `FINISHED`, linked submission `FINISHED`, `error: null`");
 includes("docs/goal-completion-audit-90.md", audit, "The full active goal is not complete yet");
-includes("docs/goal-completion-audit-90.md", audit, "build 38 has not been visually confirmed");
-includes("docs/goal-completion-audit-90.md", audit, "verified App Review contact email");
+includes("docs/goal-completion-audit-90.md", audit, "now confirms build 38 is processed");
+includes("docs/goal-completion-audit-90.md", audit, "App Review contact email");
 includes("docs/security-gate-90.md", security, "NEXT_PUBLIC_SUPPORT_EMAIL");
 includes("docs/store-submission-metadata.md", metadata, "Do not use");
 includes("docs/apple-review.md", appleReview, "DNS/MX");
@@ -122,4 +122,4 @@ console.log("- Status: pass");
 console.log(`- Checks: ${checks.length}`);
 console.log(`- Build: ${expected.appVersion} (${expected.buildNumber})`);
 console.log(`- EAS Build: ${expected.buildId}`);
-console.log("- Required follow-up: App Store Connect build 38 processing, TestFlight install, and final metadata still need Apple-side evidence.");
+console.log("- Required follow-up: iPhone TestFlight install/launch and final metadata still need Apple-side evidence.");

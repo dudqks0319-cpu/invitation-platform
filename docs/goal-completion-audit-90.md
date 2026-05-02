@@ -50,17 +50,19 @@ InviteHub 앱을 App Store 제출 기준으로 프론트엔드, 백엔드, UI/UX
 | App Store Connect execution checklist | `docs/app-store-connect-execution-checklist.md`, `docs/store-screenshot-plan.md` | Official Apple submission/privacy/upcoming-requirements pages checked on 2026-05-01; EAS, TestFlight, IAP, privacy labels, screenshots, and review notes are mapped to required evidence. | Pass |
 | App Review metadata accuracy | `docs/apple-review.md`, `docs/store-submission-metadata.md`, `docs/store-screenshot-plan.md` | Review notes now avoid claiming unverified profanity filter/report/block features. They document the implemented path: rate-limited RSVP/guestbook, host-approved guestbook publishing, and dashboard hide/approve moderation. | Pass |
 | Previous App Store Connect TestFlight evidence | ASC TestFlight page, ASC export-compliance modal, ASC internal group page | Build 37 export compliance was saved after user approval using `위에 언급된 알고리즘에 모두 해당하지 않음`. The version build row showed `제출 준비 완료`, and the internal group page showed `Team (Expo)` with 1 tester and 1 build. This is retained as historical console evidence, but it does not prove build 38 is assigned to testers. | Historical pass only |
+| Current App Store Connect TestFlight evidence | ASC TestFlight page and internal group page | Read-only Safari DOM audit on 2026-05-02 15:32 KST confirmed iOS build `1.0.0 (38)` status `완료`, version build 38 status `제출 준비 완료`, and internal group `TE Team (Expo)` assigned with 1 tester and 2 builds. The tester row is still `dudqks2@gmail.com` / `정영빈` status `초대됨` with no device/session evidence. | Pass for ASC, blocked on iPhone |
 | App Store Connect final submission surface | ASC distribution/version, app info, app privacy, IAP, review-submission pages | Read-only audit on 2026-05-02 13:21 KST found the App Store version still incomplete: iPhone screenshot set has 0 screenshots, version metadata fields are blank, build is not selected on the version page, app review submission list is empty, app privacy URL is blank and labels are not started, IAP list has no product, app subtitle/category/age rating are not set, and the app name still includes `InviteHub (40c8af)`. | Blocked externally |
 | Paid publish fallback | `apps/mobile/lib/release-flags.ts`, `lib/release-flags.ts`, `.env.example`, `apps/mobile/.env.example` | Paid photo publishing now defaults off unless web and mobile public env flags are explicitly enabled. Targeted tests passed, web/mobile typecheck and lint passed, and iPhone 17 Release simulator screenshots show the photo step disabled without an IAP purchase UI. | Pass locally |
-| Current paid-fallback EAS build | EAS build 38, EAS Submit | Build 38 (`d185dfc1-9110-4d81-b510-08e02f1ece7f`) finished and was uploaded to App Store Connect. It contains commit `d8ed82188b3233bebe7be90c173d434f36690581`. Apple processing and internal group assignment still need App Store Connect confirmation. | Pass for upload |
+| Current paid-fallback EAS build | EAS build 38, EAS Submit | Build 38 (`d185dfc1-9110-4d81-b510-08e02f1ece7f`) finished and was uploaded to App Store Connect. It contains commit `d8ed82188b3233bebe7be90c173d434f36690581`. Apple processing, export-compliance clearance, and internal group assignment were confirmed on 2026-05-02 15:32 KST. | Pass for upload and ASC |
 
 ## Completion Verdict
 
 The local codebase and EAS upload path now meet the practical 90+ release bar
 for code, build, and binary submission evidence. The latest UI complaint about
-the invitation preview has been fixed and simulator-verified. Internal
-TestFlight availability is confirmed historically for build 37, but still needs
-fresh App Store Connect confirmation for the current paid-fallback build 38.
+the invitation preview has been fixed and simulator-verified. App Store Connect
+now confirms build 38 is processed, export-compliance-cleared, and assigned to
+the internal group, but the tester has not accepted/installed it on the target
+iPhone yet.
 
 The full active goal is not complete yet because:
 
@@ -68,17 +70,15 @@ The full active goal is not complete yet because:
   metadata, privacy labels, screenshots, review notes, build selection, app
   information, and IAP product state still need to be entered/saved before App
   Store submission.
-- App Store Connect processing/export-compliance/internal-group assignment for
-  build 38 has not been visually confirmed in the Apple console.
-- Real iPhone install/launch evidence from TestFlight is still not captured
-  inside this run; only build 37 availability was visually confirmed earlier.
+- Real iPhone install/launch evidence from TestFlight is still not captured.
+  App Store Connect shows tester `dudqks2@gmail.com` / `정영빈` remains
+  `초대됨`, with no device/session evidence.
 
 ## Next Required Action
 
-After Apple processing finishes, confirm build `1.0.0 (38)` is assigned to
-`TE Team (Expo)`. Then open TestFlight on the target iPhone, accept the
-invitation for `dudqks2@gmail.com` if needed, install build `1.0.0 (38)`, and
-perform a launch smoke test.
+Open TestFlight on the target iPhone, accept the invitation for
+`dudqks2@gmail.com` if needed, install build `1.0.0 (38)`, and perform a launch
+smoke test.
 
 Do not mark the goal complete until:
 
@@ -87,7 +87,8 @@ Do not mark the goal complete until:
 - App Store Connect metadata, privacy labels, screenshots, review notes, version
   build selection, app information, and IAP product state are entered, saved, and
   verified.
-- App Store Connect processing shows build 38 is available to internal testers.
+- App Store Connect metadata/privacy/screenshot/review/contact state is saved
+  and verified.
 
 Manual Apple-side confirmation path:
 
@@ -245,14 +246,16 @@ Manual Apple-side confirmation path:
 
 ## Current Blocker
 
-The current blocker is no longer EAS build/upload. Build 38 has been uploaded
-through EAS Submit and contains the paid-publish fallback, but App Store Connect
-processing, export compliance for build 38 if prompted, and internal TestFlight
-group assignment still need console confirmation.
+The current blocker is no longer EAS build/upload or build 38 TestFlight
+assignment. Build 38 has been uploaded through EAS Submit, contains the
+paid-publish fallback, is processed in App Store Connect, is
+export-compliance-cleared, and is assigned to `TE Team (Expo)`.
 
 The remaining blocker for marking the broader App Store readiness goal complete
-is direct iPhone TestFlight install/launch evidence for build 38 plus final App
-Store Connect submission surfaces: app name/subtitle/category/age rating,
-version metadata, version build selection, privacy URL and privacy labels,
-screenshots, review notes, verified App Review contact email, and IAP product
-state or verified paid-feature fallback.
+is direct iPhone TestFlight install/launch evidence for build 38. App Store
+Connect still shows `dudqks2@gmail.com` / `정영빈` as `초대됨`, with no
+device/session evidence. The broader store-submission surfaces also remain:
+app name/subtitle/category/age rating, version metadata, version build
+selection, privacy URL and privacy labels, screenshots, review notes, verified
+App Review contact email, and IAP product state or verified paid-feature
+fallback.

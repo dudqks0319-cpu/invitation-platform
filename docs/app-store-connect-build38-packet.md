@@ -43,11 +43,21 @@ Open:
 https://appstoreconnect.apple.com/apps/6763630299/testflight/ios
 ```
 
-Confirm and save evidence:
+Confirmed on 2026-05-02 15:32 KST from the logged-in Safari App Store Connect
+session:
 
-- `1.0.0 (38)` appears after Apple processing.
-- Export compliance is saved for build 38 if App Store Connect asks.
+- `1.0.0 (38)` appears in the iOS build upload list with status `완료`.
+- The version `1.0.0` build table shows build 38 status `제출 준비 완료`, so
+  it is no longer blocked by an export-compliance document prompt.
 - Build 38 is assigned to internal group `TE Team (Expo)`.
+- `TE Team (Expo)` shows `내부 그룹 ∙ 1명의 테스터 ∙ 2개의 빌드`.
+- The tester row is still `dudqks2@gmail.com` / `정영빈` with status `초대됨`
+  and no device/session evidence yet.
+
+Still required:
+
+- The tester must accept the TestFlight invite with the Apple ID used on the
+  target iPhone.
 - Tester `dudqks2@gmail.com` can install or update InviteHub in TestFlight.
 - iPhone smoke test passes: home -> template selection -> builder Step 1 ->
   preview.

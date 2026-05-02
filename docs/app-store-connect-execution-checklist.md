@@ -14,12 +14,19 @@ Official sources checked:
 ## Current External Status
 
 Build 38 is uploaded to Apple through EAS and contains the paid-publish fallback
-commit `d8ed821`. Apple processing and internal TestFlight group assignment must
-still be confirmed in App Store Connect. Build 37 remains the last visually
-confirmed internal TestFlight group build.
+commit `d8ed821`. Apple processing, export-compliance clearance, and internal
+TestFlight group assignment were confirmed in App Store Connect on 2026-05-02
+15:32 KST. The remaining TestFlight blocker is tester acceptance/install on the
+target iPhone.
 
 Current App Store Connect evidence from 2026-05-02:
 
+- Build upload row: `1.0.0 (38)` status `완료`, created `May 2, 2026 1:58 PM`.
+- Version build row: build 38 status `제출 준비 완료`, expiring in 90 days.
+- Internal group page: `Team (Expo)` shows
+  `내부 그룹 ∙ 1명의 테스터 ∙ 2개의 빌드`.
+- Internal group tester tab: `dudqks2@gmail.com` / `정영빈` status `초대됨`,
+  with no device/session evidence.
 - Build upload row: `1.0.0 (37)` status `완료`, created `May 2, 2026 12:46 PM`.
 - Version build row: build 37 status `제출 준비 완료`, expiring in 90 days.
 - Internal group page: `Team (Expo)` shows `내부 그룹 ∙ 1명의 테스터 ∙ 1개의 빌드`.
