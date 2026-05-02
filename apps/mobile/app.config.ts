@@ -72,7 +72,11 @@ const appConfig = {
   },
   ios: {
     ...baseConfig.ios,
-    bundleIdentifier: bundleId
+    bundleIdentifier: bundleId,
+    config: {
+      ...baseConfig.ios?.config,
+      usesNonExemptEncryption: false
+    }
   },
   android: {
     ...baseConfig.android,
