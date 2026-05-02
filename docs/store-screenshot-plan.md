@@ -90,9 +90,10 @@ zsh /Users/jyb-m3max/Desktop/codex/invitation-platform/scripts/verify-store-scre
   /Users/jyb-m3max/Desktop/codex/invitation-platform/output/store-screenshots-verified
 ```
 
-현재 iPhone 17 캡처는 `1206x2622`이며, Apple의 iPhone 6.3" 세트 허용 크기에
-해당한다. 최종 제출 세트는 가능하면 App Store Connect에서 요구하는
-대표 디스플레이 세트별로 다시 캡처한다.
+현재 iPhone 17 캡처는 `1206x2622`이며, Apple의 iPhone 6.3" 세트 허용
+크기에 해당한다. Apple 문서 기준 iPhone 6.3" portrait 허용 크기에는
+`1179 x 2556`과 `1206 x 2622`가 포함된다. 최종 제출 세트는 가능하면 App
+Store Connect에서 요구하는 대표 디스플레이 세트별로 다시 캡처한다.
 
 주의:
 - 스크립트는 실행 전 `com.invitehub.app.dev`와
