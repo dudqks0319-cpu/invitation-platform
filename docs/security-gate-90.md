@@ -92,3 +92,8 @@ The public support page no longer hardcodes the unverified
 renders a mail link when that value is syntactically valid. Verification on
 2026-05-02 14:52 KST passed `lib/support-contact.test.ts`, web lint, and web
 typecheck.
+
+The filled external App Store evidence manifest
+`docs/app-store-external-evidence.json` is gitignored because it can contain App
+Review contact details, user/device confirmation notes, and private screenshot
+paths. Only `docs/app-store-external-evidence.template.json` is tracked.

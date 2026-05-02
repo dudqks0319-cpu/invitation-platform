@@ -124,7 +124,8 @@ For final active-goal completion, use the stricter completion verifier. It is
 expected to return `blocked` until Apple-side evidence is captured in
 `docs/app-store-external-evidence.json` with `status`, `capturedAt`,
 `evidence`, and `artifact` fields. `artifact` must be an `https://` URL,
-existing local file path, or `user-confirmation:` reference:
+existing local file path, or `user-confirmation:` reference. The filled
+evidence file is gitignored; commit only the template:
 
 ```bash
 node scripts/verify-goal-completion.mjs
