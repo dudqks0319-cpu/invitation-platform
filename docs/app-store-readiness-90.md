@@ -50,6 +50,8 @@ Latest local evidence after the fixed-template preview update:
   successfully on 2026-05-02 and was uploaded to App Store Connect through EAS
   Submit. It contains commit `d8ed82188b3233bebe7be90c173d434f36690581`, the
   paid-publish fallback build.
+- `node scripts/eas-build-submission-status.mjs d185dfc1-9110-4d81-b510-08e02f1ece7f`
+  confirmed the linked EAS submission is `FINISHED` with no error.
 - App Store Connect TestFlight shows `1.0.0 (37)` upload status `완료` for app
   id `6763630299`.
 - Export compliance for build 37 was saved after explicit user approval. The

@@ -1,7 +1,7 @@
 # InviteHub Goal Completion Audit - 90점 Release Readiness
 
 Date: 2026-05-01
-Latest update: 2026-05-02 14:28 KST
+Latest update: 2026-05-02 14:37 KST
 
 ## Objective
 
@@ -155,6 +155,10 @@ Manual Apple-side confirmation path:
   uploaded it to App Store Connect and Apple processing started. Submission
   details:
   `https://expo.dev/accounts/jyb1126/projects/invitehub/submissions/77395141-a80b-48f9-8e43-c61114fafa25`.
+- `node scripts/eas-build-submission-status.mjs d185dfc1-9110-4d81-b510-08e02f1ece7f`
+  confirmed build 38 status `FINISHED`, app version `1.0.0`, build number `38`,
+  git commit `d8ed82188b3233bebe7be90c173d434f36690581`, and linked submission
+  `77395141-a80b-48f9-8e43-c61114fafa25` status `FINISHED` with `error: null`.
 - App Store Connect TestFlight shows `1.0.0 (37)` upload status `완료`, created
   `May 2, 2026 12:46 PM`, and version build row status
   `수출 규정 관련 문서 누락`.

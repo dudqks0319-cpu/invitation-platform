@@ -102,6 +102,7 @@ eas submit:list --platform ios --limit 5
 If EAS CLI lacks `submit:list`, do not treat that as a release failure. Record:
 
 - `eas build:view <build-id>` status, build number, bundle id, and git commit.
+- `node scripts/eas-build-submission-status.mjs <build-id>` output.
 - EAS submit URL printed by `eas build --auto-submit`.
 - App Store Connect TestFlight page state after Apple processing.
 - Any App Store Connect export-compliance prompt state.

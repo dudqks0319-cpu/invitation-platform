@@ -121,6 +121,9 @@ Current evidence:
 - Build 38 (`d185dfc1-9110-4d81-b510-08e02f1ece7f`) finished successfully and
   was uploaded to Apple by EAS Submit. This is the first TestFlight build that
   contains the paid-publish fallback.
+- `node scripts/eas-build-submission-status.mjs d185dfc1-9110-4d81-b510-08e02f1ece7f`
+  confirmed build 38 status `FINISHED` and linked submission
+  `77395141-a80b-48f9-8e43-c61114fafa25` status `FINISHED` with `error: null`.
 
 Current external evidence:
 
