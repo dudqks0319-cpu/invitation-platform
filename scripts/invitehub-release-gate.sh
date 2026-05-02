@@ -29,6 +29,8 @@ run_step "mobile focused tests" npx vitest run \
   app/api/templates/route.test.ts \
   --exclude='**/.claude/**'
 
+run_step "App Store packet verification" node scripts/verify-app-store-packet.mjs
+
 if [[ "${SKIP_AUDIT:-0}" != "1" ]]; then
   run_step "high severity dependency audit" npm audit --audit-level=high
 fi

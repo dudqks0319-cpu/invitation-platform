@@ -114,6 +114,12 @@ Use this when the target is "all areas 90점 이상".
 zsh scripts/invitehub-release-gate.sh
 ```
 
+For a fast store-manager-only packet check:
+
+```bash
+node scripts/verify-app-store-packet.mjs
+```
+
 The score cannot be reported as 90+ unless each role signs off:
 
 | Role | 90+ Standard |
@@ -126,7 +132,7 @@ The score cannot be reported as 90+ unless each role signs off:
 | Mobile Backend Engineer | Draft, publish, payment verification, template API contracts are tested with negative paths. |
 | API Integrator | JSON-only write APIs, auth tokens, ownership filters, and error responses are explicit. |
 | Security Engineer | No high audit findings, secrets are not hardcoded, authz/validation/rate limits are present. |
-| Store Manager | `app.config.ts`, `app.json`, `eas.json`, and native Release bundle id/scheme align with App Store Connect. |
+| Store Manager | `app.config.ts`, `app.json`, `eas.json`, native Release bundle id/scheme, App Store packet, support contact, IAP fallback, and build evidence align. |
 | QA Engineer | Screenshots and user-path evidence exist for home, builder, preview, publish/share, and account screens. |
 
 External console checks still required before final App Store submission:

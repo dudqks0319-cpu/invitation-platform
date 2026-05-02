@@ -83,6 +83,10 @@ web/mobile lint, and an iPhone 17 Release simulator build. This reduces the
 store-compliance risk while the App Store Connect IAP product does not exist,
 but the flag must stay disabled until the product is created and approved.
 
+The 2026-05-02 14:56 KST fast release gate passed web/mobile lint and
+typecheck, the 55-file web/API test suite with 160 tests, the focused 9-file
+mobile/API suite with 30 tests, and the 36-check App Store packet verifier.
+
 The public support page no longer hardcodes the unverified
 `support@invitehub.co.kr` mailbox. It reads `NEXT_PUBLIC_SUPPORT_EMAIL` and only
 renders a mail link when that value is syntactically valid. Verification on
