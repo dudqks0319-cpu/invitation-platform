@@ -3,7 +3,9 @@
 ## App Store
 
 ### App Name
-InviteHub
+Preferred: InviteHub
+
+Fallback if the plain name is unavailable: InviteHub 모바일 초대장
 
 ### Subtitle
 모바일 초대장 제작과 공유
@@ -56,8 +58,10 @@ App Store Connect 입력 시 아래 항목을 기준으로 실제 운영 설정�
 
 ### Support
 - Email: support@invitehub.co.kr
-- Privacy: https://invitehub.co.kr/privacy
-- Terms: https://invitehub.co.kr/terms
+- Current verified Support URL: https://invitation-platform-youngbeens-projects.vercel.app/support
+- Current verified Privacy URL: https://invitation-platform-youngbeens-projects.vercel.app/privacy
+- Current verified Terms URL: https://invitation-platform-youngbeens-projects.vercel.app/terms
+- Custom-domain target after DNS connection: https://invitehub.co.kr/privacy and https://invitehub.co.kr/terms
 
 ## Google Play
 
@@ -80,5 +84,5 @@ InviteHub는 결혼식과 각종 행사 초대장을 모바일에서 쉽게 만�
 
 ### Support
 - Email: support@invitehub.co.kr
-- Privacy: https://invitehub.co.kr/privacy
-- Terms: https://invitehub.co.kr/terms
+- Privacy: https://invitation-platform-youngbeens-projects.vercel.app/privacy
+- Terms: https://invitation-platform-youngbeens-projects.vercel.app/terms

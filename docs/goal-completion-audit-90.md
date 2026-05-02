@@ -1,7 +1,7 @@
 # InviteHub Goal Completion Audit - 90점 Release Readiness
 
 Date: 2026-05-01
-Latest update: 2026-05-02 13:11 KST
+Latest update: 2026-05-02 13:21 KST
 
 ## Objective
 
@@ -50,6 +50,7 @@ InviteHub 앱을 App Store 제출 기준으로 프론트엔드, 백엔드, UI/UX
 | App Store Connect execution checklist | `docs/app-store-connect-execution-checklist.md`, `docs/store-screenshot-plan.md` | Official Apple submission/privacy/upcoming-requirements pages checked on 2026-05-01; EAS, TestFlight, IAP, privacy labels, screenshots, and review notes are mapped to required evidence. | Pass |
 | App Review metadata accuracy | `docs/apple-review.md`, `docs/store-submission-metadata.md`, `docs/store-screenshot-plan.md` | Review notes now avoid claiming unverified profanity filter/report/block features. They document the implemented path: rate-limited RSVP/guestbook, host-approved guestbook publishing, and dashboard hide/approve moderation. | Pass |
 | App Store Connect evidence | ASC TestFlight page, ASC export-compliance modal, ASC internal group page | Build 37 export compliance was saved after user approval using `위에 언급된 알고리즘에 모두 해당하지 않음`. The version build row now shows `제출 준비 완료`, and the internal group page shows `Team (Expo)` with 1 tester and 1 build. | Pass for TestFlight |
+| App Store Connect final submission surface | ASC distribution/version, app info, app privacy, IAP, review-submission pages | Read-only audit on 2026-05-02 13:21 KST found the App Store version still incomplete: iPhone screenshot set has 0 screenshots, version metadata fields are blank, build is not selected on the version page, app review submission list is empty, app privacy URL is blank and labels are not started, IAP list has no product, app subtitle/category/age rating are not set, and the app name still includes `InviteHub (40c8af)`. | Blocked externally |
 
 ## Completion Verdict
 
@@ -60,9 +61,10 @@ and simulator-verified.
 
 The full active goal is not complete yet because:
 
-- App Store Connect metadata, privacy labels, screenshots, review notes, and IAP
-  product approval/save state still need final verification before App Store
-  submission.
+- App Store Connect final submission surfaces are verified incomplete:
+  metadata, privacy labels, screenshots, review notes, build selection, app
+  information, and IAP product state still need to be entered/saved before App
+  Store submission.
 - Real iPhone install/launch evidence from TestFlight is still not captured
   inside this run; App Store Connect shows the build is available to the internal
   group.
@@ -77,8 +79,9 @@ Do not mark the goal complete until:
 
 - The build is installed in TestFlight by an internal tester, or the user
   confirms successful installation on their iPhone.
-- App Store Connect metadata, privacy labels, screenshots, review notes, and IAP
-  product state are verified.
+- App Store Connect metadata, privacy labels, screenshots, review notes, version
+  build selection, app information, and IAP product state are entered, saved, and
+  verified.
 - App Store Connect processing shows the build is available to internal testers.
 
 ## Latest Local Evidence
@@ -146,6 +149,20 @@ Do not mark the goal complete until:
 - `TE Team (Expo)` shows `내부 그룹 ∙ 1명의 테스터 ∙ 1개의 빌드`; the tester row
   lists `dudqks2@gmail.com` / `정영빈` with status `초대됨`, dated
   `2026년 5월 2일`.
+- Read-only App Store Connect final submission audit on 2026-05-02 13:21 KST:
+  - Version page `1.0 제출 준비 중`: 0 iPhone screenshots, promo/description/
+    keywords/support/copyright/review-note fields blank, build selector still
+    showing `빌드 추가`, and no submitted review items.
+  - App information page: name is still `InviteHub (40c8af)`, subtitle is blank,
+    category is still default/unset, and age rating is not configured.
+  - App privacy page: privacy URL is blank, optional user privacy URL is blank,
+    data collection answers are not started, and publish is disabled.
+  - IAP page: no in-app purchase product exists yet; only the create button is
+    shown.
+  - URL check: `https://invitehub.co.kr` and `/privacy`/`/terms` do not resolve
+    by DNS, while `https://invitation-platform-youngbeens-projects.vercel.app`
+    `/privacy`, `/terms`, and `/support` return HTTP 200. EAS production env has
+    `EXPO_PUBLIC_WEB_BASE_URL` set to that Vercel URL.
 
 ## Current Blocker
 
@@ -155,5 +172,6 @@ Store Connect.
 
 The remaining blocker for marking the broader App Store readiness goal complete
 is direct iPhone TestFlight install/launch evidence plus final App Store Connect
-submission surfaces: metadata, privacy labels, screenshots, review notes, and
-IAP product state.
+submission surfaces: app name/subtitle/category/age rating, version metadata,
+version build selection, privacy URL and privacy labels, screenshots, review
+notes, and IAP product state.

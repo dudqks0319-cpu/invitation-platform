@@ -28,6 +28,27 @@ Current App Store Connect evidence from 2026-05-02:
 The export-compliance prompt for build 37 was saved after explicit user approval
 using `위에 언급된 알고리즘에 모두 해당하지 않음`.
 
+Read-only final-submission audit from 2026-05-02 13:21 KST:
+
+- App version `1.0 제출 준비 중` is not ready for review submission yet.
+- iPhone screenshot set has `0` screenshots.
+- Promotional text, description, keywords, support URL, copyright, contact
+  fields, and review notes are still blank on the version page.
+- The version page still shows `빌드 추가`, so build 37 is not selected for the
+  App Store version even though it is available in TestFlight.
+- App review submission list is empty.
+- App information still shows name `InviteHub (40c8af)`, blank subtitle, default
+  category, and unconfigured age rating.
+- App privacy page has blank privacy URL, blank optional user privacy URL, no
+  started data collection answers, and disabled publish.
+- In-app purchase page has no product yet; only the create action is visible.
+- `https://invitehub.co.kr` and its `/privacy` and `/terms` paths do not resolve
+  by DNS from the release machine. The Vercel deployment URL from the current
+  environment does return HTTP 200 for `/privacy`, `/terms`, and `/support`:
+  `https://invitation-platform-youngbeens-projects.vercel.app`.
+- EAS production env contains
+  `EXPO_PUBLIC_WEB_BASE_URL=https://invitation-platform-youngbeens-projects.vercel.app`.
+
 ## 1. Build Requirement
 
 Apple's 2026 upload requirement is Xcode 26 or later with the matching current
@@ -83,8 +104,8 @@ Current external evidence:
 Required evidence before marking the store area complete:
 
 - Real iPhone install/launch evidence from TestFlight.
-- Final App Store Connect metadata, privacy labels, screenshots, review notes,
-  and IAP product state are saved or verified.
+- Final App Store Connect app info, version metadata, build selection, privacy
+  labels, screenshots, review notes, and IAP product state are saved or verified.
 
 ## 3. TestFlight
 
@@ -105,11 +126,13 @@ Use `docs/store-submission-metadata.md`.
 
 Required fields:
 
-- App name: InviteHub.
+- App name should be changed from the current `InviteHub (40c8af)` placeholder
+  to the final public name, subject to App Store name availability.
 - Subtitle: 모바일 초대장 제작과 공유.
 - Promotional text and description match the current simplified template-first product.
 - Keywords are Korean and do not claim unavailable features.
-- Support URL, privacy URL, and terms URL open successfully.
+- Support URL, privacy URL, and terms URL open successfully. Use the Vercel URL
+  unless `invitehub.co.kr` DNS is connected before submission.
 - FAQ/support copy explains that maps open through Kakao/Naver search links
   without an embedded map tile API requirement.
 - Age rating is completed in App Store Connect.
@@ -160,7 +183,8 @@ Required evidence:
 
 - App Privacy answers are saved in App Store Connect.
 - Tracking is set to no unless a tracking SDK or cross-app tracking use is added.
-- Privacy URL points to `https://invitehub.co.kr/privacy`.
+- Privacy URL points to a live page. Current verified option:
+  `https://invitation-platform-youngbeens-projects.vercel.app/privacy`.
 
 ## 7. Screenshots
 

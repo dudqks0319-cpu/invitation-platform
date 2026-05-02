@@ -54,6 +54,12 @@ Latest local evidence after the fixed-template preview update:
   `1.0.0 (37)` status `테스트 중`.
 - Future builds declare `ITSAppUsesNonExemptEncryption=false` through Expo iOS
   config and the native `Info.plist`.
+- Read-only App Store Connect final-submission audit on 2026-05-02 13:21 KST
+  confirms the TestFlight path is ready, but the App Store version surface is
+  not ready: screenshots are 0, metadata/review fields are blank, build 37 is
+  not selected for the App Store version, app privacy answers are not started,
+  IAP product does not exist, app category/age rating are not set, and the app
+  name still shows `InviteHub (40c8af)`.
 
 ## Required Command
 
@@ -83,6 +89,9 @@ These cannot be fully completed from code alone:
 - Support, privacy, terms, and FAQ copy matches the actual pricing policy:
   free template/draft/preview/photo-less publish, paid photo-included publish
   through App Store billing.
+- Public support/privacy/terms URLs are live. `invitehub.co.kr` currently does
+  not resolve by DNS; the verified live fallback is
+  `https://invitation-platform-youngbeens-projects.vercel.app`.
 
 Simulator screenshot caveat:
 
@@ -100,6 +109,8 @@ Use this map when entering the submission in App Store Connect:
 | --- | --- |
 | Bundle ID | `com.invitehub.app` |
 | URL scheme | `invitehub` |
+| Current live web base | `https://invitation-platform-youngbeens-projects.vercel.app` |
+| Custom domain target | `https://invitehub.co.kr` after DNS is connected |
 | IAP product | `publish.credit.ios` |
 | IAP type | Consumable |
 | IAP display name | 사진 포함 발행권 |
@@ -130,6 +141,7 @@ If a production build excludes analytics/tracking SDKs, do not mark tracking. If
 Do not claim final submission readiness if any of these are missing:
 
 - TestFlight install evidence.
-- App Store Connect metadata save evidence.
+- App Store Connect app information, version metadata, build selection, and
+  review-note save evidence.
 - Privacy label save evidence.
 - IAP product approval or a temporary feature flag that hides paid publishing.

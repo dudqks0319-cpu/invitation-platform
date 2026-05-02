@@ -41,7 +41,8 @@ Local security controls are materially in place. A fresh network-enabled
 | Risk | Owner | Due |
 | --- | --- | --- |
 | Real-device TestFlight install/launch evidence for build 37 has not been captured in this run. | Store Manager / Release owner | Before final release readiness sign-off |
-| App Store Connect privacy labels, IAP approval, review notes, and screenshots are not externally verified. | Store Manager / Release owner | Before final App Store submission |
+| App Store Connect app information, version metadata, build selection, privacy labels, IAP approval, review notes, and screenshots are verified incomplete. | Store Manager / Release owner | Before final App Store submission |
+| Custom domain `invitehub.co.kr` does not resolve by DNS; store URLs must use the verified Vercel deployment or DNS must be connected before submission. | Store Manager / Release owner | Before entering App Store metadata |
 
 ## Latest Audit Evidence
 
@@ -63,5 +64,8 @@ Store Connect now shows build `1.0.0 (37)` as `테스트 중` inside internal gr
 `TE Team (Expo)`.
 
 The remaining external gates are real-device TestFlight install/launch evidence
-and final App Store Connect submission surfaces: privacy labels, IAP approval or
-feature-flag fallback, screenshots, metadata, and review notes.
+and final App Store Connect submission surfaces: app information, version
+metadata, version build selection, privacy URL and privacy labels, IAP approval
+or feature-flag fallback, screenshots, and review notes. A 2026-05-02 read-only
+audit found those App Store submission surfaces incomplete even though the
+TestFlight build is available internally.
