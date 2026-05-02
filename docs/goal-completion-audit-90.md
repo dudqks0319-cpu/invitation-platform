@@ -1,7 +1,7 @@
 # InviteHub Goal Completion Audit - 90점 Release Readiness
 
 Date: 2026-05-01
-Latest update: 2026-05-01 18:06 KST
+Latest update: 2026-05-02 12:59 KST
 
 ## Objective
 
@@ -46,31 +46,33 @@ InviteHub 앱을 App Store 제출 기준으로 프론트엔드, 백엔드, UI/UX
 | Role harness coverage | `.claude/agents/*.md`, `.claude/skills/invitehub-app-builder/skill.md` | Verified agents exist: product-manager, marketing-copywriter, template-image-art-director, ux-designer, mobile-frontend-engineer, mobile-backend-engineer, api-integrator, security-engineer, qa-engineer, store-manager. | Pass |
 | Verification evidence | Release gate output, simulator screenshots | `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh` passed web lint, web typecheck, 52-file web/API suite, mobile lint, mobile typecheck, and focused 9-file mobile/API tests. Escalated iOS Release build also passed separately. Screenshots: `/private/tmp/invitehub-release-home-current.png`, `/private/tmp/invitehub-preview-fit-to-viewport.png`. Screenshot size verifier passed for `output/store-screenshots-verified/05-preview-fit-to-viewport.png`. | Pass with audit caveat |
 | App Store privacy/IAP map | `app/privacy/page.tsx`, `app/support/page.tsx`, `app/terms/page.tsx`, `app/faq/page.tsx`, `docs/app-store-readiness-90.md`, `docs/store-submission-metadata.md` | Bundle ID, production scheme, IAP product ID, privacy-label basis, support/privacy/terms URL content, map-link behavior, and env mapping are documented. | Pass |
-| Current EAS/TestFlight evidence | EAS build list, EAS build command | Latest finished iOS STORE build is build 11 from 2026-04-23 and old commit `028cd04`; it does not include current 90점 changes. New `eas build --profile testflight --platform ios --non-interactive` requires explicit user approval because it uploads current project code to Expo/EAS. | Blocked on user approval |
+| Current EAS/TestFlight evidence | EAS build list, EAS submission state, App Store Connect TestFlight page | EAS iOS build 37 (`4d995997-e952-4ada-83bf-bc6a929be412`) finished, EAS submission `bb2999db-8820-42a7-9bdf-fb2bfd7f6d21` finished, and App Store Connect shows `1.0.0 (37)` upload status `완료` for app id `6763630299`. | Pass with ASC compliance blocker |
 | App Store Connect execution checklist | `docs/app-store-connect-execution-checklist.md`, `docs/store-screenshot-plan.md` | Official Apple submission/privacy/upcoming-requirements pages checked on 2026-05-01; EAS, TestFlight, IAP, privacy labels, screenshots, and review notes are mapped to required evidence. | Pass |
 | App Review metadata accuracy | `docs/apple-review.md`, `docs/store-submission-metadata.md`, `docs/store-screenshot-plan.md` | Review notes now avoid claiming unverified profanity filter/report/block features. They document the implemented path: rate-limited RSVP/guestbook, host-approved guestbook publishing, and dashboard hide/approve moderation. | Pass |
-| App Store Connect evidence | ASC metadata/privacy/IAP/screenshot save state | Not verified in App Store Connect in this run. | Missing |
+| App Store Connect evidence | ASC TestFlight page, ASC export-compliance modal | Build 37 is visible in App Store Connect TestFlight, but the build row still shows `수출 규정 관련 문서 누락`. The modal asks what encryption algorithms the app implements; saving the answer is a legal/export compliance action requiring user confirmation. | Blocked on export compliance confirmation |
 
 ## Completion Verdict
 
-The local codebase is close to the 90+ release bar and the latest UI complaint
-about the invitation preview has been fixed and simulator-verified.
+The local codebase and EAS/TestFlight upload path now meet the practical 90+
+release bar for code, build, and upload evidence. The latest UI complaint about
+the invitation preview has been fixed and simulator-verified.
 
 The full active goal is not complete yet because:
 
-- The current changes have not been uploaded as a new EAS/TestFlight build.
+- App Store Connect is blocking build 37 from TestFlight tester availability
+  until export compliance is answered for the current build.
 - App Store Connect metadata, privacy labels, screenshots, and IAP product
-  approval/save state have not been verified.
+  approval/save state still need final verification before App Store submission.
 
 ## Next Required Action
 
-Start a new iOS EAS `testflight` build from the current workspace with
-auto-submit, then verify the resulting build in TestFlight/App Store Connect.
+Answer and save the App Store Connect encryption/export compliance prompt for
+build 37, then verify the build is available to the internal TestFlight group.
 
 Do not mark the goal complete until:
 
-- A current EAS build for these changes finishes successfully.
-- The build is selectable or installed in TestFlight.
+- The build 37 export-compliance blocker is cleared in App Store Connect.
+- The build is selectable or installed in TestFlight by an internal tester.
 - App Store Connect metadata, privacy labels, screenshots, review notes, and IAP
   product state are verified.
 - App Store Connect processing shows the build is available to internal testers.
@@ -116,23 +118,32 @@ Do not mark the goal complete until:
   before each route capture.
 - External execution checklist: `docs/app-store-connect-execution-checklist.md`.
 - Security gate: `docs/security-gate-90.md`.
+- EAS build 36 (`232b8941-5ec8-42fd-ba87-f225b4f460f1`) failed with
+  `XCODE_BUILD_ERROR` from `expo-image-picker` Swift references to `RCTFatal`
+  and `RCTErrorWithMessage`.
+- EAS archive size was reduced by running release builds with `EAS_NO_VCS=1`
+  after `.git/objects` dominated the default upload archive.
+- `expo-image-picker` was upgraded to `55.0.19`; local generic iOS device
+  archive compile passed with `xcodebuild ... -sdk iphoneos ... CODE_SIGNING_ALLOWED=NO build`.
+- EAS build 37 (`4d995997-e952-4ada-83bf-bc6a929be412`) finished successfully
+  and EAS submission `bb2999db-8820-42a7-9bdf-fb2bfd7f6d21` finished with no
+  reported submission error.
+- App Store Connect TestFlight shows `1.0.0 (37)` upload status `완료`, created
+  `May 2, 2026 12:46 PM`, and version build row status
+  `수출 규정 관련 문서 누락`.
+- Future builds now declare exempt/non-non-exempt encryption usage through
+  `apps/mobile/app.config.ts` and `apps/mobile/ios/InviteHub/Info.plist`
+  (`ITSAppUsesNonExemptEncryption=false`).
 
 ## Current Blocker
 
-The next external build command is:
+The current external blocker is not code or EAS upload. App Store Connect build
+37 requires an export-compliance answer before TestFlight can expose the build
+to testers. The visible App Store Connect question is:
 
-```bash
-cd /Users/jyb-m3max/Desktop/codex/invitation-platform/apps/mobile
-eas build --profile testflight --platform ios --non-interactive
-```
+> 앱에서 구현하는 암호화 알고리즘의 유형은 무엇입니까?
 
-This command uploads the current project code and metadata to Expo/EAS. It must
-not be run until the user explicitly approves that external code export.
-
-Use `--auto-submit` for the TestFlight upload path so the completed iOS artifact
-is sent to App Store Connect:
-
-```bash
-cd /Users/jyb-m3max/Desktop/codex/invitation-platform/apps/mobile
-eas build --profile testflight --platform ios --non-interactive --auto-submit --what-to-test "InviteHub template-first invitation builder, fixed canvas preview, map links, privacy/support copy, and store release checks."
-```
+Based on the current code review, InviteHub uses platform/network-standard
+encryption for HTTPS/service access and does not implement proprietary or
+non-standard cryptography. Saving the answer in App Store Connect is still a
+legal/export compliance action and requires explicit user confirmation.

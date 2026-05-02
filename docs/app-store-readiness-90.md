@@ -42,6 +42,15 @@ Latest local evidence after the fixed-template preview update:
 - Fresh `npm audit --audit-level=high` exited 0 on 2026-05-01 18:06 KST with
   no high or critical findings. Audit output still has moderate-only transitive
   findings in Expo/Next tooling chains.
+- EAS iOS build 37 (`4d995997-e952-4ada-83bf-bc6a929be412`) finished
+  successfully after upgrading `expo-image-picker` to `55.0.19`.
+- EAS submission `bb2999db-8820-42a7-9bdf-fb2bfd7f6d21` finished with no
+  reported submission error.
+- App Store Connect TestFlight shows `1.0.0 (37)` upload status `완료` for app
+  id `6763630299`, but the version build row is blocked by
+  `수출 규정 관련 문서 누락`.
+- Future builds declare `ITSAppUsesNonExemptEncryption=false` through Expo iOS
+  config and the native `Info.plist`.
 
 ## Required Command
 
@@ -62,7 +71,8 @@ SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh
 These cannot be fully completed from code alone:
 
 - App Store Connect app record points to bundle id `com.invitehub.app`.
-- TestFlight build is uploaded and install-tested.
+- TestFlight build 37 is uploaded; internal tester availability is blocked until
+  the export-compliance prompt is saved in App Store Connect.
 - App Privacy labels match collected data: account, invitations, RSVP, guestbook, photos, purchase records.
 - IAP product for photo-included publishing is created, priced, and approved.
 - Screenshots match the current simplified home and builder flow.
@@ -116,6 +126,7 @@ If a production build excludes analytics/tracking SDKs, do not mark tracking. If
 
 Do not claim final submission readiness if any of these are missing:
 
+- Export-compliance blocker cleared for build 37.
 - TestFlight install evidence.
 - App Store Connect metadata save evidence.
 - Privacy label save evidence.

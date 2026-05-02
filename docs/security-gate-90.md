@@ -40,7 +40,7 @@ Local security controls are materially in place. A fresh network-enabled
 
 | Risk | Owner | Due |
 | --- | --- | --- |
-| EAS/TestFlight build has not been uploaded from the current workspace. | Store Manager / Release owner | Before App Store Connect submission |
+| App Store Connect export compliance for build 37 is not saved yet, so the uploaded TestFlight build is blocked from tester availability. | Store Manager / Release owner | Before internal TestFlight install |
 | App Store Connect privacy labels, IAP approval, review notes, and screenshots are not externally verified. | Store Manager / Release owner | Before final App Store submission |
 
 ## Latest Audit Evidence
@@ -55,12 +55,13 @@ moderate findings in transitive Expo/Next tooling dependencies. Do not use
 `npm audit fix --force` for this release because npm proposes breaking
 downgrades for Next/Expo dependency chains.
 
-## Required Final Command
+## Current External Gate
 
-```bash
-cd /Users/jyb-m3max/Desktop/codex/invitation-platform/apps/mobile
-eas build --profile testflight --platform ios --non-interactive
-```
+EAS iOS build 37 and its App Store Connect submission have completed. The
+remaining gate is the App Store Connect encryption/export compliance prompt for
+the current build. The project now includes `ITSAppUsesNonExemptEncryption=false`
+for future builds, but build 37 still requires the App Store Connect answer to
+be saved manually.
 
-The EAS command uploads current project code and metadata to Expo/EAS, so it
-requires explicit user approval before execution.
+Saving the App Store Connect answer is a legal/export compliance action and
+requires explicit user confirmation.

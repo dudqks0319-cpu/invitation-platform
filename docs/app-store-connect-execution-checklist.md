@@ -13,14 +13,16 @@ Official sources checked:
 
 ## Current External Blocker
 
-The next step uploads the current project code and metadata to Expo/EAS:
+Build 37 is uploaded and processed in App Store Connect, but it is not yet
+available to testers because the TestFlight row shows
+`수출 규정 관련 문서 누락`.
 
-```bash
-cd /Users/jyb-m3max/Desktop/codex/invitation-platform/apps/mobile
-eas build --profile testflight --platform ios --non-interactive
-```
+The App Store Connect modal for build 37 asks:
 
-Run it only after the user explicitly approves external code export to Expo/EAS.
+> 앱에서 구현하는 암호화 알고리즘의 유형은 무엇입니까?
+
+Saving this answer is a legal/export compliance action. Do not save it without
+explicit user confirmation.
 
 ## 1. Build Requirement
 
@@ -52,22 +54,33 @@ Current local evidence:
 - Fresh high-severity dependency audit:
   `npm audit --audit-level=high` exited 0 on 2026-05-01 18:06 KST with no high
   or critical findings.
+- Local generic iOS device archive compile passed after the `expo-image-picker`
+  fix:
+  `xcodebuild -workspace InviteHub.xcworkspace -scheme InviteHub -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO build`.
 
 ## 2. EAS Build
 
+Current evidence:
+
+- Build 36 (`232b8941-5ec8-42fd-ba87-f225b4f460f1`) failed with
+  `XCODE_BUILD_ERROR` from stale `expo-image-picker` Swift references.
+- `expo-image-picker` was upgraded to `55.0.19`.
+- Build 37 (`4d995997-e952-4ada-83bf-bc6a929be412`) finished successfully.
+- Submission `bb2999db-8820-42a7-9bdf-fb2bfd7f6d21` finished with no reported
+  EAS submission error.
+- Artifact is associated with App Store Connect app id `6763630299`.
+
 Required evidence before marking the store area complete:
 
-- New iOS `testflight` EAS build starts from the current workspace.
-- Build finishes successfully.
-- Build number is newer than build 11.
-- Build commit or artifact timestamp matches the current 90점 changes.
-- Artifact is associated with App Store Connect app id `6763630299`.
+- App Store Connect export compliance is saved for build 37.
+- Build 37 is available to internal testers.
 
 ## 3. TestFlight
 
 Required evidence:
 
 - The new build is visible in App Store Connect TestFlight.
+- The build no longer shows `수출 규정 관련 문서 누락`.
 - The build can be installed by an internal tester.
 - Launch smoke test passes.
 - Home template gallery opens.
