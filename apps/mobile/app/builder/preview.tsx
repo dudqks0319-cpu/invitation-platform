@@ -1,9 +1,8 @@
 import { Link, useLocalSearchParams } from "expo-router";
-import { useState } from "react";
+import { type ComponentType, useEffect, useState } from "react";
 import { Text, View } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { InvitationPreviewCard } from "@/components/invitation/InvitationPreviewCard";
-import { StorePurchaseCard } from "@/components/payments/StorePurchaseCard";
 import { Card } from "@/components/ui/Card";
 import { ErrorView } from "@/components/ui/ErrorView";
 import { Loading } from "@/components/ui/Loading";
@@ -18,6 +17,15 @@ import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 import { openInvitationPublicPage, shareInvitationLink } from "@/lib/share";
 import { getPublicInvitationUrl } from "@/lib/web-links";
 import { publishGuestInvitation } from "@/lib/invitations";
+
+type StorePurchaseCardProps = {
+  accessToken?: string;
+  disabledReason?: string;
+  invitationId?: string;
+  onBeforePurchase?: () => Promise<{ invitationId: string } | null>;
+  onVerified?: (result: { invitationId: string; slug: string }) => void;
+};
+type StorePurchaseCardComponent = ComponentType<StorePurchaseCardProps>;
 
 export default function BuilderPreviewScreen() {
   const { localId } = useLocalSearchParams<{ localId?: string }>();
@@ -34,6 +42,7 @@ export default function BuilderPreviewScreen() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [pending, setPending] = useState<"" | "save" | "publish" | "share">("");
+  const [StorePurchaseCard, setStorePurchaseCard] = useState<StorePurchaseCardComponent | null>(null);
   const shareSlug = draft?.payload.share.slug ?? "";
   const hasMapSearchTarget = Boolean(draft?.payload.venueName || draft?.payload.venueAddress);
   const pricing = draft ? getMobileInvitationPricing(draft.payload) : { amount: 0, breakdown: [], isFree: true };
@@ -67,6 +76,35 @@ export default function BuilderPreviewScreen() {
       : "필수 정보만 채우면 로그인 없이 게스트로 공개 링크를 발행할 수 있습니다.";
   const urlGuide = publicUrl || (paidPublishUnavailable ? "사진 제거 후 무료 발행 가능" : requiresPurchase ? "스토어 결제 완료 후 자동 생성" : "서버 저장 후 자동 생성");
   const missingItemsText = publishReadiness.missingFields.join(" · ");
+
+  useEffect(() => {
+    if (!paidPublishingEnabled) {
+      setStorePurchaseCard(null);
+      return;
+    }
+
+    let mounted = true;
+
+    void import("@/components/payments/StorePurchaseCard")
+      .then((module) => {
+        if (!mounted) {
+          return;
+        }
+
+        setStorePurchaseCard(() => module.StorePurchaseCard);
+      })
+      .catch((caught) => {
+        if (!mounted) {
+          return;
+        }
+
+        setError(caught instanceof Error ? caught.message : "스토어 결제 모듈을 불러오지 못했습니다.");
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [paidPublishingEnabled]);
 
   async function resolveRemoteUser(requireFullAccount = false) {
     if (!configured) {
@@ -426,25 +464,33 @@ export default function BuilderPreviewScreen() {
               </Link>
             </Card>
           ) : (
-            <StorePurchaseCard
-              accessToken={canUsePaidAccount ? session?.access_token : ""}
-              disabledReason={
-                !configured
-                  ? configMessage
-                  : paidPublishBlockReason
-                    ? paidPublishBlockReason
-                    : !publishReadiness.canPublish
-                      ? `공개 전 필요 항목: ${publishReadiness.missingFields.join(", ")}`
-                      : ""
-              }
-              invitationId={draft?.serverId}
-              onBeforePurchase={ensureDraftForPurchase}
-              onVerified={({ invitationId, slug }) => {
-                applyRemotePublish(invitationId, slug);
-                setMessage(`스토어 결제가 완료되어 공개 링크를 발행했습니다.\n${getPublicInvitationUrl(slug)}`);
-                setError("");
-              }}
-            />
+            StorePurchaseCard ? (
+              <StorePurchaseCard
+                accessToken={canUsePaidAccount ? session?.access_token : ""}
+                disabledReason={
+                  !configured
+                    ? configMessage
+                    : paidPublishBlockReason
+                      ? paidPublishBlockReason
+                      : !publishReadiness.canPublish
+                        ? `공개 전 필요 항목: ${publishReadiness.missingFields.join(", ")}`
+                        : ""
+                }
+                invitationId={draft?.serverId}
+                onBeforePurchase={ensureDraftForPurchase}
+                onVerified={({ invitationId, slug }) => {
+                  applyRemotePublish(invitationId, slug);
+                  setMessage(`스토어 결제가 완료되어 공개 링크를 발행했습니다.\n${getPublicInvitationUrl(slug)}`);
+                  setError("");
+                }}
+              />
+            ) : (
+              <Card eyebrow="앱 결제" title="스토어 결제 준비 중">
+                <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
+                  결제 모듈을 불러오는 중입니다. 잠시 후 다시 시도해 주세요.
+                </Text>
+              </Card>
+            )
           )
         ) : (
           <View

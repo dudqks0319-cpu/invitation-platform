@@ -14,6 +14,7 @@ async function loadConfig(envPatch: Record<string, string | undefined>) {
     scheme: string;
     ios: { bundleIdentifier: string };
     android: { package: string };
+    plugins: Array<string | [string, Record<string, unknown>?]>;
   };
 }
 
@@ -43,5 +44,21 @@ describe("mobile app config", () => {
     expect(config.ios.bundleIdentifier).toBe("com.invitehub.app.dev");
     expect(config.android.package).toBe("com.invitehub.app.dev");
     expect(config.scheme).toBe("invitehub-dev");
+  });
+
+  it("does not include IAP native config when paid publishing is disabled", async () => {
+    const config = await loadConfig({
+      EXPO_PUBLIC_ENABLE_PAID_PUBLISH: undefined
+    });
+
+    expect(config.plugins).not.toContain("react-native-iap");
+  });
+
+  it("includes IAP native config only when paid publishing is explicitly enabled", async () => {
+    const config = await loadConfig({
+      EXPO_PUBLIC_ENABLE_PAID_PUBLISH: "true"
+    });
+
+    expect(config.plugins).toContain("react-native-iap");
   });
 });

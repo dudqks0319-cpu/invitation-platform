@@ -17,6 +17,26 @@ const scheme = process.env.APP_SCHEME || (isProduction ? "invitehub" : "invitehu
 const googleIosUrlScheme = process.env.GOOGLE_IOS_URL_SCHEME ?? "";
 const kakaoNativeAppKey = process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY ?? "";
 const basePlugins = (Array.isArray(baseConfig.plugins) ? baseConfig.plugins : []) as ExpoPlugin[];
+const paidPublishingEnabled = parsePublicBooleanFlag(process.env.EXPO_PUBLIC_ENABLE_PAID_PUBLISH);
+
+function parsePublicBooleanFlag(value: string | undefined, defaultValue = false) {
+  if (value === undefined) {
+    return defaultValue;
+  }
+
+  const normalized = value.trim().toLowerCase();
+
+  if (["1", "true", "yes", "on"].includes(normalized)) {
+    return true;
+  }
+
+  if (["0", "false", "no", "off", ""].includes(normalized)) {
+    return false;
+  }
+
+  return defaultValue;
+}
+
 const googleSignInPlugin: ExpoPlugin | null = googleIosUrlScheme
   ? [
     "@react-native-google-signin/google-signin",
@@ -42,7 +62,6 @@ const kakaoPlugin: ExpoPlugin | null = kakaoNativeAppKey
 const mergedPlugins: ExpoPlugin[] = [
   "expo-router",
   "expo-web-browser",
-  "react-native-iap",
   [
     "expo-build-properties",
     {
@@ -57,6 +76,7 @@ const mergedPlugins: ExpoPlugin[] = [
       }
     }
   ],
+  ...(paidPublishingEnabled ? ["react-native-iap"] : []),
   ...(googleSignInPlugin ? [googleSignInPlugin] : []),
   ...(kakaoPlugin ? [kakaoPlugin] : [])
 ];
@@ -84,14 +104,22 @@ const appConfig = {
   },
   plugins: [
     ...mergedPlugins,
-    ...basePlugins.filter((plugin) => {
-      if (typeof plugin === "string") {
-        return !mergedPlugins.includes(plugin);
+  ...basePlugins.filter((plugin) => {
+    if (typeof plugin === "string") {
+      if (plugin === "react-native-iap" && !paidPublishingEnabled) {
+        return false;
       }
 
-      const pluginName = Array.isArray(plugin) ? plugin[0] : "";
-      return !mergedPlugins.some((candidate) => Array.isArray(candidate) && candidate[0] === pluginName);
-    })
+      return !mergedPlugins.includes(plugin);
+    }
+
+    const pluginName = Array.isArray(plugin) ? plugin[0] : "";
+    if (pluginName === "react-native-iap" && !paidPublishingEnabled) {
+      return false;
+    }
+
+    return !mergedPlugins.some((candidate) => Array.isArray(candidate) && candidate[0] === pluginName);
+  })
   ],
   extra: {
     ...baseConfig.extra,
