@@ -50,8 +50,15 @@ App Store Connect accepts 1 to 10 screenshots per display set in `.png`,
   `01-home-paid-disabled.png` and `02-step3-paid-disabled.png` passed at
   `1206x2622`. The Step 3 screenshot shows photo publishing disabled for the
   first submission path and no IAP purchase button.
-- These are simulator evidence only. Final App Store screenshot assets still
-  need to be captured/exported in the required App Store Connect sizes.
+- Build 40 local submission candidate folder:
+  `/Users/jyb-m3max/Desktop/codex/invitation-platform/output/store-screenshots-submission-build40`
+- `scripts/verify-store-screenshots.sh output/store-screenshots-submission-build40`:
+  6 PNGs passed at `1206x2622` on 2026-05-03. Manual visual check found no
+  iOS `InviteHub에서 열겠습니까?` prompt, no dev overlay, and no simulator
+  window chrome.
+- These are simulator evidence only. App Store Connect screenshot upload still
+  needs Apple-side confirmation before the `screenshotsUploaded` evidence key
+  can be marked passed.
 
 ## Simulator Checklist
 
@@ -99,6 +106,8 @@ Store Connect에서 요구하는 대표 디스플레이 세트별로 다시 캡�
 - 스크립트는 실행 전 `com.invitehub.app.dev`와
   `com.invitehub.app.dev-default`를 종료/제거해 dev 앱이 딥링크를 가로채는
   문제를 줄인다.
+- 홈 화면은 Release 앱 렌더링이 안정화될 때까지 기본 5초 대기한 뒤
+  촬영한다.
 - 다만 iOS Simulator에서 `simctl openurl`을 쓰면 `InviteHub에서
   열겠습니까?` 확인 팝업이 뜰 수 있다. 이 팝업이 찍힌 이미지는 스토어
   제출용으로 쓰면 안 된다.

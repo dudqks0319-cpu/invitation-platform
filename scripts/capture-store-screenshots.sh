@@ -8,6 +8,8 @@ DEVICE_NAME="${DEVICE_NAME:-iPhone 17}"
 OUTPUT_DIR="${1:-$ROOT/output/store-screenshots}"
 BUNDLE_ID="${APP_BUNDLE_ID:-com.invitehub.app}"
 APP_SCHEME="${APP_SCHEME:-invitehub}"
+LAUNCH_WAIT_SECONDS="${LAUNCH_WAIT_SECONDS:-5}"
+ROUTE_WAIT_SECONDS="${ROUTE_WAIT_SECONDS:-2}"
 DEV_BUNDLE_IDS=(
   "com.invitehub.app.dev"
   "com.invitehub.app.dev-default"
@@ -35,27 +37,27 @@ done
 /usr/bin/xcrun simctl install "$DEVICE_ID" "$IOS_APP" >/dev/null
 /usr/bin/xcrun simctl terminate "$DEVICE_ID" "$BUNDLE_ID" >/dev/null 2>&1 || true
 /usr/bin/xcrun simctl launch "$DEVICE_ID" "$BUNDLE_ID" >/dev/null
-sleep 1
+sleep "$LAUNCH_WAIT_SECONDS"
 /usr/bin/xcrun simctl io "$DEVICE_ID" screenshot "$OUTPUT_DIR/01-home.png" >/dev/null
 
 /usr/bin/xcrun simctl openurl "$DEVICE_ID" "$APP_SCHEME:///templates" >/dev/null
-sleep 1
+sleep "$ROUTE_WAIT_SECONDS"
 /usr/bin/xcrun simctl io "$DEVICE_ID" screenshot "$OUTPUT_DIR/02-templates.png" >/dev/null
 
 /usr/bin/xcrun simctl openurl "$DEVICE_ID" "$APP_SCHEME:///builder/step1-basic" >/dev/null
-sleep 1
+sleep "$ROUTE_WAIT_SECONDS"
 /usr/bin/xcrun simctl io "$DEVICE_ID" screenshot "$OUTPUT_DIR/03-builder-step1.png" >/dev/null
 
 /usr/bin/xcrun simctl openurl "$DEVICE_ID" "$APP_SCHEME:///builder/step3-photos" >/dev/null
-sleep 1
+sleep "$ROUTE_WAIT_SECONDS"
 /usr/bin/xcrun simctl io "$DEVICE_ID" screenshot "$OUTPUT_DIR/04-builder-step3.png" >/dev/null
 
 /usr/bin/xcrun simctl openurl "$DEVICE_ID" "$APP_SCHEME:///builder/preview" >/dev/null
-sleep 1
+sleep "$ROUTE_WAIT_SECONDS"
 /usr/bin/xcrun simctl io "$DEVICE_ID" screenshot "$OUTPUT_DIR/05-preview.png" >/dev/null
 
 /usr/bin/xcrun simctl openurl "$DEVICE_ID" "$APP_SCHEME:///mypage" >/dev/null
-sleep 1
+sleep "$ROUTE_WAIT_SECONDS"
 /usr/bin/xcrun simctl io "$DEVICE_ID" screenshot "$OUTPUT_DIR/06-mypage.png" >/dev/null
 
 cat <<EOF

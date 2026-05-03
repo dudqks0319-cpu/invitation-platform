@@ -131,6 +131,13 @@ Manual Apple-side confirmation path:
   `scripts/verify-store-screenshots.sh output/store-screenshots-verified`;
   passed for `05-preview-fit-to-viewport.png` and
   `06-preview-fixed-canvas.png` at `1206x2622`.
+- Build 40 local submission screenshot candidate:
+  `zsh scripts/capture-store-screenshots.sh output/store-screenshots-submission-build40`
+  generated six images on 2026-05-03 after the capture script was adjusted to
+  wait for the Release home screen. `scripts/verify-store-screenshots.sh
+  output/store-screenshots-submission-build40` passed all six at `1206x2622`.
+  Manual visual review found no iOS open-confirmation prompt, dev overlay, or
+  simulator window chrome.
 - Fresh dependency audit:
   `npm audit --audit-level=high` exited 0 on 2026-05-01 18:06 KST. Current
   audit output has moderate-only transitive findings for PostCSS and uuid in

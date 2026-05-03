@@ -146,10 +146,11 @@ These cannot be fully completed from code alone:
 Simulator screenshot caveat:
 
 - `scripts/capture-store-screenshots.sh` now removes dev bundles before capture,
-  but route changes still use `simctl openurl`. iOS can display an
-  "Open in InviteHub" confirmation prompt, so final App Store screenshots should
-  be captured from a manually confirmed Simulator flow or a TestFlight build
-  rather than relying blindly on the automated route screenshots.
+  waits longer for the Release home screen to render, and writes valid
+  `1206x2622` PNGs for the build 40 local submission candidate set:
+  `output/store-screenshots-submission-build40`. Route changes still use
+  `simctl openurl`, so each generated image must be visually rejected if iOS
+  displays the "Open in InviteHub" confirmation prompt.
 
 ## App Store Connect Field Map
 

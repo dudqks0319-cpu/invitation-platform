@@ -293,6 +293,9 @@ Required evidence:
 - `simctl openurl` route captures are checked for the iOS `InviteHub에서
   열겠습니까?` prompt before upload; any image containing the prompt is rejected.
 - Screenshot files pass `scripts/verify-store-screenshots.sh` before upload.
+- Local build 40 candidate folder:
+  `output/store-screenshots-submission-build40`; 6 PNGs passed size validation
+  at `1206x2622` and manual visual prompt/overlay checks on 2026-05-03.
 
 ## 8. Review Notes
 
