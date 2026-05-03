@@ -86,3 +86,18 @@ The script writes a timestamped bundle under
 `output/testflight-device-evidence/`. It filters app inventory to
 `com.invitehub.app` and process inventory to `InviteHub` to avoid collecting a
 full device app list.
+
+To wait for the phone and collect as soon as CoreDevice becomes available:
+
+```bash
+bash scripts/await-testflight-device.sh
+```
+
+To wait and then launch the app for an observed smoke test:
+
+```bash
+bash scripts/await-testflight-device.sh --launch
+```
+
+This writes watch output under `output/testflight-device-watch/`, then nests the
+focused evidence bundle when the phone becomes available.
