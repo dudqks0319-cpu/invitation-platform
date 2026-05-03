@@ -87,7 +87,8 @@ notIncludes(
 includes("docs/app-store-readiness-90.md", readiness, "Build 40 App Store Connect entry values");
 includes("docs/app-store-readiness-90.md", readiness, "NEXT_PUBLIC_SUPPORT_EMAIL");
 includes("docs/app-store-readiness-90.md", readiness, "returned build 40 `FINISHED`, linked submission `FINISHED`, `error: null`");
-includes("docs/goal-completion-audit-90.md", audit, "The full active goal is not complete yet");
+includes("docs/goal-completion-audit-90.md", audit, "## Completion Verdict");
+includes("docs/goal-completion-audit-90.md", audit, "Do not mark the goal complete until");
 includes("docs/goal-completion-audit-90.md", audit, "build 40 is uploaded and submitted");
 includes("docs/goal-completion-audit-90.md", audit, "App Review contact email");
 includes("docs/security-gate-90.md", security, "NEXT_PUBLIC_SUPPORT_EMAIL");

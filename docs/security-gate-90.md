@@ -67,8 +67,8 @@ candidate is build 40.
 `node scripts/eas-build-submission-status.mjs 86a14873-bdfd-4390-87d1-81ae0ddd06dc`
 returned build 40 `FINISHED`, linked submission `FINISHED`, `error: null`.
 A group-submit retry `949d446f-dea1-490f-8b52-2de359d899ee` ended `ERRORED`,
-so internal TestFlight group assignment still needs App Store Connect
-confirmation.
+but direct App Store Connect evidence on 2026-05-03 confirmed build 40 is now
+assigned to internal group `Team (Expo)` and status `테스트 중`.
 
 Historical build 38 completed and EAS Submit uploaded the binary to App Store
 Connect. It contains commit `d8ed82188b3233bebe7be90c173d434f36690581`, which
@@ -76,9 +76,8 @@ keeps paid photo publishing disabled by default until an IAP product exists.
 `node scripts/eas-build-submission-status.mjs d185dfc1-9110-4d81-b510-08e02f1ece7f`
 was re-run on 2026-05-02 14:47 KST and returned build status `FINISHED`, linked
 submission status `FINISHED`, and `error: null`.
-Build 37 remains the last App Store Connect internal-group build that was
-visually confirmed as `테스트 중`; build 38 processing/group assignment still
-needs App Store Connect confirmation.
+Build 40 is the current App Store Connect internal-group build visually
+confirmed as `테스트 중`; build 38 and 39 are superseded.
 
 The remaining external gates are real-device TestFlight install/launch evidence
 and final App Store Connect submission surfaces: app information, version
@@ -95,7 +94,7 @@ but the flag must stay disabled until the product is created and approved.
 
 The 2026-05-03 12:37 KST fast release gate passed web/mobile lint and
 typecheck, the 58-file web/API test suite with 175 tests, and the focused
-9-file mobile/API suite with 34 tests. The 36-check App Store packet verifier
+9-file mobile/API suite with 34 tests. The 42-check App Store packet verifier
 is now pinned to build 40.
 
 The public support page no longer hardcodes the unverified

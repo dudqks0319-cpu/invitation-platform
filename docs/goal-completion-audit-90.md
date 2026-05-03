@@ -1,7 +1,7 @@
 # InviteHub Goal Completion Audit - 90점 Release Readiness
 
 Date: 2026-05-01
-Latest update: 2026-05-03 12:53 KST
+Latest update: 2026-05-03 13:18 KST
 
 ## Objective
 
@@ -44,7 +44,7 @@ InviteHub 앱을 App Store 제출 기준으로 프론트엔드, 백엔드, UI/UX
 | Store config 90+ | `apps/mobile/app.config.ts`, `apps/mobile/eas.json`, native project | Production bundle id is `com.invitehub.app`; production scheme is `invitehub`; dev scheme is `invitehub-dev`; Xcode is 26.3. | Pass |
 | Harness 90+ | `.claude/skills/invitehub-app-builder/skill.md`, `docs/invitehub-app-harness.md`, `scripts/invitehub-release-gate.sh` | Release gate covers lint, typecheck, tests, high audit, iOS Release simulator build. | Pass |
 | Role harness coverage | `.claude/agents/*.md`, `.claude/skills/invitehub-app-builder/skill.md` | Verified agents exist: product-manager, marketing-copywriter, template-image-art-director, ux-designer, mobile-frontend-engineer, mobile-backend-engineer, api-integrator, security-engineer, qa-engineer, store-manager. | Pass |
-| Verification evidence | Release gate output, simulator screenshots | `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh` passed code gates on 2026-05-03 12:37 KST: web/mobile lint, web/mobile typecheck, 58-file web/API suite with 175 tests, and focused 9-file mobile/API suite with 34 tests. The packet verifier is pinned to build 40. Escalated iOS Release build also passed separately. Screenshots: `/private/tmp/invitehub-release-home-current.png`, `/private/tmp/invitehub-preview-fit-to-viewport.png`, `/tmp/invitehub-build40-candidate-release-home-20260503.png`. Screenshot size verifier passed for `output/store-screenshots-verified/05-preview-fit-to-viewport.png`. | Pass with audit caveat |
+| Verification evidence | Release gate output, simulator screenshots | `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh` passed code gates on 2026-05-03 12:37 KST: web/mobile lint, web/mobile typecheck, 58-file web/API suite with 175 tests, and focused 9-file mobile/API suite with 34 tests. The 42-check packet verifier is pinned to build 40. Escalated iOS Release build also passed separately. Screenshots: `/private/tmp/invitehub-release-home-current.png`, `/private/tmp/invitehub-preview-fit-to-viewport.png`, `/tmp/invitehub-build40-candidate-release-home-20260503.png`. Screenshot size verifier passed for `output/store-screenshots-verified/05-preview-fit-to-viewport.png`. | Pass with audit caveat |
 | App Store privacy/IAP map | `app/privacy/page.tsx`, `app/support/page.tsx`, `app/terms/page.tsx`, `app/faq/page.tsx`, `docs/app-store-readiness-90.md`, `docs/store-submission-metadata.md` | Bundle ID, production scheme, IAP product ID, privacy-label basis, support/privacy/terms URL content, map-link behavior, and env mapping are documented. | Pass |
 | Current EAS/Submit evidence | `scripts/eas-build-submission-status.mjs`, EAS build/submission state | EAS iOS build 38 (`d185dfc1-9110-4d81-b510-08e02f1ece7f`) was rechecked on 2026-05-02 14:47 KST: build status `FINISHED`, app version `1.0.0`, build number `38`, commit `d8ed82188b3233bebe7be90c173d434f36690581`, linked submission `77395141-a80b-48f9-8e43-c61114fafa25` status `FINISHED`, `error: null`. | Pass for EAS upload |
 | App Store Connect execution checklist | `docs/app-store-connect-execution-checklist.md`, `docs/store-screenshot-plan.md` | Official Apple submission/privacy/upcoming-requirements pages checked on 2026-05-01; EAS, TestFlight, IAP, privacy labels, screenshots, and review notes are mapped to required evidence. | Pass |
@@ -104,14 +104,16 @@ Manual Apple-side confirmation path:
 - `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`:
   passed code gates on 2026-05-03 12:37 KST. It ran web lint, web typecheck,
   58-file web/API test suite with 175 tests, mobile lint, mobile typecheck, and
-  focused 9-file mobile/API test suite with 34 tests. The 36-check App Store
+  focused 9-file mobile/API test suite with 34 tests. The 42-check App Store
   packet verifier is now pinned to build 40.
 - Escalated iOS Release simulator build:
   `npm --prefix apps/mobile run ios -- --device "iPhone 17" --configuration Release --no-bundler`;
   passed with 0 errors and 2 warnings; installed and opened `com.invitehub.app`
   on iPhone 17.
-- `npm run test -- --exclude=**/.claude/**`: 52 test files / 152 tests passed.
-- Focused mobile/API tests: 9 test files / 30 tests passed.
+- `npm run test -- --exclude=**/.claude/**`: 58 test files / 175 tests passed
+  in the latest release gate.
+- Focused mobile/API tests: 9 test files / 34 tests passed in the latest
+  release gate.
 - Latest Release home screenshot:
   `/private/tmp/invitehub-release-home-current.png`.
 - Latest fixed template preview screenshot from real Simulator taps:
@@ -217,7 +219,7 @@ Manual Apple-side confirmation path:
   `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`
   passed web lint, web typecheck, 58-file web/API test suite with 175 tests,
   mobile lint, mobile typecheck, and focused 9-file mobile/API suite with 34
-  tests. The new 36-check App Store packet verifier is pinned to build 40.
+  tests. The new 42-check App Store packet verifier is pinned to build 40.
 - App Store Connect TestFlight group check on 2026-05-03 12:53 KST:
   internal group `Team (Expo)` shows `내부 그룹 ∙ 1명의 테스터 ∙ 4개의 빌드`.
   The group build tab lists `1.0.0 (40)` with status `테스트 중`, platform
@@ -230,17 +232,18 @@ Manual Apple-side confirmation path:
   reference. The filled evidence file is gitignored; only the template is
   tracked.
 - Goal completion verifier tests:
-  `npm run test -- scripts/verify-goal-completion.test.ts --exclude='**/.claude/**'`
-  passed on 2026-05-02 15:13 KST. It covers missing manifest, legacy boolean
-  evidence, invalid artifacts, and the fully structured pass path.
+  `npm run test -- scripts/record-app-store-evidence.test.ts scripts/verify-goal-completion.test.ts --exclude='**/.claude/**'`
+  passed 2 files / 9 tests on 2026-05-03 13:09 KST. It covers missing
+  manifest, legacy boolean evidence, invalid artifacts, App Store Connect
+  local-file artifact rejection, and the fully structured pass path.
 - App Store evidence recorder:
   `node scripts/record-app-store-evidence.mjs --list` lists the allowed
   Apple-side evidence keys, and the recorder writes only the gitignored
   `docs/app-store-external-evidence.json` manifest.
-- App Store evidence recorder tests:
-  `npm run test -- scripts/record-app-store-evidence.test.ts --exclude='**/.claude/**'`
-  passed on 2026-05-02 15:18 KST. It covers key listing, valid structured
-  evidence recording, unknown-key rejection, and invalid-artifact rejection.
+- App Store evidence recorder tests are included in the same 2026-05-03
+  2-file / 9-test run and cover key listing, valid structured evidence
+  recording, unknown-key rejection, invalid-artifact rejection, and rejection of
+  local file paths for App Store Connect upload evidence.
 - Paid-publish fallback verification on 2026-05-02 13:38 KST:
   - `npm run test -- apps/mobile/lib/release-flags.test.ts apps/mobile/lib/preview-flow.test.ts apps/mobile/lib/payments/pricing.test.ts apps/mobile/lib/invitations.test.ts lib/release-flags.test.ts --exclude='**/.claude/**'`: 5 files / 14 tests passed.
   - `npm --prefix apps/mobile run typecheck`: passed.

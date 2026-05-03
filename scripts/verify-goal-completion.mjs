@@ -10,10 +10,12 @@ const requiredLocalClaims = [
   {
     file: "docs/goal-completion-audit-90.md",
     snippets: [
+      "Concrete Success Criteria",
+      "Prompt-to-Artifact Checklist",
       "Fast release gate recheck on 2026-05-03 12:37 KST",
       "58-file web/API test suite with 175 tests",
-      "36-check App Store packet verifier",
-      "The full active goal is not complete yet"
+      "42-check App Store packet verifier",
+      "Build 40 local submission screenshot candidate"
     ]
   },
   {
@@ -29,7 +31,7 @@ const requiredLocalClaims = [
     file: "docs/security-gate-90.md",
     snippets: [
       "58-file web/API test suite with 175 tests",
-      "36-check App Store packet verifier",
+      "42-check App Store packet verifier",
       "NEXT_PUBLIC_SUPPORT_EMAIL"
     ]
   }
