@@ -78,6 +78,29 @@ still reports installed bundle version `39` for `com.invitehub.app`. The visible
 crash dialog uses the ASC app name `InviteHub (40c8af)`, which can appear for
 build 38, 39, or 40.
 
+Mac TestFlight build 40 has a separate confirmed crash. The macOS crash dialog
+and unified logs show build `1.0.0 (40)` aborting with an unhandled JavaScript
+exception:
+
+```txt
+Unhandled JS Exception: Error: No routes found
+```
+
+The stack points to Expo Router's `ContextNavigator` inside the release
+`main.jsbundle`. The local cause was the custom `apps/mobile/index.js` entry and
+`apps/mobile/package.json` main value calling `ExpoRoot` with
+`require.context("./app")`, which bypassed Expo Router's generated
+`expo-router/_ctx` route context. The fix is to use the supported
+`expo-router/entry` entrypoint directly from `package.json`, use Expo's default
+Metro config so `transform.routerRoot` reaches the Babel transformer, and
+explicitly load Expo Router's Babel env transform for `EXPO_ROUTER_APP_ROOT` in
+`apps/mobile/babel.config.js`.
+That extra Babel hook is required in this workspace because `babel-preset-expo`
+is resolved from the monorepo root while `expo-router` is installed in the
+mobile workspace. After the fix, `npx expo export --platform ios --output-dir
+/tmp/invitehub-ios-export-entry-fix-20260503-1531` passed and produced the iOS
+Hermes bundle.
+
 ## Required Next Check
 
 On the iPhone:
