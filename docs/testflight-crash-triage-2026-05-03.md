@@ -68,3 +68,21 @@ On the iPhone:
 For machine verification, the iPhone must be unlocked, trusted by the Mac, and
 available to `xcrun devicectl`. Current `devicectl` state is `unavailable`, so
 local log capture is blocked.
+
+When the phone is available, collect focused local evidence with:
+
+```bash
+bash scripts/collect-testflight-device-evidence.sh
+```
+
+After the user is ready to observe the phone, launch the app and capture the
+launch result with:
+
+```bash
+bash scripts/collect-testflight-device-evidence.sh --launch
+```
+
+The script writes a timestamped bundle under
+`output/testflight-device-evidence/`. It filters app inventory to
+`com.invitehub.app` and process inventory to `InviteHub` to avoid collecting a
+full device app list.
