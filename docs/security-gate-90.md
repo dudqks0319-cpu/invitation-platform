@@ -66,6 +66,9 @@ candidate is build 40.
 
 `node scripts/eas-build-submission-status.mjs 86a14873-bdfd-4390-87d1-81ae0ddd06dc`
 returned build 40 `FINISHED`, linked submission `FINISHED`, `error: null`.
+A group-submit retry `949d446f-dea1-490f-8b52-2de359d899ee` ended `ERRORED`,
+so internal TestFlight group assignment still needs App Store Connect
+confirmation.
 
 Historical build 38 completed and EAS Submit uploaded the binary to App Store
 Connect. It contains commit `d8ed82188b3233bebe7be90c173d434f36690581`, which

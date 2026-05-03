@@ -54,7 +54,7 @@ InviteHub 앱을 App Store 제출 기준으로 프론트엔드, 백엔드, UI/UX
 | App Store Connect final submission surface | ASC distribution/version, app info, app privacy, IAP, review-submission pages | Read-only audit on 2026-05-02 13:21 KST found the App Store version still incomplete: iPhone screenshot set has 0 screenshots, version metadata fields are blank, build is not selected on the version page, app review submission list is empty, app privacy URL is blank and labels are not started, IAP list has no product, app subtitle/category/age rating are not set, and the app name still includes `InviteHub (40c8af)`. | Blocked externally |
 | Paid publish fallback | `apps/mobile/lib/release-flags.ts`, `lib/release-flags.ts`, `.env.example`, `apps/mobile/.env.example` | Paid photo publishing now defaults off unless web and mobile public env flags are explicitly enabled. Targeted tests passed, web/mobile typecheck and lint passed, and iPhone 17 Release simulator screenshots show the photo step disabled without an IAP purchase UI. | Pass locally |
 | Current paid-fallback EAS build | EAS build 38, EAS Submit | Build 38 (`d185dfc1-9110-4d81-b510-08e02f1ece7f`) finished and was uploaded to App Store Connect. It contains commit `d8ed82188b3233bebe7be90c173d434f36690581`. Apple processing, export-compliance clearance, and internal group assignment were confirmed on 2026-05-02 15:32 KST. | Pass for upload and ASC |
-| Current launch-crash recovery build | EAS build 40, EAS Submit | Build 40 (`86a14873-bdfd-4390-87d1-81ae0ddd06dc`) is uploaded and submitted through EAS Submit; build 40 is uploaded and submitted as the current recovery build. Submission `cf537e44-73dd-4a2d-8640-7d31e9facba8` finished with `error: null`. It contains source commit `9c83039`, which removes optional Google/Kakao/IAP/Nitro native modules from the first-submission binary. | Pass for EAS upload, waiting on Apple processing/iPhone |
+| Current launch-crash recovery build | EAS build 40, EAS Submit | Build 40 (`86a14873-bdfd-4390-87d1-81ae0ddd06dc`) is uploaded and submitted through EAS Submit; build 40 is uploaded and submitted as the current recovery build. Submission `cf537e44-73dd-4a2d-8640-7d31e9facba8` finished with `error: null`. A group-submit retry `949d446f-dea1-490f-8b52-2de359d899ee` ended `ERRORED`, so internal group assignment still needs App Store Connect confirmation. It contains source commit `9c83039`, which removes optional Google/Kakao/IAP/Nitro native modules from the first-submission binary. | Pass for EAS upload, blocked on group/iPhone evidence |
 
 ## Completion Verdict
 
@@ -249,7 +249,10 @@ Manual Apple-side confirmation path:
 ## Current Blocker
 
 The current blocker is no longer EAS build/upload. Build 40 has been uploaded
-through EAS Submit after the build 38 and 39 iPhone launch crash reports.
+through EAS Submit after the build 38 and 39 iPhone launch crash reports. The
+EAS group-submit retry for `TE Team (Expo)` ended `ERRORED`, so build 40 still
+needs App Store Connect processing/group confirmation before the iPhone test can
+be considered available.
 
 The remaining blocker for marking the broader App Store readiness goal complete
 is direct iPhone TestFlight install/launch evidence for build 40. App Store

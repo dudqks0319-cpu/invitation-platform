@@ -24,6 +24,9 @@ Current EAS evidence from 2026-05-03:
   `86a14873-bdfd-4390-87d1-81ae0ddd06dc`, status `FINISHED`.
 - EAS submission: `cf537e44-73dd-4a2d-8640-7d31e9facba8`, status `FINISHED`,
   `error: null`.
+- A follow-up EAS submit attempt with `--groups "TE Team (Expo)"` created
+  submission `949d446f-dea1-490f-8b52-2de359d899ee`, but it ended `ERRORED`.
+  Confirm or assign build 40 to the internal group in App Store Connect.
 - Apple processing still needs to complete before TestFlight install can be
   rechecked on the user's iPhone.
 
@@ -154,6 +157,8 @@ Current evidence:
 - Build 40 (`86a14873-bdfd-4390-87d1-81ae0ddd06dc`) finished and EAS Submit
   uploaded it with submission `cf537e44-73dd-4a2d-8640-7d31e9facba8`, status
   `FINISHED`, `error: null`.
+- Group assignment via EAS submit retry did not complete:
+  `949d446f-dea1-490f-8b52-2de359d899ee` status `ERRORED`.
 
 Current external evidence:
 

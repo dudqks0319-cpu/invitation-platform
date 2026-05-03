@@ -21,6 +21,7 @@ loading them.
 | Source commit | `9c83039` |
 | EAS submission id | `cf537e44-73dd-4a2d-8640-7d31e9facba8` |
 | EAS submission status | `FINISHED`, `error: null` |
+| Group-submit retry | `949d446f-dea1-490f-8b52-2de359d899ee`, status `ERRORED` |
 | IPA artifact | `https://expo.dev/artifacts/eas/hCes69aZwsDbfuVwaP4mFN.ipa` |
 | Latest EAS status recheck | `2026-05-03 12:28 KST` |
 
@@ -35,6 +36,11 @@ node scripts/eas-build-submission-status.mjs 86a14873-bdfd-4390-87d1-81ae0ddd06d
 EAS Submit uploaded build 40 to App Store Connect and returned `FINISHED` with
 `error: null`. Apple processing and internal-group assignment still need console
 or user evidence before this can be treated as passed on the real iPhone.
+
+A second EAS submit attempt with `--groups "TE Team (Expo)"` scheduled
+submission `949d446f-dea1-490f-8b52-2de359d899ee`, but it ended in `ERRORED`.
+Treat App Store Connect manual confirmation or assignment as required for build
+40.
 
 Required next evidence:
 
