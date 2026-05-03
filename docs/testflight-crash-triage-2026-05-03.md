@@ -35,6 +35,8 @@ and changing the app name would not fix this launch crash path.
     installs `1`, sessions `-`, crashes `3`.
   - Crash feedback page is empty, so there is no downloadable crash detail for
     symbol-level root cause yet.
+- App Store Connect read-only recheck on 2026-05-03 15:49 KST still shows build
+  41 installs `-`, sessions `-`, crashes `-`, and feedback `-`.
 - EAS build 41 state:
   - Build id `61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`
   - Version `1.0.0`, build `41`

@@ -234,6 +234,10 @@ Manual Apple-side confirmation path:
   iOS build upload list shows `1.0.0 (41)` status `완료`; the version `1.0.0`
   TestFlight table shows build 41 status `제출 준비 완료`, expiry `90일 후 만료`,
   group `Team (Expo)`, invite count `1`, and installs/sessions/crashes all `-`.
+- App Store Connect read-only recheck on 2026-05-03 15:49 KST:
+  build 41 still shows invite `1`, installs `-`, sessions `-`, crashes `-`, and
+  feedback `-`. This confirms App Store Connect has no real iPhone build 41
+  install/session evidence yet.
 - Goal completion verifier:
   `node scripts/verify-goal-completion.mjs` returns `blocked` until
   `docs/app-store-external-evidence.json` exists and every Apple-side evidence
