@@ -50,6 +50,7 @@ const audit = read("docs/goal-completion-audit-90.md");
 const security = read("docs/security-gate-90.md");
 const metadata = read("docs/store-submission-metadata.md");
 const appleReview = read("docs/apple-review.md");
+const inputPacket = read("docs/app-store-connect-input-packet-build40.md");
 const supportPage = read("app/support/page.tsx");
 const envExample = read(".env.example");
 const supportContact = read("lib/support-contact.ts");
@@ -92,6 +93,12 @@ includes("docs/goal-completion-audit-90.md", audit, "App Review contact email");
 includes("docs/security-gate-90.md", security, "NEXT_PUBLIC_SUPPORT_EMAIL");
 includes("docs/store-submission-metadata.md", metadata, "Do not use");
 includes("docs/apple-review.md", appleReview, "DNS/MX");
+includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "Build Number | `40`");
+includes("docs/app-store-connect-input-packet-build40.md", inputPacket, expected.buildId);
+includes("docs/app-store-connect-input-packet-build40.md", inputPacket, expected.liveBaseUrl);
+includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "output/store-screenshots-submission-build40");
+includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "Do not use `support@invitehub.co.kr`");
+includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "final submit action still requires separate explicit user confirmation");
 
 notIncludes(
   "app/support/page.tsx",
