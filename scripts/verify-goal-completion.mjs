@@ -15,14 +15,14 @@ const requiredLocalClaims = [
       "Fast release gate recheck on 2026-05-03 13:24 KST",
       "58-file web/API test suite with 177 tests",
       "88-check App Store packet verifier",
-      "Build 40 local submission screenshot candidate"
+      "Build 41 EAS upload and submission evidence"
     ]
   },
   {
-    file: "docs/app-store-connect-build40-packet.md",
+    file: "docs/app-store-connect-build41-packet.md",
     snippets: [
       "EAS submission status | `FINISHED`, `error: null`",
-      "Latest EAS status recheck | `2026-05-03 12:28 KST`",
+      "Latest EAS status recheck | `2026-05-03 15:33 KST`",
       "do not use it as the App Review contact",
       "submit only after the user explicitly confirms"
     ]
@@ -102,7 +102,7 @@ if (blockers.length > 0) {
   for (const blocker of blockers) {
     console.log(`  - ${blocker}`);
   }
-  console.log("- Next Action: capture App Store Connect build 40, TestFlight iPhone, metadata, privacy, screenshot, review-note, and contact save evidence.");
+  console.log("- Next Action: capture the missing external evidence listed above before marking the goal complete.");
   process.exit(2);
 }
 

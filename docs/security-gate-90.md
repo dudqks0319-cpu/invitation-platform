@@ -40,7 +40,7 @@ Local security controls are materially in place. A fresh network-enabled
 
 | Risk | Owner | Due |
 | --- | --- | --- |
-| Real-device TestFlight install/launch evidence for build 40 has not been captured in this run. Builds 38 and 39 produced user-visible crash dialogs and are superseded. | Store Manager / Release owner | Before final release readiness sign-off |
+| Real-device TestFlight install/launch evidence for build 41 has not been captured in this run. Builds 38, 39, and 40 are superseded. | Store Manager / Release owner | Before final release readiness sign-off |
 | App Store Connect app information, version metadata, build selection, privacy labels, IAP approval, review notes, and screenshots are verified incomplete. | Store Manager / Release owner | Before final App Store submission |
 | Custom domain `invitehub.co.kr` does not resolve by DNS; store URLs must use the verified Vercel deployment or DNS must be connected before submission. | Store Manager / Release owner | Before entering App Store metadata |
 | `support@invitehub.co.kr` has no verified MX/DNS evidence; App Review contact must use a currently verified mailbox and `NEXT_PUBLIC_SUPPORT_EMAIL` until domain email is configured. | Store Manager / Release owner | Before entering App Review contact |
@@ -60,15 +60,18 @@ downgrades for Next/Expo dependency chains.
 
 ## Current External Gate
 
-EAS iOS build 40 completed and EAS Submit uploaded the binary to App Store
-Connect after the build 38 and 39 launch crash reports. The current release
-candidate is build 40.
+EAS iOS build 41 completed and EAS Submit uploaded the binary to App Store
+Connect after the build 40 Expo Router release-entry crash report. The current
+release candidate is build 41.
 
-`node scripts/eas-build-submission-status.mjs 86a14873-bdfd-4390-87d1-81ae0ddd06dc`
-returned build 40 `FINISHED`, linked submission `FINISHED`, `error: null`.
+`node scripts/eas-build-submission-status.mjs 61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`
+returned build 41 `FINISHED`, linked submission `FINISHED`, `error: null`.
 A group-submit retry `949d446f-dea1-490f-8b52-2de359d899ee` ended `ERRORED`,
 but direct App Store Connect evidence on 2026-05-03 confirmed build 40 is now
 assigned to internal group `Team (Expo)` and status `테스트 중`.
+Direct App Store Connect evidence on 2026-05-03 15:40 KST confirmed build
+`1.0.0 (41)` upload status `완료`, version-row status `제출 준비 완료`, internal
+group `Team (Expo)`, invite count `1`, and installs/sessions/crashes all `-`.
 
 Historical build 38 completed and EAS Submit uploaded the binary to App Store
 Connect. It contains commit `d8ed82188b3233bebe7be90c173d434f36690581`, which
@@ -76,8 +79,9 @@ keeps paid photo publishing disabled by default until an IAP product exists.
 `node scripts/eas-build-submission-status.mjs d185dfc1-9110-4d81-b510-08e02f1ece7f`
 was re-run on 2026-05-02 14:47 KST and returned build status `FINISHED`, linked
 submission status `FINISHED`, and `error: null`.
-Build 40 is the current App Store Connect internal-group build visually
-confirmed as `테스트 중`; build 38 and 39 are superseded.
+Build 41 is the current EAS/App Store Connect upload candidate and is now
+visually confirmed in the internal group. It still lacks real-device
+install/session evidence.
 
 The remaining external gates are real-device TestFlight install/launch evidence
 and final App Store Connect submission surfaces: app information, version
@@ -95,7 +99,7 @@ but the flag must stay disabled until the product is created and approved.
 The 2026-05-03 13:24 KST fast release gate passed web/mobile lint and
 typecheck, the 58-file web/API test suite with 177 tests, and the focused
 9-file mobile/API suite with 34 tests. The 88-check App Store packet verifier
-is now pinned to build 40.
+is now pinned to build 41.
 
 The public support page no longer hardcodes the unverified
 `support@invitehub.co.kr` mailbox. It reads `NEXT_PUBLIC_SUPPORT_EMAIL` and only

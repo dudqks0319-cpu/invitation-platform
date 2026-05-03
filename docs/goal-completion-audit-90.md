@@ -1,7 +1,7 @@
 # InviteHub Goal Completion Audit - 90점 Release Readiness
 
 Date: 2026-05-01
-Latest update: 2026-05-03 13:18 KST
+Latest update: 2026-05-03 15:42 KST
 
 ## Objective
 
@@ -44,28 +44,30 @@ InviteHub 앱을 App Store 제출 기준으로 프론트엔드, 백엔드, UI/UX
 | Store config 90+ | `apps/mobile/app.config.ts`, `apps/mobile/eas.json`, native project | Production bundle id is `com.invitehub.app`; production scheme is `invitehub`; dev scheme is `invitehub-dev`; Xcode is 26.3. | Pass |
 | Harness 90+ | `.claude/skills/invitehub-app-builder/skill.md`, `docs/invitehub-app-harness.md`, `scripts/invitehub-release-gate.sh` | Release gate covers lint, typecheck, tests, high audit, iOS Release simulator build. | Pass |
 | Role harness coverage | `.claude/agents/*.md`, `.claude/skills/invitehub-app-builder/skill.md` | Verified agents exist: product-manager, marketing-copywriter, template-image-art-director, ux-designer, mobile-frontend-engineer, mobile-backend-engineer, api-integrator, security-engineer, qa-engineer, store-manager. | Pass |
-| Verification evidence | Release gate output, simulator screenshots | `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh` passed code gates on 2026-05-03 13:24 KST: web/mobile lint, web/mobile typecheck, 58-file web/API suite with 177 tests, and focused 9-file mobile/API suite with 34 tests. The 88-check packet verifier is pinned to build 40. Escalated iOS Release build also passed separately. Screenshots: `/private/tmp/invitehub-release-home-current.png`, `/private/tmp/invitehub-preview-fit-to-viewport.png`, `/tmp/invitehub-build40-candidate-release-home-20260503.png`. Screenshot size verifier passed for `output/store-screenshots-verified/05-preview-fit-to-viewport.png`. | Pass with audit caveat |
+| Verification evidence | Release gate output, simulator screenshots | `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh` passed code gates on 2026-05-03 13:24 KST: web/mobile lint, web/mobile typecheck, 58-file web/API suite with 177 tests, and focused 9-file mobile/API suite with 34 tests. The 88-check packet verifier is pinned to build 41. Escalated iOS Release build also passed separately. Screenshots: `/private/tmp/invitehub-release-home-current.png`, `/private/tmp/invitehub-preview-fit-to-viewport.png`, `/tmp/invitehub-build40-candidate-release-home-20260503.png`. Screenshot size verifier passed for `output/store-screenshots-verified/05-preview-fit-to-viewport.png`. | Pass with audit caveat |
 | App Store privacy/IAP map | `app/privacy/page.tsx`, `app/support/page.tsx`, `app/terms/page.tsx`, `app/faq/page.tsx`, `docs/app-store-readiness-90.md`, `docs/store-submission-metadata.md` | Bundle ID, production scheme, IAP product ID, privacy-label basis, support/privacy/terms URL content, map-link behavior, and env mapping are documented. | Pass |
 | Current EAS/Submit evidence | `scripts/eas-build-submission-status.mjs`, EAS build/submission state | EAS iOS build 38 (`d185dfc1-9110-4d81-b510-08e02f1ece7f`) was rechecked on 2026-05-02 14:47 KST: build status `FINISHED`, app version `1.0.0`, build number `38`, commit `d8ed82188b3233bebe7be90c173d434f36690581`, linked submission `77395141-a80b-48f9-8e43-c61114fafa25` status `FINISHED`, `error: null`. | Pass for EAS upload |
 | App Store Connect execution checklist | `docs/app-store-connect-execution-checklist.md`, `docs/store-screenshot-plan.md` | Official Apple submission/privacy/upcoming-requirements pages checked on 2026-05-01; EAS, TestFlight, IAP, privacy labels, screenshots, and review notes are mapped to required evidence. | Pass |
 | App Review metadata accuracy | `docs/apple-review.md`, `docs/store-submission-metadata.md`, `docs/store-screenshot-plan.md` | Review notes now avoid claiming unverified profanity filter/report/block features. They document the implemented path: rate-limited RSVP/guestbook, host-approved guestbook publishing, and dashboard hide/approve moderation. | Pass |
 | Previous App Store Connect TestFlight evidence | ASC TestFlight page, ASC export-compliance modal, ASC internal group page | Build 37 export compliance was saved after user approval using `위에 언급된 알고리즘에 모두 해당하지 않음`. The version build row showed `제출 준비 완료`, and the internal group page showed `Team (Expo)` with 1 tester and 1 build. This is retained as historical console evidence, but it does not prove build 38 is assigned to testers. | Historical pass only |
-| Current App Store Connect TestFlight evidence | ASC TestFlight page and internal group page | Read-only Safari DOM audit on 2026-05-03 12:53 KST confirmed build `1.0.0 (40)` is processed, available in internal group `Team (Expo)`, and status `테스트 중` with `90일 후 만료`. The group now shows 1 tester and 4 builds. The tester row still shows the target iPhone installed `1.0.0 (39)` with crash evidence, so build 40 still needs real iPhone install/launch evidence. | Pass for ASC, blocked on iPhone |
-| TestFlight crash triage | `docs/testflight-crash-triage-2026-05-03.md`, ASC TestFlight iOS build table, native config tests, CoreDevice evidence | Read-only ASC audit shows build 40 has invite `1` but installs/sessions/crashes `-`; build 39 has install `1` and crash `1`; build 38 has install `1` and crashes `3`. CoreDevice evidence on 2026-05-03 14:39 KST confirmed the connected iPhone still has `com.invitehub.app` bundle version `39` installed. Production/dev bundle ids are separated, so the leading hypothesis is an old TestFlight build rather than two apps colliding. | Blocked on iPhone build 40 install proof |
-| Mac TestFlight build 40 crash | `apps/mobile/index.js`, `apps/mobile/package.json`, `apps/mobile/babel.config.js`, `apps/mobile/metro.config.js`, `apps/mobile/entry.test.ts`, `docs/testflight-crash-triage-2026-05-03.md` | macOS TestFlight build 40 crash logs show `Unhandled JS Exception: Error: No routes found` in Expo Router `ContextNavigator`. The mobile entry now uses `expo-router/entry` instead of a custom `ExpoRoot` plus `require.context("./app")`; the mobile Babel config explicitly loads Expo Router's env transform in this monorepo; `npx expo export --platform ios --output-dir /tmp/invitehub-ios-export-entry-fix-20260503-1531` passed. | Fixed locally, needs new EAS build |
-| TestFlight device evidence harness | `scripts/collect-testflight-device-evidence.sh`, `scripts/await-testflight-device.sh`, `scripts/diagnose-ios-device-connection.sh` | Added focused real-device evidence collection and wait harnesses for device state, lock state, TestFlight app metadata, `com.invitehub.app` app metadata, InviteHub process state, optional TestFlight launch, optional user-observed InviteHub launch, and CoreDevice/USB connection diagnostics. Evidence bundle `output/testflight-device-watch/20260503-143921/evidence/20260503-143922` reached the paired iPhone, found installed build `39`, and launch was denied because the phone was locked. Later diagnostics in `output/ios-device-diagnostics/20260503-145413` show `xctrace` can see the iPhone but `devicectl` tunnel state is still `unavailable`. | Ready, blocked on unlocked iPhone with build 40 installed |
+| Current App Store Connect TestFlight evidence | ASC TestFlight page and internal group page | Read-only Safari DOM audit on 2026-05-03 15:40 KST confirmed build `1.0.0 (41)` upload status `완료`, version-row status `제출 준비 완료`, expiry `90일 후 만료`, internal group `Team (Expo)`, invite count `1`, and installs/sessions/crashes all `-`. The tester/device side still has no build 41 install/session evidence. | Pass for ASC, blocked on iPhone |
+| TestFlight crash triage | `docs/testflight-crash-triage-2026-05-03.md`, ASC TestFlight iOS build table, native config tests, CoreDevice evidence | Read-only ASC audit shows build 41 has invite `1` but installs/sessions/crashes `-`; build 39 has install `1` and crash `1`; build 38 has install `1` and crashes `3`. CoreDevice evidence on 2026-05-03 14:39 KST confirmed the connected iPhone still has `com.invitehub.app` bundle version `39` installed. Production/dev bundle ids are separated, so the leading hypothesis is an old TestFlight build rather than two apps colliding or an app-name conflict. | Blocked on iPhone build 41 install proof |
+| Mac TestFlight build 40 crash | `apps/mobile/index.js`, `apps/mobile/package.json`, `apps/mobile/babel.config.js`, `apps/mobile/metro.config.js`, `apps/mobile/entry.test.ts`, `docs/testflight-crash-triage-2026-05-03.md` | macOS TestFlight build 40 crash logs show `Unhandled JS Exception: Error: No routes found` in Expo Router `ContextNavigator`. The mobile entry now uses `expo-router/entry` instead of a custom `ExpoRoot` plus `require.context("./app")`; the mobile Babel config explicitly loads Expo Router's env transform in this monorepo; `npx expo export --platform ios --output-dir /tmp/invitehub-ios-export-entry-fix-20260503-1531` passed. Build 41 carries this fix and is now processed in App Store Connect. | Fixed and uploaded, needs iPhone proof |
+| TestFlight device evidence harness | `scripts/collect-testflight-device-evidence.sh`, `scripts/await-testflight-device.sh`, `scripts/diagnose-ios-device-connection.sh` | Added focused real-device evidence collection and wait harnesses for device state, lock state, TestFlight app metadata, `com.invitehub.app` app metadata, InviteHub process state, optional TestFlight launch, optional user-observed InviteHub launch, and CoreDevice/USB connection diagnostics. Evidence bundle `output/testflight-device-watch/20260503-143921/evidence/20260503-143922` reached the paired iPhone, found installed build `39`, and launch was denied because the phone was locked. Later diagnostics in `output/ios-device-diagnostics/20260503-145413` show `xctrace` can see the iPhone but `devicectl` tunnel state is still `unavailable`. | Ready, blocked on unlocked iPhone with build 41 installed |
 | App Store Connect final submission surface | ASC distribution/version, app info, app privacy, IAP, review-submission pages | Read-only audit on 2026-05-03 13:37 KST found the App Store version still incomplete: iPhone screenshot set has 0 screenshots, version metadata fields are blank, build is not selected on the version page, app privacy URL is blank and labels are not started, app subtitle/category/age rating are not set, and the app name still includes `InviteHub (40c8af)`. | Blocked externally |
 | Paid publish fallback | `apps/mobile/lib/release-flags.ts`, `lib/release-flags.ts`, `.env.example`, `apps/mobile/.env.example` | Paid photo publishing now defaults off unless web and mobile public env flags are explicitly enabled. Targeted tests passed, web/mobile typecheck and lint passed, and iPhone 17 Release simulator screenshots show the photo step disabled without an IAP purchase UI. | Pass locally |
 | Current paid-fallback EAS build | EAS build 38, EAS Submit | Build 38 (`d185dfc1-9110-4d81-b510-08e02f1ece7f`) finished and was uploaded to App Store Connect. It contains commit `d8ed82188b3233bebe7be90c173d434f36690581`. Apple processing, export-compliance clearance, and internal group assignment were confirmed on 2026-05-02 15:32 KST. | Pass for upload and ASC |
 | Current launch-crash recovery build | EAS build 40, EAS Submit, ASC TestFlight group | build 40 is uploaded and submitted through EAS Submit as `86a14873-bdfd-4390-87d1-81ae0ddd06dc`. Submission `cf537e44-73dd-4a2d-8640-7d31e9facba8` finished with `error: null`. A group-submit retry `949d446f-dea1-490f-8b52-2de359d899ee` ended `ERRORED`, but direct App Store Connect evidence confirms build 40 is now in `Team (Expo)` and `테스트 중`. It contains source commit `9c83039`, which removes optional Google/Kakao/IAP/Nitro native modules from the first-submission binary. | Pass for EAS and ASC, blocked on iPhone evidence |
+| Build 41 EAS upload and submission evidence | EAS build 41, EAS Submit, ASC TestFlight group | build 41 is uploaded and submitted through EAS Submit as `61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`. Submission `25518b07-b8de-4507-8a0e-20d85bfe9e14` finished with `error: null`. It contains local source commit `0655ced`, which restores the Expo Router release entry and fixes the build 40 `No routes found` crash path. App Store Connect now shows build 41 processed and assigned to `Team (Expo)`. | Pass for EAS and ASC, blocked on iPhone evidence |
 
 ## Completion Verdict
 
 The local codebase, EAS upload path, and App Store Connect TestFlight assignment
 now meet the practical 90+ release bar for code, build, and binary availability
 evidence. The latest UI complaint about the invitation preview has been fixed
-and simulator-verified. Build 40 is uploaded, processed, assigned to internal
-group `Team (Expo)`, and available for TestFlight testing.
+and simulator-verified. Build 41 is uploaded, submitted, processed in App Store
+Connect, assigned to internal group `Team (Expo)`, and available for
+TestFlight testing.
 
 The full active goal is not complete yet because:
 
@@ -74,14 +76,14 @@ The full active goal is not complete yet because:
   information, and IAP product state still need to be entered/saved before App
   Store submission.
 - Real iPhone install/launch evidence from TestFlight is still not captured for
-  build 40. Build 39 has negative evidence: it reached the user's iPhone and
+  build 41. Build 39 has negative evidence: it reached the user's iPhone and
   crashed on launch, and the 2026-05-03 14:39 KST CoreDevice check confirmed
   the connected iPhone still had bundle version `39` installed.
 
 ## Next Required Action
 
 Open TestFlight on the target iPhone, install/update InviteHub to build
-`1.0.0 (40)`, and perform a launch smoke test.
+`1.0.0 (41)`, and perform a launch smoke test.
 
 Do not mark the goal complete until:
 
@@ -97,9 +99,9 @@ Manual Apple-side confirmation path:
 
 1. App Store Connect TestFlight URL:
    `https://appstoreconnect.apple.com/apps/6763630299/testflight/ios`.
-2. Confirm `1.0.0 (40)` appears after Apple processing.
-3. Save export compliance for build 40 if prompted.
-4. Confirm build 40 is in internal group `TE Team (Expo)`.
+2. Confirm `1.0.0 (41)` remains visible in App Store Connect TestFlight.
+3. Save export compliance for build 41 if a new prompt appears.
+4. Confirm build 41 remains in internal group `Team (Expo)`.
 5. Install/update InviteHub from TestFlight on the user's iPhone and smoke test
    home -> template selection -> builder Step 1 -> preview.
 
@@ -109,7 +111,7 @@ Manual Apple-side confirmation path:
   passed code gates on 2026-05-03 13:24 KST. It ran web lint, web typecheck,
   58-file web/API test suite with 177 tests, mobile lint, mobile typecheck, and
   focused 9-file mobile/API test suite with 34 tests. The 88-check App Store
-  packet verifier is now pinned to build 40.
+  packet verifier is now pinned to build 41.
 - Escalated iOS Release simulator build:
   `npm --prefix apps/mobile run ios -- --device "iPhone 17" --configuration Release --no-bundler`;
   passed with 0 errors and 2 warnings; installed and opened `com.invitehub.app`
@@ -223,11 +225,15 @@ Manual Apple-side confirmation path:
   `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`
   passed web lint, web typecheck, 58-file web/API test suite with 177 tests,
   mobile lint, mobile typecheck, and focused 9-file mobile/API suite with 34
-  tests. The new 88-check App Store packet verifier is pinned to build 40.
+  tests. The new 88-check App Store packet verifier is pinned to build 41.
 - App Store Connect TestFlight group check on 2026-05-03 12:53 KST:
   internal group `Team (Expo)` shows `내부 그룹 ∙ 1명의 테스터 ∙ 4개의 빌드`.
   The group build tab lists `1.0.0 (40)` with status `테스트 중`, platform
   `iOS`, no sessions, and no crashes.
+- App Store Connect build 41 check on 2026-05-03 15:40 KST:
+  iOS build upload list shows `1.0.0 (41)` status `완료`; the version `1.0.0`
+  TestFlight table shows build 41 status `제출 준비 완료`, expiry `90일 후 만료`,
+  group `Team (Expo)`, invite count `1`, and installs/sessions/crashes all `-`.
 - Goal completion verifier:
   `node scripts/verify-goal-completion.mjs` returns `blocked` until
   `docs/app-store-external-evidence.json` exists and every Apple-side evidence
@@ -265,15 +271,15 @@ Manual Apple-side confirmation path:
 
 ## Current Blocker
 
-The current blocker is no longer EAS build/upload or App Store Connect
-TestFlight assignment. Build 40 has been uploaded through EAS Submit after the
-build 38 and 39 iPhone launch crash reports, processed by Apple, and listed in
-the internal group as `테스트 중`.
+The current blocker is no longer EAS build/upload, Apple processing, export
+compliance, or internal group assignment. Build 41 has been uploaded through
+EAS Submit after the build 40 Expo Router launch-crash diagnosis, and App Store
+Connect now shows it processed and assigned to internal group `Team (Expo)`.
 
 The remaining blocker for marking the broader App Store readiness goal complete
-is direct iPhone TestFlight install/launch evidence for build 40. App Store
+is direct iPhone TestFlight install/launch evidence for build 41. App Store
 Connect still shows the target tester's current installed version as `1.0.0
-(39)` with crash evidence, so build 40 has not yet been proven on the real
+(39)` with crash evidence, so build 41 has not yet been proven on the real
 iPhone. The broader store-submission surfaces also remain:
 app name/subtitle/category/age rating, version metadata, version build
 selection, privacy URL and privacy labels, screenshots, review notes, verified

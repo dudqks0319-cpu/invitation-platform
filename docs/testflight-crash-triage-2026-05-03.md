@@ -11,19 +11,22 @@ when their bundle identifiers differ, and this repo uses separate identifiers:
 
 The stronger current explanation is that the iPhone is still launching build 39
 or build 38, both of which already have App Store Connect crash evidence. Build
-40 is uploaded and assigned to the internal TestFlight group, but App Store
-Connect does not yet show a build 40 install, session, or crash. Local
+41 is uploaded, processed, and assigned to the internal TestFlight group, but
+App Store Connect does not yet show a build 41 install, session, or crash. Local
 CoreDevice evidence captured on 2026-05-03 14:39 KST confirmed the connected
 iPhone still has `InviteHub` bundle version `39` installed for
 `com.invitehub.app`.
 
 `InviteHub (40c8af)` is the App Store Connect app name, not the TestFlight build
-number. A crash alert with that app name does not prove build 40 is installed.
+number. A crash alert with that app name does not prove build 41 is installed,
+and changing the app name would not fix this launch crash path.
 
 ## Evidence
 
 - App Store Connect TestFlight iOS build table, read-only Safari audit on
   2026-05-03:
+  - Build 41: status `제출 준비 완료`, group `Team (Expo)`, invites `1`,
+    installs `-`, sessions `-`, crashes `-`.
   - Build 40: status `제출 준비 완료`, group `Team (Expo)`, invites `1`,
     installs `-`, sessions `-`, crashes `-`.
   - Build 39: status `제출 준비 완료`, group `Team (Expo)`, invites `1`,
@@ -32,10 +35,10 @@ number. A crash alert with that app name does not prove build 40 is installed.
     installs `1`, sessions `-`, crashes `3`.
   - Crash feedback page is empty, so there is no downloadable crash detail for
     symbol-level root cause yet.
-- EAS build 40 state:
-  - Build id `86a14873-bdfd-4390-87d1-81ae0ddd06dc`
-  - Version `1.0.0`, build `40`
-  - Submission `cf537e44-73dd-4a2d-8640-7d31e9facba8` finished with
+- EAS build 41 state:
+  - Build id `61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`
+  - Version `1.0.0`, build `41`
+  - Submission `25518b07-b8de-4507-8a0e-20d85bfe9e14` finished with
     `error: null`
 - Local native config:
   - `apps/mobile/eas.json` production profile sets `APP_BUNDLE_ID` to
@@ -73,10 +76,10 @@ number. A crash alert with that app name does not prove build 40 is installed.
 
 ## Likely Cause
 
-The iPhone has not updated to build 40 from TestFlight. The connected device
+The iPhone has not updated to build 41 from TestFlight. The connected device
 still reports installed bundle version `39` for `com.invitehub.app`. The visible
 crash dialog uses the ASC app name `InviteHub (40c8af)`, which can appear for
-build 38, 39, or 40.
+build 38, 39, 40, or 41.
 
 Mac TestFlight build 40 has a separate confirmed crash. The macOS crash dialog
 and unified logs show build `1.0.0 (40)` aborting with an unhandled JavaScript
@@ -107,7 +110,7 @@ On the iPhone:
 
 1. Open TestFlight.
 2. Open `InviteHub (40c8af)`.
-3. Confirm the installed build shows `40`.
+3. Confirm the installed build shows `41`.
 4. If it shows an update button, update first.
 5. Launch from TestFlight once.
 

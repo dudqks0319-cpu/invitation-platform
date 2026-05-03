@@ -19,19 +19,19 @@ answer requirement, App Review metadata accuracy/completeness guidance, and
 | Store | Production bundle id is `com.invitehub.app`, production scheme is `invitehub`, dev scheme is separate. |
 | QA | Simulator evidence exists for home and template-to-builder flow; TestFlight evidence required before external review. |
 
-Latest local evidence after the build 40 TestFlight stabilization update:
+Latest local evidence after the build 41 TestFlight stabilization update:
 
-- Build 40 App Store Connect entry values are consolidated in
-  `docs/app-store-connect-build40-packet.md`.
-- `node scripts/eas-build-submission-status.mjs 86a14873-bdfd-4390-87d1-81ae0ddd06dc`
-  returned build 40 `FINISHED`, linked submission `FINISHED`, `error: null`.
-- Build 40 supersedes builds 38 and 39 after the user's iPhone showed the same
-  TestFlight launch crash dialog for both prior builds.
+- Build 41 App Store Connect entry values are consolidated in
+  `docs/app-store-connect-build41-packet.md`.
+- `node scripts/eas-build-submission-status.mjs 61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`
+  returned build 41 `FINISHED`, linked submission `FINISHED`, `error: null`.
+- Build 41 supersedes build 40 after Mac TestFlight logs showed
+  `Unhandled JS Exception: Error: No routes found`.
 - `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`
   passed code gates on 2026-05-03 13:24 KST through web/mobile lint,
   web/mobile typecheck, the 58-file web/API test suite with 177 tests, and the
   focused 9-file mobile/API test suite with 34 tests. The 88-check packet
-  verifier is now pinned to build 40 and includes the build 40 App Store Connect
+  verifier is now pinned to build 41 and includes the build 41 App Store Connect
   input packet.
 - Escalated local iOS Release simulator build passed with 0 errors and 2
   warnings and opened `com.invitehub.app` on iPhone 17.
@@ -74,23 +74,28 @@ Latest local evidence after the build 40 TestFlight stabilization update:
   version build row now shows `제출 준비 완료`.
 - Internal group `TE Team (Expo)` shows `1명의 테스터`, `1개의 빌드`, and build
   `1.0.0 (37)` status `테스트 중`.
-- Build 40 Apple processing and internal group assignment are confirmed in App
-  Store Connect. Real-device TestFlight QA is still missing because the latest
+- Historical build 40 Apple processing and internal group assignment are
+  confirmed in App Store Connect, but it is superseded by build 41.
+  Real-device TestFlight QA is still missing because the latest
   CoreDevice check found bundle version `39` installed on the target iPhone;
   launch was also denied while the phone was locked. The tester row has not
-  shown build 40 install/session evidence. The device harness now supports
+  shown build 41 install/session evidence. The device harness now supports
   opening TestFlight itself with `--open-testflight` when the iPhone is
   available and unlocked, plus CoreDevice/USB diagnostics with
   `scripts/diagnose-ios-device-connection.sh` when the iPhone remains
   unavailable.
+- Build 41 has now been uploaded through EAS Submit after the Expo Router
+  release-entry fix. App Store Connect read-only check on 2026-05-03 15:40 KST
+  shows `1.0.0 (41)` upload status `완료`, version-row status `제출 준비 완료`,
+  internal group `Team (Expo)`, invite count `1`, and no install/session/crash
+  counts yet. Real-device TestFlight launch evidence is still pending.
 - Future builds declare `ITSAppUsesNonExemptEncryption=false` through Expo iOS
   config and the native `Info.plist`.
 - Read-only App Store Connect final-submission audit on 2026-05-03 13:37 KST
-  confirmed the build 40 TestFlight group assignment, but the current App Store
-  version surface is still not ready: screenshots are 0, metadata/review fields
-  are blank, no build is selected for the App Store version, app privacy answers
-  are not started, app category/age rating are not set, and the app name still
-  shows `InviteHub (40c8af)`.
+  confirmed the current App Store version surface is still not ready:
+  screenshots are 0, metadata/review fields are blank, no build is selected for
+  the App Store version, app privacy answers are not started, app category/age
+  rating are not set, and the app name still shows `InviteHub (40c8af)`.
 - First-submission paid-publish fallback is now represented in code: paid photo
   publishing is disabled unless `NEXT_PUBLIC_ENABLE_PAID_PUBLISH=true` and
   `EXPO_PUBLIC_ENABLE_PAID_PUBLISH=true` are set. The app and web copy avoid
@@ -133,9 +138,9 @@ SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh
 These cannot be fully completed from code alone:
 
 - App Store Connect app record points to bundle id `com.invitehub.app`.
-- TestFlight build 38 is uploaded through EAS Submit and contains the latest
-  release fallback. App Store Connect processing/group assignment and real
-  iPhone install/launch evidence are still needed.
+- TestFlight build 41 is uploaded through EAS Submit, processed in App Store
+  Connect, and assigned to internal group `Team (Expo)`. Real iPhone
+  install/launch evidence is still needed.
 - App Privacy labels match collected data: account, invitations, RSVP, guestbook, photos, purchase records.
 - IAP product for photo-included publishing is created, priced, and approved, or
   the paid publish flag remains disabled and paid claims stay hidden.
@@ -149,8 +154,8 @@ These cannot be fully completed from code alone:
 - Public support/privacy/terms URLs are live. `invitehub.co.kr` currently does
   not resolve by DNS; the verified live fallback is
   `https://invitation-platform-youngbeens-projects.vercel.app`.
-- Build 38 App Store Connect entry values are consolidated in
-  `docs/app-store-connect-build38-packet.md`.
+- Build 41 App Store Connect entry values are consolidated in
+  `docs/app-store-connect-build41-packet.md`.
 - App Review contact email must be a currently verified mailbox. The
   `support@invitehub.co.kr` address is not verified while the domain has no
   DNS/MX records. Mirror the verified mailbox in `NEXT_PUBLIC_SUPPORT_EMAIL`

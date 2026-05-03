@@ -27,30 +27,32 @@ Current source-derived requirements:
 - App privacy answers are required for new apps and updates and must cover data
   collected by the app and integrated third-party partners.
 - iPhone screenshot sets accept 1 to 10 `.png`, `.jpg`, or `.jpeg` files; the
-  build 40 candidate `1206x2622` screenshots match Apple's 6.3" portrait size.
+  current `1206x2622` screenshots match Apple's 6.3" portrait size.
 
 ## Current External Status
 
-Build 40 is uploaded to Apple through EAS Submit and supersedes builds 38 and
-39 because both showed the same launch crash dialog on the user's iPhone. Build
-40 contains source commit `9c83039`, which removes the optional Google/Kakao/IAP
-native modules from the first-submission binary.
+Build 41 is uploaded to Apple through EAS Submit and supersedes build 40 because
+Mac TestFlight logs showed an Expo Router `No routes found` launch crash. Build
+41 contains local source commit `0655ced`, which restores the supported
+`expo-router/entry` release entry.
 
 Current EAS evidence from 2026-05-03:
 
-- Build upload: `1.0.0 (40)`, EAS build
-  `86a14873-bdfd-4390-87d1-81ae0ddd06dc`, status `FINISHED`.
-- EAS submission: `cf537e44-73dd-4a2d-8640-7d31e9facba8`, status `FINISHED`,
+- Build upload: `1.0.0 (41)`, EAS build
+  `61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`, status `FINISHED`.
+- EAS submission: `25518b07-b8de-4507-8a0e-20d85bfe9e14`, status `FINISHED`,
   `error: null`.
+- App Store Connect read-only check on 2026-05-03 15:40 KST shows build
+  `1.0.0 (41)` upload status `완료`, version-row status `제출 준비 완료`,
+  expiry `90일 후 만료`, internal group `Team (Expo)`, invite count `1`, and
+  installs/sessions/crashes all `-`.
+- Export compliance is not blocking the build 41 TestFlight row.
+- The user's iPhone still needs to install and launch build 41 from TestFlight.
+- Historical build 40 (`86a14873-bdfd-4390-87d1-81ae0ddd06dc`) was uploaded and
+  assigned to internal group `Team (Expo)`, but it is superseded by build 41.
 - A follow-up EAS submit attempt with `--groups "TE Team (Expo)"` created
   submission `949d446f-dea1-490f-8b52-2de359d899ee`, but it ended `ERRORED`.
   App Store Connect was checked directly after that failure.
-- App Store Connect TestFlight now shows build `1.0.0 (40)` processed and
-  assigned to internal group `Team (Expo)`.
-- The group build tab shows `1.0.0 (40)` status `테스트 중`, expiring in 90
-  days, with no crash/session data yet.
-- The user's iPhone still needs to install and launch build 40 from TestFlight.
-
 Build 38 is uploaded to Apple through EAS and contains the paid-publish fallback
 commit `d8ed821`. Apple processing, export-compliance clearance, and internal
 TestFlight group assignment were confirmed in App Store Connect on 2026-05-02
@@ -128,7 +130,7 @@ Current local evidence:
   passed code gates on 2026-05-03 13:24 KST. It ran web lint, web typecheck,
   58-file web/API tests with 177 tests, mobile lint, mobile typecheck, and
   focused 9-file mobile/API tests with 34 tests. The 88-check App Store packet
-  verifier is now pinned to build 40.
+  verifier is now pinned to build 41.
 - Escalated iOS Release simulator build: 0 errors, 2 warnings.
 - Bundle opened on iPhone 17 as `com.invitehub.app`.
 - Release home screenshot: `/private/tmp/invitehub-release-home-current.png`.
@@ -178,6 +180,9 @@ Current evidence:
 - Build 40 (`86a14873-bdfd-4390-87d1-81ae0ddd06dc`) finished and EAS Submit
   uploaded it with submission `cf537e44-73dd-4a2d-8640-7d31e9facba8`, status
   `FINISHED`, `error: null`.
+- Build 41 (`61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`) finished and EAS Submit
+  uploaded it with submission `25518b07-b8de-4507-8a0e-20d85bfe9e14`, status
+  `FINISHED`, `error: null`.
 - Group assignment via EAS submit retry did not complete:
   `949d446f-dea1-490f-8b52-2de359d899ee` status `ERRORED`.
 
@@ -187,7 +192,7 @@ Current external evidence:
 - Build 37 is available to internal group `TE Team (Expo)`.
 - One internal tester is invited.
 - App Store Connect processing and internal-group assignment are confirmed for
-  build 40 as of 2026-05-03 12:53 KST.
+  build 41 as of 2026-05-03 15:40 KST.
 
 Required evidence before marking the store area complete:
 
@@ -208,14 +213,14 @@ Required evidence:
 - Selecting a template opens builder Step 1.
 - Preview path opens without crash.
 
-Build 40 confirmation steps:
+Build 41 confirmation steps:
 
 1. Open `https://appstoreconnect.apple.com/apps/6763630299/testflight/ios`.
-2. Confirm `1.0.0 (40)` is visible after Apple processing.
-3. If export compliance appears, answer consistently with
+2. Confirm `1.0.0 (41)` remains visible in the version `1.0.0` TestFlight row.
+3. If export compliance appears later, answer consistently with
    `ITSAppUsesNonExemptEncryption=false`.
-4. Add build `1.0.0 (40)` to internal group `TE Team (Expo)`.
-5. On the user's iPhone, open TestFlight, install/update InviteHub to build 40,
+4. Confirm build `1.0.0 (41)` remains assigned to internal group `Team (Expo)`.
+5. On the user's iPhone, open TestFlight, install/update InviteHub to build 41,
    launch once, and record whether the home/template-first screen opens.
 
 ## 4. App Information
@@ -311,7 +316,7 @@ Required evidence:
 - `simctl openurl` route captures are checked for the iOS `InviteHub에서
   열겠습니까?` prompt before upload; any image containing the prompt is rejected.
 - Screenshot files pass `scripts/verify-store-screenshots.sh` before upload.
-- Local build 40 candidate folder:
+- Local screenshot candidate folder:
   `output/store-screenshots-submission-build40`; 6 PNGs passed size validation
   at `1206x2622` and manual visual prompt/overlay checks on 2026-05-03.
 
@@ -353,8 +358,8 @@ To record one evidence item without hand-editing JSON:
 ```bash
 node scripts/record-app-store-evidence.mjs --list
 node scripts/record-app-store-evidence.mjs \
-  --key appStoreConnectBuild38Processed \
-  --capturedAt 2026-05-02T15:30:00+09:00 \
-  --evidence "App Store Connect TestFlight shows 1.0.0 (38) processed." \
+  --key appStoreConnectBuild41Processed \
+  --capturedAt 2026-05-03T15:40:00+09:00 \
+  --evidence "App Store Connect TestFlight shows 1.0.0 (41) processed." \
   --artifact "https://appstoreconnect.apple.com/apps/6763630299/testflight/ios"
 ```

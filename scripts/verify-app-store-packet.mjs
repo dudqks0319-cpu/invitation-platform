@@ -6,11 +6,11 @@ const root = process.cwd();
 const expected = {
   appId: "6763630299",
   bundleId: "com.invitehub.app",
-  buildId: "86a14873-bdfd-4390-87d1-81ae0ddd06dc",
-  submissionId: "cf537e44-73dd-4a2d-8640-7d31e9facba8",
+  buildId: "61bc2e17-0c5a-45f3-94ee-bf3b63e09f03",
+  submissionId: "25518b07-b8de-4507-8a0e-20d85bfe9e14",
   appVersion: "1.0.0",
-  buildNumber: "40",
-  commit: "9c83039",
+  buildNumber: "41",
+  commit: "0655ced",
   liveBaseUrl: "https://invitation-platform-youngbeens-projects.vercel.app"
 };
 
@@ -50,13 +50,13 @@ function isExecutable(relativePath) {
   return existsSync(path) && (statSync(path).mode & 0o111) !== 0;
 }
 
-const packet = read("docs/app-store-connect-build40-packet.md");
+const packet = read("docs/app-store-connect-build41-packet.md");
 const readiness = read("docs/app-store-readiness-90.md");
 const audit = read("docs/goal-completion-audit-90.md");
 const security = read("docs/security-gate-90.md");
 const metadata = read("docs/store-submission-metadata.md");
 const appleReview = read("docs/apple-review.md");
-const inputPacket = read("docs/app-store-connect-input-packet-build40.md");
+const inputPacket = read("docs/app-store-connect-input-packet-build41.md");
 const supportPage = read("app/support/page.tsx");
 const envExample = read(".env.example");
 const supportContact = read("lib/support-contact.ts");
@@ -72,55 +72,55 @@ const awaitDevice = read("scripts/await-testflight-device.sh");
 const diagnoseDeviceConnection = read("scripts/diagnose-ios-device-connection.sh");
 
 for (const value of Object.values(expected)) {
-  includes("docs/app-store-connect-build40-packet.md", packet, value);
+  includes("docs/app-store-connect-build41-packet.md", packet, value);
 }
 
-includes("docs/app-store-connect-build40-packet.md", packet, "EAS submission status | `FINISHED`, `error: null`");
-includes("docs/app-store-connect-build40-packet.md", packet, "Do not use `invitehub.co.kr` yet");
-includes("docs/app-store-connect-build40-packet.md", packet, "do not use it as the App Review contact");
-includes("docs/app-store-connect-build40-packet.md", packet, "NEXT_PUBLIC_SUPPORT_EMAIL");
-includes("docs/app-store-connect-build40-packet.md", packet, "For build 40, do not attach or promote an IAP product");
-includes("docs/app-store-connect-build40-packet.md", packet, "NEXT_PUBLIC_ENABLE_PAID_PUBLISH=false");
-includes("docs/app-store-connect-build40-packet.md", packet, "EXPO_PUBLIC_ENABLE_PAID_PUBLISH=false");
-includes("docs/app-store-connect-build40-packet.md", packet, "submit only after the user explicitly confirms");
+includes("docs/app-store-connect-build41-packet.md", packet, "EAS submission status | `FINISHED`, `error: null`");
+includes("docs/app-store-connect-build41-packet.md", packet, "Do not use `invitehub.co.kr` yet");
+includes("docs/app-store-connect-build41-packet.md", packet, "do not use it as the App Review contact");
+includes("docs/app-store-connect-build41-packet.md", packet, "NEXT_PUBLIC_SUPPORT_EMAIL");
+includes("docs/app-store-connect-build41-packet.md", packet, "For build 41, do not attach or promote an IAP product");
+includes("docs/app-store-connect-build41-packet.md", packet, "NEXT_PUBLIC_ENABLE_PAID_PUBLISH=false");
+includes("docs/app-store-connect-build41-packet.md", packet, "EXPO_PUBLIC_ENABLE_PAID_PUBLISH=false");
+includes("docs/app-store-connect-build41-packet.md", packet, "submit only after the user explicitly confirms");
 
 const reviewNotes = packet.match(/## Review Notes[\s\S]*?```txt\n([\s\S]*?)\n```/)?.[1] ?? "";
-check("review notes block is present", reviewNotes.length > 0, "docs/app-store-connect-build40-packet.md: missing Review Notes txt block");
+check("review notes block is present", reviewNotes.length > 0, "docs/app-store-connect-build41-packet.md: missing Review Notes txt block");
 notIncludes(
-  "docs/app-store-connect-build40-packet.md Review Notes",
+  "docs/app-store-connect-build41-packet.md Review Notes",
   reviewNotes,
   "support@invitehub.co.kr",
   "Review Notes must not publish the unverified support@invitehub.co.kr mailbox"
 );
 notIncludes(
-  "docs/app-store-connect-build40-packet.md Review Notes",
+  "docs/app-store-connect-build41-packet.md Review Notes",
   reviewNotes,
   "자동 욕설 필터",
   "Review Notes must not claim an unverified profanity-filter feature"
 );
 
-includes("docs/app-store-readiness-90.md", readiness, "Build 40 App Store Connect entry values");
+includes("docs/app-store-readiness-90.md", readiness, "Build 41 App Store Connect entry values");
 includes("docs/app-store-readiness-90.md", readiness, "NEXT_PUBLIC_SUPPORT_EMAIL");
-includes("docs/app-store-readiness-90.md", readiness, "returned build 40 `FINISHED`, linked submission `FINISHED`, `error: null`");
+includes("docs/app-store-readiness-90.md", readiness, "returned build 41 `FINISHED`, linked submission `FINISHED`, `error: null`");
 includes("docs/goal-completion-audit-90.md", audit, "## Completion Verdict");
 includes("docs/goal-completion-audit-90.md", audit, "Do not mark the goal complete until");
-includes("docs/goal-completion-audit-90.md", audit, "build 40 is uploaded and submitted");
+includes("docs/goal-completion-audit-90.md", audit, "build 41 is uploaded and submitted");
 includes("docs/goal-completion-audit-90.md", audit, "App Review contact email");
 includes("docs/goal-completion-audit-90.md", audit, "TestFlight device evidence harness");
 includes("docs/security-gate-90.md", security, "NEXT_PUBLIC_SUPPORT_EMAIL");
 includes("docs/store-submission-metadata.md", metadata, "Do not use");
 includes("docs/apple-review.md", appleReview, "DNS/MX");
-includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "Build Number | `40`");
-includes("docs/app-store-connect-input-packet-build40.md", inputPacket, expected.buildId);
-includes("docs/app-store-connect-input-packet-build40.md", inputPacket, expected.liveBaseUrl);
-includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "output/store-screenshots-submission-build40");
-includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "Age Rating | Complete and save");
-includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "use Apple's calculated result");
-includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "host moderation");
-includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "realIphoneTestFlightInstallLaunchPassed");
-includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "node scripts/verify-goal-completion.mjs");
-includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "Do not use `support@invitehub.co.kr`");
-includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "final submit action still requires separate explicit user confirmation");
+includes("docs/app-store-connect-input-packet-build41.md", inputPacket, "Build Number | `41`");
+includes("docs/app-store-connect-input-packet-build41.md", inputPacket, expected.buildId);
+includes("docs/app-store-connect-input-packet-build41.md", inputPacket, expected.liveBaseUrl);
+includes("docs/app-store-connect-input-packet-build41.md", inputPacket, "output/store-screenshots-submission-build40");
+includes("docs/app-store-connect-input-packet-build41.md", inputPacket, "Age Rating | Complete and save");
+includes("docs/app-store-connect-input-packet-build41.md", inputPacket, "use Apple's calculated result");
+includes("docs/app-store-connect-input-packet-build41.md", inputPacket, "host moderation");
+includes("docs/app-store-connect-input-packet-build41.md", inputPacket, "realIphoneTestFlightInstallLaunchPassed");
+includes("docs/app-store-connect-input-packet-build41.md", inputPacket, "node scripts/verify-goal-completion.mjs");
+includes("docs/app-store-connect-input-packet-build41.md", inputPacket, "Do not use `support@invitehub.co.kr`");
+includes("docs/app-store-connect-input-packet-build41.md", inputPacket, "final submit action still requires separate explicit user confirmation");
 
 notIncludes(
   "app/support/page.tsx",
@@ -135,8 +135,8 @@ includes(".env.example", envExample, "NEXT_PUBLIC_ENABLE_PAID_PUBLISH=false");
 includes("lib/support-contact.ts", supportContact, "normalizeSupportEmail");
 includes("lib/support-contact.ts", supportContact, "NEXT_PUBLIC_SUPPORT_EMAIL");
 includes("lib/support-contact.test.ts", supportContactTest, "normalizeSupportEmail");
-includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "A crash alert with that app name does not prove build 40 is installed");
-includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "Build 40: status `제출 준비 완료`");
+includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "A crash alert with that app name does not prove build 41 is installed");
+includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "Build 41: status `제출 준비 완료`");
 includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "installs `-`, sessions `-`, crashes `-`");
 includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "bundle version `39` installed");
 includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "Unable to launch com.invitehub.app because the device was not, or could not be, unlocked");
