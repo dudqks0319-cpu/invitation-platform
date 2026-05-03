@@ -2,13 +2,13 @@ import { existsSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 
 export const requiredExternalEvidence = [
-  { key: "appStoreConnectBuild38Processed", label: "App Store Connect shows build 1.0.0 (38) processed/available" },
-  { key: "build38ExportComplianceSaved", label: "Build 38 export compliance is saved if prompted" },
-  { key: "build38AssignedToInternalGroup", label: "Build 38 is assigned to TE Team (Expo)" },
+  { key: "appStoreConnectBuild40Processed", label: "App Store Connect shows build 1.0.0 (40) processed/available" },
+  { key: "build40ExportComplianceSaved", label: "Build 40 export compliance is saved if prompted" },
+  { key: "build40AssignedToInternalGroup", label: "Build 40 is assigned to TE Team (Expo)" },
   { key: "realIphoneTestFlightInstallLaunchPassed", label: "A real iPhone TestFlight install and launch smoke test passed" },
   { key: "appInfoSaved", label: "App Information fields are saved" },
   { key: "versionMetadataSaved", label: "Version metadata fields are saved" },
-  { key: "build38SelectedForVersion", label: "Build 38 is selected for the App Store version" },
+  { key: "build40SelectedForVersion", label: "Build 40 is selected for the App Store version" },
   { key: "privacyLabelsSaved", label: "App Privacy labels are saved" },
   { key: "screenshotsUploaded", label: "Required screenshots are uploaded" },
   { key: "reviewNotesSaved", label: "Review Notes are saved" },

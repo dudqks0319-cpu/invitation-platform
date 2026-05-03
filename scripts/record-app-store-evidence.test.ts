@@ -41,7 +41,7 @@ describe("record-app-store-evidence", () => {
 
       expect(result.status).toBe(0);
       expect(result.stdout).toContain("APP STORE EXTERNAL EVIDENCE KEYS");
-      expect(result.stdout).toContain("appStoreConnectBuild38Processed");
+      expect(result.stdout).toContain("appStoreConnectBuild40Processed");
       expect(result.stdout).toContain("iapStateVerifiedOrPaidFeaturesDisabled");
     });
   });
@@ -50,11 +50,11 @@ describe("record-app-store-evidence", () => {
     withTempProject((root) => {
       const result = runRecorder(root, [
         "--key",
-        "appStoreConnectBuild38Processed",
+        "appStoreConnectBuild40Processed",
         "--capturedAt",
         "2026-05-02T15:30:00+09:00",
         "--evidence",
-        "App Store Connect TestFlight shows 1.0.0 (38) processed.",
+        "App Store Connect TestFlight shows 1.0.0 (40) processed.",
         "--artifact",
         "https://appstoreconnect.apple.com/apps/6763630299/testflight/ios"
       ]);
@@ -65,10 +65,10 @@ describe("record-app-store-evidence", () => {
       expect(result.status).toBe(0);
       expect(result.stdout).toContain("Status: pass");
       expect(existsSync(evidencePath)).toBe(true);
-      expect(manifest.appStoreConnectBuild38Processed).toEqual({
+      expect(manifest.appStoreConnectBuild40Processed).toEqual({
         status: true,
         capturedAt: "2026-05-02T15:30:00+09:00",
-        evidence: "App Store Connect TestFlight shows 1.0.0 (38) processed.",
+        evidence: "App Store Connect TestFlight shows 1.0.0 (40) processed.",
         artifact: "https://appstoreconnect.apple.com/apps/6763630299/testflight/ios"
       });
     });

@@ -2,6 +2,10 @@
 
 Date: 2026-05-02
 
+Status: superseded. The user's iPhone showed a TestFlight launch crash dialog
+for build 38, and build 39 later reproduced the same iPhone crash dialog. Use
+`docs/app-store-connect-build40-packet.md` for the current TestFlight pass.
+
 This packet is the single handoff sheet for entering InviteHub build `1.0.0
 (38)` into App Store Connect. It avoids claims about paid publishing because
 the first-submission fallback keeps photo-included paid publishing disabled

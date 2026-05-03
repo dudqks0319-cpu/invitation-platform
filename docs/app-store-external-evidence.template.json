@@ -1,26 +1,26 @@
 {
-  "appStoreConnectBuild38Processed": {
+  "appStoreConnectBuild40Processed": {
     "status": false,
     "capturedAt": "",
-    "evidence": "App Store Connect TestFlight shows 1.0.0 (38) processed/available.",
+    "evidence": "App Store Connect TestFlight shows 1.0.0 (40) processed/available.",
     "artifact": ""
   },
-  "build38ExportComplianceSaved": {
+  "build40ExportComplianceSaved": {
     "status": false,
     "capturedAt": "",
-    "evidence": "Build 38 export compliance is saved or App Store Connect did not request it.",
+    "evidence": "Build 40 export compliance is saved or App Store Connect did not request it.",
     "artifact": ""
   },
-  "build38AssignedToInternalGroup": {
+  "build40AssignedToInternalGroup": {
     "status": false,
     "capturedAt": "",
-    "evidence": "Build 38 is assigned to internal group TE Team (Expo).",
+    "evidence": "Build 40 is assigned to internal group TE Team (Expo).",
     "artifact": ""
   },
   "realIphoneTestFlightInstallLaunchPassed": {
     "status": false,
     "capturedAt": "",
-    "evidence": "A real iPhone installed build 38 from TestFlight and launched home -> template -> builder -> preview.",
+    "evidence": "A real iPhone installed build 40 from TestFlight and launched home -> template -> builder -> preview.",
     "artifact": ""
   },
   "appInfoSaved": {
@@ -35,10 +35,10 @@
     "evidence": "Promotional text, description, keywords, support URL, copyright, and version metadata are saved.",
     "artifact": ""
   },
-  "build38SelectedForVersion": {
+  "build40SelectedForVersion": {
     "status": false,
     "capturedAt": "",
-    "evidence": "Build 1.0.0 (38) is selected for the App Store version.",
+    "evidence": "Build 1.0.0 (40) is selected for the App Store version.",
     "artifact": ""
   },
   "privacyLabelsSaved": {

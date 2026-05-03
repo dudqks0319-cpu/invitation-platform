@@ -14,11 +14,19 @@
 | Store | Production bundle id is `com.invitehub.app`, production scheme is `invitehub`, dev scheme is separate. |
 | QA | Simulator evidence exists for home and template-to-builder flow; TestFlight evidence required before external review. |
 
-Latest local evidence after the fixed-template preview update:
+Latest local evidence after the build 40 TestFlight stabilization update:
 
+- Build 40 App Store Connect entry values are consolidated in
+  `docs/app-store-connect-build40-packet.md`.
+- `node scripts/eas-build-submission-status.mjs 86a14873-bdfd-4390-87d1-81ae0ddd06dc`
+  returned build 40 `FINISHED`, linked submission `FINISHED`, `error: null`.
+- Build 40 supersedes builds 38 and 39 after the user's iPhone showed the same
+  TestFlight launch crash dialog for both prior builds.
 - `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`
-  passed web lint, web typecheck, 52-file web/API test suite, mobile lint,
-  mobile typecheck, and focused 9-file mobile/API tests.
+  passed code gates on 2026-05-03 12:37 KST through web/mobile lint,
+  web/mobile typecheck, the 58-file web/API test suite with 175 tests, and the
+  focused 9-file mobile/API test suite with 34 tests. The packet verifier is now
+  pinned to build 40.
 - Escalated local iOS Release simulator build passed with 0 errors and 2
   warnings and opened `com.invitehub.app` on iPhone 17.
 - Release home screenshot:
@@ -60,7 +68,7 @@ Latest local evidence after the fixed-template preview update:
   version build row now shows `제출 준비 완료`.
 - Internal group `TE Team (Expo)` shows `1명의 테스터`, `1개의 빌드`, and build
   `1.0.0 (37)` status `테스트 중`.
-- Build 38 Apple processing and internal group assignment still need App Store
+- Build 40 Apple processing and internal group assignment still need App Store
   Connect confirmation before real-device TestFlight QA.
 - Future builds declare `ITSAppUsesNonExemptEncryption=false` through Expo iOS
   config and the native `Info.plist`.

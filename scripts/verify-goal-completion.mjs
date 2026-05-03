@@ -10,17 +10,17 @@ const requiredLocalClaims = [
   {
     file: "docs/goal-completion-audit-90.md",
     snippets: [
-      "Fast release gate recheck on 2026-05-02 14:56 KST",
-      "55-file web/API test suite with 160 tests",
+      "Fast release gate recheck on 2026-05-03 12:37 KST",
+      "58-file web/API test suite with 175 tests",
       "36-check App Store packet verifier",
       "The full active goal is not complete yet"
     ]
   },
   {
-    file: "docs/app-store-connect-build38-packet.md",
+    file: "docs/app-store-connect-build40-packet.md",
     snippets: [
       "EAS submission status | `FINISHED`, `error: null`",
-      "Latest EAS status recheck | `2026-05-02 14:47 KST`",
+      "Latest EAS status recheck | `2026-05-03 12:28 KST`",
       "do not use it as the App Review contact",
       "submit only after the user explicitly confirms"
     ]
@@ -28,7 +28,7 @@ const requiredLocalClaims = [
   {
     file: "docs/security-gate-90.md",
     snippets: [
-      "55-file web/API test suite with 160 tests",
+      "58-file web/API test suite with 175 tests",
       "36-check App Store packet verifier",
       "NEXT_PUBLIC_SUPPORT_EMAIL"
     ]
@@ -71,6 +71,12 @@ if (!existsSync(join(root, evidencePath))) {
   }
 
   if (evidence) {
+    for (const [key, entry] of Object.entries(evidence)) {
+      if (entry === true) {
+        blockers.push(`${evidencePath}: ${key} uses legacy boolean true; add capturedAt, evidence, and artifact`);
+      }
+    }
+
     for (const { key, label } of requiredExternalEvidence) {
       blockers.push(...validateEvidenceEntry({ entry: evidence[key], evidencePath, key, label, root }));
     }
@@ -94,7 +100,7 @@ if (blockers.length > 0) {
   for (const blocker of blockers) {
     console.log(`  - ${blocker}`);
   }
-  console.log("- Next Action: capture App Store Connect build 38, TestFlight iPhone, metadata, privacy, screenshot, review-note, and contact save evidence.");
+  console.log("- Next Action: capture App Store Connect build 40, TestFlight iPhone, metadata, privacy, screenshot, review-note, and contact save evidence.");
   process.exit(2);
 }
 

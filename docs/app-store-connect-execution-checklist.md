@@ -13,6 +13,20 @@ Official sources checked:
 
 ## Current External Status
 
+Build 40 is uploaded to Apple through EAS Submit and supersedes builds 38 and
+39 because both showed the same launch crash dialog on the user's iPhone. Build
+40 contains source commit `9c83039`, which removes the optional Google/Kakao/IAP
+native modules from the first-submission binary.
+
+Current EAS evidence from 2026-05-03:
+
+- Build upload: `1.0.0 (40)`, EAS build
+  `86a14873-bdfd-4390-87d1-81ae0ddd06dc`, status `FINISHED`.
+- EAS submission: `cf537e44-73dd-4a2d-8640-7d31e9facba8`, status `FINISHED`,
+  `error: null`.
+- Apple processing still needs to complete before TestFlight install can be
+  rechecked on the user's iPhone.
+
 Build 38 is uploaded to Apple through EAS and contains the paid-publish fallback
 commit `d8ed821`. Apple processing, export-compliance clearance, and internal
 TestFlight group assignment were confirmed in App Store Connect on 2026-05-02
@@ -87,10 +101,10 @@ Current local evidence:
 
 - `xcodebuild -version`: Xcode 26.3.
 - `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`:
-  passed again on 2026-05-02 14:56 KST. It ran web lint, web typecheck, 55-file
-  web/API tests with 160 tests, mobile lint, mobile typecheck, focused
-  9-file mobile/API tests with 30 tests, and the 36-check App Store packet
-  verifier.
+  passed code gates on 2026-05-03 12:37 KST. It ran web lint, web typecheck,
+  58-file web/API tests with 175 tests, mobile lint, mobile typecheck, and
+  focused 9-file mobile/API tests with 34 tests. The 36-check App Store packet
+  verifier is now pinned to build 40.
 - Escalated iOS Release simulator build: 0 errors, 2 warnings.
 - Bundle opened on iPhone 17 as `com.invitehub.app`.
 - Release home screenshot: `/private/tmp/invitehub-release-home-current.png`.
@@ -135,6 +149,11 @@ Current evidence:
 - `node scripts/eas-build-submission-status.mjs d185dfc1-9110-4d81-b510-08e02f1ece7f`
   confirmed build 38 status `FINISHED` and linked submission
   `77395141-a80b-48f9-8e43-c61114fafa25` status `FINISHED` with `error: null`.
+- Build 39 (`d3b6a8c0-4a3e-4705-8790-b9d90c98370a`) finished and submitted,
+  but the user reported the same iPhone launch crash dialog.
+- Build 40 (`86a14873-bdfd-4390-87d1-81ae0ddd06dc`) finished and EAS Submit
+  uploaded it with submission `cf537e44-73dd-4a2d-8640-7d31e9facba8`, status
+  `FINISHED`, `error: null`.
 
 Current external evidence:
 
@@ -144,9 +163,9 @@ Current external evidence:
 
 Required evidence before marking the store area complete:
 
-- App Store Connect processing completes for build 38.
-- App Store Connect export compliance is saved for build 38 if prompted.
-- Build 38 is available to internal group `TE Team (Expo)`.
+- App Store Connect processing completes for build 40.
+- App Store Connect export compliance is saved for build 40 if prompted.
+- Build 40 is available to internal group `TE Team (Expo)`.
 - Real iPhone install/launch evidence from TestFlight.
 - Final App Store Connect app info, version metadata, build selection, privacy
   labels, screenshots, review notes, and IAP product state are saved or verified.
@@ -164,14 +183,14 @@ Required evidence:
 - Selecting a template opens builder Step 1.
 - Preview path opens without crash.
 
-Build 38 confirmation steps:
+Build 40 confirmation steps:
 
 1. Open `https://appstoreconnect.apple.com/apps/6763630299/testflight/ios`.
-2. Confirm `1.0.0 (38)` is visible after Apple processing.
+2. Confirm `1.0.0 (40)` is visible after Apple processing.
 3. If export compliance appears, answer consistently with
    `ITSAppUsesNonExemptEncryption=false`.
-4. Add build `1.0.0 (38)` to internal group `TE Team (Expo)`.
-5. On the user's iPhone, open TestFlight, install/update InviteHub to build 38,
+4. Add build `1.0.0 (40)` to internal group `TE Team (Expo)`.
+5. On the user's iPhone, open TestFlight, install/update InviteHub to build 40,
    launch once, and record whether the home/template-first screen opens.
 
 ## 4. App Information

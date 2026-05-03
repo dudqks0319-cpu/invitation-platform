@@ -20,7 +20,7 @@ Local security controls are materially in place. A fresh network-enabled
 | Output/sensitive data | Store verification writes sanitized provider verification payloads through `sanitizeStoreVerification` before audit/payment storage. | Pass |
 | Request controls | JSON-only checks and body-size limits are centralized in `lib/supabase/public-write.ts`; store verification uses an 80 KB limit. | Pass |
 | Abuse controls | `consume_rate_limit` exists in Supabase and public RSVP/guestbook/guest-publish routes call it before writes. | Pass |
-| Negative-path tests | Latest local test run passed 52 files / 152 tests and focused mobile/API run passed 9 files / 30 tests, including auth, ownership, invalid body, payment, public write, and rate-limit coverage. | Pass |
+| Negative-path tests | Latest local code-gate run passed 58 files / 175 tests and focused mobile/API run passed 9 files / 34 tests, including auth, ownership, invalid body, payment, public write, and rate-limit coverage. | Pass |
 | Dependencies | `npm audit --audit-level=high` exited 0. Current findings are moderate-only transitive advisories: PostCSS below 8.5.10 under Expo/Next and uuid below 14 under Expo config tooling. | Pass for high gate |
 
 ## Key Code Evidence
@@ -40,7 +40,7 @@ Local security controls are materially in place. A fresh network-enabled
 
 | Risk | Owner | Due |
 | --- | --- | --- |
-| Real-device TestFlight install/launch evidence for build 38 has not been captured in this run. | Store Manager / Release owner | Before final release readiness sign-off |
+| Real-device TestFlight install/launch evidence for build 40 has not been captured in this run. Builds 38 and 39 produced user-visible crash dialogs and are superseded. | Store Manager / Release owner | Before final release readiness sign-off |
 | App Store Connect app information, version metadata, build selection, privacy labels, IAP approval, review notes, and screenshots are verified incomplete. | Store Manager / Release owner | Before final App Store submission |
 | Custom domain `invitehub.co.kr` does not resolve by DNS; store URLs must use the verified Vercel deployment or DNS must be connected before submission. | Store Manager / Release owner | Before entering App Store metadata |
 | `support@invitehub.co.kr` has no verified MX/DNS evidence; App Review contact must use a currently verified mailbox and `NEXT_PUBLIC_SUPPORT_EMAIL` until domain email is configured. | Store Manager / Release owner | Before entering App Review contact |
@@ -60,7 +60,14 @@ downgrades for Next/Expo dependency chains.
 
 ## Current External Gate
 
-EAS iOS build 38 completed and EAS Submit uploaded the binary to App Store
+EAS iOS build 40 completed and EAS Submit uploaded the binary to App Store
+Connect after the build 38 and 39 launch crash reports. The current release
+candidate is build 40.
+
+`node scripts/eas-build-submission-status.mjs 86a14873-bdfd-4390-87d1-81ae0ddd06dc`
+returned build 40 `FINISHED`, linked submission `FINISHED`, `error: null`.
+
+Historical build 38 completed and EAS Submit uploaded the binary to App Store
 Connect. It contains commit `d8ed82188b3233bebe7be90c173d434f36690581`, which
 keeps paid photo publishing disabled by default until an IAP product exists.
 `node scripts/eas-build-submission-status.mjs d185dfc1-9110-4d81-b510-08e02f1ece7f`
@@ -83,9 +90,10 @@ web/mobile lint, and an iPhone 17 Release simulator build. This reduces the
 store-compliance risk while the App Store Connect IAP product does not exist,
 but the flag must stay disabled until the product is created and approved.
 
-The 2026-05-02 14:56 KST fast release gate passed web/mobile lint and
-typecheck, the 55-file web/API test suite with 160 tests, the focused 9-file
-mobile/API suite with 30 tests, and the 36-check App Store packet verifier.
+The 2026-05-03 12:37 KST fast release gate passed web/mobile lint and
+typecheck, the 58-file web/API test suite with 175 tests, and the focused
+9-file mobile/API suite with 34 tests. The 36-check App Store packet verifier
+is now pinned to build 40.
 
 The public support page no longer hardcodes the unverified
 `support@invitehub.co.kr` mailbox. It reads `NEXT_PUBLIC_SUPPORT_EMAIL` and only

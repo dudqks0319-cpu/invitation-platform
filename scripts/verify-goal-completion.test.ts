@@ -7,13 +7,13 @@ import { describe, expect, it } from "vitest";
 const scriptPath = join(process.cwd(), "scripts/verify-goal-completion.mjs");
 
 const evidenceKeys = [
-  "appStoreConnectBuild38Processed",
-  "build38ExportComplianceSaved",
-  "build38AssignedToInternalGroup",
+  "appStoreConnectBuild40Processed",
+  "build40ExportComplianceSaved",
+  "build40AssignedToInternalGroup",
   "realIphoneTestFlightInstallLaunchPassed",
   "appInfoSaved",
   "versionMetadataSaved",
-  "build38SelectedForVersion",
+  "build40SelectedForVersion",
   "privacyLabelsSaved",
   "screenshotsUploaded",
   "reviewNotesSaved",
@@ -28,18 +28,18 @@ function makeTempProject() {
   writeFileSync(
     join(root, "docs/goal-completion-audit-90.md"),
     [
-      "Fast release gate recheck on 2026-05-02 14:56 KST",
-      "55-file web/API test suite with 160 tests",
+      "Fast release gate recheck on 2026-05-03 12:37 KST",
+      "58-file web/API test suite with 175 tests",
       "36-check App Store packet verifier",
       "The full active goal is not complete yet"
     ].join("\n")
   );
 
   writeFileSync(
-    join(root, "docs/app-store-connect-build38-packet.md"),
+    join(root, "docs/app-store-connect-build40-packet.md"),
     [
       "EAS submission status | `FINISHED`, `error: null`",
-      "Latest EAS status recheck | `2026-05-02 14:47 KST`",
+      "Latest EAS status recheck | `2026-05-03 12:28 KST`",
       "do not use it as the App Review contact",
       "submit only after the user explicitly confirms"
     ].join("\n")
@@ -48,7 +48,7 @@ function makeTempProject() {
   writeFileSync(
     join(root, "docs/security-gate-90.md"),
     [
-      "55-file web/API test suite with 160 tests",
+      "58-file web/API test suite with 175 tests",
       "36-check App Store packet verifier",
       "NEXT_PUBLIC_SUPPORT_EMAIL"
     ].join("\n")
@@ -112,7 +112,7 @@ describe("verify-goal-completion", () => {
     withTempProject((root) => {
       writeEvidence(root, {
         ...makeCompleteEvidence(),
-        appStoreConnectBuild38Processed: true
+        appStoreConnectBuild39Processed: true
       });
 
       const result = runVerifier(root);
