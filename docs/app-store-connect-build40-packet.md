@@ -24,6 +24,7 @@ loading them.
 | Group-submit retry | `949d446f-dea1-490f-8b52-2de359d899ee`, status `ERRORED` |
 | IPA artifact | `https://expo.dev/artifacts/eas/hCes69aZwsDbfuVwaP4mFN.ipa` |
 | Latest EAS status recheck | `2026-05-03 12:28 KST` |
+| Latest ASC group check | `2026-05-03 12:53 KST` |
 
 Verification command:
 
@@ -34,19 +35,23 @@ node scripts/eas-build-submission-status.mjs 86a14873-bdfd-4390-87d1-81ae0ddd06d
 ## TestFlight Status
 
 EAS Submit uploaded build 40 to App Store Connect and returned `FINISHED` with
-`error: null`. Apple processing and internal-group assignment still need console
-or user evidence before this can be treated as passed on the real iPhone.
+`error: null`. App Store Connect now shows build `1.0.0 (40)` in the internal
+group `Team (Expo)` with status `테스트 중` and `90일 후 만료`.
 
 A second EAS submit attempt with `--groups "TE Team (Expo)"` scheduled
 submission `949d446f-dea1-490f-8b52-2de359d899ee`, but it ended in `ERRORED`.
-Treat App Store Connect manual confirmation or assignment as required for build
-40.
+App Store Connect was therefore checked directly.
+
+Current App Store Connect evidence:
+
+- `1.0.0 (40)` appears in the iOS build upload list with status `완료`.
+- Build 40 is in internal group `Team (Expo)`.
+- The group header shows `내부 그룹 ∙ 1명의 테스터 ∙ 4개의 빌드`.
+- The group build tab shows `1.0.0 (40)` with status `테스트 중`.
+- No export-compliance blocking prompt is present for build 40.
 
 Required next evidence:
 
-- `1.0.0 (40)` appears in the iOS build upload list with status `완료`.
-- Build 40 export compliance is saved if App Store Connect prompts for it.
-- Build 40 is assigned to internal group `TE Team (Expo)`.
 - The user's iPhone installs build 40 from TestFlight and launches without the
   crash dialog.
 

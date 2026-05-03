@@ -26,9 +26,12 @@ Current EAS evidence from 2026-05-03:
   `error: null`.
 - A follow-up EAS submit attempt with `--groups "TE Team (Expo)"` created
   submission `949d446f-dea1-490f-8b52-2de359d899ee`, but it ended `ERRORED`.
-  Confirm or assign build 40 to the internal group in App Store Connect.
-- Apple processing still needs to complete before TestFlight install can be
-  rechecked on the user's iPhone.
+  App Store Connect was checked directly after that failure.
+- App Store Connect TestFlight now shows build `1.0.0 (40)` processed and
+  assigned to internal group `Team (Expo)`.
+- The group build tab shows `1.0.0 (40)` status `테스트 중`, expiring in 90
+  days, with no crash/session data yet.
+- The user's iPhone still needs to install and launch build 40 from TestFlight.
 
 Build 38 is uploaded to Apple through EAS and contains the paid-publish fallback
 commit `d8ed821`. Apple processing, export-compliance clearance, and internal
@@ -165,12 +168,11 @@ Current external evidence:
 - App Store Connect export compliance is saved for build 37.
 - Build 37 is available to internal group `TE Team (Expo)`.
 - One internal tester is invited.
+- App Store Connect processing and internal-group assignment are confirmed for
+  build 40 as of 2026-05-03 12:53 KST.
 
 Required evidence before marking the store area complete:
 
-- App Store Connect processing completes for build 40.
-- App Store Connect export compliance is saved for build 40 if prompted.
-- Build 40 is available to internal group `TE Team (Expo)`.
 - Real iPhone install/launch evidence from TestFlight.
 - Final App Store Connect app info, version metadata, build selection, privacy
   labels, screenshots, review notes, and IAP product state are saved or verified.
