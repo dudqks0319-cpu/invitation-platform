@@ -74,6 +74,46 @@ describe("record-app-store-evidence", () => {
     });
   });
 
+  it("backfills missing required evidence keys in an existing manifest", () => {
+    withTempProject((root) => {
+      const evidencePath = join(root, "docs/app-store-external-evidence.json");
+      writeFileSync(
+        evidencePath,
+        JSON.stringify({
+          appStoreConnectBuild40Processed: {
+            status: true,
+            capturedAt: "2026-05-02T15:30:00+09:00",
+            evidence: "App Store Connect TestFlight shows 1.0.0 (40) processed.",
+            artifact: "https://appstoreconnect.apple.com/apps/6763630299/testflight/ios"
+          }
+        })
+      );
+
+      const result = runRecorder(root, [
+        "--key",
+        "build40AssignedToInternalGroup",
+        "--capturedAt",
+        "2026-05-02T15:31:00+09:00",
+        "--evidence",
+        "Build 40 is assigned to Team (Expo).",
+        "--artifact",
+        "https://appstoreconnect.apple.com/apps/6763630299/testflight/ios"
+      ]);
+
+      const manifest = JSON.parse(readFileSync(evidencePath, "utf8"));
+
+      expect(result.status).toBe(0);
+      expect(manifest.appStoreConnectBuild40Processed.status).toBe(true);
+      expect(manifest.build40AssignedToInternalGroup.status).toBe(true);
+      expect(manifest.build40SelectedForVersion).toEqual({
+        status: false,
+        capturedAt: "",
+        evidence: "Build 40 is selected for the App Store version",
+        artifact: ""
+      });
+    });
+  });
+
   it("refuses unknown keys and invalid artifacts", () => {
     withTempProject((root) => {
       const unknownKey = runRecorder(root, [

@@ -57,7 +57,10 @@ function loadManifest() {
     }
   }
 
-  return JSON.parse(readFileSync(fullEvidencePath, "utf8"));
+  return {
+    ...createEmptyEvidenceManifest(),
+    ...JSON.parse(readFileSync(fullEvidencePath, "utf8"))
+  };
 }
 
 function saveManifest(manifest) {

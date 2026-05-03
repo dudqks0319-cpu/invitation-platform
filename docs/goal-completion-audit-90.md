@@ -233,17 +233,19 @@ Manual Apple-side confirmation path:
   tracked.
 - Goal completion verifier tests:
   `npm run test -- scripts/record-app-store-evidence.test.ts scripts/verify-goal-completion.test.ts --exclude='**/.claude/**'`
-  passed 2 files / 9 tests on 2026-05-03 13:09 KST. It covers missing
+  passed 2 files / 10 tests on 2026-05-03 13:31 KST. It covers missing
   manifest, legacy boolean evidence, invalid artifacts, App Store Connect
-  local-file artifact rejection, and the fully structured pass path.
+  local-file artifact rejection, existing manifest key backfill, and the fully
+  structured pass path.
 - App Store evidence recorder:
   `node scripts/record-app-store-evidence.mjs --list` lists the allowed
   Apple-side evidence keys, and the recorder writes only the gitignored
   `docs/app-store-external-evidence.json` manifest.
 - App Store evidence recorder tests are included in the same 2026-05-03
-  2-file / 9-test run and cover key listing, valid structured evidence
-  recording, unknown-key rejection, invalid-artifact rejection, and rejection of
-  local file paths for App Store Connect upload evidence.
+  2-file / 10-test run and cover key listing, valid structured evidence
+  recording, existing manifest key backfill, unknown-key rejection,
+  invalid-artifact rejection, and rejection of local file paths for App Store
+  Connect upload evidence.
 - Paid-publish fallback verification on 2026-05-02 13:38 KST:
   - `npm run test -- apps/mobile/lib/release-flags.test.ts apps/mobile/lib/preview-flow.test.ts apps/mobile/lib/payments/pricing.test.ts apps/mobile/lib/invitations.test.ts lib/release-flags.test.ts --exclude='**/.claude/**'`: 5 files / 14 tests passed.
   - `npm --prefix apps/mobile run typecheck`: passed.
