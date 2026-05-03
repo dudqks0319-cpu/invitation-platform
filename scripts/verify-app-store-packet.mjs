@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const root = process.cwd();
@@ -44,6 +44,12 @@ function notIncludes(file, content, value, detail) {
   check(`${file} excludes ${value}`, !content.includes(value), detail ?? `${file}: expected to exclude ${value}`);
 }
 
+function isExecutable(relativePath) {
+  const path = join(root, relativePath);
+
+  return existsSync(path) && (statSync(path).mode & 0o111) !== 0;
+}
+
 const packet = read("docs/app-store-connect-build40-packet.md");
 const readiness = read("docs/app-store-readiness-90.md");
 const audit = read("docs/goal-completion-audit-90.md");
@@ -55,6 +61,9 @@ const supportPage = read("app/support/page.tsx");
 const envExample = read(".env.example");
 const supportContact = read("lib/support-contact.ts");
 const supportContactTest = read("lib/support-contact.test.ts");
+const crashTriage = read("docs/testflight-crash-triage-2026-05-03.md");
+const collectDeviceEvidence = read("scripts/collect-testflight-device-evidence.sh");
+const awaitDevice = read("scripts/await-testflight-device.sh");
 
 for (const value of Object.values(expected)) {
   includes("docs/app-store-connect-build40-packet.md", packet, value);
@@ -91,6 +100,7 @@ includes("docs/goal-completion-audit-90.md", audit, "## Completion Verdict");
 includes("docs/goal-completion-audit-90.md", audit, "Do not mark the goal complete until");
 includes("docs/goal-completion-audit-90.md", audit, "build 40 is uploaded and submitted");
 includes("docs/goal-completion-audit-90.md", audit, "App Review contact email");
+includes("docs/goal-completion-audit-90.md", audit, "TestFlight device evidence harness");
 includes("docs/security-gate-90.md", security, "NEXT_PUBLIC_SUPPORT_EMAIL");
 includes("docs/store-submission-metadata.md", metadata, "Do not use");
 includes("docs/apple-review.md", appleReview, "DNS/MX");
@@ -114,6 +124,24 @@ includes(".env.example", envExample, "NEXT_PUBLIC_ENABLE_PAID_PUBLISH=false");
 includes("lib/support-contact.ts", supportContact, "normalizeSupportEmail");
 includes("lib/support-contact.ts", supportContact, "NEXT_PUBLIC_SUPPORT_EMAIL");
 includes("lib/support-contact.test.ts", supportContactTest, "normalizeSupportEmail");
+includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "A crash alert with that app name does not prove build 40 is installed");
+includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "Build 40: status `제출 준비 완료`");
+includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "installs `-`, sessions `-`, crashes `-`");
+includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "bash scripts/await-testflight-device.sh --launch");
+includes("scripts/collect-testflight-device-evidence.sh", collectDeviceEvidence, "BUNDLE_ID=\"${BUNDLE_ID:-com.invitehub.app}\"");
+includes("scripts/collect-testflight-device-evidence.sh", collectDeviceEvidence, "--bundle-id \"$BUNDLE_ID\"");
+includes("scripts/await-testflight-device.sh", awaitDevice, "tunnelState");
+includes("scripts/await-testflight-device.sh", awaitDevice, "scripts/collect-testflight-device-evidence.sh --launch");
+check(
+  "scripts/collect-testflight-device-evidence.sh is executable",
+  isExecutable("scripts/collect-testflight-device-evidence.sh"),
+  "scripts/collect-testflight-device-evidence.sh must be executable"
+);
+check(
+  "scripts/await-testflight-device.sh is executable",
+  isExecutable("scripts/await-testflight-device.sh"),
+  "scripts/await-testflight-device.sh must be executable"
+);
 
 if (failures.length > 0) {
   console.error("APP STORE PACKET VERIFY RESULT");

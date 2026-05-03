@@ -44,7 +44,7 @@ InviteHub 앱을 App Store 제출 기준으로 프론트엔드, 백엔드, UI/UX
 | Store config 90+ | `apps/mobile/app.config.ts`, `apps/mobile/eas.json`, native project | Production bundle id is `com.invitehub.app`; production scheme is `invitehub`; dev scheme is `invitehub-dev`; Xcode is 26.3. | Pass |
 | Harness 90+ | `.claude/skills/invitehub-app-builder/skill.md`, `docs/invitehub-app-harness.md`, `scripts/invitehub-release-gate.sh` | Release gate covers lint, typecheck, tests, high audit, iOS Release simulator build. | Pass |
 | Role harness coverage | `.claude/agents/*.md`, `.claude/skills/invitehub-app-builder/skill.md` | Verified agents exist: product-manager, marketing-copywriter, template-image-art-director, ux-designer, mobile-frontend-engineer, mobile-backend-engineer, api-integrator, security-engineer, qa-engineer, store-manager. | Pass |
-| Verification evidence | Release gate output, simulator screenshots | `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh` passed code gates on 2026-05-03 13:24 KST: web/mobile lint, web/mobile typecheck, 58-file web/API suite with 177 tests, and focused 9-file mobile/API suite with 34 tests. The 42-check packet verifier is pinned to build 40. Escalated iOS Release build also passed separately. Screenshots: `/private/tmp/invitehub-release-home-current.png`, `/private/tmp/invitehub-preview-fit-to-viewport.png`, `/tmp/invitehub-build40-candidate-release-home-20260503.png`. Screenshot size verifier passed for `output/store-screenshots-verified/05-preview-fit-to-viewport.png`. | Pass with audit caveat |
+| Verification evidence | Release gate output, simulator screenshots | `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh` passed code gates on 2026-05-03 13:24 KST: web/mobile lint, web/mobile typecheck, 58-file web/API suite with 177 tests, and focused 9-file mobile/API suite with 34 tests. The 54-check packet verifier is pinned to build 40. Escalated iOS Release build also passed separately. Screenshots: `/private/tmp/invitehub-release-home-current.png`, `/private/tmp/invitehub-preview-fit-to-viewport.png`, `/tmp/invitehub-build40-candidate-release-home-20260503.png`. Screenshot size verifier passed for `output/store-screenshots-verified/05-preview-fit-to-viewport.png`. | Pass with audit caveat |
 | App Store privacy/IAP map | `app/privacy/page.tsx`, `app/support/page.tsx`, `app/terms/page.tsx`, `app/faq/page.tsx`, `docs/app-store-readiness-90.md`, `docs/store-submission-metadata.md` | Bundle ID, production scheme, IAP product ID, privacy-label basis, support/privacy/terms URL content, map-link behavior, and env mapping are documented. | Pass |
 | Current EAS/Submit evidence | `scripts/eas-build-submission-status.mjs`, EAS build/submission state | EAS iOS build 38 (`d185dfc1-9110-4d81-b510-08e02f1ece7f`) was rechecked on 2026-05-02 14:47 KST: build status `FINISHED`, app version `1.0.0`, build number `38`, commit `d8ed82188b3233bebe7be90c173d434f36690581`, linked submission `77395141-a80b-48f9-8e43-c61114fafa25` status `FINISHED`, `error: null`. | Pass for EAS upload |
 | App Store Connect execution checklist | `docs/app-store-connect-execution-checklist.md`, `docs/store-screenshot-plan.md` | Official Apple submission/privacy/upcoming-requirements pages checked on 2026-05-01; EAS, TestFlight, IAP, privacy labels, screenshots, and review notes are mapped to required evidence. | Pass |
@@ -106,7 +106,7 @@ Manual Apple-side confirmation path:
 - `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`:
   passed code gates on 2026-05-03 13:24 KST. It ran web lint, web typecheck,
   58-file web/API test suite with 177 tests, mobile lint, mobile typecheck, and
-  focused 9-file mobile/API test suite with 34 tests. The 42-check App Store
+  focused 9-file mobile/API test suite with 34 tests. The 54-check App Store
   packet verifier is now pinned to build 40.
 - Escalated iOS Release simulator build:
   `npm --prefix apps/mobile run ios -- --device "iPhone 17" --configuration Release --no-bundler`;
@@ -221,7 +221,7 @@ Manual Apple-side confirmation path:
   `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`
   passed web lint, web typecheck, 58-file web/API test suite with 177 tests,
   mobile lint, mobile typecheck, and focused 9-file mobile/API suite with 34
-  tests. The new 42-check App Store packet verifier is pinned to build 40.
+  tests. The new 54-check App Store packet verifier is pinned to build 40.
 - App Store Connect TestFlight group check on 2026-05-03 12:53 KST:
   internal group `Team (Expo)` shows `내부 그룹 ∙ 1명의 테스터 ∙ 4개의 빌드`.
   The group build tab lists `1.0.0 (40)` with status `테스트 중`, platform
