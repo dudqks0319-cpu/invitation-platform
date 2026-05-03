@@ -27,9 +27,9 @@ Latest local evidence after the build 40 TestFlight stabilization update:
   returned build 40 `FINISHED`, linked submission `FINISHED`, `error: null`.
 - Build 40 supersedes builds 38 and 39 after the user's iPhone showed the same
   TestFlight launch crash dialog for both prior builds.
-- `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`
-  passed code gates on 2026-05-03 12:37 KST through web/mobile lint,
-  web/mobile typecheck, the 58-file web/API test suite with 175 tests, and the
+- `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`
+  passed code gates on 2026-05-03 13:24 KST through web/mobile lint,
+  web/mobile typecheck, the 58-file web/API test suite with 177 tests, and the
   focused 9-file mobile/API test suite with 34 tests. The 42-check packet
   verifier is now pinned to build 40 and includes the build 40 App Store Connect
   input packet.
@@ -53,7 +53,7 @@ Latest local evidence after the build 40 TestFlight stabilization update:
 - `scripts/verify-store-screenshots.sh output/store-screenshots-verified`
   passed for the verified preview PNGs at `1206x2622`.
 - Security gate evidence is documented in `docs/security-gate-90.md`.
-- Fresh `npm audit --audit-level=high` exited 0 on 2026-05-01 18:06 KST with
+- Fresh `npm audit --audit-level=high` exited 0 on 2026-05-03 13:24 KST with
   no high or critical findings. Audit output still has moderate-only transitive
   findings in Expo/Next tooling chains.
 - EAS iOS build 37 (`4d995997-e952-4ada-83bf-bc6a929be412`) finished

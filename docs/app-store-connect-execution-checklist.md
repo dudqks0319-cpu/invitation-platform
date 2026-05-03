@@ -124,9 +124,9 @@ SDK family for iOS/iPadOS apps.
 Current local evidence:
 
 - `xcodebuild -version`: Xcode 26.3.
-- `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`:
-  passed code gates on 2026-05-03 12:37 KST. It ran web lint, web typecheck,
-  58-file web/API tests with 175 tests, mobile lint, mobile typecheck, and
+- `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`:
+  passed code gates on 2026-05-03 13:24 KST. It ran web lint, web typecheck,
+  58-file web/API tests with 177 tests, mobile lint, mobile typecheck, and
   focused 9-file mobile/API tests with 34 tests. The 42-check App Store packet
   verifier is now pinned to build 40.
 - Escalated iOS Release simulator build: 0 errors, 2 warnings.
@@ -150,7 +150,7 @@ Current local evidence:
   passed for `01-home-paid-disabled.png` and `02-step3-paid-disabled.png` at
   `1206x2622`.
 - Fresh high-severity dependency audit:
-  `npm audit --audit-level=high` exited 0 on 2026-05-01 18:06 KST with no high
+  `npm audit --audit-level=high` exited 0 on 2026-05-03 13:24 KST with no high
   or critical findings.
 - Local generic iOS device archive compile passed after the `expo-image-picker`
   fix:

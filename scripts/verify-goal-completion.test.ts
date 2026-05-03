@@ -28,10 +28,10 @@ function makeTempProject() {
   writeFileSync(
     join(root, "docs/goal-completion-audit-90.md"),
     [
-      "Fast release gate recheck on 2026-05-03 12:37 KST",
+      "Fast release gate recheck on 2026-05-03 13:24 KST",
       "Concrete Success Criteria",
       "Prompt-to-Artifact Checklist",
-      "58-file web/API test suite with 175 tests",
+      "58-file web/API test suite with 177 tests",
       "42-check App Store packet verifier",
       "Build 40 local submission screenshot candidate"
     ].join("\n")
@@ -50,7 +50,7 @@ function makeTempProject() {
   writeFileSync(
     join(root, "docs/security-gate-90.md"),
     [
-      "58-file web/API test suite with 175 tests",
+      "58-file web/API test suite with 177 tests",
       "42-check App Store packet verifier",
       "NEXT_PUBLIC_SUPPORT_EMAIL"
     ].join("\n")

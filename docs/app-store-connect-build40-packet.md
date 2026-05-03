@@ -76,9 +76,9 @@ Local evidence before EAS build:
 - `npm --prefix apps/mobile run typecheck`: passed.
 - `npm --prefix apps/mobile run lint`: passed.
 - Focused native/config evidence tests passed: 7 files / 25 tests.
-- `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`
-  passed code gates on 2026-05-03 12:37 KST through web/mobile lint,
-  web/mobile typecheck, the 58-file web/API test suite with 175 tests, and the
+- `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`
+  passed code gates on 2026-05-03 13:24 KST through web/mobile lint,
+  web/mobile typecheck, the 58-file web/API test suite with 177 tests, and the
   focused 9-file mobile/API test suite with 34 tests. The packet verifier was
   then updated from build 39 to build 40.
 - iPhone 17 Release simulator build passed with 0 errors and 2 warnings and

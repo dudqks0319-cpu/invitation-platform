@@ -7,7 +7,7 @@ Owner: Orchestrator / Security Engineer harness
 
 Local security controls are materially in place. A fresh network-enabled
 `npm audit --audit-level=high` passed for the current lockfile on
-2026-05-01 18:06 KST with no high or critical findings.
+2026-05-03 13:24 KST with no high or critical findings.
 
 ## Checklist
 
@@ -20,7 +20,7 @@ Local security controls are materially in place. A fresh network-enabled
 | Output/sensitive data | Store verification writes sanitized provider verification payloads through `sanitizeStoreVerification` before audit/payment storage. | Pass |
 | Request controls | JSON-only checks and body-size limits are centralized in `lib/supabase/public-write.ts`; store verification uses an 80 KB limit. | Pass |
 | Abuse controls | `consume_rate_limit` exists in Supabase and public RSVP/guestbook/guest-publish routes call it before writes. | Pass |
-| Negative-path tests | Latest local code-gate run passed 58 files / 175 tests and focused mobile/API run passed 9 files / 34 tests, including auth, ownership, invalid body, payment, public write, and rate-limit coverage. | Pass |
+| Negative-path tests | Latest local code-gate run passed 58 files / 177 tests and focused mobile/API run passed 9 files / 34 tests, including auth, ownership, invalid body, payment, public write, and rate-limit coverage. | Pass |
 | Dependencies | `npm audit --audit-level=high` exited 0. Current findings are moderate-only transitive advisories: PostCSS below 8.5.10 under Expo/Next and uuid below 14 under Expo config tooling. | Pass for high gate |
 
 ## Key Code Evidence
@@ -92,8 +92,8 @@ web/mobile lint, and an iPhone 17 Release simulator build. This reduces the
 store-compliance risk while the App Store Connect IAP product does not exist,
 but the flag must stay disabled until the product is created and approved.
 
-The 2026-05-03 12:37 KST fast release gate passed web/mobile lint and
-typecheck, the 58-file web/API test suite with 175 tests, and the focused
+The 2026-05-03 13:24 KST fast release gate passed web/mobile lint and
+typecheck, the 58-file web/API test suite with 177 tests, and the focused
 9-file mobile/API suite with 34 tests. The 42-check App Store packet verifier
 is now pinned to build 40.
 
