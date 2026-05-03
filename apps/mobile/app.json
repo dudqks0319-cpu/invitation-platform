@@ -22,7 +22,6 @@
     "plugins": [
       "expo-router",
       "expo-web-browser",
-      "react-native-iap",
       [
         "expo-build-properties",
         {

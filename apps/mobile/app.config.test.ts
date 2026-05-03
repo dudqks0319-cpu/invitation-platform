@@ -54,11 +54,31 @@ describe("mobile app config", () => {
     expect(config.plugins).not.toContain("react-native-iap");
   });
 
-  it("includes IAP native config only when paid publishing is explicitly enabled", async () => {
+  it("does not include Google or Kakao native config by default", async () => {
+    const config = await loadConfig({
+      EXPO_PUBLIC_ENABLE_NATIVE_SOCIAL_AUTH: undefined
+    });
+
+    expect(config.plugins).not.toContain("@react-native-google-signin/google-signin");
+    expect(config.plugins).not.toContain("@react-native-kakao/core");
+  });
+
+  it("keeps IAP native config excluded while the native package is not installed", async () => {
     const config = await loadConfig({
       EXPO_PUBLIC_ENABLE_PAID_PUBLISH: "true"
     });
 
-    expect(config.plugins).toContain("react-native-iap");
+    expect(config.plugins).not.toContain("react-native-iap");
+  });
+
+  it("keeps native social auth plugins excluded while native packages are not installed", async () => {
+    const config = await loadConfig({
+      EXPO_PUBLIC_ENABLE_NATIVE_SOCIAL_AUTH: "true",
+      EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY: "kakao-key",
+      GOOGLE_IOS_URL_SCHEME: "google-url-scheme"
+    });
+
+    expect(config.plugins).not.toContain("@react-native-google-signin/google-signin");
+    expect(config.plugins).not.toContain("@react-native-kakao/core");
   });
 });

@@ -7,11 +7,15 @@ const require = createRequire(import.meta.url);
 const configPath = path.join(path.dirname(fileURLToPath(import.meta.url)), "react-native.config.js");
 const ORIGINAL_ENV = { ...process.env };
 
-function loadReactNativeConfig(flagValue: string | undefined) {
+function loadReactNativeConfig(flags: {
+  paidPublishing?: string;
+  nativeSocialAuth?: string;
+}) {
   delete require.cache[require.resolve(configPath)];
   process.env = {
     ...ORIGINAL_ENV,
-    EXPO_PUBLIC_ENABLE_PAID_PUBLISH: flagValue
+    EXPO_PUBLIC_ENABLE_PAID_PUBLISH: flags.paidPublishing,
+    EXPO_PUBLIC_ENABLE_NATIVE_SOCIAL_AUTH: flags.nativeSocialAuth
   };
 
   return require(configPath) as {
@@ -26,15 +30,32 @@ afterEach(() => {
 
 describe("react-native autolinking config", () => {
   it("excludes StoreKit native modules for the free first submission", () => {
-    const config = loadReactNativeConfig(undefined);
+    const config = loadReactNativeConfig({});
 
     expect(config.dependencies["react-native-iap"]?.platforms?.ios).toBeNull();
     expect(config.dependencies["react-native-nitro-modules"]?.platforms?.ios).toBeNull();
   });
 
-  it("keeps StoreKit native modules available when paid publishing is enabled", () => {
-    const config = loadReactNativeConfig("true");
+  it("excludes native Google and Kakao modules by default", () => {
+    const config = loadReactNativeConfig({});
 
-    expect(config.dependencies).toEqual({});
+    expect(config.dependencies["@react-native-google-signin/google-signin"]?.platforms?.ios).toBeNull();
+    expect(config.dependencies["@react-native-kakao/core"]?.platforms?.ios).toBeNull();
+    expect(config.dependencies["@react-native-kakao/user"]?.platforms?.ios).toBeNull();
+  });
+
+  it("keeps StoreKit native modules available when paid publishing is enabled", () => {
+    const config = loadReactNativeConfig({ paidPublishing: "true" });
+
+    expect(config.dependencies["react-native-iap"]).toBeUndefined();
+    expect(config.dependencies["react-native-nitro-modules"]).toBeUndefined();
+  });
+
+  it("keeps native social modules available only when explicitly enabled", () => {
+    const config = loadReactNativeConfig({ nativeSocialAuth: "true" });
+
+    expect(config.dependencies["@react-native-google-signin/google-signin"]).toBeUndefined();
+    expect(config.dependencies["@react-native-kakao/core"]).toBeUndefined();
+    expect(config.dependencies["@react-native-kakao/user"]).toBeUndefined();
   });
 });

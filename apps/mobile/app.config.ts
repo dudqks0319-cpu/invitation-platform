@@ -1,9 +1,11 @@
 import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 
 const appJson = JSON.parse(
   readFileSync(path.join(__dirname, "app.json"), "utf8")
 );
+const resolveFromMobile = createRequire(path.join(__dirname, "package.json"));
 
 type ExpoPlugin = string | [string, Record<string, unknown>?];
 
@@ -18,6 +20,16 @@ const googleIosUrlScheme = process.env.GOOGLE_IOS_URL_SCHEME ?? "";
 const kakaoNativeAppKey = process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY ?? "";
 const basePlugins = (Array.isArray(baseConfig.plugins) ? baseConfig.plugins : []) as ExpoPlugin[];
 const paidPublishingEnabled = parsePublicBooleanFlag(process.env.EXPO_PUBLIC_ENABLE_PAID_PUBLISH);
+const nativeSocialAuthEnabled = parsePublicBooleanFlag(process.env.EXPO_PUBLIC_ENABLE_NATIVE_SOCIAL_AUTH);
+
+function hasPackage(packageName: string) {
+  try {
+    resolveFromMobile.resolve(`${packageName}/package.json`);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 function parsePublicBooleanFlag(value: string | undefined, defaultValue = false) {
   if (value === undefined) {
@@ -37,7 +49,29 @@ function parsePublicBooleanFlag(value: string | undefined, defaultValue = false)
   return defaultValue;
 }
 
-const googleSignInPlugin: ExpoPlugin | null = googleIosUrlScheme
+const paidPublishingNativeAvailable = paidPublishingEnabled && hasPackage("react-native-iap");
+const googleSignInNativeAvailable =
+  nativeSocialAuthEnabled && hasPackage("@react-native-google-signin/google-signin");
+const kakaoNativeAvailable =
+  nativeSocialAuthEnabled && hasPackage("@react-native-kakao/core");
+
+function isOptionalNativePluginEnabled(pluginName: string) {
+  if (pluginName === "react-native-iap") {
+    return paidPublishingNativeAvailable;
+  }
+
+  if (pluginName === "@react-native-google-signin/google-signin") {
+    return googleSignInNativeAvailable;
+  }
+
+  if (["@react-native-kakao/core", "@react-native-kakao/user"].includes(pluginName)) {
+    return kakaoNativeAvailable;
+  }
+
+  return true;
+}
+
+const googleSignInPlugin: ExpoPlugin | null = googleSignInNativeAvailable && googleIosUrlScheme
   ? [
     "@react-native-google-signin/google-signin",
     {
@@ -45,7 +79,7 @@ const googleSignInPlugin: ExpoPlugin | null = googleIosUrlScheme
     }
   ]
   : null;
-const kakaoPlugin: ExpoPlugin | null = kakaoNativeAppKey
+const kakaoPlugin: ExpoPlugin | null = kakaoNativeAvailable && kakaoNativeAppKey
   ? [
     "@react-native-kakao/core",
     {
@@ -76,7 +110,7 @@ const mergedPlugins: ExpoPlugin[] = [
       }
     }
   ],
-  ...(paidPublishingEnabled ? ["react-native-iap"] : []),
+  ...(paidPublishingNativeAvailable ? ["react-native-iap"] : []),
   ...(googleSignInPlugin ? [googleSignInPlugin] : []),
   ...(kakaoPlugin ? [kakaoPlugin] : [])
 ];
@@ -106,7 +140,7 @@ const appConfig = {
     ...mergedPlugins,
   ...basePlugins.filter((plugin) => {
     if (typeof plugin === "string") {
-      if (plugin === "react-native-iap" && !paidPublishingEnabled) {
+      if (!isOptionalNativePluginEnabled(plugin)) {
         return false;
       }
 
@@ -114,7 +148,7 @@ const appConfig = {
     }
 
     const pluginName = Array.isArray(plugin) ? plugin[0] : "";
-    if (pluginName === "react-native-iap" && !paidPublishingEnabled) {
+    if (!isOptionalNativePluginEnabled(pluginName)) {
       return false;
     }
 
