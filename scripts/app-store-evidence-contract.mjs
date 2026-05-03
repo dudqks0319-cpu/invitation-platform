@@ -16,6 +16,19 @@ export const requiredExternalEvidence = [
   { key: "iapStateVerifiedOrPaidFeaturesDisabled", label: "IAP state is verified or paid features are disabled" }
 ];
 
+const appleConsoleEvidenceKeys = new Set([
+  "appStoreConnectBuild40Processed",
+  "build40ExportComplianceSaved",
+  "build40AssignedToInternalGroup",
+  "appInfoSaved",
+  "versionMetadataSaved",
+  "build40SelectedForVersion",
+  "privacyLabelsSaved",
+  "screenshotsUploaded",
+  "reviewNotesSaved",
+  "verifiedAppReviewContactSaved"
+]);
+
 export function createEmptyEvidenceManifest() {
   return Object.fromEntries(
     requiredExternalEvidence.map(({ key, label }) => [
@@ -73,6 +86,24 @@ export function hasValidArtifact(value, root) {
   );
 }
 
+export function hasValidArtifactForKey({ key, value, root }) {
+  const trimmed = typeof value === "string" ? value.trim() : "";
+
+  if (appleConsoleEvidenceKeys.has(key)) {
+    return isHttpUrl(trimmed) || isUserConfirmationRef(trimmed);
+  }
+
+  return hasValidArtifact(trimmed, root);
+}
+
+export function artifactRequirementForKey(key) {
+  if (appleConsoleEvidenceKeys.has(key)) {
+    return "an App Store Connect/TestFlight http(s) URL or user-confirmation: reference";
+  }
+
+  return "an http(s) URL, existing local file path, or user-confirmation: reference";
+}
+
 export function validateEvidenceEntry({ entry, evidencePath, key, label, root }) {
   const blockers = [];
 
@@ -98,8 +129,8 @@ export function validateEvidenceEntry({ entry, evidencePath, key, label, root })
     blockers.push(`${evidencePath}: ${key}.evidence is missing`);
   }
 
-  if (!hasValidArtifact(entry.artifact, root)) {
-    blockers.push(`${evidencePath}: ${key}.artifact must be an http(s) URL, existing local file path, or user-confirmation: reference`);
+  if (!hasValidArtifactForKey({ key, value: entry.artifact, root })) {
+    blockers.push(`${evidencePath}: ${key}.artifact must be ${artifactRequirementForKey(key)}`);
   }
 
   return blockers;

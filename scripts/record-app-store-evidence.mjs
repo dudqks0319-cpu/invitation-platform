@@ -2,6 +2,7 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import {
+  artifactRequirementForKey,
   createEmptyEvidenceManifest,
   isKnownEvidenceKey,
   requiredExternalEvidence,
@@ -67,6 +68,7 @@ function printList() {
   console.log("APP STORE EXTERNAL EVIDENCE KEYS");
   for (const { key, label } of requiredExternalEvidence) {
     console.log(`- ${key}: ${label}`);
+    console.log(`  artifact: ${artifactRequirementForKey(key)}`);
   }
 }
 

@@ -102,4 +102,27 @@ describe("record-app-store-evidence", () => {
       expect(invalidArtifact.stderr).toContain("screenshotsUploaded.artifact must be");
     });
   });
+
+  it("refuses local paths for App Store Connect upload evidence", () => {
+    withTempProject((root) => {
+      const localProof = join(root, "local-screenshot.png");
+      writeFileSync(localProof, "fixture");
+
+      const result = runRecorder(root, [
+        "--key",
+        "screenshotsUploaded",
+        "--capturedAt",
+        "2026-05-02T15:30:00+09:00",
+        "--evidence",
+        "Screenshots were uploaded to App Store Connect.",
+        "--artifact",
+        localProof
+      ]);
+
+      expect(result.status).toBe(1);
+      expect(result.stderr).toContain(
+        "screenshotsUploaded.artifact must be an App Store Connect/TestFlight http(s) URL or user-confirmation: reference"
+      );
+    });
+  });
 });

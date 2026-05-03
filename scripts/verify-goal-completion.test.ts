@@ -138,6 +138,26 @@ describe("verify-goal-completion", () => {
     });
   });
 
+  it("blocks local file artifacts for App Store Connect saved/uploaded evidence", () => {
+    withTempProject((root) => {
+      const localProof = join(root, "local-screenshot.png");
+      writeFileSync(localProof, "not a real screenshot, only a path existence fixture");
+      writeEvidence(
+        root,
+        makeCompleteEvidence({
+          screenshotsUploaded: { artifact: localProof }
+        })
+      );
+
+      const result = runVerifier(root);
+
+      expect(result.status).toBe(2);
+      expect(result.stdout).toContain(
+        "screenshotsUploaded.artifact must be an App Store Connect/TestFlight http(s) URL or user-confirmation: reference"
+      );
+    });
+  });
+
   it("passes only when local claims and every structured evidence item are present", () => {
     withTempProject((root) => {
       writeEvidence(root, makeCompleteEvidence());
