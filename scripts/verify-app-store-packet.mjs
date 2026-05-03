@@ -130,10 +130,14 @@ includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "installs `-
 includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "bundle version `39` installed");
 includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "Unable to launch com.invitehub.app because the device was not, or could not be, unlocked");
 includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "bash scripts/await-testflight-device.sh --launch");
+includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "bash scripts/await-testflight-device.sh --open-testflight");
 includes("scripts/collect-testflight-device-evidence.sh", collectDeviceEvidence, "BUNDLE_ID=\"${BUNDLE_ID:-com.invitehub.app}\"");
+includes("scripts/collect-testflight-device-evidence.sh", collectDeviceEvidence, "TESTFLIGHT_BUNDLE_ID=\"${TESTFLIGHT_BUNDLE_ID:-com.apple.TestFlight}\"");
 includes("scripts/collect-testflight-device-evidence.sh", collectDeviceEvidence, "--bundle-id \"$BUNDLE_ID\"");
+includes("scripts/collect-testflight-device-evidence.sh", collectDeviceEvidence, "--open-testflight");
 includes("scripts/await-testflight-device.sh", awaitDevice, "tunnelState");
-includes("scripts/await-testflight-device.sh", awaitDevice, "scripts/collect-testflight-device-evidence.sh --launch");
+includes("scripts/await-testflight-device.sh", awaitDevice, "OPEN_TESTFLIGHT_ON_READY");
+includes("scripts/await-testflight-device.sh", awaitDevice, "collector_args+=(--launch)");
 check(
   "scripts/collect-testflight-device-evidence.sh is executable",
   isExecutable("scripts/collect-testflight-device-evidence.sh"),

@@ -113,5 +113,12 @@ To wait and then launch the app for an observed smoke test:
 bash scripts/await-testflight-device.sh --launch
 ```
 
+To wait and then open TestFlight itself on the phone so the user can update or
+inspect the installed InviteHub build:
+
+```bash
+bash scripts/await-testflight-device.sh --open-testflight
+```
+
 This writes watch output under `output/testflight-device-watch/`, then nests the
 focused evidence bundle when the phone becomes available.

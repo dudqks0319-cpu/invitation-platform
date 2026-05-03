@@ -9,10 +9,11 @@ STAMP="$(date '+%Y%m%d-%H%M%S')"
 OUT_DIR="${OUT_DIR:-$OUT_ROOT/$STAMP}"
 COLLECT_ON_READY=1
 LAUNCH_ON_READY=0
+OPEN_TESTFLIGHT_ON_READY=0
 
 usage() {
   cat <<EOF
-Usage: DEVICE_ID=<device-id> $0 [--timeout seconds] [--interval seconds] [--no-collect] [--launch]
+Usage: DEVICE_ID=<device-id> $0 [--timeout seconds] [--interval seconds] [--no-collect] [--launch] [--open-testflight]
 
 Wait until a paired iPhone becomes available to CoreDevice, then optionally
 collect focused InviteHub TestFlight evidence.
@@ -28,6 +29,8 @@ Options:
   --interval seconds  Seconds between device checks.
   --no-collect        Only wait and report readiness.
   --launch            Run the evidence collector with --launch when ready.
+  --open-testflight   Run the evidence collector with --open-testflight when
+                      ready so the user can update or inspect InviteHub.
 EOF
 }
 
@@ -47,6 +50,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --launch)
       LAUNCH_ON_READY=1
+      shift
+      ;;
+    --open-testflight)
+      OPEN_TESTFLIGHT_ON_READY=1
       shift
       ;;
     -h|--help)
@@ -86,11 +93,14 @@ while true; do
       echo "- Output: $OUT_DIR"
 
       if [[ "$COLLECT_ON_READY" -eq 1 ]]; then
+        collector_args=()
         if [[ "$LAUNCH_ON_READY" -eq 1 ]]; then
-          OUT_ROOT="$OUT_DIR/evidence" scripts/collect-testflight-device-evidence.sh --launch
-        else
-          OUT_ROOT="$OUT_DIR/evidence" scripts/collect-testflight-device-evidence.sh
+          collector_args+=(--launch)
         fi
+        if [[ "$OPEN_TESTFLIGHT_ON_READY" -eq 1 ]]; then
+          collector_args+=(--open-testflight)
+        fi
+        OUT_ROOT="$OUT_DIR/evidence" scripts/collect-testflight-device-evidence.sh "${collector_args[@]}"
       fi
 
       exit 0
