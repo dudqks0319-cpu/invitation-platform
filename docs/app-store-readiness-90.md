@@ -80,12 +80,12 @@ Latest local evidence after the build 40 TestFlight stabilization update:
   shown build 40 install/session evidence.
 - Future builds declare `ITSAppUsesNonExemptEncryption=false` through Expo iOS
   config and the native `Info.plist`.
-- Read-only App Store Connect final-submission audit on 2026-05-02 13:21 KST
-  confirmed the build 37 TestFlight path was usable, but the current App Store
-  version surface was not ready: screenshots are 0, metadata/review fields are
-  blank, no current build is selected for the App Store version, app privacy
-  answers are not started, IAP product does not exist, app category/age rating
-  are not set, and the app name still shows `InviteHub (40c8af)`.
+- Read-only App Store Connect final-submission audit on 2026-05-03 13:37 KST
+  confirmed the build 40 TestFlight group assignment, but the current App Store
+  version surface is still not ready: screenshots are 0, metadata/review fields
+  are blank, no build is selected for the App Store version, app privacy answers
+  are not started, app category/age rating are not set, and the app name still
+  shows `InviteHub (40c8af)`.
 - First-submission paid-publish fallback is now represented in code: paid photo
   publishing is disabled unless `NEXT_PUBLIC_ENABLE_PAID_PUBLISH=true` and
   `EXPO_PUBLIC_ENABLE_PAID_PUBLISH=true` are set. The app and web copy avoid
