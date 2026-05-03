@@ -32,7 +32,7 @@ function makeTempProject() {
       "Concrete Success Criteria",
       "Prompt-to-Artifact Checklist",
       "58-file web/API test suite with 177 tests",
-      "54-check App Store packet verifier",
+      "56-check App Store packet verifier",
       "Build 40 local submission screenshot candidate"
     ].join("\n")
   );
@@ -51,7 +51,7 @@ function makeTempProject() {
     join(root, "docs/security-gate-90.md"),
     [
       "58-file web/API test suite with 177 tests",
-      "54-check App Store packet verifier",
+      "56-check App Store packet verifier",
       "NEXT_PUBLIC_SUPPORT_EMAIL"
     ].join("\n")
   );

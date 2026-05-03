@@ -127,6 +127,8 @@ includes("lib/support-contact.test.ts", supportContactTest, "normalizeSupportEma
 includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "A crash alert with that app name does not prove build 40 is installed");
 includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "Build 40: status `제출 준비 완료`");
 includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "installs `-`, sessions `-`, crashes `-`");
+includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "bundle version `39` installed");
+includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "Unable to launch com.invitehub.app because the device was not, or could not be, unlocked");
 includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "bash scripts/await-testflight-device.sh --launch");
 includes("scripts/collect-testflight-device-evidence.sh", collectDeviceEvidence, "BUNDLE_ID=\"${BUNDLE_ID:-com.invitehub.app}\"");
 includes("scripts/collect-testflight-device-evidence.sh", collectDeviceEvidence, "--bundle-id \"$BUNDLE_ID\"");

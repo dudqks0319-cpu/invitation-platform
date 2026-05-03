@@ -12,7 +12,10 @@ when their bundle identifiers differ, and this repo uses separate identifiers:
 The stronger current explanation is that the iPhone is still launching build 39
 or build 38, both of which already have App Store Connect crash evidence. Build
 40 is uploaded and assigned to the internal TestFlight group, but App Store
-Connect does not yet show a build 40 install, session, or crash.
+Connect does not yet show a build 40 install, session, or crash. Local
+CoreDevice evidence captured on 2026-05-03 14:39 KST confirmed the connected
+iPhone still has `InviteHub` bundle version `39` installed for
+`com.invitehub.app`.
 
 `InviteHub (40c8af)` is the App Store Connect app name, not the TestFlight build
 number. A crash alert with that app name does not prove build 40 is installed.
@@ -48,12 +51,22 @@ number. A crash alert with that app name does not prove build 40 is installed.
     passed 2 files / 10 tests on 2026-05-03.
   - These tests confirm production/dev bundle separation and default exclusion
     of optional Google, Kakao, IAP, and Nitro native dependencies.
+- Real-device CoreDevice check on 2026-05-03 14:39 KST:
+  - Device `8CCEF0FF-05C7-5A6F-BF68-38DF12FA83C4` was available and paired.
+  - `invitehub-app.txt` showed `InviteHub`, bundle id `com.invitehub.app`,
+    version `1.0.0`, bundle version `39`.
+  - The launch attempt exited with code `1` because iOS denied opening
+    `com.invitehub.app` while the phone was locked:
+    `Unable to launch com.invitehub.app because the device was not, or could not be, unlocked`.
+  - Evidence bundle:
+    `output/testflight-device-watch/20260503-143921/evidence/20260503-143922`.
 
 ## Likely Cause
 
-The iPhone has not updated to build 40 from TestFlight, or the user is opening a
-different existing InviteHub entry. The visible crash dialog uses the ASC app
-name `InviteHub (40c8af)`, which can appear for build 38, 39, or 40.
+The iPhone has not updated to build 40 from TestFlight. The connected device
+still reports installed bundle version `39` for `com.invitehub.app`. The visible
+crash dialog uses the ASC app name `InviteHub (40c8af)`, which can appear for
+build 38, 39, or 40.
 
 ## Required Next Check
 
@@ -66,8 +79,9 @@ On the iPhone:
 5. Launch from TestFlight once.
 
 For machine verification, the iPhone must be unlocked, trusted by the Mac, and
-available to `xcrun devicectl`. Current `devicectl` state is `unavailable`, so
-local log capture is blocked.
+available to `xcrun devicectl`. The latest machine check reached the phone, but
+launch was blocked by the iOS locked-device state and the installed InviteHub
+bundle was still build `39`.
 
 When the phone is available, collect focused local evidence with:
 
