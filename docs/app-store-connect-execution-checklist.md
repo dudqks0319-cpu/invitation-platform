@@ -1,6 +1,7 @@
 # InviteHub App Store Connect Execution Checklist
 
 Date: 2026-05-01
+Latest official-doc recheck: 2026-05-03
 
 This checklist is for the final external submission step after the local 90+
 release gate has passed.
@@ -10,6 +11,23 @@ Official sources checked:
 - Apple submitting overview: `https://developer.apple.com/app-store/submitting/`
 - Apple privacy details: `https://developer.apple.com/app-store/app-privacy-details/`
 - Apple upcoming requirements: `https://developer.apple.com/news/upcoming-requirements/`
+- Apple App Review Guidelines:
+  `https://developer.apple.com/app-store/review/guidelines/`
+- Apple App Store Connect submit help:
+  `https://developer.apple.com/help/app-store-connect/manage-submissions-to-app-review/submit-an-app`
+- Apple screenshot specifications:
+  `https://developer.apple.com/help/app-store-connect/reference/screenshot-specifications/`
+
+Current source-derived requirements:
+
+- Uploaded iOS apps must be built with the iOS/iPadOS 26 SDK or later starting
+  2026-04-28.
+- App versions need required metadata and a selected build before review
+  submission.
+- App privacy answers are required for new apps and updates and must cover data
+  collected by the app and integrated third-party partners.
+- iPhone screenshot sets accept 1 to 10 `.png`, `.jpg`, or `.jpeg` files; the
+  build 40 candidate `1206x2622` screenshots match Apple's 6.3" portrait size.
 
 ## Current External Status
 
@@ -109,7 +127,7 @@ Current local evidence:
 - `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`:
   passed code gates on 2026-05-03 12:37 KST. It ran web lint, web typecheck,
   58-file web/API tests with 175 tests, mobile lint, mobile typecheck, and
-  focused 9-file mobile/API tests with 34 tests. The 36-check App Store packet
+  focused 9-file mobile/API tests with 34 tests. The 42-check App Store packet
   verifier is now pinned to build 40.
 - Escalated iOS Release simulator build: 0 errors, 2 warnings.
 - Bundle opened on iPhone 17 as `com.invitehub.app`.

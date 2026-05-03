@@ -2,6 +2,11 @@
 
 목표: 프론트엔드, 백엔드, UI/UX, API, 보안, 스토어 제출 영역을 모두 90점 이상으로 유지한다.
 
+Official Apple source recheck: 2026-05-03. Reconfirmed iOS/iPadOS 26 SDK upload
+requirement, App Store Connect metadata/build-selection requirement, privacy
+answer requirement, App Review metadata accuracy/completeness guidance, and
+`1206x2622` as an accepted iPhone 6.3" screenshot size.
+
 ## Current 90+ Gate
 
 | Area | Pass Criteria |
@@ -25,8 +30,9 @@ Latest local evidence after the build 40 TestFlight stabilization update:
 - `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`
   passed code gates on 2026-05-03 12:37 KST through web/mobile lint,
   web/mobile typecheck, the 58-file web/API test suite with 175 tests, and the
-  focused 9-file mobile/API test suite with 34 tests. The packet verifier is now
-  pinned to build 40.
+  focused 9-file mobile/API test suite with 34 tests. The 42-check packet
+  verifier is now pinned to build 40 and includes the build 40 App Store Connect
+  input packet.
 - Escalated local iOS Release simulator build passed with 0 errors and 2
   warnings and opened `com.invitehub.app` on iPhone 17.
 - Release home screenshot:
@@ -68,8 +74,10 @@ Latest local evidence after the build 40 TestFlight stabilization update:
   version build row now shows `제출 준비 완료`.
 - Internal group `TE Team (Expo)` shows `1명의 테스터`, `1개의 빌드`, and build
   `1.0.0 (37)` status `테스트 중`.
-- Build 40 Apple processing and internal group assignment still need App Store
-  Connect confirmation before real-device TestFlight QA.
+- Build 40 Apple processing and internal group assignment are confirmed in App
+  Store Connect. Real-device TestFlight QA is still missing because the target
+  iPhone remains unavailable to local device tooling and the tester row has not
+  shown build 40 install/session evidence.
 - Future builds declare `ITSAppUsesNonExemptEncryption=false` through Expo iOS
   config and the native `Info.plist`.
 - Read-only App Store Connect final-submission audit on 2026-05-02 13:21 KST

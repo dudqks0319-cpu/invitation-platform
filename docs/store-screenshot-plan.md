@@ -5,6 +5,11 @@
 App Store Connect accepts 1 to 10 screenshots per display set in `.png`,
 `.jpg`, or `.jpeg` format.
 
+Official Apple screenshot specification rechecked on 2026-05-03:
+`https://developer.apple.com/help/app-store-connect/reference/screenshot-specifications/`.
+The build 40 local candidate screenshots are `1206x2622`, which matches Apple's
+iPhone 6.3" portrait accepted size.
+
 ### iPhone 6.5"
 1. 홈 화면
 2. 디자인 둘러보기 화면
