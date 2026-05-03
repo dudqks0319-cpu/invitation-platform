@@ -30,7 +30,7 @@ Latest local evidence after the build 40 TestFlight stabilization update:
 - `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`
   passed code gates on 2026-05-03 13:24 KST through web/mobile lint,
   web/mobile typecheck, the 58-file web/API test suite with 177 tests, and the
-  focused 9-file mobile/API test suite with 34 tests. The 65-check packet
+  focused 9-file mobile/API test suite with 34 tests. The 70-check packet
   verifier is now pinned to build 40 and includes the build 40 App Store Connect
   input packet.
 - Escalated local iOS Release simulator build passed with 0 errors and 2

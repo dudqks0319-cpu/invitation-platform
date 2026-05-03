@@ -29,10 +29,21 @@ TestFlight launch check passes.
 | Subtitle | `모바일 초대장 제작과 공유` |
 | Primary Category | Lifestyle |
 | Secondary Category | Productivity, if App Store Connect allows it |
+| Age Rating | Complete and save the App Store Connect age-rating questionnaire before submission. Do not force a target rating; use Apple's calculated result. |
 | Privacy Policy URL | `https://invitation-platform-youngbeens-projects.vercel.app/privacy` |
 | Support URL | `https://invitation-platform-youngbeens-projects.vercel.app/support` |
 
 Do not use `invitehub.co.kr` yet. DNS/MX is not verified in this release run.
+
+Age-rating questionnaire basis:
+
+- No gambling, contests, alcohol/tobacco/drug references, medical treatment, or
+  mature entertainment content is intentionally provided by the app.
+- Invitation text, RSVP, and guestbook content are user-provided.
+- Guestbook entries are not intended to be public immediately; host moderation
+  controls exist before public display.
+- Map behavior opens Kakao/Naver search links; the app does not embed an open
+  web browser for arbitrary browsing.
 
 ## Version Metadata
 
@@ -141,6 +152,7 @@ confirmed.
 After each Apple-side save, record structured evidence:
 
 ```bash
+node scripts/record-app-store-evidence.mjs --key realIphoneTestFlightInstallLaunchPassed --evidence "<real iPhone installed TestFlight build 1.0.0 (40) and launched home/template/builder/preview without the crash dialog>" --artifact "output/testflight-device-watch/<timestamp>/evidence/<timestamp>"
 node scripts/record-app-store-evidence.mjs --key appInfoSaved --evidence "<saved App Information summary>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/distribution"
 node scripts/record-app-store-evidence.mjs --key versionMetadataSaved --evidence "<saved version metadata summary>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/distribution"
 node scripts/record-app-store-evidence.mjs --key screenshotsUploaded --evidence "<uploaded screenshot summary>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/distribution"
@@ -148,6 +160,12 @@ node scripts/record-app-store-evidence.mjs --key privacyLabelsSaved --evidence "
 node scripts/record-app-store-evidence.mjs --key reviewNotesSaved --evidence "<saved review notes summary>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/distribution"
 node scripts/record-app-store-evidence.mjs --key verifiedAppReviewContactSaved --evidence "<saved verified App Review contact summary>" --artifact "user-confirmation:app-review-contact-saved-by-account-holder"
 node scripts/record-app-store-evidence.mjs --key build40SelectedForVersion --evidence "<build 1.0.0 (40) selected for version 1.0.0>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/distribution"
+```
+
+After recording evidence, rerun:
+
+```bash
+node scripts/verify-goal-completion.mjs
 ```
 
 The final submit action still requires separate explicit user confirmation.

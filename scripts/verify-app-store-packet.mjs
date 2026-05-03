@@ -109,6 +109,11 @@ includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "Build N
 includes("docs/app-store-connect-input-packet-build40.md", inputPacket, expected.buildId);
 includes("docs/app-store-connect-input-packet-build40.md", inputPacket, expected.liveBaseUrl);
 includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "output/store-screenshots-submission-build40");
+includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "Age Rating | Complete and save");
+includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "use Apple's calculated result");
+includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "host moderation");
+includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "realIphoneTestFlightInstallLaunchPassed");
+includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "node scripts/verify-goal-completion.mjs");
 includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "Do not use `support@invitehub.co.kr`");
 includes("docs/app-store-connect-input-packet-build40.md", inputPacket, "final submit action still requires separate explicit user confirmation");
 
