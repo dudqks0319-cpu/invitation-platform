@@ -238,6 +238,19 @@ Manual Apple-side confirmation path:
   build 41 still shows invite `1`, installs `-`, sessions `-`, crashes `-`, and
   feedback `-`. This confirms App Store Connect has no real iPhone build 41
   install/session evidence yet.
+- Real-device capture attempt on 2026-05-03 16:02 KST:
+  `bash scripts/await-testflight-device.sh --timeout 120 --interval 5 --launch`
+  timed out with `devicectl-error`. Evidence:
+  `output/testflight-device-watch/20260503-160203`.
+- Escalated iOS device diagnostics on 2026-05-03 16:05 KST:
+  `devicectl` found device `영빈` as paired with developer mode enabled, but
+  `tunnelState` was `unavailable`; `xctrace` listed the iPhone under
+  `Devices Offline`; lock-state still failed with CoreDevice error `1011`.
+  Evidence: `output/ios-device-diagnostics/20260503-160544`.
+- App Store Connect read-only recheck on 2026-05-03 16:06 KST:
+  build 41 still shows installs `-`, sessions `-`, crashes `-`, and feedback
+  `-`. This confirms neither local CoreDevice nor ASC currently proves build 41
+  real-device launch.
 - Goal completion verifier:
   `node scripts/verify-goal-completion.mjs` returns `blocked` until
   `docs/app-store-external-evidence.json` exists and every Apple-side evidence

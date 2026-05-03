@@ -37,6 +37,16 @@ and changing the app name would not fix this launch crash path.
     symbol-level root cause yet.
 - App Store Connect read-only recheck on 2026-05-03 15:49 KST still shows build
   41 installs `-`, sessions `-`, crashes `-`, and feedback `-`.
+- Real-device launch attempt on 2026-05-03 16:02 KST timed out before launch
+  because `devicectl` returned CoreDevice initialization errors. Evidence:
+  `output/testflight-device-watch/20260503-160203`.
+- Escalated iOS device diagnostics on 2026-05-03 16:05 KST found the iPhone
+  paired with developer mode enabled, but `tunnelState` remained `unavailable`,
+  `xctrace` listed it under `Devices Offline`, and lock-state failed with
+  CoreDevice error `1011`. Evidence:
+  `output/ios-device-diagnostics/20260503-160544`.
+- App Store Connect read-only recheck on 2026-05-03 16:06 KST still shows build
+  41 installs `-`, sessions `-`, crashes `-`, and feedback `-`.
 - EAS build 41 state:
   - Build id `61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`
   - Version `1.0.0`, build `41`
