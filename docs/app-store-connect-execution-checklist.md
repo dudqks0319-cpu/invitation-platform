@@ -127,7 +127,7 @@ Current local evidence:
 - `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`:
   passed code gates on 2026-05-03 13:24 KST. It ran web lint, web typecheck,
   58-file web/API tests with 177 tests, mobile lint, mobile typecheck, and
-  focused 9-file mobile/API tests with 34 tests. The 60-check App Store packet
+  focused 9-file mobile/API tests with 34 tests. The 65-check App Store packet
   verifier is now pinned to build 40.
 - Escalated iOS Release simulator build: 0 errors, 2 warnings.
 - Bundle opened on iPhone 17 as `com.invitehub.app`.

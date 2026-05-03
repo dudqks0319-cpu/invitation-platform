@@ -60,6 +60,16 @@ number. A crash alert with that app name does not prove build 40 is installed.
     `Unable to launch com.invitehub.app because the device was not, or could not be, unlocked`.
   - Evidence bundle:
     `output/testflight-device-watch/20260503-143921/evidence/20260503-143922`.
+- iOS connection diagnostics on 2026-05-03 14:54 KST:
+  - `devicectl` found the paired device, developer mode enabled, iOS
+    `26.3.1 (a)`, but `tunnelState` remained `unavailable`.
+  - `xcrun xctrace list devices` still listed `영빈 (26.3.1)
+    (00008140-000470E13E10801C)`, so the phone is visible to Xcode tooling.
+  - `devicectl device info lockState` failed with CoreDevice error `1011`,
+    so TestFlight and InviteHub launch commands cannot run until the phone is
+    unlocked/trusted and the CoreDevice tunnel becomes available.
+  - Evidence bundle:
+    `output/ios-device-diagnostics/20260503-145413`.
 
 ## Likely Cause
 
@@ -81,7 +91,9 @@ On the iPhone:
 For machine verification, the iPhone must be unlocked, trusted by the Mac, and
 available to `xcrun devicectl`. The latest machine check reached the phone, but
 launch was blocked by the iOS locked-device state and the installed InviteHub
-bundle was still build `39`.
+bundle was still build `39`. A later connection diagnostic showed Xcode can see
+the phone through `xctrace`, but `devicectl` still reports the CoreDevice tunnel
+as `unavailable`.
 
 When the phone is available, collect focused local evidence with:
 
@@ -118,6 +130,13 @@ inspect the installed InviteHub build:
 
 ```bash
 bash scripts/await-testflight-device.sh --open-testflight
+```
+
+If CoreDevice keeps reporting the iPhone as `unavailable`, collect connection
+diagnostics before retrying:
+
+```bash
+bash scripts/diagnose-ios-device-connection.sh
 ```
 
 This writes watch output under `output/testflight-device-watch/`, then nests the

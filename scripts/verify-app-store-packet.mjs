@@ -64,6 +64,7 @@ const supportContactTest = read("lib/support-contact.test.ts");
 const crashTriage = read("docs/testflight-crash-triage-2026-05-03.md");
 const collectDeviceEvidence = read("scripts/collect-testflight-device-evidence.sh");
 const awaitDevice = read("scripts/await-testflight-device.sh");
+const diagnoseDeviceConnection = read("scripts/diagnose-ios-device-connection.sh");
 
 for (const value of Object.values(expected)) {
   includes("docs/app-store-connect-build40-packet.md", packet, value);
@@ -131,6 +132,7 @@ includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "bundle vers
 includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "Unable to launch com.invitehub.app because the device was not, or could not be, unlocked");
 includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "bash scripts/await-testflight-device.sh --launch");
 includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "bash scripts/await-testflight-device.sh --open-testflight");
+includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "bash scripts/diagnose-ios-device-connection.sh");
 includes("scripts/collect-testflight-device-evidence.sh", collectDeviceEvidence, "BUNDLE_ID=\"${BUNDLE_ID:-com.invitehub.app}\"");
 includes("scripts/collect-testflight-device-evidence.sh", collectDeviceEvidence, "TESTFLIGHT_BUNDLE_ID=\"${TESTFLIGHT_BUNDLE_ID:-com.apple.TestFlight}\"");
 includes("scripts/collect-testflight-device-evidence.sh", collectDeviceEvidence, "--bundle-id \"$BUNDLE_ID\"");
@@ -138,6 +140,9 @@ includes("scripts/collect-testflight-device-evidence.sh", collectDeviceEvidence,
 includes("scripts/await-testflight-device.sh", awaitDevice, "tunnelState");
 includes("scripts/await-testflight-device.sh", awaitDevice, "OPEN_TESTFLIGHT_ON_READY");
 includes("scripts/await-testflight-device.sh", awaitDevice, "collector_args+=(--launch)");
+includes("scripts/diagnose-ios-device-connection.sh", diagnoseDeviceConnection, "xcrun xctrace list devices");
+includes("scripts/diagnose-ios-device-connection.sh", diagnoseDeviceConnection, "system_profiler SPUSBDataType");
+includes("scripts/diagnose-ios-device-connection.sh", diagnoseDeviceConnection, "device-summary.json");
 check(
   "scripts/collect-testflight-device-evidence.sh is executable",
   isExecutable("scripts/collect-testflight-device-evidence.sh"),
@@ -147,6 +152,11 @@ check(
   "scripts/await-testflight-device.sh is executable",
   isExecutable("scripts/await-testflight-device.sh"),
   "scripts/await-testflight-device.sh must be executable"
+);
+check(
+  "scripts/diagnose-ios-device-connection.sh is executable",
+  isExecutable("scripts/diagnose-ios-device-connection.sh"),
+  "scripts/diagnose-ios-device-connection.sh must be executable"
 );
 
 if (failures.length > 0) {

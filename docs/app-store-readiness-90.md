@@ -30,7 +30,7 @@ Latest local evidence after the build 40 TestFlight stabilization update:
 - `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`
   passed code gates on 2026-05-03 13:24 KST through web/mobile lint,
   web/mobile typecheck, the 58-file web/API test suite with 177 tests, and the
-  focused 9-file mobile/API test suite with 34 tests. The 60-check packet
+  focused 9-file mobile/API test suite with 34 tests. The 65-check packet
   verifier is now pinned to build 40 and includes the build 40 App Store Connect
   input packet.
 - Escalated local iOS Release simulator build passed with 0 errors and 2
@@ -80,7 +80,9 @@ Latest local evidence after the build 40 TestFlight stabilization update:
   launch was also denied while the phone was locked. The tester row has not
   shown build 40 install/session evidence. The device harness now supports
   opening TestFlight itself with `--open-testflight` when the iPhone is
-  available and unlocked.
+  available and unlocked, plus CoreDevice/USB diagnostics with
+  `scripts/diagnose-ios-device-connection.sh` when the iPhone remains
+  unavailable.
 - Future builds declare `ITSAppUsesNonExemptEncryption=false` through Expo iOS
   config and the native `Info.plist`.
 - Read-only App Store Connect final-submission audit on 2026-05-03 13:37 KST

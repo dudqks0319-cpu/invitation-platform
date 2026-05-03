@@ -94,7 +94,7 @@ but the flag must stay disabled until the product is created and approved.
 
 The 2026-05-03 13:24 KST fast release gate passed web/mobile lint and
 typecheck, the 58-file web/API test suite with 177 tests, and the focused
-9-file mobile/API suite with 34 tests. The 60-check App Store packet verifier
+9-file mobile/API suite with 34 tests. The 65-check App Store packet verifier
 is now pinned to build 40.
 
 The public support page no longer hardcodes the unverified

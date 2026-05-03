@@ -14,7 +14,7 @@ const requiredLocalClaims = [
       "Prompt-to-Artifact Checklist",
       "Fast release gate recheck on 2026-05-03 13:24 KST",
       "58-file web/API test suite with 177 tests",
-      "60-check App Store packet verifier",
+      "65-check App Store packet verifier",
       "Build 40 local submission screenshot candidate"
     ]
   },
@@ -31,7 +31,7 @@ const requiredLocalClaims = [
     file: "docs/security-gate-90.md",
     snippets: [
       "58-file web/API test suite with 177 tests",
-      "60-check App Store packet verifier",
+      "65-check App Store packet verifier",
       "NEXT_PUBLIC_SUPPORT_EMAIL"
     ]
   }
