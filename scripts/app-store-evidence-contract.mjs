@@ -4,7 +4,7 @@ import { isAbsolute, join } from "node:path";
 export const requiredExternalEvidence = [
   { key: "appStoreConnectBuild41Processed", label: "App Store Connect shows build 1.0.0 (41) processed/available" },
   { key: "build41ExportComplianceSaved", label: "Build 41 export compliance is saved if prompted" },
-  { key: "build41AssignedToInternalGroup", label: "Build 41 is assigned to TE Team (Expo)" },
+  { key: "build41AssignedToInternalGroup", label: "Build 41 is assigned to Team (Expo)" },
   { key: "realIphoneTestFlightInstallLaunchPassed", label: "A real iPhone TestFlight install and launch smoke test passed" },
   { key: "appInfoSaved", label: "App Information fields are saved" },
   { key: "versionMetadataSaved", label: "Version metadata fields are saved" },
