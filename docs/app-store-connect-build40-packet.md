@@ -38,7 +38,7 @@ EAS Submit uploaded build 40 to App Store Connect and returned `FINISHED` with
 `error: null`. App Store Connect now shows build `1.0.0 (40)` in the internal
 group `Team (Expo)` with status `테스트 중` and `90일 후 만료`.
 
-A second EAS submit attempt with `--groups "TE Team (Expo)"` scheduled
+A second EAS submit attempt with a stale internal-group alias scheduled
 submission `949d446f-dea1-490f-8b52-2de359d899ee`, but it ended in `ERRORED`.
 App Store Connect was therefore checked directly.
 
@@ -140,7 +140,7 @@ EXPO_PUBLIC_ENABLE_PAID_PUBLISH=false
 
 1. Confirm build `1.0.0 (40)` is processed and available.
 2. Save export compliance for build 40 if prompted.
-3. Add build 40 to `TE Team (Expo)`.
+3. Add build 40 to `Team (Expo)`.
 4. Install and launch build 40 on the user's iPhone through TestFlight.
 5. Enter App Information fields.
 6. Enter version metadata and review notes.

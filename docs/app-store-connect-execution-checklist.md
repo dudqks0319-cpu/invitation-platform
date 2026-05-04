@@ -50,7 +50,7 @@ Current EAS evidence from 2026-05-03:
 - The user's iPhone still needs to install and launch build 41 from TestFlight.
 - Historical build 40 (`86a14873-bdfd-4390-87d1-81ae0ddd06dc`) was uploaded and
   assigned to internal group `Team (Expo)`, but it is superseded by build 41.
-- A follow-up EAS submit attempt with `--groups "TE Team (Expo)"` created
+- A follow-up EAS submit attempt with a stale internal-group alias created
   submission `949d446f-dea1-490f-8b52-2de359d899ee`, but it ended `ERRORED`.
   App Store Connect was checked directly after that failure.
 Build 38 is uploaded to Apple through EAS and contains the paid-publish fallback
@@ -189,7 +189,7 @@ Current evidence:
 Current external evidence:
 
 - App Store Connect export compliance is saved for build 37.
-- Build 37 is available to internal group `TE Team (Expo)`.
+- Build 37 is available to internal group `Team (Expo)`.
 - One internal tester is invited.
 - App Store Connect processing and internal-group assignment are confirmed for
   build 41 as of 2026-05-03 15:40 KST.
@@ -206,7 +206,7 @@ Required evidence:
 
 - The new build is visible in App Store Connect TestFlight.
 - The build no longer shows `수출 규정 관련 문서 누락`.
-- The build is assigned to internal group `TE Team (Expo)`.
+- The build is assigned to internal group `Team (Expo)`.
 - The build can be installed by an internal tester.
 - Launch smoke test passes.
 - Home template gallery opens.

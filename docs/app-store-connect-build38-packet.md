@@ -53,8 +53,8 @@ session:
 - `1.0.0 (38)` appears in the iOS build upload list with status `완료`.
 - The version `1.0.0` build table shows build 38 status `제출 준비 완료`, so
   it is no longer blocked by an export-compliance document prompt.
-- Build 38 is assigned to internal group `TE Team (Expo)`.
-- `TE Team (Expo)` shows `내부 그룹 ∙ 1명의 테스터 ∙ 2개의 빌드`.
+- Build 38 is assigned to internal group `Team (Expo)`.
+- `Team (Expo)` shows `내부 그룹 ∙ 1명의 테스터 ∙ 2개의 빌드`.
 - The tester row is still `dudqks2@gmail.com` / `정영빈` with status `초대됨`
   and no device/session evidence yet.
 
@@ -202,7 +202,7 @@ Minimum recommended App Store set for build 38:
 
 1. Confirm build `1.0.0 (38)` is processed and available.
 2. Save export compliance for build 38 if prompted.
-3. Add build 38 to `TE Team (Expo)`.
+3. Add build 38 to `Team (Expo)`.
 4. Install and launch build 38 on the user's iPhone through TestFlight.
 5. Enter App Information fields.
 6. Enter version metadata and review notes.

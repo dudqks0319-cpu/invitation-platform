@@ -189,8 +189,8 @@ Manual Apple-side confirmation path:
   approval on 2026-05-02. The selected answer was
   `위에 언급된 알고리즘에 모두 해당하지 않음`.
 - App Store Connect now shows build 37 status `제출 준비 완료` in the iOS build
-  list and `테스트 중` inside internal group `TE Team (Expo)`.
-- `TE Team (Expo)` shows `내부 그룹 ∙ 1명의 테스터 ∙ 1개의 빌드`; the tester row
+  list and `테스트 중` inside internal group `Team (Expo)`.
+- `Team (Expo)` shows `내부 그룹 ∙ 1명의 테스터 ∙ 1개의 빌드`; the tester row
   lists `dudqks2@gmail.com` / `정영빈` with status `초대됨`, dated
   `2026년 5월 2일`.
 - Read-only App Store Connect final submission audit on 2026-05-03 13:37 KST:

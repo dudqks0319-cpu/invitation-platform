@@ -72,7 +72,7 @@ Latest local evidence after the build 41 TestFlight stabilization update:
   id `6763630299`.
 - Export compliance for build 37 was saved after explicit user approval. The
   version build row now shows `제출 준비 완료`.
-- Internal group `TE Team (Expo)` shows `1명의 테스터`, `1개의 빌드`, and build
+- Internal group `Team (Expo)` shows `1명의 테스터`, `1개의 빌드`, and build
   `1.0.0 (37)` status `테스트 중`.
 - Historical build 40 Apple processing and internal group assignment are
   confirmed in App Store Connect, but it is superseded by build 41.

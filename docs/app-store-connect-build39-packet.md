@@ -43,7 +43,7 @@ Historical evidence that was still needed before the build was superseded:
 
 - `1.0.0 (39)` appears in the iOS build upload list with status `완료`.
 - Build 39 export compliance is saved if App Store Connect prompts for it.
-- Build 39 is assigned to internal group `TE Team (Expo)`.
+- Build 39 is assigned to internal group `Team (Expo)`.
 - The user's iPhone installs build 39 from TestFlight and launches without the
   crash dialog.
 
@@ -120,7 +120,7 @@ EXPO_PUBLIC_ENABLE_PAID_PUBLISH=false
 
 1. Confirm build `1.0.0 (39)` is processed and available.
 2. Save export compliance for build 39 if prompted.
-3. Add build 39 to `TE Team (Expo)`.
+3. Add build 39 to `Team (Expo)`.
 4. Install and launch build 39 on the user's iPhone through TestFlight.
 5. Enter App Information fields.
 6. Enter version metadata and review notes.

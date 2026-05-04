@@ -13,6 +13,7 @@ const expected = {
   commit: "0655ced",
   liveBaseUrl: "https://invitation-platform-youngbeens-projects.vercel.app"
 };
+const nextNativeBuildNumber = "42";
 
 const checks = [];
 const failures = [];
@@ -57,6 +58,10 @@ const security = read("docs/security-gate-90.md");
 const metadata = read("docs/store-submission-metadata.md");
 const appleReview = read("docs/apple-review.md");
 const inputPacket = read("docs/app-store-connect-input-packet-build41.md");
+const build38Packet = read("docs/app-store-connect-build38-packet.md");
+const build39Packet = read("docs/app-store-connect-build39-packet.md");
+const build40Packet = read("docs/app-store-connect-build40-packet.md");
+const executionChecklist = read("docs/app-store-connect-execution-checklist.md");
 const supportPage = read("app/support/page.tsx");
 const envExample = read(".env.example");
 const supportContact = read("lib/support-contact.ts");
@@ -67,6 +72,7 @@ const mobilePackage = read("apps/mobile/package.json");
 const mobileEntryTest = read("apps/mobile/entry.test.ts");
 const mobileMetroConfig = read("apps/mobile/metro.config.js");
 const mobileBabelConfig = read("apps/mobile/babel.config.js");
+const iosProject = read("apps/mobile/ios/InviteHub.xcodeproj/project.pbxproj");
 const collectDeviceEvidence = read("scripts/collect-testflight-device-evidence.sh");
 const awaitDevice = read("scripts/await-testflight-device.sh");
 const diagnoseDeviceConnection = read("scripts/diagnose-ios-device-connection.sh");
@@ -83,6 +89,25 @@ includes("docs/app-store-connect-build41-packet.md", packet, "For build 41, do n
 includes("docs/app-store-connect-build41-packet.md", packet, "NEXT_PUBLIC_ENABLE_PAID_PUBLISH=false");
 includes("docs/app-store-connect-build41-packet.md", packet, "EXPO_PUBLIC_ENABLE_PAID_PUBLISH=false");
 includes("docs/app-store-connect-build41-packet.md", packet, "submit only after the user explicitly confirms");
+
+for (const [file, content] of [
+  ["docs/app-store-connect-build41-packet.md", packet],
+  ["docs/app-store-connect-build40-packet.md", build40Packet],
+  ["docs/app-store-connect-build39-packet.md", build39Packet],
+  ["docs/app-store-connect-build38-packet.md", build38Packet],
+  ["docs/app-store-connect-execution-checklist.md", executionChecklist],
+  ["docs/app-store-readiness-90.md", readiness],
+  ["docs/goal-completion-audit-90.md", audit],
+  ["docs/security-gate-90.md", security],
+  ["docs/testflight-crash-triage-2026-05-03.md", crashTriage]
+]) {
+  notIncludes(
+    file,
+    content,
+    "TE Team (Expo)",
+    `${file}: stale TestFlight internal group alias must be Team (Expo)`
+  );
+}
 
 const reviewNotes = packet.match(/## Review Notes[\s\S]*?```txt\n([\s\S]*?)\n```/)?.[1] ?? "";
 check("review notes block is present", reviewNotes.length > 0, "docs/app-store-connect-build41-packet.md: missing Review Notes txt block");
@@ -153,6 +178,17 @@ includes("apps/mobile/metro.config.js", mobileMetroConfig, "getDefaultConfig(__d
 includes("apps/mobile/babel.config.js", mobileBabelConfig, "babel-preset-expo/build/expo-router-plugin");
 includes("apps/mobile/babel.config.js", mobileBabelConfig, "expoRouterBabelPlugin");
 includes("apps/mobile/babel.config.js", mobileBabelConfig, "plugins: [expoRouterBabelPlugin]");
+includes(
+  "apps/mobile/ios/InviteHub.xcodeproj/project.pbxproj",
+  iosProject,
+  `CURRENT_PROJECT_VERSION = ${nextNativeBuildNumber}`
+);
+notIncludes(
+  "apps/mobile/ios/InviteHub.xcodeproj/project.pbxproj",
+  iosProject,
+  "CURRENT_PROJECT_VERSION = 28",
+  "Native iOS project must not keep the stale pre-build-41 build number"
+);
 includes("apps/mobile/entry.test.ts", mobileEntryTest, "uses the Expo Router entry");
 includes("apps/mobile/entry.test.ts", mobileEntryTest, "uses Expo Metro config");
 includes("apps/mobile/entry.test.ts", mobileEntryTest, "loads the Expo Router Babel transform");
