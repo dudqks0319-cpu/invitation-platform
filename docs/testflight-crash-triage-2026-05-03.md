@@ -47,6 +47,15 @@ and changing the app name would not fix this launch crash path.
   `output/ios-device-diagnostics/20260503-160544`.
 - App Store Connect read-only recheck on 2026-05-03 16:06 KST still shows build
   41 installs `-`, sessions `-`, crashes `-`, and feedback `-`.
+- Real-device evidence on 2026-05-06 19:02 KST confirmed `InviteHub`
+  `com.invitehub.app` is installed on the paired iPhone as version `1.0.0`,
+  bundle version `41`, and the device was unlocked. Evidence:
+  `output/testflight-device-evidence/20260506-190249`.
+- Real-device launch on 2026-05-06 19:03 KST succeeded through CoreDevice with
+  exit code `0` for `com.invitehub.app`. Evidence:
+  `output/testflight-device-evidence/20260506-190312`. The remaining gap is
+  visual/user confirmation that the launched app reaches the expected
+  home/template/builder/preview flow without an iOS crash dialog.
 - EAS build 41 state:
   - Build id `61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`
   - Version `1.0.0`, build `41`

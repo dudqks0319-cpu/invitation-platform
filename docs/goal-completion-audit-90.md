@@ -251,6 +251,19 @@ Manual Apple-side confirmation path:
   build 41 still shows installs `-`, sessions `-`, crashes `-`, and feedback
   `-`. This confirms neither local CoreDevice nor ASC currently proves build 41
   real-device launch.
+- Real-device install evidence on 2026-05-06 19:02 KST:
+  `bash scripts/collect-testflight-device-evidence.sh` reached the paired
+  iPhone, confirmed the device was unlocked, and found `InviteHub`
+  `com.invitehub.app` installed as version `1.0.0`, bundle version `41`.
+  Evidence: `output/testflight-device-evidence/20260506-190249`.
+- Real-device launch evidence on 2026-05-06 19:03 KST:
+  `bash scripts/collect-testflight-device-evidence.sh --launch` launched
+  `com.invitehub.app` successfully with exit code `0`. Evidence:
+  `output/testflight-device-evidence/20260506-190312`. This proves build 41 can
+  be launched by CoreDevice, but the full user-facing smoke path
+  home -> template -> builder -> preview still needs visual/user confirmation
+  before the `realIphoneTestFlightInstallLaunchPassed` evidence key can be
+  marked complete.
 - Goal completion verifier:
   `node scripts/verify-goal-completion.mjs` returns `blocked` until
   `docs/app-store-external-evidence.json` exists and every Apple-side evidence
