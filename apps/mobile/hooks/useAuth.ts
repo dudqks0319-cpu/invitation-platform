@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import * as AppleAuthentication from "expo-apple-authentication";
-import * as WebBrowser from "expo-web-browser";
 import type { Session, User } from "@supabase/supabase-js";
 import {
   getAuthRedirectUrl,
@@ -11,8 +9,6 @@ import {
 } from "@/lib/supabase";
 import { hasFullAccount as userHasFullAccount, isAnonymousUser } from "@/lib/auth-access";
 import { isNativeGoogleConfigured, isNativeKakaoConfigured } from "@/lib/auth-native-config";
-
-WebBrowser.maybeCompleteAuthSession();
 
 type AuthStatus = "loading" | "anonymous" | "authenticated";
 
@@ -66,6 +62,7 @@ export function useAuth() {
           return { error: new Error("Supabase 환경 변수가 없어 Apple 로그인을 시작할 수 없습니다.") };
         }
 
+        const AppleAuthentication = await import("expo-apple-authentication");
         const available = await AppleAuthentication.isAvailableAsync();
         if (!available) {
           return { error: new Error("현재 환경에서는 Apple 로그인을 사용할 수 없습니다.") };

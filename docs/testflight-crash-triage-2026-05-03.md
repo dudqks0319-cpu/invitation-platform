@@ -1,5 +1,11 @@
 # TestFlight Crash Triage - 2026-05-03
 
+2026-05-06 update: build 41 is no longer considered proven by the local
+`devicectl` launch result alone. The command returned exit code `0`, but the
+follow-up process query did not show a running InviteHub process. Current
+follow-up is tracked in `docs/testflight-crash-triage-2026-05-06.md`; build 42
+is the local emergency crash-fix candidate.
+
 ## Verdict
 
 The current evidence does not support "two similar apps installed" as the crash
@@ -51,11 +57,11 @@ and changing the app name would not fix this launch crash path.
   `com.invitehub.app` is installed on the paired iPhone as version `1.0.0`,
   bundle version `41`, and the device was unlocked. Evidence:
   `output/testflight-device-evidence/20260506-190249`.
-- Real-device launch on 2026-05-06 19:03 KST succeeded through CoreDevice with
-  exit code `0` for `com.invitehub.app`. Evidence:
-  `output/testflight-device-evidence/20260506-190312`. The remaining gap is
-  visual/user confirmation that the launched app reaches the expected
-  home/template/builder/preview flow without an iOS crash dialog.
+- Real-device launch on 2026-05-06 19:03 KST returned CoreDevice exit code `0`
+  for `com.invitehub.app`, but the follow-up process query did not show a
+  running InviteHub process. Evidence:
+  `output/testflight-device-evidence/20260506-190312`. Treat this as
+  inconclusive startup evidence, not a real-device launch pass.
 - EAS build 41 state:
   - Build id `61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`
   - Version `1.0.0`, build `41`

@@ -40,7 +40,7 @@ Local security controls are materially in place. A fresh network-enabled
 
 | Risk | Owner | Due |
 | --- | --- | --- |
-| Real-device TestFlight install/launch evidence for build 41 has not been captured in this run. Builds 38, 39, and 40 are superseded. | Store Manager / Release owner | Before final release readiness sign-off |
+| Real-device TestFlight install/launch evidence for the current crash-fix candidate has not been captured. Builds 38, 39, and 40 are unsafe rollback candidates; build 41 is uploaded but no longer treated as proven after the latest crash report. | Store Manager / Release owner | Before final release readiness sign-off |
 | App Store Connect app information, version metadata, build selection, privacy labels, IAP approval, review notes, and screenshots are verified incomplete. | Store Manager / Release owner | Before final App Store submission |
 | Custom domain `invitehub.co.kr` does not resolve by DNS; store URLs must use the verified Vercel deployment or DNS must be connected before submission. | Store Manager / Release owner | Before entering App Store metadata |
 | `support@invitehub.co.kr` has no verified MX/DNS evidence; App Review contact must use a currently verified mailbox and `NEXT_PUBLIC_SUPPORT_EMAIL` until domain email is configured. | Store Manager / Release owner | Before entering App Review contact |
@@ -61,8 +61,9 @@ downgrades for Next/Expo dependency chains.
 ## Current External Gate
 
 EAS iOS build 41 completed and EAS Submit uploaded the binary to App Store
-Connect after the build 40 Expo Router release-entry crash report. The current
-release candidate is build 41.
+Connect after the build 40 Expo Router release-entry crash report. After the
+latest user crash report, build 41 remains the newest uploaded TestFlight build
+but is not treated as the current proven release candidate.
 
 `node scripts/eas-build-submission-status.mjs 61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`
 returned build 41 `FINISHED`, linked submission `FINISHED`, `error: null`.
@@ -79,9 +80,12 @@ keeps paid photo publishing disabled by default until an IAP product exists.
 `node scripts/eas-build-submission-status.mjs d185dfc1-9110-4d81-b510-08e02f1ece7f`
 was re-run on 2026-05-02 14:47 KST and returned build status `FINISHED`, linked
 submission status `FINISHED`, and `error: null`.
-Build 41 is the current EAS/App Store Connect upload candidate and is now
-visually confirmed in the internal group. It still lacks real-device
-install/session evidence.
+Build 41 is visually confirmed in the internal group, but the 2026-05-06
+follow-up showed that a `devicectl` exit code `0` was not enough evidence
+because InviteHub was absent from the follow-up process query. Build 42 is the
+local emergency candidate after removing the prebuilt React Native core embed
+path and delaying optional startup native modules. It still needs TestFlight
+upload and real-device install/session evidence.
 
 The remaining external gates are real-device TestFlight install/launch evidence
 and final App Store Connect submission surfaces: app information, version

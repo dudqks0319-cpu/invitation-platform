@@ -21,6 +21,17 @@ answer requirement, App Review metadata accuracy/completeness guidance, and
 
 Latest local evidence after the build 41 TestFlight stabilization update:
 
+- 2026-05-06 crash follow-up: build 41 is not considered proven because the
+  prior `devicectl` launch returned exit code `0` but InviteHub was not present
+  in the follow-up process query. New triage lives in
+  `docs/testflight-crash-triage-2026-05-06.md`.
+- Build 42 is the local emergency crash-fix candidate. It builds React Native
+  iOS from source, removes the embedded prebuilt `React.framework` /
+  `ReactNativeDependencies.framework` path, and lazy-loads optional browser/auth
+  native modules outside first render.
+- Build 42 Release simulator build passed locally with bundle id
+  `com.invitehub.app`, build number `42`, and only `hermesvm.framework`
+  embedded. TestFlight upload and real iPhone evidence are still pending.
 - Build 41 App Store Connect entry values are consolidated in
   `docs/app-store-connect-build41-packet.md`.
 - `node scripts/eas-build-submission-status.mjs 61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`
@@ -139,8 +150,9 @@ These cannot be fully completed from code alone:
 
 - App Store Connect app record points to bundle id `com.invitehub.app`.
 - TestFlight build 41 is uploaded through EAS Submit, processed in App Store
-  Connect, and assigned to internal group `Team (Expo)`. Real iPhone
-  install/launch evidence is still needed.
+  Connect, and assigned to internal group `Team (Expo)`, but the latest crash
+  follow-up makes build 42 the next candidate to upload. Real iPhone
+  install/launch evidence is still needed for the current candidate.
 - App Privacy labels match collected data: account, invitations, RSVP, guestbook, photos, purchase records.
 - IAP product for photo-included publishing is created, priced, and approved, or
   the paid publish flag remains disabled and paid claims stay hidden.

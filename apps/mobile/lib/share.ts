@@ -1,5 +1,4 @@
 import { Share } from "react-native";
-import * as WebBrowser from "expo-web-browser";
 import { getPublicInvitationUrl, getWebBuilderUrl, getWebTemplatesUrl } from "./web-links";
 
 export { getPublicInvitationUrl } from "./web-links";
@@ -18,6 +17,7 @@ export async function shareInvitationLink(slug: string, title: string) {
 }
 
 export async function openInviteHubUrl(url: string) {
+  const WebBrowser = await import("expo-web-browser");
   await WebBrowser.openBrowserAsync(url);
   return url;
 }
