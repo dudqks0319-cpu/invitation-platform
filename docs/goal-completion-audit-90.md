@@ -1,7 +1,7 @@
 # InviteHub Goal Completion Audit - 90점 Release Readiness
 
 Date: 2026-05-01
-Latest update: 2026-05-03 15:42 KST
+Latest update: 2026-05-07 20:56 KST
 
 ## Objective
 
@@ -59,15 +59,18 @@ InviteHub 앱을 App Store 제출 기준으로 프론트엔드, 백엔드, UI/UX
 | Current paid-fallback EAS build | EAS build 38, EAS Submit | Build 38 (`d185dfc1-9110-4d81-b510-08e02f1ece7f`) finished and was uploaded to App Store Connect. It contains commit `d8ed82188b3233bebe7be90c173d434f36690581`. Apple processing, export-compliance clearance, and internal group assignment were confirmed on 2026-05-02 15:32 KST. | Pass for upload and ASC |
 | Current launch-crash recovery build | EAS build 40, EAS Submit, ASC TestFlight group | build 40 is uploaded and submitted through EAS Submit as `86a14873-bdfd-4390-87d1-81ae0ddd06dc`. Submission `cf537e44-73dd-4a2d-8640-7d31e9facba8` finished with `error: null`. A group-submit retry `949d446f-dea1-490f-8b52-2de359d899ee` ended `ERRORED`, but direct App Store Connect evidence confirms build 40 is now in `Team (Expo)` and `테스트 중`. It contains source commit `9c83039`, which removes optional Google/Kakao/IAP/Nitro native modules from the first-submission binary. | Pass for EAS and ASC, blocked on iPhone evidence |
 | Build 41 EAS upload and submission evidence | EAS build 41, EAS Submit, ASC TestFlight group | build 41 is uploaded and submitted through EAS Submit as `61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`. Submission `25518b07-b8de-4507-8a0e-20d85bfe9e14` finished with `error: null`. It contains local source commit `0655ced`, which restores the Expo Router release entry and fixes the build 40 `No routes found` crash path. App Store Connect now shows build 41 processed and assigned to `Team (Expo)`. | Pass for EAS and ASC, blocked on iPhone evidence |
+| Build 42 local crash-fix candidate | `docs/app-store-connect-build42-packet.md`, `docs/testflight-crash-triage-2026-05-06.md`, native Pod/Xcode files | build 42 is prepared locally at source commit `0d21924`. It builds React Native iOS from source, removes the prebuilt `React.framework` / `ReactNativeDependencies.framework` embed path, lazy-loads optional browser/auth native modules, and passed the local Release simulator/source-build checks plus release gate. EAS read-only check on 2026-05-07 still shows build 41 as the newest uploaded TestFlight build, so build 42 is not yet available on the user's iPhone. | Pass locally, blocked on EAS/TestFlight upload |
 
 ## Completion Verdict
 
-The local codebase, EAS upload path, and App Store Connect TestFlight assignment
-now meet the practical 90+ release bar for code, build, and binary availability
-evidence. The latest UI complaint about the invitation preview has been fixed
-and simulator-verified. Build 41 is uploaded, submitted, processed in App Store
-Connect, assigned to internal group `Team (Expo)`, and available for
-TestFlight testing.
+The local codebase still meets the practical 90+ release bar for code, build,
+UI/UX, backend/API, and security evidence. The latest UI complaint about the
+invitation preview has been fixed and simulator-verified. Build 42 is now the
+local crash-fix candidate for the current iPhone TestFlight crash report.
+
+Build 41 is uploaded, submitted, processed in App Store Connect, and assigned
+to internal group `Team (Expo)`, but it is no longer treated as a proven iPhone
+release candidate after the latest user crash report.
 
 The full active goal is not complete yet because:
 
@@ -76,19 +79,21 @@ The full active goal is not complete yet because:
   information, and IAP product state still need to be entered/saved before App
   Store submission.
 - Real iPhone install/launch evidence from TestFlight is still not captured for
-  build 41. Build 39 has negative evidence: it reached the user's iPhone and
-  crashed on launch, and the 2026-05-03 14:39 KST CoreDevice check confirmed
-  the connected iPhone still had bundle version `39` installed.
+  the current crash-fix candidate. Build 42 is not uploaded to EAS/TestFlight yet,
+  and build 41 still crashes on the user's iPhone per the 2026-05-07 user
+  report.
 
 ## Next Required Action
 
-Open TestFlight on the target iPhone, install/update InviteHub to build
-`1.0.0 (41)`, and perform a launch smoke test.
+Upload build `1.0.0 (42)` through EAS production with auto-submit after
+explicit user approval, then install/update InviteHub from TestFlight on the
+target iPhone and perform a launch smoke test.
 
 Do not mark the goal complete until:
 
-- The build is installed in TestFlight by an internal tester, or the user
-  confirms successful installation on their iPhone.
+- The current crash-fix build is uploaded, processed, assigned to internal
+  TestFlight, installed by the internal tester, and the user confirms successful
+  launch on their iPhone.
 - App Store Connect metadata, privacy labels, screenshots, review notes, version
   build selection, app information, and IAP product state are entered, saved, and
   verified.

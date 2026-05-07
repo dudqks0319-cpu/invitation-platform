@@ -14,6 +14,13 @@ const expected = {
   liveBaseUrl: "https://invitation-platform-youngbeens-projects.vercel.app"
 };
 const nextNativeBuildNumber = "42";
+const expectedBuild42 = {
+  appId: "6763630299",
+  bundleId: "com.invitehub.app",
+  appVersion: "1.0.0",
+  buildNumber: "42",
+  commit: "0d21924"
+};
 
 const checks = [];
 const failures = [];
@@ -52,6 +59,7 @@ function isExecutable(relativePath) {
 }
 
 const packet = read("docs/app-store-connect-build41-packet.md");
+const build42Packet = read("docs/app-store-connect-build42-packet.md");
 const readiness = read("docs/app-store-readiness-90.md");
 const audit = read("docs/goal-completion-audit-90.md");
 const security = read("docs/security-gate-90.md");
@@ -67,18 +75,26 @@ const envExample = read(".env.example");
 const supportContact = read("lib/support-contact.ts");
 const supportContactTest = read("lib/support-contact.test.ts");
 const crashTriage = read("docs/testflight-crash-triage-2026-05-03.md");
+const crashTriageBuild42 = read("docs/testflight-crash-triage-2026-05-06.md");
 const mobileEntry = read("apps/mobile/index.js");
 const mobilePackage = read("apps/mobile/package.json");
 const mobileEntryTest = read("apps/mobile/entry.test.ts");
 const mobileMetroConfig = read("apps/mobile/metro.config.js");
 const mobileBabelConfig = read("apps/mobile/babel.config.js");
 const iosProject = read("apps/mobile/ios/InviteHub.xcodeproj/project.pbxproj");
+const iosPodfileProperties = read("apps/mobile/ios/Podfile.properties.json");
+const iosPodfileLock = read("apps/mobile/ios/Podfile.lock");
+const nativeStartupSafetyTest = read("apps/mobile/lib/native-startup-safety.test.ts");
 const collectDeviceEvidence = read("scripts/collect-testflight-device-evidence.sh");
 const awaitDevice = read("scripts/await-testflight-device.sh");
 const diagnoseDeviceConnection = read("scripts/diagnose-ios-device-connection.sh");
 
 for (const value of Object.values(expected)) {
   includes("docs/app-store-connect-build41-packet.md", packet, value);
+}
+
+for (const value of Object.values(expectedBuild42)) {
+  includes("docs/app-store-connect-build42-packet.md", build42Packet, value);
 }
 
 includes("docs/app-store-connect-build41-packet.md", packet, "EAS submission status | `FINISHED`, `error: null`");
@@ -89,9 +105,16 @@ includes("docs/app-store-connect-build41-packet.md", packet, "For build 41, do n
 includes("docs/app-store-connect-build41-packet.md", packet, "NEXT_PUBLIC_ENABLE_PAID_PUBLISH=false");
 includes("docs/app-store-connect-build41-packet.md", packet, "EXPO_PUBLIC_ENABLE_PAID_PUBLISH=false");
 includes("docs/app-store-connect-build41-packet.md", packet, "submit only after the user explicitly confirms");
+includes("docs/app-store-connect-build42-packet.md", build42Packet, "TestFlight state | Not uploaded");
+includes("docs/app-store-connect-build42-packet.md", build42Packet, "React.framework");
+includes("docs/app-store-connect-build42-packet.md", build42Packet, "ReactNativeDependencies.framework");
+includes("docs/app-store-connect-build42-packet.md", build42Packet, "hermesvm.framework");
+includes("docs/app-store-connect-build42-packet.md", build42Packet, "EAS_NO_VCS=1 eas build -p ios --profile production --non-interactive --auto-submit");
+includes("docs/app-store-connect-build42-packet.md", build42Packet, "Do not count simulator launch as TestFlight proof");
 
 for (const [file, content] of [
   ["docs/app-store-connect-build41-packet.md", packet],
+  ["docs/app-store-connect-build42-packet.md", build42Packet],
   ["docs/app-store-connect-build40-packet.md", build40Packet],
   ["docs/app-store-connect-build39-packet.md", build39Packet],
   ["docs/app-store-connect-build38-packet.md", build38Packet],
@@ -99,7 +122,8 @@ for (const [file, content] of [
   ["docs/app-store-readiness-90.md", readiness],
   ["docs/goal-completion-audit-90.md", audit],
   ["docs/security-gate-90.md", security],
-  ["docs/testflight-crash-triage-2026-05-03.md", crashTriage]
+  ["docs/testflight-crash-triage-2026-05-03.md", crashTriage],
+  ["docs/testflight-crash-triage-2026-05-06.md", crashTriageBuild42]
 ]) {
   notIncludes(
     file,
@@ -130,6 +154,9 @@ includes("docs/app-store-readiness-90.md", readiness, "returned build 41 `FINISH
 includes("docs/goal-completion-audit-90.md", audit, "## Completion Verdict");
 includes("docs/goal-completion-audit-90.md", audit, "Do not mark the goal complete until");
 includes("docs/goal-completion-audit-90.md", audit, "build 41 is uploaded and submitted");
+includes("docs/goal-completion-audit-90.md", audit, "Build 42 local crash-fix candidate");
+includes("docs/goal-completion-audit-90.md", audit, "build 42 is not yet available on the user's iPhone");
+includes("docs/goal-completion-audit-90.md", audit, "Build 42 is not uploaded to EAS/TestFlight yet");
 includes("docs/goal-completion-audit-90.md", audit, "App Review contact email");
 includes("docs/goal-completion-audit-90.md", audit, "TestFlight device evidence harness");
 includes("docs/security-gate-90.md", security, "NEXT_PUBLIC_SUPPORT_EMAIL");
@@ -169,6 +196,11 @@ includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "Unhandled J
 includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "expo-router/entry");
 includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "EXPO_ROUTER_APP_ROOT");
 includes("docs/testflight-crash-triage-2026-05-03.md", crashTriage, "transform.routerRoot");
+includes("docs/testflight-crash-triage-2026-05-06.md", crashTriageBuild42, "Prepare build 42 as the emergency crash-fix candidate");
+includes("docs/testflight-crash-triage-2026-05-06.md", crashTriageBuild42, "React-Core-prebuilt");
+includes("docs/testflight-crash-triage-2026-05-06.md", crashTriageBuild42, "ReactNativeDependencies");
+includes("docs/testflight-crash-triage-2026-05-06.md", crashTriageBuild42, "CFBundleVersion`: `42`");
+includes("docs/testflight-crash-triage-2026-05-06.md", crashTriageBuild42, "Do not claim the crash is fixed until build 42 is installed from TestFlight");
 includes("apps/mobile/package.json", mobilePackage, "\"main\": \"expo-router/entry\"");
 includes("apps/mobile/index.js", mobileEntry, "expo-router/entry");
 notIncludes("apps/mobile/index.js", mobileEntry, "require.context");
@@ -183,6 +215,34 @@ includes(
   iosProject,
   `CURRENT_PROJECT_VERSION = ${nextNativeBuildNumber}`
 );
+includes("apps/mobile/ios/Podfile.properties.json", iosPodfileProperties, "\"ios.buildReactNativeFromSource\": \"true\"");
+notIncludes(
+  "apps/mobile/ios/Podfile.lock",
+  iosPodfileLock,
+  "React-Core-prebuilt",
+  "Podfile.lock must not include React-Core-prebuilt for build 42"
+);
+notIncludes(
+  "apps/mobile/ios/Podfile.lock",
+  iosPodfileLock,
+  "ReactNativeDependencies",
+  "Podfile.lock must not include ReactNativeDependencies for build 42"
+);
+notIncludes(
+  "apps/mobile/ios/InviteHub.xcodeproj/project.pbxproj",
+  iosProject,
+  "React.framework",
+  "Native project must not embed React.framework for build 42"
+);
+notIncludes(
+  "apps/mobile/ios/InviteHub.xcodeproj/project.pbxproj",
+  iosProject,
+  "ReactNativeDependencies.framework",
+  "Native project must not embed ReactNativeDependencies.framework for build 42"
+);
+includes("apps/mobile/lib/native-startup-safety.test.ts", nativeStartupSafetyTest, "does not load optional auth/browser native modules");
+includes("apps/mobile/lib/native-startup-safety.test.ts", nativeStartupSafetyTest, "builds React Native iOS from source");
+includes("apps/mobile/lib/native-startup-safety.test.ts", nativeStartupSafetyTest, "ios.buildReactNativeFromSource");
 notIncludes(
   "apps/mobile/ios/InviteHub.xcodeproj/project.pbxproj",
   iosProject,

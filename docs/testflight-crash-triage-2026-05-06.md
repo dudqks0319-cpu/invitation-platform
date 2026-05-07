@@ -99,6 +99,5 @@ candidate.
 ## Next Check
 
 Upload build 42 to TestFlight after explicit approval, assign it to the internal
-group, then verify on the user's iPhone. Do not claim the crash is fixed until
-build 42 is installed from TestFlight and the user or CoreDevice evidence shows
+group, then verify on the user's iPhone. Do not claim the crash is fixed until build 42 is installed from TestFlight and the user or CoreDevice evidence shows
 the app remains open past launch.
