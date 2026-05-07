@@ -15,14 +15,14 @@ const requiredLocalClaims = [
       "Fast release gate recheck on 2026-05-03 13:24 KST",
       "58-file web/API test suite with 177 tests",
       "88-check App Store packet verifier",
-      "Build 41 EAS upload and submission evidence"
+      "Build 42 EAS upload and submission evidence"
     ]
   },
   {
-    file: "docs/app-store-connect-build41-packet.md",
+    file: "docs/app-store-connect-build42-packet.md",
     snippets: [
       "EAS submission status | `FINISHED`, `error: null`",
-      "Latest EAS status recheck | `2026-05-03 15:33 KST`",
+      "Latest EAS status recheck | `2026-05-07 21:18 KST`",
       "do not use it as the App Review contact",
       "submit only after the user explicitly confirms"
     ]

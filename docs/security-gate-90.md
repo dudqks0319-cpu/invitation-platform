@@ -83,9 +83,11 @@ submission status `FINISHED`, and `error: null`.
 Build 41 is visually confirmed in the internal group, but the 2026-05-06
 follow-up showed that a `devicectl` exit code `0` was not enough evidence
 because InviteHub was absent from the follow-up process query. Build 42 is the
-local emergency candidate after removing the prebuilt React Native core embed
-path and delaying optional startup native modules. It still needs TestFlight
-upload and real-device install/session evidence.
+emergency candidate after removing the prebuilt React Native core embed path
+and delaying optional startup native modules. EAS Build and EAS Submit are
+finished for build `88c911f5-3c21-41e8-a6a2-a04939fa6179`, submission
+`ba6727cf-2c1d-464f-a005-6ce9670d4f81`, `error: null`; Apple processing and
+real-device install/session evidence are still pending.
 
 The remaining external gates are real-device TestFlight install/launch evidence
 and final App Store Connect submission surfaces: app information, version

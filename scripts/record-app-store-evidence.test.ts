@@ -41,7 +41,7 @@ describe("record-app-store-evidence", () => {
 
       expect(result.status).toBe(0);
       expect(result.stdout).toContain("APP STORE EXTERNAL EVIDENCE KEYS");
-      expect(result.stdout).toContain("appStoreConnectBuild41Processed");
+      expect(result.stdout).toContain("appStoreConnectBuild42Processed");
       expect(result.stdout).toContain("iapStateVerifiedOrPaidFeaturesDisabled");
     });
   });
@@ -50,11 +50,11 @@ describe("record-app-store-evidence", () => {
     withTempProject((root) => {
       const result = runRecorder(root, [
         "--key",
-        "appStoreConnectBuild41Processed",
+        "appStoreConnectBuild42Processed",
         "--capturedAt",
-        "2026-05-02T15:30:00+09:00",
+        "2026-05-07T21:18:00+09:00",
         "--evidence",
-        "App Store Connect TestFlight shows 1.0.0 (41) processed.",
+        "App Store Connect TestFlight shows 1.0.0 (42) processed.",
         "--artifact",
         "https://appstoreconnect.apple.com/apps/6763630299/testflight/ios"
       ]);
@@ -65,10 +65,10 @@ describe("record-app-store-evidence", () => {
       expect(result.status).toBe(0);
       expect(result.stdout).toContain("Status: pass");
       expect(existsSync(evidencePath)).toBe(true);
-      expect(manifest.appStoreConnectBuild41Processed).toEqual({
+      expect(manifest.appStoreConnectBuild42Processed).toEqual({
         status: true,
-        capturedAt: "2026-05-02T15:30:00+09:00",
-        evidence: "App Store Connect TestFlight shows 1.0.0 (41) processed.",
+        capturedAt: "2026-05-07T21:18:00+09:00",
+        evidence: "App Store Connect TestFlight shows 1.0.0 (42) processed.",
         artifact: "https://appstoreconnect.apple.com/apps/6763630299/testflight/ios"
       });
     });
@@ -91,11 +91,11 @@ describe("record-app-store-evidence", () => {
 
       const result = runRecorder(root, [
         "--key",
-        "build41AssignedToInternalGroup",
+        "build42AssignedToInternalGroup",
         "--capturedAt",
-        "2026-05-02T15:31:00+09:00",
+        "2026-05-07T21:19:00+09:00",
         "--evidence",
-        "Build 41 is assigned to Team (Expo).",
+        "Build 42 is assigned to Team (Expo).",
         "--artifact",
         "https://appstoreconnect.apple.com/apps/6763630299/testflight/ios"
       ]);
@@ -104,11 +104,11 @@ describe("record-app-store-evidence", () => {
 
       expect(result.status).toBe(0);
       expect(manifest.appStoreConnectBuild41Processed.status).toBe(true);
-      expect(manifest.build41AssignedToInternalGroup.status).toBe(true);
-      expect(manifest.build41SelectedForVersion).toEqual({
+      expect(manifest.build42AssignedToInternalGroup.status).toBe(true);
+      expect(manifest.build42SelectedForVersion).toEqual({
         status: false,
         capturedAt: "",
-        evidence: "Build 41 is selected for the App Store version",
+        evidence: "Build 42 is selected for the App Store version",
         artifact: ""
       });
     });

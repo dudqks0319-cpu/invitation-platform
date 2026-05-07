@@ -19,7 +19,11 @@ const expectedBuild42 = {
   bundleId: "com.invitehub.app",
   appVersion: "1.0.0",
   buildNumber: "42",
-  commit: "0d21924"
+  commit: "73872e2",
+  crashFixCommit: "0d21924",
+  buildId: "88c911f5-3c21-41e8-a6a2-a04939fa6179",
+  submissionId: "ba6727cf-2c1d-464f-a005-6ce9670d4f81",
+  artifact: "https://expo.dev/artifacts/eas/hTEP9Gx8wMFmK6w9aKSmcc.ipa"
 };
 
 const checks = [];
@@ -65,7 +69,7 @@ const audit = read("docs/goal-completion-audit-90.md");
 const security = read("docs/security-gate-90.md");
 const metadata = read("docs/store-submission-metadata.md");
 const appleReview = read("docs/apple-review.md");
-const inputPacket = read("docs/app-store-connect-input-packet-build41.md");
+const inputPacket = read("docs/app-store-connect-input-packet-build42.md");
 const build38Packet = read("docs/app-store-connect-build38-packet.md");
 const build39Packet = read("docs/app-store-connect-build39-packet.md");
 const build40Packet = read("docs/app-store-connect-build40-packet.md");
@@ -105,11 +109,14 @@ includes("docs/app-store-connect-build41-packet.md", packet, "For build 41, do n
 includes("docs/app-store-connect-build41-packet.md", packet, "NEXT_PUBLIC_ENABLE_PAID_PUBLISH=false");
 includes("docs/app-store-connect-build41-packet.md", packet, "EXPO_PUBLIC_ENABLE_PAID_PUBLISH=false");
 includes("docs/app-store-connect-build41-packet.md", packet, "submit only after the user explicitly confirms");
-includes("docs/app-store-connect-build42-packet.md", build42Packet, "TestFlight state | Not uploaded");
+includes("docs/app-store-connect-build42-packet.md", build42Packet, "EAS submission status | `FINISHED`, `error: null`");
+includes("docs/app-store-connect-build42-packet.md", build42Packet, "Latest EAS status recheck | `2026-05-07 21:18 KST`");
+includes("docs/app-store-connect-build42-packet.md", build42Packet, "TestFlight state | Uploaded to App Store Connect; Apple processing pending");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "React.framework");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "ReactNativeDependencies.framework");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "hermesvm.framework");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "EAS_NO_VCS=1 eas build -p ios --profile production --non-interactive --auto-submit");
+includes("docs/app-store-connect-build42-packet.md", build42Packet, "node scripts/eas-build-submission-status.mjs 88c911f5-3c21-41e8-a6a2-a04939fa6179");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "Do not count simulator launch as TestFlight proof");
 
 for (const [file, content] of [
@@ -155,24 +162,25 @@ includes("docs/goal-completion-audit-90.md", audit, "## Completion Verdict");
 includes("docs/goal-completion-audit-90.md", audit, "Do not mark the goal complete until");
 includes("docs/goal-completion-audit-90.md", audit, "build 41 is uploaded and submitted");
 includes("docs/goal-completion-audit-90.md", audit, "Build 42 local crash-fix candidate");
-includes("docs/goal-completion-audit-90.md", audit, "build 42 is not yet available on the user's iPhone");
-includes("docs/goal-completion-audit-90.md", audit, "Build 42 is not uploaded to EAS/TestFlight yet");
+includes("docs/goal-completion-audit-90.md", audit, "Apple processing and TestFlight install evidence are still pending");
+includes("docs/goal-completion-audit-90.md", audit, "Build 42 EAS upload and submission evidence");
 includes("docs/goal-completion-audit-90.md", audit, "App Review contact email");
 includes("docs/goal-completion-audit-90.md", audit, "TestFlight device evidence harness");
 includes("docs/security-gate-90.md", security, "NEXT_PUBLIC_SUPPORT_EMAIL");
 includes("docs/store-submission-metadata.md", metadata, "Do not use");
 includes("docs/apple-review.md", appleReview, "DNS/MX");
-includes("docs/app-store-connect-input-packet-build41.md", inputPacket, "Build Number | `41`");
-includes("docs/app-store-connect-input-packet-build41.md", inputPacket, expected.buildId);
-includes("docs/app-store-connect-input-packet-build41.md", inputPacket, expected.liveBaseUrl);
-includes("docs/app-store-connect-input-packet-build41.md", inputPacket, "output/store-screenshots-submission-build40");
-includes("docs/app-store-connect-input-packet-build41.md", inputPacket, "Age Rating | Complete and save");
-includes("docs/app-store-connect-input-packet-build41.md", inputPacket, "use Apple's calculated result");
-includes("docs/app-store-connect-input-packet-build41.md", inputPacket, "host moderation");
-includes("docs/app-store-connect-input-packet-build41.md", inputPacket, "realIphoneTestFlightInstallLaunchPassed");
-includes("docs/app-store-connect-input-packet-build41.md", inputPacket, "node scripts/verify-goal-completion.mjs");
-includes("docs/app-store-connect-input-packet-build41.md", inputPacket, "Do not use `support@invitehub.co.kr`");
-includes("docs/app-store-connect-input-packet-build41.md", inputPacket, "final submit action still requires separate explicit user confirmation");
+includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "Build Number | `42`");
+includes("docs/app-store-connect-input-packet-build42.md", inputPacket, expectedBuild42.buildId);
+includes("docs/app-store-connect-input-packet-build42.md", inputPacket, expectedBuild42.submissionId);
+includes("docs/app-store-connect-input-packet-build42.md", inputPacket, expectedBuild42.artifact);
+includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "output/store-screenshots-submission-build40");
+includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "호스트가 대시보드에서 승인하거나 숨길 수 있습니다");
+includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "realIphoneTestFlightInstallLaunchPassed");
+includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "appStoreConnectBuild42Processed");
+includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "build42SelectedForVersion");
+includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "node scripts/verify-goal-completion.mjs");
+includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "Do not use `support@invitehub.co.kr`");
+includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "Do not press final Add for Review or Submit for Review");
 
 notIncludes(
   "app/support/page.tsx",
@@ -296,6 +304,6 @@ if (failures.length > 0) {
 console.log("APP STORE PACKET VERIFY RESULT");
 console.log("- Status: pass");
 console.log(`- Checks: ${checks.length}`);
-console.log(`- Build: ${expected.appVersion} (${expected.buildNumber})`);
-console.log(`- EAS Build: ${expected.buildId}`);
+console.log(`- Current Candidate Build: ${expectedBuild42.appVersion} (${expectedBuild42.buildNumber})`);
+console.log(`- Current EAS Build: ${expectedBuild42.buildId}`);
 console.log("- Required follow-up: iPhone TestFlight install/launch and final metadata still need Apple-side evidence.");

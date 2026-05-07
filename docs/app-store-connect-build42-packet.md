@@ -2,14 +2,14 @@
 
 Date: 2026-05-07
 
-Build `1.0.0 (42)` is the local emergency crash-fix candidate after the user
-reported that the current TestFlight app still crashes on iPhone while the
-simulator build works.
+Build `1.0.0 (42)` is the emergency crash-fix candidate after the user reported
+that the current TestFlight app still crashes on iPhone while the simulator
+build works.
 
-This build has not been uploaded to EAS/TestFlight yet. Do not mark it as
-available on the user's iPhone until EAS Build, EAS Submit, App Store Connect
-processing, internal group assignment, and real-device TestFlight launch
-evidence are captured.
+EAS Build and EAS Submit are finished. Apple has accepted the binary upload to
+App Store Connect and is processing it. Do not mark it as available on the
+user's iPhone until App Store Connect processing, internal group assignment, and
+real-device TestFlight launch evidence are captured.
 
 ## Candidate Build
 
@@ -20,11 +20,14 @@ evidence are captured.
 | EAS project | `@jyb1126/invitehub` |
 | App version | `1.0.0` |
 | Build number | `42` |
-| Source commit | `0d21924` |
-| EAS build id | Pending |
-| EAS submission id | Pending |
-| IPA artifact | Pending |
-| TestFlight state | Not uploaded |
+| Source commit | `73872e2` |
+| Crash-fix code commit | `0d21924` |
+| EAS build id | `88c911f5-3c21-41e8-a6a2-a04939fa6179` |
+| EAS submission id | `ba6727cf-2c1d-464f-a005-6ce9670d4f81` |
+| EAS submission status | `FINISHED`, `error: null` |
+| IPA artifact | `https://expo.dev/artifacts/eas/hTEP9Gx8wMFmK6w9aKSmcc.ipa` |
+| Latest EAS status recheck | `2026-05-07 21:18 KST` |
+| TestFlight state | Uploaded to App Store Connect; Apple processing pending |
 
 ## Why Build 42 Exists
 
@@ -72,21 +75,44 @@ That is a stronger native startup-crash candidate than an app-name conflict.
 - `SKIP_AUDIT=1 SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`: passed.
 - `node scripts/verify-app-store-packet.mjs`: passed.
 
-## Required Upload Sequence
+## Upload Evidence
 
-After explicit user approval:
+Command:
 
 ```bash
-cd /Users/jyb-m3max/Desktop/codex/invitation-platform/apps/mobile
 EAS_NO_VCS=1 eas build -p ios --profile production --non-interactive --auto-submit
 ```
 
-After EAS returns a build id:
+Result:
 
-1. Record EAS build id, submission id, IPA URL, and source commit in this file.
-2. Run `node scripts/eas-build-submission-status.mjs <build-id>`.
-3. Confirm App Store Connect shows build `1.0.0 (42)` processed.
-4. Assign build 42 to internal group `Team (Expo)` if needed, after explicit
+- EAS build status: `FINISHED`
+- EAS submission status: `FINISHED`
+- EAS submission error: `null`
+- App Store Connect upload: accepted by Apple for processing
+
+Verification command:
+
+```bash
+node scripts/eas-build-submission-status.mjs 88c911f5-3c21-41e8-a6a2-a04939fa6179
+```
+
+## Required Next Sequence
+
+1. Confirm App Store Connect shows build `1.0.0 (42)` processed.
+2. Save export compliance if App Store Connect prompts for it.
+3. Assign build 42 to internal group `Team (Expo)` if needed, after explicit
    user approval.
-5. Install/update InviteHub from TestFlight on the user's iPhone.
-6. Capture real-device launch evidence. Do not count simulator launch as TestFlight proof.
+4. Install/update InviteHub from TestFlight on the user's iPhone.
+5. Capture real-device launch evidence. Do not count simulator launch as TestFlight proof.
+
+Review/contact fields still require the account holder's real contact
+information. Do not fabricate these fields. Enter the user's current App Review
+contact name, phone, and email in App Store Connect. Do not use it as the App
+Review contact unless the mailbox is verified.
+
+Final Add for Review and Submit for Review still require separate explicit user
+confirmation.
+
+do not use it as the App Review contact until the mailbox is verified, and
+submit only after the user explicitly confirms the final App Store review
+action.

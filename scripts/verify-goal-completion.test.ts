@@ -7,13 +7,13 @@ import { describe, expect, it } from "vitest";
 const scriptPath = join(process.cwd(), "scripts/verify-goal-completion.mjs");
 
 const evidenceKeys = [
-  "appStoreConnectBuild41Processed",
-  "build41ExportComplianceSaved",
-  "build41AssignedToInternalGroup",
+  "appStoreConnectBuild42Processed",
+  "build42ExportComplianceSaved",
+  "build42AssignedToInternalGroup",
   "realIphoneTestFlightInstallLaunchPassed",
   "appInfoSaved",
   "versionMetadataSaved",
-  "build41SelectedForVersion",
+  "build42SelectedForVersion",
   "privacyLabelsSaved",
   "screenshotsUploaded",
   "reviewNotesSaved",
@@ -33,15 +33,15 @@ function makeTempProject() {
       "Prompt-to-Artifact Checklist",
       "58-file web/API test suite with 177 tests",
       "88-check App Store packet verifier",
-      "Build 41 EAS upload and submission evidence"
+      "Build 42 EAS upload and submission evidence"
     ].join("\n")
   );
 
   writeFileSync(
-    join(root, "docs/app-store-connect-build41-packet.md"),
+    join(root, "docs/app-store-connect-build42-packet.md"),
     [
       "EAS submission status | `FINISHED`, `error: null`",
-      "Latest EAS status recheck | `2026-05-03 15:33 KST`",
+      "Latest EAS status recheck | `2026-05-07 21:18 KST`",
       "do not use it as the App Review contact",
       "submit only after the user explicitly confirms"
     ].join("\n")
