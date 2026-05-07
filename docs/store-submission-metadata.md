@@ -68,6 +68,8 @@ App Store Connect 입력 시 아래 항목을 기준으로 실제 운영 설정�
 - Current verified Support URL: https://invitation-platform-youngbeens-projects.vercel.app/support
 - Current verified Privacy URL: https://invitation-platform-youngbeens-projects.vercel.app/privacy
 - Current verified Terms URL: https://invitation-platform-youngbeens-projects.vercel.app/terms
+- Live URL recheck on 2026-05-07 22:34 KST: support, privacy, and terms URLs
+  all returned HTTP 200 from Vercel.
 - Custom-domain target after DNS connection: https://invitehub.co.kr/privacy and https://invitehub.co.kr/terms
 
 ## Google Play

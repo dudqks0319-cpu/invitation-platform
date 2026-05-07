@@ -23,13 +23,67 @@ TestFlight launch check passes.
 
 ## App Information
 
-Use the same store metadata from
-`docs/app-store-connect-input-packet-build41.md`, except the selected build and
-evidence keys must point to build 42.
+| App Store Connect Field | Value |
+| --- | --- |
+| Name | `InviteHub` |
+| Name fallback | `InviteHub 모바일 초대장` |
+| Subtitle | `모바일 초대장 제작과 공유` |
+| Primary Category | Lifestyle |
+| Secondary Category | Productivity, if App Store Connect allows it |
+| Age Rating | Complete and save the App Store Connect age-rating questionnaire before submission. Do not force a target rating; use Apple's calculated result. |
+| Privacy Policy URL | `https://invitation-platform-youngbeens-projects.vercel.app/privacy` |
+| Support URL | `https://invitation-platform-youngbeens-projects.vercel.app/support` |
 
 Do not use `invitehub.co.kr` yet. DNS/MX is not verified in this release run.
 Do not use `support@invitehub.co.kr` as the App Review contact until DNS/MX and
 mailbox receipt are confirmed.
+
+Age-rating questionnaire basis:
+
+- No gambling, contests, alcohol/tobacco/drug references, medical treatment, or
+  mature entertainment content is intentionally provided by the app.
+- Invitation text, RSVP, and guestbook content are user-provided.
+- Guestbook entries are not intended to be public immediately; host moderation
+  controls exist before public display.
+- Map behavior opens Kakao/Naver search links; the app does not embed an open
+  web browser for arbitrary browsing.
+
+## Version Metadata
+
+Promotional Text:
+
+```txt
+디자인을 고르고 이름, 날짜, 장소만 채우면 무료 모바일 초대장을 바로 만들 수 있습니다.
+```
+
+Description:
+
+```txt
+InviteHub는 결혼식과 각종 행사 초대장을 모바일에서 손쉽게 만들고 공유할 수 있는 앱입니다.
+
+청첩장, 돌잔치, 브라이덜샤워, 환갑잔치 등 행사별 템플릿을 고를 수 있습니다.
+날짜, 장소, 문구, 계좌 안내, RSVP, 방명록까지 한 번에 준비할 수 있습니다.
+링크 하나로 하객에게 초대장을 공유하고 참석 여부와 축하 메시지를 받을 수 있습니다.
+방명록은 호스트 확인 후 공개되도록 운영할 수 있습니다.
+현재 제출 버전은 사진 없는 공개 링크 발행을 무료로 제공합니다.
+
+기본 디자인, 초안 작성, 미리보기, 사진 없는 공개 링크 발행은 무료입니다.
+사진 포함 발행권은 App Store 상품 준비 후 활성화 예정입니다.
+
+InviteHub는 디자인을 먼저 고르고, 필요한 정보만 채워 공유하는 모바일 초대장 경험을 제공합니다.
+```
+
+Keywords:
+
+```txt
+청첩장,모바일초대장,결혼식초대장,돌잔치초대장,초대장제작,웨딩초대장,모바일청첩장,RSVP,방명록,초대링크
+```
+
+Copyright:
+
+```txt
+2026 Youngbeen Jung
+```
 
 ## Review Notes
 
@@ -55,8 +109,51 @@ output/store-screenshots-submission-build40
 ```
 
 The build 42 code change targets native startup stability and does not change
-the store screenshot UI. Re-run visual review if App Store Connect requires new
-screenshots or if the UI changes before final submission.
+the store screenshot UI.
+
+Files:
+
+- `01-home.png`
+- `02-templates.png`
+- `03-builder-step1.png`
+- `04-builder-step3.png`
+- `05-preview.png`
+- `06-mypage.png`
+
+Verification:
+
+```bash
+zsh scripts/verify-store-screenshots.sh output/store-screenshots-submission-build40
+```
+
+Result on 2026-05-03: 6 PNG files passed at `1206x2622`, with no visible iOS
+open-confirmation prompt, dev overlay, or simulator window chrome. Re-run
+visual review if App Store Connect requires new screenshots or if the UI
+changes before final submission.
+
+## App Privacy Draft
+
+Use App Store Connect privacy labels that match the current app:
+
+| Data Type | Purpose | Linked to User | Tracking |
+| --- | --- | --- | --- |
+| Contact Info: email, name | account management, invitation owner display, RSVP contact | yes | no |
+| User Content: invitation text, RSVP, guestbook, optional photos when enabled | app functionality | yes | no |
+| Identifiers: user id, invitation id, transaction id | app functionality and purchase verification | yes | no |
+| Purchases: product id/order or transaction reference | purchase verification and fraud prevention | yes | no |
+
+Set tracking to no unless a cross-app tracking SDK or use case is added.
+
+## App Review Contact
+
+Required from user before saving:
+
+- Contact name
+- Phone number
+- Verified email address
+
+Do not use `support@invitehub.co.kr` until DNS/MX and mailbox receipt are
+confirmed.
 
 ## Evidence Recording
 
