@@ -19,7 +19,8 @@ answer requirement, App Review metadata accuracy/completeness guidance, and
 | Store | Production bundle id is `com.invitehub.app`, production scheme is `invitehub`, dev scheme is separate. |
 | QA | Simulator evidence exists for home and template-to-builder flow; TestFlight evidence required before external review. |
 
-Latest local evidence after the build 41 TestFlight stabilization update:
+Latest local and App Store Connect evidence after the build 42 TestFlight
+crash-fix update:
 
 - 2026-05-06 crash follow-up: build 41 is not considered proven because the
   prior `devicectl` launch returned exit code `0` but InviteHub was not present
@@ -33,19 +34,21 @@ Latest local evidence after the build 41 TestFlight stabilization update:
   `com.invitehub.app`, build number `42`, and only `hermesvm.framework`
   embedded. EAS Build and EAS Submit are finished for build
   `88c911f5-3c21-41e8-a6a2-a04939fa6179`, submission
-  `ba6727cf-2c1d-464f-a005-6ce9670d4f81`, `error: null`. Apple processing and
-  real iPhone evidence are still pending.
-- Build 41 App Store Connect entry values are consolidated in
-  `docs/app-store-connect-build41-packet.md`.
-- `node scripts/eas-build-submission-status.mjs 61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`
-  returned build 41 `FINISHED`, linked submission `FINISHED`, `error: null`.
-- Build 41 supersedes build 40 after Mac TestFlight logs showed
+  `ba6727cf-2c1d-464f-a005-6ce9670d4f81`, `error: null`. App Store Connect
+  shows build `1.0.0 (42)` upload status `완료`, version-row status
+  `제출 준비 완료`, internal group `Team (Expo)`, and invite count `1`.
+  Real iPhone evidence is still pending.
+- Build 42 App Store Connect entry values are consolidated in
+  `docs/app-store-connect-build42-packet.md`.
+- `node scripts/eas-build-submission-status.mjs 88c911f5-3c21-41e8-a6a2-a04939fa6179`
+  returned build 42 `FINISHED`, linked submission `FINISHED`, `error: null`.
+- Build 41 superseded build 40 after Mac TestFlight logs showed
   `Unhandled JS Exception: Error: No routes found`.
 - `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`
   passed code gates on 2026-05-03 13:24 KST through web/mobile lint,
   web/mobile typecheck, the 58-file web/API test suite with 177 tests, and the
-  focused 9-file mobile/API test suite with 34 tests. The 88-check packet
-  verifier is now pinned to build 41 and includes the build 41 App Store Connect
+  focused 9-file mobile/API test suite with 34 tests. The App Store packet
+  verifier is now pinned to build 42 and includes the build 42 App Store Connect
   input packet.
 - Escalated local iOS Release simulator build passed with 0 errors and 2
   warnings and opened `com.invitehub.app` on iPhone 17.
@@ -152,10 +155,10 @@ SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh
 These cannot be fully completed from code alone:
 
 - App Store Connect app record points to bundle id `com.invitehub.app`.
-- TestFlight build 42 is uploaded through EAS Submit and accepted by Apple for
-  App Store Connect processing. Real iPhone install/launch evidence is still
-  needed for the current candidate after processing and internal TestFlight
-  availability.
+- TestFlight build 42 is uploaded through EAS Submit, processed in App Store
+  Connect, export-compliance clear on the build row, and assigned to internal
+  group `Team (Expo)`. Real iPhone install/launch evidence is still needed for
+  the current candidate.
 - App Privacy labels match collected data: account, invitations, RSVP, guestbook, photos, purchase records.
 - IAP product for photo-included publishing is created, priced, and approved, or
   the paid publish flag remains disabled and paid claims stay hidden.
@@ -169,8 +172,8 @@ These cannot be fully completed from code alone:
 - Public support/privacy/terms URLs are live. `invitehub.co.kr` currently does
   not resolve by DNS; the verified live fallback is
   `https://invitation-platform-youngbeens-projects.vercel.app`.
-- Build 41 App Store Connect entry values are consolidated in
-  `docs/app-store-connect-build41-packet.md`.
+- Current build 42 App Store Connect entry values are consolidated in
+  `docs/app-store-connect-build42-packet.md`.
 - App Review contact email must be a currently verified mailbox. The
   `support@invitehub.co.kr` address is not verified while the domain has no
   DNS/MX records. Mirror the verified mailbox in `NEXT_PUBLIC_SUPPORT_EMAIL`

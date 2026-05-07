@@ -40,7 +40,7 @@ Local security controls are materially in place. A fresh network-enabled
 
 | Risk | Owner | Due |
 | --- | --- | --- |
-| Real-device TestFlight install/launch evidence for the current crash-fix candidate has not been captured. Builds 38, 39, and 40 are unsafe rollback candidates; build 41 is uploaded but no longer treated as proven after the latest crash report. | Store Manager / Release owner | Before final release readiness sign-off |
+| Real-device TestFlight install/launch evidence for the current crash-fix candidate has not been captured. Builds 38, 39, 40, and 41 are unsafe rollback candidates; build 42 is processed in App Store Connect but not yet proven on the user's iPhone. | Store Manager / Release owner | Before final release readiness sign-off |
 | App Store Connect app information, version metadata, build selection, privacy labels, IAP approval, review notes, and screenshots are verified incomplete. | Store Manager / Release owner | Before final App Store submission |
 | Custom domain `invitehub.co.kr` does not resolve by DNS; store URLs must use the verified Vercel deployment or DNS must be connected before submission. | Store Manager / Release owner | Before entering App Store metadata |
 | `support@invitehub.co.kr` has no verified MX/DNS evidence; App Review contact must use a currently verified mailbox and `NEXT_PUBLIC_SUPPORT_EMAIL` until domain email is configured. | Store Manager / Release owner | Before entering App Review contact |
@@ -60,10 +60,10 @@ downgrades for Next/Expo dependency chains.
 
 ## Current External Gate
 
-EAS iOS build 41 completed and EAS Submit uploaded the binary to App Store
-Connect after the build 40 Expo Router release-entry crash report. After the
-latest user crash report, build 41 remains the newest uploaded TestFlight build
-but is not treated as the current proven release candidate.
+EAS iOS build 42 completed and EAS Submit uploaded the binary to App Store
+Connect after the latest user iPhone TestFlight crash report. Build 42 is the
+current crash-fix candidate, but it is not treated as proven until the user's
+iPhone installs and launches it from TestFlight.
 
 `node scripts/eas-build-submission-status.mjs 61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`
 returned build 41 `FINISHED`, linked submission `FINISHED`, `error: null`.
@@ -86,8 +86,10 @@ because InviteHub was absent from the follow-up process query. Build 42 is the
 emergency candidate after removing the prebuilt React Native core embed path
 and delaying optional startup native modules. EAS Build and EAS Submit are
 finished for build `88c911f5-3c21-41e8-a6a2-a04939fa6179`, submission
-`ba6727cf-2c1d-464f-a005-6ce9670d4f81`, `error: null`; Apple processing and
-real-device install/session evidence are still pending.
+`ba6727cf-2c1d-464f-a005-6ce9670d4f81`, `error: null`. Chrome App Store
+Connect evidence on 2026-05-07 21:49 KST shows build `1.0.0 (42)` processed,
+export compliance not blocking, and internal group `Team (Expo)` assigned with
+invite count `1`. Real-device install/session evidence is still pending.
 
 The remaining external gates are real-device TestFlight install/launch evidence
 and final App Store Connect submission surfaces: app information, version
@@ -104,8 +106,8 @@ but the flag must stay disabled until the product is created and approved.
 
 The 2026-05-03 13:24 KST fast release gate passed web/mobile lint and
 typecheck, the 58-file web/API test suite with 177 tests, and the focused
-9-file mobile/API suite with 34 tests. The 88-check App Store packet verifier
-is now pinned to build 41.
+9-file mobile/API suite with 34 tests. The App Store packet verifier is now
+pinned to build 42.
 
 The public support page no longer hardcodes the unverified
 `support@invitehub.co.kr` mailbox. It reads `NEXT_PUBLIC_SUPPORT_EMAIL` and only

@@ -6,10 +6,10 @@ Build `1.0.0 (42)` is the emergency crash-fix candidate after the user reported
 that the current TestFlight app still crashes on iPhone while the simulator
 build works.
 
-EAS Build and EAS Submit are finished. Apple has accepted the binary upload to
-App Store Connect and is processing it. Do not mark it as available on the
-user's iPhone until App Store Connect processing, internal group assignment, and
-real-device TestFlight launch evidence are captured.
+EAS Build and EAS Submit are finished. App Store Connect now shows build
+`1.0.0 (42)` processed, export compliance not blocking, and internal group
+`Team (Expo)` assigned. Do not mark it as proven on the user's iPhone until
+real-device TestFlight install and launch evidence is captured.
 
 ## Candidate Build
 
@@ -26,13 +26,15 @@ real-device TestFlight launch evidence are captured.
 | EAS submission id | `ba6727cf-2c1d-464f-a005-6ce9670d4f81` |
 | EAS submission status | `FINISHED`, `error: null` |
 | IPA artifact | `https://expo.dev/artifacts/eas/hTEP9Gx8wMFmK6w9aKSmcc.ipa` |
-| Latest EAS status recheck | `2026-05-07 21:18 KST` |
-| TestFlight state | Uploaded to App Store Connect; Apple processing pending |
+| Latest EAS status recheck | `2026-05-07 21:44 KST` |
+| Latest App Store Connect check | `2026-05-07 21:49 KST` |
+| TestFlight state | Processed in App Store Connect; `Team (Expo)` assigned; iPhone install/launch pending |
 
 ## Why Build 42 Exists
 
-Build 41 is still the newest uploaded TestFlight build. The user reports that
-the TestFlight app continues to crash on iPhone, and the 2026-05-06
+Build 42 supersedes build 41 for current TestFlight crash verification. The
+user reports that the TestFlight app continues to crash on iPhone, and the
+2026-05-06
 `devicectl` launch evidence is now treated as inconclusive because the
 follow-up process query did not show a running InviteHub process.
 
@@ -88,7 +90,12 @@ Result:
 - EAS build status: `FINISHED`
 - EAS submission status: `FINISHED`
 - EAS submission error: `null`
-- App Store Connect upload: accepted by Apple for processing
+- App Store Connect upload: accepted by Apple
+- App Store Connect processing: complete; iOS build upload list shows
+  `1.0.0 (42)` status `완료`
+- Internal TestFlight group: `Team (Expo)` assigned with invite count `1`
+- Export compliance: not blocking the build 42 row; the only visible export
+  compliance warning is on legacy build 28
 
 Verification command:
 
@@ -98,12 +105,12 @@ node scripts/eas-build-submission-status.mjs 88c911f5-3c21-41e8-a6a2-a04939fa617
 
 ## Required Next Sequence
 
-1. Confirm App Store Connect shows build `1.0.0 (42)` processed.
-2. Save export compliance if App Store Connect prompts for it.
-3. Assign build 42 to internal group `Team (Expo)` if needed, after explicit
-   user approval.
-4. Install/update InviteHub from TestFlight on the user's iPhone.
-5. Capture real-device launch evidence. Do not count simulator launch as TestFlight proof.
+1. Install/update InviteHub from TestFlight on the user's iPhone.
+2. Confirm the installed TestFlight build is `1.0.0 (42)`.
+3. Capture real-device launch evidence. Do not count simulator launch as TestFlight proof.
+4. Continue App Store version metadata, screenshots, privacy labels, review
+   notes, contact, IAP state, and build-selection work only with the required
+   user approvals.
 
 Review/contact fields still require the account holder's real contact
 information. Do not fabricate these fields. Enter the user's current App Review

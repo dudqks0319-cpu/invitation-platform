@@ -110,8 +110,9 @@ includes("docs/app-store-connect-build41-packet.md", packet, "NEXT_PUBLIC_ENABLE
 includes("docs/app-store-connect-build41-packet.md", packet, "EXPO_PUBLIC_ENABLE_PAID_PUBLISH=false");
 includes("docs/app-store-connect-build41-packet.md", packet, "submit only after the user explicitly confirms");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "EAS submission status | `FINISHED`, `error: null`");
-includes("docs/app-store-connect-build42-packet.md", build42Packet, "Latest EAS status recheck | `2026-05-07 21:18 KST`");
-includes("docs/app-store-connect-build42-packet.md", build42Packet, "TestFlight state | Uploaded to App Store Connect; Apple processing pending");
+includes("docs/app-store-connect-build42-packet.md", build42Packet, "Latest EAS status recheck | `2026-05-07 21:44 KST`");
+includes("docs/app-store-connect-build42-packet.md", build42Packet, "Latest App Store Connect check | `2026-05-07 21:49 KST`");
+includes("docs/app-store-connect-build42-packet.md", build42Packet, "TestFlight state | Processed in App Store Connect; `Team (Expo)` assigned; iPhone install/launch pending");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "React.framework");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "ReactNativeDependencies.framework");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "hermesvm.framework");
@@ -155,14 +156,14 @@ notIncludes(
   "Review Notes must not claim an unverified profanity-filter feature"
 );
 
-includes("docs/app-store-readiness-90.md", readiness, "Build 41 App Store Connect entry values");
+includes("docs/app-store-readiness-90.md", readiness, "Build 42 App Store Connect entry values");
 includes("docs/app-store-readiness-90.md", readiness, "NEXT_PUBLIC_SUPPORT_EMAIL");
-includes("docs/app-store-readiness-90.md", readiness, "returned build 41 `FINISHED`, linked submission `FINISHED`, `error: null`");
+includes("docs/app-store-readiness-90.md", readiness, "returned build 42 `FINISHED`, linked submission `FINISHED`, `error: null`");
 includes("docs/goal-completion-audit-90.md", audit, "## Completion Verdict");
 includes("docs/goal-completion-audit-90.md", audit, "Do not mark the goal complete until");
 includes("docs/goal-completion-audit-90.md", audit, "build 41 is uploaded and submitted");
 includes("docs/goal-completion-audit-90.md", audit, "Build 42 local crash-fix candidate");
-includes("docs/goal-completion-audit-90.md", audit, "Apple processing and TestFlight install evidence are still pending");
+includes("docs/goal-completion-audit-90.md", audit, "processed and assigned to internal group `Team (Expo)`");
 includes("docs/goal-completion-audit-90.md", audit, "Build 42 EAS upload and submission evidence");
 includes("docs/goal-completion-audit-90.md", audit, "App Review contact email");
 includes("docs/goal-completion-audit-90.md", audit, "TestFlight device evidence harness");

@@ -1,7 +1,7 @@
 # InviteHub Goal Completion Audit - 90점 Release Readiness
 
 Date: 2026-05-01
-Latest update: 2026-05-07 20:56 KST
+Latest update: 2026-05-07 21:55 KST
 
 ## Objective
 
@@ -44,7 +44,7 @@ InviteHub 앱을 App Store 제출 기준으로 프론트엔드, 백엔드, UI/UX
 | Store config 90+ | `apps/mobile/app.config.ts`, `apps/mobile/eas.json`, native project | Production bundle id is `com.invitehub.app`; production scheme is `invitehub`; dev scheme is `invitehub-dev`; Xcode is 26.3. | Pass |
 | Harness 90+ | `.claude/skills/invitehub-app-builder/skill.md`, `docs/invitehub-app-harness.md`, `scripts/invitehub-release-gate.sh` | Release gate covers lint, typecheck, tests, high audit, iOS Release simulator build. | Pass |
 | Role harness coverage | `.claude/agents/*.md`, `.claude/skills/invitehub-app-builder/skill.md` | Verified agents exist: product-manager, marketing-copywriter, template-image-art-director, ux-designer, mobile-frontend-engineer, mobile-backend-engineer, api-integrator, security-engineer, qa-engineer, store-manager. | Pass |
-| Verification evidence | Release gate output, simulator screenshots | `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh` passed code gates on 2026-05-03 13:24 KST: web/mobile lint, web/mobile typecheck, 58-file web/API suite with 177 tests, and focused 9-file mobile/API suite with 34 tests. The 88-check packet verifier is pinned to build 41. Escalated iOS Release build also passed separately. Screenshots: `/private/tmp/invitehub-release-home-current.png`, `/private/tmp/invitehub-preview-fit-to-viewport.png`, `/tmp/invitehub-build40-candidate-release-home-20260503.png`. Screenshot size verifier passed for `output/store-screenshots-verified/05-preview-fit-to-viewport.png`. | Pass with audit caveat |
+| Verification evidence | Release gate output, simulator screenshots | `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh` passed code gates on 2026-05-03 13:24 KST: web/mobile lint, web/mobile typecheck, 58-file web/API suite with 177 tests, and focused 9-file mobile/API suite with 34 tests. The App Store packet verifier is now pinned to build 42. Escalated iOS Release build also passed separately. Screenshots: `/private/tmp/invitehub-release-home-current.png`, `/private/tmp/invitehub-preview-fit-to-viewport.png`, `/tmp/invitehub-build40-candidate-release-home-20260503.png`. Screenshot size verifier passed for `output/store-screenshots-verified/05-preview-fit-to-viewport.png`. | Pass with audit caveat |
 | App Store privacy/IAP map | `app/privacy/page.tsx`, `app/support/page.tsx`, `app/terms/page.tsx`, `app/faq/page.tsx`, `docs/app-store-readiness-90.md`, `docs/store-submission-metadata.md` | Bundle ID, production scheme, IAP product ID, privacy-label basis, support/privacy/terms URL content, map-link behavior, and env mapping are documented. | Pass |
 | Current EAS/Submit evidence | `scripts/eas-build-submission-status.mjs`, EAS build/submission state | EAS iOS build 38 (`d185dfc1-9110-4d81-b510-08e02f1ece7f`) was rechecked on 2026-05-02 14:47 KST: build status `FINISHED`, app version `1.0.0`, build number `38`, commit `d8ed82188b3233bebe7be90c173d434f36690581`, linked submission `77395141-a80b-48f9-8e43-c61114fafa25` status `FINISHED`, `error: null`. | Pass for EAS upload |
 | App Store Connect execution checklist | `docs/app-store-connect-execution-checklist.md`, `docs/store-screenshot-plan.md` | Official Apple submission/privacy/upcoming-requirements pages checked on 2026-05-01; EAS, TestFlight, IAP, privacy labels, screenshots, and review notes are mapped to required evidence. | Pass |
@@ -59,8 +59,8 @@ InviteHub 앱을 App Store 제출 기준으로 프론트엔드, 백엔드, UI/UX
 | Current paid-fallback EAS build | EAS build 38, EAS Submit | Build 38 (`d185dfc1-9110-4d81-b510-08e02f1ece7f`) finished and was uploaded to App Store Connect. It contains commit `d8ed82188b3233bebe7be90c173d434f36690581`. Apple processing, export-compliance clearance, and internal group assignment were confirmed on 2026-05-02 15:32 KST. | Pass for upload and ASC |
 | Current launch-crash recovery build | EAS build 40, EAS Submit, ASC TestFlight group | build 40 is uploaded and submitted through EAS Submit as `86a14873-bdfd-4390-87d1-81ae0ddd06dc`. Submission `cf537e44-73dd-4a2d-8640-7d31e9facba8` finished with `error: null`. A group-submit retry `949d446f-dea1-490f-8b52-2de359d899ee` ended `ERRORED`, but direct App Store Connect evidence confirms build 40 is now in `Team (Expo)` and `테스트 중`. It contains source commit `9c83039`, which removes optional Google/Kakao/IAP/Nitro native modules from the first-submission binary. | Pass for EAS and ASC, blocked on iPhone evidence |
 | Build 41 EAS upload and submission evidence | EAS build 41, EAS Submit, ASC TestFlight group | build 41 is uploaded and submitted through EAS Submit as `61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`. Submission `25518b07-b8de-4507-8a0e-20d85bfe9e14` finished with `error: null`. It contains local source commit `0655ced`, which restores the Expo Router release entry and fixes the build 40 `No routes found` crash path. App Store Connect now shows build 41 processed and assigned to `Team (Expo)`. | Pass for EAS and ASC, blocked on iPhone evidence |
-| Build 42 local crash-fix candidate | `docs/app-store-connect-build42-packet.md`, `docs/testflight-crash-triage-2026-05-06.md`, native Pod/Xcode files | build 42 is prepared at source commit `73872e2` with crash-fix code from `0d21924`. It builds React Native iOS from source, removes the prebuilt `React.framework` / `ReactNativeDependencies.framework` embed path, lazy-loads optional browser/auth native modules, and passed the local Release simulator/source-build checks plus release gate. EAS Build and EAS Submit are now finished for build `88c911f5-3c21-41e8-a6a2-a04939fa6179`; Apple processing and TestFlight install evidence are still pending. | Pass for EAS upload, blocked on Apple processing and iPhone evidence |
-| Build 42 EAS upload and submission evidence | EAS build 42, EAS Submit, App Store Connect processing | build 42 is uploaded and submitted through EAS Submit as `88c911f5-3c21-41e8-a6a2-a04939fa6179`. Submission `ba6727cf-2c1d-464f-a005-6ce9670d4f81` finished with `error: null`. IPA artifact is `https://expo.dev/artifacts/eas/hTEP9Gx8wMFmK6w9aKSmcc.ipa`. Apple accepted the binary upload and is processing it. | Pass for EAS and upload, blocked on App Store Connect processed/internal group/iPhone evidence |
+| Build 42 local crash-fix candidate | `docs/app-store-connect-build42-packet.md`, `docs/testflight-crash-triage-2026-05-06.md`, native Pod/Xcode files | build 42 is prepared at source commit `73872e2` with crash-fix code from `0d21924`. It builds React Native iOS from source, removes the prebuilt `React.framework` / `ReactNativeDependencies.framework` embed path, lazy-loads optional browser/auth native modules, and passed the local Release simulator/source-build checks plus release gate. EAS Build and EAS Submit are finished for build `88c911f5-3c21-41e8-a6a2-a04939fa6179`; App Store Connect now shows build 42 processed and assigned to `Team (Expo)`. | Pass for EAS and ASC, blocked on iPhone evidence |
+| Build 42 EAS upload and submission evidence | EAS build 42, EAS Submit, App Store Connect processing | build 42 is uploaded and submitted through EAS Submit as `88c911f5-3c21-41e8-a6a2-a04939fa6179`. Submission `ba6727cf-2c1d-464f-a005-6ce9670d4f81` finished with `error: null`. IPA artifact is `https://expo.dev/artifacts/eas/hTEP9Gx8wMFmK6w9aKSmcc.ipa`. Chrome App Store Connect evidence on 2026-05-07 21:49 KST shows `1.0.0 (42)` upload status `완료`, version-row status `제출 준비 완료`, internal group `Team (Expo)`, and invite count `1`. | Pass for EAS and ASC, blocked on iPhone install/launch evidence |
 
 ## Completion Verdict
 
@@ -69,10 +69,10 @@ UI/UX, backend/API, and security evidence. The latest UI complaint about the
 invitation preview has been fixed and simulator-verified. Build 42 is now the
 local crash-fix candidate for the current iPhone TestFlight crash report.
 
-Build 42 is uploaded through EAS Submit and Apple accepted the binary for App
-Store Connect processing. It is not yet treated as a proven iPhone release
-candidate because App Store Connect processing, internal TestFlight group
-assignment, and real-device launch evidence are still missing.
+Build 42 is uploaded through EAS Submit and App Store Connect now shows it as
+processed and assigned to internal group `Team (Expo)`. It is not yet treated
+as a proven iPhone release candidate because real-device TestFlight install and
+launch evidence are still missing.
 
 The full active goal is not complete yet because:
 
@@ -81,8 +81,8 @@ The full active goal is not complete yet because:
   information, and IAP product state still need to be entered/saved before App
   Store submission.
 - Real iPhone install/launch evidence from TestFlight is still not captured for
-  the current crash-fix candidate. Build 42 is uploaded to App Store Connect
-  but still needs Apple processing, TestFlight availability, and iPhone launch
+  the current crash-fix candidate. Build 42 is available in App Store Connect
+  and assigned to `Team (Expo)`, but it still needs iPhone install and launch
   evidence.
 
 ## Next Required Action
@@ -106,10 +106,9 @@ Manual Apple-side confirmation path:
 
 1. App Store Connect TestFlight URL:
    `https://appstoreconnect.apple.com/apps/6763630299/testflight/ios`.
-2. Confirm `1.0.0 (41)` remains visible in App Store Connect TestFlight.
-3. Save export compliance for build 41 if a new prompt appears.
-4. Confirm build 41 remains in internal group `Team (Expo)`.
-5. Install/update InviteHub from TestFlight on the user's iPhone and smoke test
+2. Confirm `1.0.0 (42)` remains visible in App Store Connect TestFlight.
+3. Confirm build 42 remains in internal group `Team (Expo)`.
+4. Install/update InviteHub from TestFlight on the user's iPhone and smoke test
    home -> template selection -> builder Step 1 -> preview.
 
 ## Latest Local Evidence
@@ -118,7 +117,7 @@ Manual Apple-side confirmation path:
   passed code gates on 2026-05-03 13:24 KST. It ran web lint, web typecheck,
   58-file web/API test suite with 177 tests, mobile lint, mobile typecheck, and
   focused 9-file mobile/API test suite with 34 tests. The 88-check App Store
-  packet verifier is now pinned to build 41.
+  packet verifier is now pinned to build 42.
 - Escalated iOS Release simulator build:
   `npm --prefix apps/mobile run ios -- --device "iPhone 17" --configuration Release --no-bundler`;
   passed with 0 errors and 2 warnings; installed and opened `com.invitehub.app`
@@ -232,7 +231,7 @@ Manual Apple-side confirmation path:
   `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`
   passed web lint, web typecheck, 58-file web/API test suite with 177 tests,
   mobile lint, mobile typecheck, and focused 9-file mobile/API suite with 34
-  tests. The new 88-check App Store packet verifier is pinned to build 41.
+  tests. The App Store packet verifier is pinned to build 42.
 - App Store Connect TestFlight group check on 2026-05-03 12:53 KST:
   internal group `Team (Expo)` shows `내부 그룹 ∙ 1명의 테스터 ∙ 4개의 빌드`.
   The group build tab lists `1.0.0 (40)` with status `테스트 중`, platform

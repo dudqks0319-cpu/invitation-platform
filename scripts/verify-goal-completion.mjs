@@ -14,7 +14,7 @@ const requiredLocalClaims = [
       "Prompt-to-Artifact Checklist",
       "Fast release gate recheck on 2026-05-03 13:24 KST",
       "58-file web/API test suite with 177 tests",
-      "88-check App Store packet verifier",
+      "App Store packet verifier is now pinned to build 42",
       "Build 42 EAS upload and submission evidence"
     ]
   },
@@ -22,7 +22,7 @@ const requiredLocalClaims = [
     file: "docs/app-store-connect-build42-packet.md",
     snippets: [
       "EAS submission status | `FINISHED`, `error: null`",
-      "Latest EAS status recheck | `2026-05-07 21:18 KST`",
+      "Latest EAS status recheck | `2026-05-07 21:44 KST`",
       "do not use it as the App Review contact",
       "submit only after the user explicitly confirms"
     ]
@@ -31,7 +31,7 @@ const requiredLocalClaims = [
     file: "docs/security-gate-90.md",
     snippets: [
       "58-file web/API test suite with 177 tests",
-      "88-check App Store packet verifier",
+      "App Store packet verifier is now",
       "NEXT_PUBLIC_SUPPORT_EMAIL"
     ]
   }
