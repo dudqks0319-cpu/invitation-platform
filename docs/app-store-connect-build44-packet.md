@@ -7,12 +7,12 @@ startup-surface reduction patch, but additional P0 release hardening was applied
 afterward. Build 44 is the first TestFlight candidate that includes that P0
 patch.
 
-EAS Build and EAS Submit are finished. Apple accepted the upload and App Store
-Connect processing is pending.
+EAS Build and EAS Submit are finished. Apple accepted the upload, App Store
+Connect processing is complete, and build 44 is visible in the internal
+TestFlight group.
 
-Do not select build 44 for App Store release until App Store Connect processing
-is complete, internal TestFlight assignment is verified, and the user's real
-iPhone passes the smoke test from TestFlight without the crash dialog.
+Do not select build 44 for App Store release until the user's real iPhone
+passes the smoke test from TestFlight without the crash dialog.
 
 ## Candidate Build
 
@@ -29,7 +29,11 @@ iPhone passes the smoke test from TestFlight without the crash dialog.
 | EAS build status | `FINISHED` |
 | EAS submission status | Uploaded to App Store Connect by EAS Submit |
 | IPA artifact | `https://expo.dev/artifacts/eas/kgrkUGUKw83kez1dTixVfN.ipa` |
-| App Store Connect state | Uploaded to Apple; processing pending |
+| App Store Connect build upload state | `완료` |
+| App Store Connect TestFlight state | `제출 준비 완료`, expires in 90 days |
+| Internal TestFlight group | `Team (Expo)` |
+| Internal invites | `1` |
+| App Store Connect created time | `May 8, 2026 8:59 PM` |
 
 ## Why Build 44
 
@@ -90,6 +94,18 @@ Your binary has been successfully uploaded to App Store Connect.
 It is now being processed by Apple.
 ```
 
+## App Store Connect Browser Evidence
+
+Checked in Chrome after EAS Submit completed:
+
+```txt
+Build upload row: 1.0.0 (44) / status 완료 / May 8, 2026 8:59 PM
+TestFlight build row: build 44 / 제출 준비 완료 / 90일 후 만료
+Group: Team (Expo)
+Invites: 1
+Install/session/crash/feedback: –
+```
+
 ## Required Real iPhone Smoke Test
 
 Do not mark this build as release-ready until the user's iPhone installs build
@@ -116,7 +132,5 @@ Do not mark this build as release-ready until the user's iPhone installs build
 
 ## Remaining Blockers
 
-- App Store Connect processing must complete.
-- Build 44 must be assigned to the internal TestFlight group.
 - Real iPhone TestFlight smoke test evidence is still required.
 - App Store final submission still requires explicit user confirmation.
