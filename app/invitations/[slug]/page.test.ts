@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import GlobalError from "@/app/error";
 import {
   buildPublicInvitationMetadata,
+  loadApprovedGuestbookEntries,
   logInvitationView,
   resolveRequestOrigin
 } from "@/app/invitations/[slug]/page";
@@ -83,6 +84,53 @@ describe("public invitation page helpers", () => {
     await logInvitationView(admin, "invitation-1", "test-agent");
 
     expect(insert).not.toHaveBeenCalled();
+  });
+
+  it("returns an empty guestbook when the admin client is unavailable", async () => {
+    await expect(loadApprovedGuestbookEntries(null, "invitation-1")).resolves.toEqual([]);
+  });
+
+  it("loads approved guestbook entries through the admin client", async () => {
+    const limit = vi.fn(async () => ({
+      data: [
+        {
+          id: "guestbook-1",
+          nickname: "하객",
+          message: "축하합니다",
+          approved: true,
+          created_at: "2026-05-08T00:00:00.000Z"
+        }
+      ],
+      error: null
+    }));
+    const order = vi.fn(() => ({ limit }));
+    const approvedEq = vi.fn(() => ({ order }));
+    const invitationEq = vi.fn(() => ({ eq: approvedEq }));
+    const select = vi.fn(() => ({ eq: invitationEq }));
+    const from = vi.fn(() => ({ select }));
+
+    const entries = await loadApprovedGuestbookEntries({ from }, "invitation-1");
+
+    expect(from).toHaveBeenCalledWith("guestbook_entries");
+    expect(invitationEq).toHaveBeenCalledWith("invitation_id", "invitation-1");
+    expect(approvedEq).toHaveBeenCalledWith("approved", true);
+    expect(order).toHaveBeenCalledWith("created_at", { ascending: false });
+    expect(limit).toHaveBeenCalledWith(20);
+    expect(entries).toHaveLength(1);
+  });
+
+  it("returns an empty guestbook when the guestbook query fails", async () => {
+    const limit = vi.fn(async () => ({
+      data: null,
+      error: { message: "database unavailable" }
+    }));
+    const order = vi.fn(() => ({ limit }));
+    const approvedEq = vi.fn(() => ({ order }));
+    const invitationEq = vi.fn(() => ({ eq: approvedEq }));
+    const select = vi.fn(() => ({ eq: invitationEq }));
+    const from = vi.fn(() => ({ select }));
+
+    await expect(loadApprovedGuestbookEntries({ from }, "invitation-1")).resolves.toEqual([]);
   });
 
   it("renders user-friendly loading and error fallbacks", () => {

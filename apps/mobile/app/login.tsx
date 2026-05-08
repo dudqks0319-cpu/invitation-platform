@@ -119,11 +119,11 @@ export default function LoginScreen() {
             : isAnonymousSession
               ? "무료 기능은 게스트 모드로 사용할 수 있습니다."
             : configured
-              ? "아직 연결된 계정이 없습니다. 이메일 또는 소셜 로그인을 선택해 주세요."
+              ? "아직 연결된 계정이 없습니다. 이메일 또는 Apple 로그인을 선택해 주세요."
               : "Supabase 설정이 없어서 현재는 둘러보기 전용 상태입니다."}
         </Text>
         <Text style={{ color: "#766452", lineHeight: 22, marginTop: 8 }}>
-          현재 상태: {hasFullAccount ? "원격 저장과 유료 발행 가능" : "무료 작성과 게스트 저장 가능"}
+          현재 상태: {hasFullAccount ? "원격 저장 가능" : "무료 작성과 게스트 저장 가능"}
         </Text>
         {showDebugInfo ? (
           <Text style={{ color: "#8d5a2b", lineHeight: 22, marginTop: 8 }}>
@@ -241,18 +241,8 @@ export default function LoginScreen() {
       ) : null}
 
       {!hasFullAccount ? (
-        <Card eyebrow="소셜 로그인" title="Google · Apple · Kakao">
+        <Card eyebrow="소셜 로그인" title="Apple로 계속하기">
           <View style={{ gap: 12 }}>
-            <SocialSignInButton
-              accessibilityLabel="Google로 로그인"
-              loadingLabel={pendingAction === "google" ? "Google 로그인 중..." : "Google로 계속하기"}
-              onPress={
-                configured && pendingAction === ""
-                  ? () => void runAction("google", signInWithGoogle)
-                  : undefined
-              }
-              provider="google"
-            />
             <SocialSignInButton
               accessibilityLabel="Apple로 로그인"
               loadingLabel={pendingAction === "apple" ? "Apple 로그인 중..." : "Apple로 계속하기"}
@@ -263,19 +253,33 @@ export default function LoginScreen() {
               }
               provider="apple"
             />
-            <SocialSignInButton
-              accessibilityLabel="Kakao로 로그인"
-              loadingLabel={pendingAction === "kakao" ? "Kakao 로그인 중..." : "Kakao로 계속하기"}
-              onPress={
-                configured && pendingAction === ""
-                  ? () => void runAction("kakao", signInWithKakao)
-                  : undefined
-              }
-              provider="kakao"
-            />
+            {nativeGoogleConfigured ? (
+              <SocialSignInButton
+                accessibilityLabel="Google로 로그인"
+                loadingLabel={pendingAction === "google" ? "Google 로그인 중..." : "Google로 계속하기"}
+                onPress={
+                  configured && pendingAction === ""
+                    ? () => void runAction("google", signInWithGoogle)
+                    : undefined
+                }
+                provider="google"
+              />
+            ) : null}
+            {nativeKakaoConfigured ? (
+              <SocialSignInButton
+                accessibilityLabel="Kakao로 로그인"
+                loadingLabel={pendingAction === "kakao" ? "Kakao 로그인 중..." : "Kakao로 계속하기"}
+                onPress={
+                  configured && pendingAction === ""
+                    ? () => void runAction("kakao", signInWithKakao)
+                    : undefined
+                }
+                provider="kakao"
+              />
+            ) : null}
           </View>
           <Text style={{ color: "#766452", lineHeight: 22, marginTop: 10 }}>
-            Google, Apple, Kakao 인증 후 앱으로 돌아오면 내 초대장 탭으로 연결됩니다.
+            Google/Kakao 모바일 로그인은 안정화된 빌드에서만 함께 제공합니다.
           </Text>
         </Card>
       ) : null}

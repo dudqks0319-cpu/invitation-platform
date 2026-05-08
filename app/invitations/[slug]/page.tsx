@@ -33,6 +33,29 @@ type ViewLogsTable = {
   }): Promise<{ error: { message?: string } | null }>;
 };
 
+type GuestbookEntryRow = {
+  id: string;
+  nickname: string;
+  message: string;
+  approved: boolean;
+  created_at: string;
+};
+
+type GuestbookEntriesTable = {
+  select(columns: string): {
+    eq(column: string, value: string): {
+      eq(column: string, value: boolean): {
+        order(column: string, options: { ascending: boolean }): {
+          limit(count: number): Promise<{
+            data: GuestbookEntryRow[] | null;
+            error: { message?: string } | null;
+          }>;
+        };
+      };
+    };
+  };
+};
+
 const VIEW_LOG_COOLDOWN_MS = 30 * 60 * 1000;
 const DEFAULT_OG_IMAGE = "/images/genspark/cncrue0H.jpg";
 
@@ -110,6 +133,33 @@ export async function logInvitationView(
     invitation_id: invitationId,
     user_agent: userAgent
   });
+}
+
+export async function loadApprovedGuestbookEntries(
+  admin: { from(table: string): unknown } | null,
+  invitationId: string
+) {
+  if (!admin) {
+    return [];
+  }
+
+  try {
+    const guestbookEntriesTable = admin.from("guestbook_entries") as GuestbookEntriesTable;
+    const { data, error } = await guestbookEntriesTable
+      .select("*")
+      .eq("invitation_id", invitationId)
+      .eq("approved", true)
+      .order("created_at", { ascending: false })
+      .limit(20);
+
+    if (error) {
+      return [];
+    }
+
+    return data ?? [];
+  } catch {
+    return [];
+  }
 }
 
 async function loadPublishedInvitation(slug: string) {
@@ -201,13 +251,7 @@ export default async function PublicInvitationPage({
       await logInvitationView(admin, invitation.id, headerList.get("user-agent") || "");
     }
 
-    const { data: guestbookEntries } = await (admin ?? createSupabaseAdminClient())!
-      .from("guestbook_entries")
-      .select("*")
-      .eq("invitation_id", invitation.id)
-      .eq("approved", true)
-      .order("created_at", { ascending: false })
-      .limit(20);
+    const guestbookEntries = await loadApprovedGuestbookEntries(admin, invitation.id);
 
     return (
       <>

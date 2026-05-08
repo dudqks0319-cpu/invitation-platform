@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocalSearchParams } from "expo-router";
-import { Linking, Pressable, Text, View } from "react-native";
+import { Alert, Linking, Pressable, Text, View } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ErrorView } from "@/components/ui/ErrorView";
@@ -34,10 +34,53 @@ export default function InvitationDetailScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const { configMessage, configured, status, user } = useAuth();
   const publicUrl = draft?.payload.share.slug ? getPublicInvitationUrl(draft.payload.share.slug) : "";
   const shareSlug = draft?.payload.share.slug ?? "";
   const mapLinks = draft ? getInvitationMapLinks(draft.payload) : null;
+
+  async function deleteCurrentInvitation() {
+    if (!draft || deleting) {
+      return;
+    }
+
+    setDeleting(true);
+    setError("");
+    setMessage("");
+
+    try {
+      await deleteDraft(draft.localId);
+      if (configured && status === "authenticated" && user?.id && draft.serverId) {
+        await deleteRemoteInvitation(draft.serverId, user.id);
+      }
+      setDraft(null);
+      setMessage("초대장을 삭제했습니다.");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "삭제에 실패했습니다.");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  function confirmDeleteInvitation() {
+    if (!draft || deleting) {
+      return;
+    }
+
+    Alert.alert(
+      "초대장 삭제",
+      "삭제하면 이 기기의 초안이 제거되고, 로그인된 서버 저장본도 함께 삭제될 수 있습니다. 이 작업은 되돌릴 수 없습니다.",
+      [
+        { text: "취소", style: "cancel" },
+        {
+          text: "삭제",
+          style: "destructive",
+          onPress: () => void deleteCurrentInvitation()
+        }
+      ]
+    );
+  }
 
   useEffect(() => {
     let mounted = true;
@@ -343,23 +386,10 @@ export default function InvitationDetailScreen() {
         <View style={{ marginTop: 10 }}>
           <Button
             accessibilityLabel="초대장 삭제"
-            onPress={() => {
-              setError("");
-              setMessage("");
-              if (!draft) return;
-
-              void deleteDraft(draft.localId)
-                .then(async () => {
-                  if (configured && status === "authenticated" && user?.id && draft.serverId) {
-                    await deleteRemoteInvitation(draft.serverId, user.id);
-                  }
-                  setMessage("초대장을 삭제했습니다.");
-                })
-                .catch((caught) => setError(caught instanceof Error ? caught.message : "삭제에 실패했습니다."));
-            }}
+            onPress={draft && !deleting ? confirmDeleteInvitation : undefined}
             variant="outline"
           >
-            초대장 삭제
+            {deleting ? "삭제 중..." : "초대장 삭제"}
           </Button>
         </View>
       </Card>

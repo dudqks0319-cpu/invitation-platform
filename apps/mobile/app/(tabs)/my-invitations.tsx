@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useRouter } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { Alert, Pressable, Text, View } from "react-native";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -76,6 +76,7 @@ export default function MyInvitationsScreen() {
   async function handleDeleteLocalDraft(draft: MobileInvitationDraft) {
     setPendingDeleteId(draft.localId);
     setMessage("");
+    setError("");
 
     try {
       await deleteDraft(draft.localId);
@@ -86,6 +87,25 @@ export default function MyInvitationsScreen() {
     } finally {
       setPendingDeleteId(null);
     }
+  }
+
+  function confirmDeleteLocalDraft(draft: MobileInvitationDraft) {
+    if (pendingDeleteId) {
+      return;
+    }
+
+    Alert.alert(
+      "로컬 초안 삭제",
+      "이 기기에 저장된 초안을 삭제합니다. 서버에 저장되지 않은 내용은 복구할 수 없습니다.",
+      [
+        { text: "취소", style: "cancel" },
+        {
+          text: "삭제",
+          style: "destructive",
+          onPress: () => void handleDeleteLocalDraft(draft)
+        }
+      ]
+    );
   }
 
   return (
@@ -205,7 +225,7 @@ export default function MyInvitationsScreen() {
             {isLocalOnlyDraft(draft) ? (
               <Pressable
                 accessibilityLabel="로컬 초안 삭제"
-                onPress={() => void handleDeleteLocalDraft(draft)}
+                onPress={() => confirmDeleteLocalDraft(draft)}
                 style={{ alignItems: "center", paddingVertical: 6 }}
               >
                 <Text style={{ color: theme.colors.primaryDark, fontSize: 13, fontWeight: "700" }}>

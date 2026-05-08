@@ -86,6 +86,10 @@ export default function BuilderStep3PhotosScreen() {
   const [pendingSlot, setPendingSlot] = useState<"" | "main" | "background" | "gallery">("");
   const [error, setError] = useState("");
   const paidPublishingEnabled = isPaidPublishingEnabled();
+  const hasMainPhoto = Boolean(draft?.payload.photos.mainUri);
+  const hasBackgroundPhoto = Boolean(draft?.payload.photos.backgroundUri);
+  const galleryPhotos = draft?.payload.photos.gallery ?? [];
+  const hasGalleryPhotos = galleryPhotos.length > 0;
 
   async function handlePick(slot: "main" | "background" | "gallery") {
     setError("");
@@ -134,174 +138,171 @@ export default function BuilderStep3PhotosScreen() {
           </Text>
         </Card>
       ) : null}
-      <Card eyebrow="메인 사진" title="대표 사진">
-        {draft?.payload.photos.mainUri ? (
-          <UploadedPhotoPreview
-            height={180}
-            label="대표 사진 미리보기"
-            onRemove={() => removePhoto("main")}
-            uri={draft.payload.photos.mainUri}
-          />
-        ) : null}
-        <Pressable
-          accessibilityLabel="메인 사진 선택"
-          disabled={!paidPublishingEnabled}
-          onPress={() => void handlePick("main")}
-          style={{
-            borderWidth: 1,
-            borderColor: pendingSlot === "main" ? theme.colors.primary : "rgba(143,111,82,0.18)",
-            borderRadius: 14,
-            padding: 12,
-            backgroundColor: paidPublishingEnabled ? "#fff" : theme.colors.surfaceSoft,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 10
-          }}
-        >
-          <Text style={{ color: theme.colors.text, fontSize: 15, fontWeight: "600" }}>
-            {pendingSlot === "main" ? "메인 사진 처리 중..." : "메인 사진 선택"}
-          </Text>
-          <View
-            style={{
-              borderRadius: 999,
-              backgroundColor: !paidPublishingEnabled
-                ? "rgba(143,111,82,0.24)"
-                : pendingSlot === "main"
-                  ? theme.colors.primaryDark
-                  : "#C9935A",
-              paddingHorizontal: 14,
-              paddingVertical: 8
-            }}
-          >
-            <Text style={{ color: "#fff8f1", fontSize: 13, fontWeight: "700" }}>
-              {!paidPublishingEnabled ? "준비 중" : pendingSlot === "main" ? "처리 중" : "업로드"}
-            </Text>
-          </View>
-        </Pressable>
-      </Card>
-      <Card eyebrow="배경 사진" title="커버 배경">
-        {draft?.payload.photos.backgroundUri ? (
-          <UploadedPhotoPreview
-            height={140}
-            label="배경 사진 미리보기"
-            onRemove={() => removePhoto("background")}
-            uri={draft.payload.photos.backgroundUri}
-          />
-        ) : null}
-        <Pressable
-          accessibilityLabel="배경 사진 선택"
-          disabled={!paidPublishingEnabled}
-          onPress={() => void handlePick("background")}
-          style={{
-            borderWidth: 1,
-            borderColor: pendingSlot === "background" ? theme.colors.primary : "rgba(143,111,82,0.18)",
-            borderRadius: 14,
-            padding: 12,
-            backgroundColor: paidPublishingEnabled ? "#fff" : theme.colors.surfaceSoft,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 10
-          }}
-        >
-          <Text style={{ color: theme.colors.text, fontSize: 15, fontWeight: "600" }}>
-            {pendingSlot === "background" ? "배경 사진 처리 중..." : "배경 사진 선택"}
-          </Text>
-          <View
-            style={{
-              borderRadius: 999,
-              backgroundColor: !paidPublishingEnabled
-                ? "rgba(143,111,82,0.24)"
-                : pendingSlot === "background"
-                  ? theme.colors.primaryDark
-                  : "#C9935A",
-              paddingHorizontal: 14,
-              paddingVertical: 8
-            }}
-          >
-            <Text style={{ color: "#fff8f1", fontSize: 13, fontWeight: "700" }}>
-              {!paidPublishingEnabled ? "준비 중" : pendingSlot === "background" ? "처리 중" : "업로드"}
-            </Text>
-          </View>
-        </Pressable>
-      </Card>
-      <Card eyebrow="갤러리" title={`현재 ${draft?.payload.photos.gallery.length ?? 0}장`}>
-        <Text style={{ color: theme.colors.muted, lineHeight: 22, marginBottom: 12 }}>
-          v1에서는 한 장씩 추가하는 방식으로 먼저 연결합니다.
-        </Text>
-        {error ? (
-          <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginBottom: 12 }}>
-            {error}
-          </Text>
-        ) : null}
-        <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginBottom: 12 }}>
-          업로드 대기: {draft?.pendingPhotos.length ?? 0}개
-        </Text>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
-          {draft?.payload.photos.gallery.map((photo) => (
-            <View key={photo.order} style={{ position: "relative" }}>
-              <Image
-                source={{ uri: photo.uri }}
-                style={{ width: 92, height: 92, borderRadius: 14 }}
-              />
-              <Pressable
-                accessibilityLabel="갤러리 사진 삭제"
-                onPress={() => removeGalleryPhoto(photo.order)}
+      {paidPublishingEnabled || hasMainPhoto ? (
+        <Card eyebrow="메인 사진" title="대표 사진">
+          {draft?.payload.photos.mainUri ? (
+            <UploadedPhotoPreview
+              height={180}
+              label="대표 사진 미리보기"
+              onRemove={() => removePhoto("main")}
+              uri={draft.payload.photos.mainUri}
+            />
+          ) : null}
+          {paidPublishingEnabled ? (
+            <Pressable
+              accessibilityLabel="메인 사진 선택"
+              onPress={() => void handlePick("main")}
+              style={{
+                borderWidth: 1,
+                borderColor: pendingSlot === "main" ? theme.colors.primary : "rgba(143,111,82,0.18)",
+                borderRadius: 14,
+                padding: 12,
+                backgroundColor: "#fff",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 10
+              }}
+            >
+              <Text style={{ color: theme.colors.text, fontSize: 15, fontWeight: "600" }}>
+                {pendingSlot === "main" ? "메인 사진 처리 중..." : "메인 사진 선택"}
+              </Text>
+              <View
                 style={{
-                  position: "absolute",
-                  top: 6,
-                  right: 6,
-                  width: 28,
-                  height: 28,
-                  borderRadius: 14,
-                  backgroundColor: "rgba(44,44,44,0.72)",
-                  alignItems: "center",
-                  justifyContent: "center"
+                  borderRadius: 999,
+                  backgroundColor: pendingSlot === "main" ? theme.colors.primaryDark : "#C9935A",
+                  paddingHorizontal: 14,
+                  paddingVertical: 8
                 }}
               >
-                <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>×</Text>
-              </Pressable>
-            </View>
-          ))}
-        </View>
-        <Pressable
-          accessibilityLabel="갤러리 사진 추가"
-          disabled={!paidPublishingEnabled}
-          onPress={() => void handlePick("gallery")}
-          style={{
-            borderWidth: 1,
-            borderColor: pendingSlot === "gallery" ? theme.colors.primary : "rgba(143,111,82,0.18)",
-            borderRadius: 14,
-            padding: 12,
-            backgroundColor: paidPublishingEnabled ? "#fff" : theme.colors.surfaceSoft,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 10
-          }}
-        >
-          <Text style={{ color: theme.colors.text, fontSize: 15, fontWeight: "600" }}>
-            {pendingSlot === "gallery" ? "갤러리 사진 처리 중..." : "갤러리 사진 추가"}
+                <Text style={{ color: "#fff8f1", fontSize: 13, fontWeight: "700" }}>
+                  {pendingSlot === "main" ? "처리 중" : "업로드"}
+                </Text>
+              </View>
+            </Pressable>
+          ) : null}
+        </Card>
+      ) : null}
+      {paidPublishingEnabled || hasBackgroundPhoto ? (
+        <Card eyebrow="배경 사진" title="커버 배경">
+          {draft?.payload.photos.backgroundUri ? (
+            <UploadedPhotoPreview
+              height={140}
+              label="배경 사진 미리보기"
+              onRemove={() => removePhoto("background")}
+              uri={draft.payload.photos.backgroundUri}
+            />
+          ) : null}
+          {paidPublishingEnabled ? (
+            <Pressable
+              accessibilityLabel="배경 사진 선택"
+              onPress={() => void handlePick("background")}
+              style={{
+                borderWidth: 1,
+                borderColor: pendingSlot === "background" ? theme.colors.primary : "rgba(143,111,82,0.18)",
+                borderRadius: 14,
+                padding: 12,
+                backgroundColor: "#fff",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 10
+              }}
+            >
+              <Text style={{ color: theme.colors.text, fontSize: 15, fontWeight: "600" }}>
+                {pendingSlot === "background" ? "배경 사진 처리 중..." : "배경 사진 선택"}
+              </Text>
+              <View
+                style={{
+                  borderRadius: 999,
+                  backgroundColor: pendingSlot === "background" ? theme.colors.primaryDark : "#C9935A",
+                  paddingHorizontal: 14,
+                  paddingVertical: 8
+                }}
+              >
+                <Text style={{ color: "#fff8f1", fontSize: 13, fontWeight: "700" }}>
+                  {pendingSlot === "background" ? "처리 중" : "업로드"}
+                </Text>
+              </View>
+            </Pressable>
+          ) : null}
+        </Card>
+      ) : null}
+      {paidPublishingEnabled || hasGalleryPhotos ? (
+        <Card eyebrow="갤러리" title={`현재 ${galleryPhotos.length}장`}>
+          <Text style={{ color: theme.colors.muted, lineHeight: 22, marginBottom: 12 }}>
+            v1에서는 한 장씩 추가하는 방식으로 먼저 연결합니다.
           </Text>
-          <View
-            style={{
-              borderRadius: 999,
-              backgroundColor: !paidPublishingEnabled
-                ? "rgba(143,111,82,0.24)"
-                : pendingSlot === "gallery"
-                  ? theme.colors.primaryDark
-                  : "#C9935A",
-              paddingHorizontal: 14,
-              paddingVertical: 8
-            }}
-          >
-            <Text style={{ color: "#fff8f1", fontSize: 13, fontWeight: "700" }}>
-              {!paidPublishingEnabled ? "준비 중" : pendingSlot === "gallery" ? "처리 중" : "추가"}
+          {error ? (
+            <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginBottom: 12 }}>
+              {error}
             </Text>
+          ) : null}
+          <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginBottom: 12 }}>
+            업로드 대기: {draft?.pendingPhotos.length ?? 0}개
+          </Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10, marginBottom: 12 }}>
+            {galleryPhotos.map((photo) => (
+              <View key={photo.order} style={{ position: "relative" }}>
+                <Image
+                  source={{ uri: photo.uri }}
+                  style={{ width: 92, height: 92, borderRadius: 14 }}
+                />
+                <Pressable
+                  accessibilityLabel="갤러리 사진 삭제"
+                  onPress={() => removeGalleryPhoto(photo.order)}
+                  style={{
+                    position: "absolute",
+                    top: 6,
+                    right: 6,
+                    width: 28,
+                    height: 28,
+                    borderRadius: 14,
+                    backgroundColor: "rgba(44,44,44,0.72)",
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontSize: 15, fontWeight: "700" }}>×</Text>
+                </Pressable>
+              </View>
+            ))}
           </View>
-        </Pressable>
-      </Card>
+          {paidPublishingEnabled ? (
+            <Pressable
+              accessibilityLabel="갤러리 사진 추가"
+              onPress={() => void handlePick("gallery")}
+              style={{
+                borderWidth: 1,
+                borderColor: pendingSlot === "gallery" ? theme.colors.primary : "rgba(143,111,82,0.18)",
+                borderRadius: 14,
+                padding: 12,
+                backgroundColor: "#fff",
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 10
+              }}
+            >
+              <Text style={{ color: theme.colors.text, fontSize: 15, fontWeight: "600" }}>
+                {pendingSlot === "gallery" ? "갤러리 사진 처리 중..." : "갤러리 사진 추가"}
+              </Text>
+              <View
+                style={{
+                  borderRadius: 999,
+                  backgroundColor: pendingSlot === "gallery" ? theme.colors.primaryDark : "#C9935A",
+                  paddingHorizontal: 14,
+                  paddingVertical: 8
+                }}
+              >
+                <Text style={{ color: "#fff8f1", fontSize: 13, fontWeight: "700" }}>
+                  {pendingSlot === "gallery" ? "처리 중" : "추가"}
+                </Text>
+              </View>
+            </Pressable>
+          ) : null}
+        </Card>
+      ) : null}
       <View style={{ gap: 12, flexDirection: "row" }}>
         <View style={{ flex: 1 }}>
           <Link asChild href={{ pathname: "/builder/step2-people", params: localId ? { localId } : {} }}>
