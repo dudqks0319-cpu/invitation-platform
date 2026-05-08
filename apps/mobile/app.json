@@ -2,7 +2,7 @@
   "expo": {
     "name": "초대장허브",
     "slug": "invitehub",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "scheme": "invitehub",
     "userInterfaceStyle": "automatic",
