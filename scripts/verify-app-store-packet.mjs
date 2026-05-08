@@ -25,6 +25,16 @@ const expectedBuild42 = {
   submissionId: "ba6727cf-2c1d-464f-a005-6ce9670d4f81",
   artifact: "https://expo.dev/artifacts/eas/hTEP9Gx8wMFmK6w9aKSmcc.ipa"
 };
+const expectedBuild43 = {
+  appId: "6763630299",
+  bundleId: "com.invitehub.app",
+  appVersion: "1.0.0",
+  buildNumber: "43",
+  sourceCommit: "4af7f3c",
+  buildId: "9a4a25a7-c362-4ba0-9c01-fdac8b0f942c",
+  submissionId: "595cd20f-6d0d-4c72-887f-ffcc7b614dd6",
+  artifact: "https://expo.dev/artifacts/eas/k435zPEohnNNZiQAiAB9Wq.ipa"
+};
 
 const checks = [];
 const failures = [];
@@ -64,6 +74,7 @@ function isExecutable(relativePath) {
 
 const packet = read("docs/app-store-connect-build41-packet.md");
 const build42Packet = read("docs/app-store-connect-build42-packet.md");
+const build43Packet = read("docs/app-store-connect-build43-packet.md");
 const readiness = read("docs/app-store-readiness-90.md");
 const audit = read("docs/goal-completion-audit-90.md");
 const security = read("docs/security-gate-90.md");
@@ -103,6 +114,10 @@ for (const value of Object.values(expectedBuild42)) {
   includes("docs/app-store-connect-build42-packet.md", build42Packet, value);
 }
 
+for (const value of Object.values(expectedBuild43)) {
+  includes("docs/app-store-connect-build43-packet.md", build43Packet, value);
+}
+
 includes("docs/app-store-connect-build41-packet.md", packet, "EAS submission status | `FINISHED`, `error: null`");
 includes("docs/app-store-connect-build41-packet.md", packet, "Do not use `invitehub.co.kr` yet");
 includes("docs/app-store-connect-build41-packet.md", packet, "do not use it as the App Review contact");
@@ -122,6 +137,11 @@ includes("docs/app-store-connect-build42-packet.md", build42Packet, "hermesvm.fr
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "EAS_NO_VCS=1 eas build -p ios --profile production --non-interactive --auto-submit");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "node scripts/eas-build-submission-status.mjs 88c911f5-3c21-41e8-a6a2-a04939fa6179");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "Do not count simulator launch as TestFlight proof");
+includes("docs/app-store-connect-build43-packet.md", build43Packet, "EAS submission status | `FINISHED`, `error: null`");
+includes("docs/app-store-connect-build43-packet.md", build43Packet, "Uploaded to Apple; processing pending");
+includes("docs/app-store-connect-build43-packet.md", build43Packet, "currentTestFlightBuildProcessed");
+includes("docs/app-store-connect-build43-packet.md", build43Packet, "realIphoneTestFlightInstallLaunchPassed");
+includes("docs/app-store-connect-build43-packet.md", build43Packet, "Final Add for Review and Submit for Review still require separate explicit user");
 includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "Source commit | Verify immediately before upload with `git rev-parse --short HEAD`");
 includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "EAS remote auto-increment after build 42");
 includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "git rev-parse --short HEAD");
@@ -133,6 +153,7 @@ includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "Final 
 for (const [file, content] of [
   ["docs/app-store-connect-build41-packet.md", packet],
   ["docs/app-store-connect-build42-packet.md", build42Packet],
+  ["docs/app-store-connect-build43-packet.md", build43Packet],
   ["docs/app-store-connect-next-build-packet.md", nextBuildPacket],
   ["docs/app-store-connect-build40-packet.md", build40Packet],
   ["docs/app-store-connect-build39-packet.md", build39Packet],
@@ -325,7 +346,7 @@ if (failures.length > 0) {
 console.log("APP STORE PACKET VERIFY RESULT");
 console.log("- Status: pass");
 console.log(`- Checks: ${checks.length}`);
-console.log(`- Latest Uploaded Build: ${expectedBuild42.appVersion} (${expectedBuild42.buildNumber})`);
-console.log(`- Latest EAS Build: ${expectedBuild42.buildId}`);
-console.log("- Device Verdict: build 42 failed real iPhone TestFlight launch.");
-console.log("- Required follow-up: prepare a newer build, pass real iPhone TestFlight launch, then finish Apple-side metadata evidence.");
+console.log(`- Latest Uploaded Build: ${expectedBuild43.appVersion} (${expectedBuild43.buildNumber})`);
+console.log(`- Latest EAS Build: ${expectedBuild43.buildId}`);
+console.log("- Device Verdict: build 42 failed real iPhone TestFlight launch; build 43 iPhone launch pending.");
+console.log("- Required follow-up: wait for Apple processing, assign build 43 to internal TestFlight, pass real iPhone launch, then finish Apple-side metadata evidence.");

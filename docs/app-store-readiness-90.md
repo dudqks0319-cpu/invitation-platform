@@ -22,6 +22,15 @@ answer requirement, App Review metadata accuracy/completeness guidance, and
 Latest local and App Store Connect evidence after the build 42 TestFlight
 crash-fix update:
 
+- 2026-05-08 build 43 upload: EAS iOS build
+  `9a4a25a7-c362-4ba0-9c01-fdac8b0f942c` finished for `1.0.0 (43)` and EAS
+  submission `595cd20f-6d0d-4c72-887f-ffcc7b614dd6` finished with `error:
+  null`. IPA artifact:
+  `https://expo.dev/artifacts/eas/k435zPEohnNNZiQAiAB9Wq.ipa`. Apple accepted
+  the binary and App Store Connect processing is pending. Build 43 still needs
+  App Store Connect processed/internal group evidence and real iPhone
+  TestFlight launch evidence before it can be selected for the App Store
+  version.
 - 2026-05-08 startup-surface reduction patch: the home screen no longer imports
   auth, Supabase, or draft storage at module load. Local Release simulator build
   passed on iPhone 17 and opened `com.invitehub.app`. Screenshot:
@@ -186,6 +195,9 @@ These cannot be fully completed from code alone:
   `https://invitation-platform-youngbeens-projects.vercel.app`.
 - Current build 42 App Store Connect entry values are consolidated in
   `docs/app-store-connect-build42-packet.md`.
+- Current build 43 upload values are consolidated in
+  `docs/app-store-connect-build43-packet.md`; App Store Connect processing and
+  iPhone TestFlight launch evidence are still pending.
 - App Review contact email must be a currently verified mailbox. The
   `support@invitehub.co.kr` address is not verified while the domain has no
   DNS/MX records. Mirror the verified mailbox in `NEXT_PUBLIC_SUPPORT_EMAIL`

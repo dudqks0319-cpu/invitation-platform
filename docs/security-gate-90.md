@@ -66,6 +66,13 @@ longer a current crash-fix candidate because the user's 2026-05-07 real iPhone
 recording shows it still crashes on launch. A newer post-build-42 candidate is
 required before final release readiness sign-off.
 
+EAS iOS build 43 now finished and EAS Submit uploaded it to App Store Connect:
+build `9a4a25a7-c362-4ba0-9c01-fdac8b0f942c`, submission
+`595cd20f-6d0d-4c72-887f-ffcc7b614dd6`, `error: null`, artifact
+`https://expo.dev/artifacts/eas/k435zPEohnNNZiQAiAB9Wq.ipa`. Apple processing,
+internal TestFlight assignment, and real iPhone launch evidence are still
+pending.
+
 `node scripts/eas-build-submission-status.mjs 61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`
 returned build 41 `FINISHED`, linked submission `FINISHED`, `error: null`.
 A group-submit retry `949d446f-dea1-490f-8b52-2de359d899ee` ended `ERRORED`,

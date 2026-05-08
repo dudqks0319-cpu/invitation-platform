@@ -1,7 +1,7 @@
 # InviteHub Goal Completion Audit - 90점 Release Readiness
 
 Date: 2026-05-01
-Latest update: 2026-05-08 18:18 KST
+Latest update: 2026-05-08 18:52 KST
 
 ## Objective
 
@@ -61,6 +61,7 @@ InviteHub 앱을 App Store 제출 기준으로 프론트엔드, 백엔드, UI/UX
 | Build 41 EAS upload and submission evidence | EAS build 41, EAS Submit, ASC TestFlight group | build 41 is uploaded and submitted through EAS Submit as `61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`. Submission `25518b07-b8de-4507-8a0e-20d85bfe9e14` finished with `error: null`. It contains local source commit `0655ced`, which restores the Expo Router release entry and fixes the build 40 `No routes found` crash path. App Store Connect now shows build 41 processed and assigned to `Team (Expo)`. | Pass for EAS and ASC, blocked on iPhone evidence |
 | Build 42 local crash-fix candidate | `docs/app-store-connect-build42-packet.md`, `docs/testflight-crash-triage-2026-05-06.md`, `docs/testflight-crash-triage-2026-05-07.md`, native Pod/Xcode files | build 42 was prepared at source commit `73872e2` with crash-fix code from `0d21924`. It builds React Native iOS from source, removes the prebuilt `React.framework` / `ReactNativeDependencies.framework` embed path, lazy-loads optional browser/auth native modules, and passed the local Release simulator/source-build checks plus release gate. EAS Build and EAS Submit are finished for build `88c911f5-3c21-41e8-a6a2-a04939fa6179`; App Store Connect shows build 42 processed and assigned to `Team (Expo)`. The user-provided real iPhone recording from 2026-05-07 23:43 KST shows build `1.0.0 (42)` crashing on launch, so it is not a valid release candidate. The next local patch further removes auth/Supabase/draft imports from first home render, and the patched Release simulator build opened on iPhone 17 on 2026-05-08. | Failed on real iPhone; next patch passes local simulator |
 | Build 42 EAS upload and submission evidence | EAS build 42, EAS Submit, App Store Connect processing, user iPhone recording | build 42 is uploaded and submitted through EAS Submit as `88c911f5-3c21-41e8-a6a2-a04939fa6179`. Submission `ba6727cf-2c1d-464f-a005-6ce9670d4f81` finished with `error: null`. IPA artifact is `https://expo.dev/artifacts/eas/hTEP9Gx8wMFmK6w9aKSmcc.ipa`. Chrome App Store Connect evidence on 2026-05-07 21:49 KST shows `1.0.0 (42)` upload status `완료`, version-row status `제출 준비 완료`, internal group `Team (Expo)`, and invite count `1`. Real iPhone recording on 2026-05-07 23:43 KST shows build 42 detail and then the iOS crash prompt, so this is pass for upload only and fail for device launch. | Pass for EAS/ASC, failed on iPhone |
+| Build 43 EAS upload and submission evidence | `docs/app-store-connect-build43-packet.md`, EAS build 43, EAS Submit | build 43 uploaded and submitted through EAS Submit as `9a4a25a7-c362-4ba0-9c01-fdac8b0f942c`. Submission `595cd20f-6d0d-4c72-887f-ffcc7b614dd6` finished with `error: null`. IPA artifact is `https://expo.dev/artifacts/eas/k435zPEohnNNZiQAiAB9Wq.ipa`. Apple accepted the upload and App Store Connect processing is pending. | Pass for EAS upload, pending ASC/iPhone |
 
 ## Completion Verdict
 
@@ -142,6 +143,11 @@ Manual Apple-side confirmation path:
   on the current branch head; upload still requires explicit user approval and
   the source commit must be captured with `git rev-parse --short HEAD`
   immediately before running EAS.
+- Build 43 EAS upload and EAS Submit are finished:
+  `9a4a25a7-c362-4ba0-9c01-fdac8b0f942c`,
+  submission `595cd20f-6d0d-4c72-887f-ffcc7b614dd6`, artifact
+  `https://expo.dev/artifacts/eas/k435zPEohnNNZiQAiAB9Wq.ipa`. Apple processing
+  is pending, so current-build external evidence is not complete yet.
 - `npm run test -- --exclude=**/.claude/**`: 58 test files / 177 tests passed
   in the latest release gate.
 - Focused mobile/API tests: 9 test files / 34 tests passed in the latest
