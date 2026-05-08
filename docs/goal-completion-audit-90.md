@@ -137,6 +137,9 @@ Manual Apple-side confirmation path:
   instead of requiring failed build 42 to be selected for the App Store version.
   The historical build 42 evidence remains in the manifest, but goal completion
   requires a newer passing TestFlight build and `currentReleaseBuildSelectedForVersion`.
+- Next-build upload packet is prepared at
+  `docs/app-store-connect-next-build-packet.md` for the post-build-42 candidate
+  at source commit `5908ad0`; upload still requires explicit user approval.
 - `npm run test -- --exclude=**/.claude/**`: 58 test files / 177 tests passed
   in the latest release gate.
 - Focused mobile/API tests: 9 test files / 34 tests passed in the latest

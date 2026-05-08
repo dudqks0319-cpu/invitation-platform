@@ -70,6 +70,7 @@ const security = read("docs/security-gate-90.md");
 const metadata = read("docs/store-submission-metadata.md");
 const appleReview = read("docs/apple-review.md");
 const inputPacket = read("docs/app-store-connect-input-packet-build42.md");
+const nextBuildPacket = read("docs/app-store-connect-next-build-packet.md");
 const build38Packet = read("docs/app-store-connect-build38-packet.md");
 const build39Packet = read("docs/app-store-connect-build39-packet.md");
 const build40Packet = read("docs/app-store-connect-build40-packet.md");
@@ -121,10 +122,17 @@ includes("docs/app-store-connect-build42-packet.md", build42Packet, "hermesvm.fr
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "EAS_NO_VCS=1 eas build -p ios --profile production --non-interactive --auto-submit");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "node scripts/eas-build-submission-status.mjs 88c911f5-3c21-41e8-a6a2-a04939fa6179");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "Do not count simulator launch as TestFlight proof");
+includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "Source commit | `5908ad0`");
+includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "EAS remote auto-increment after build 42");
+includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "EAS_NO_VCS=1 eas build -p ios --profile production --non-interactive --auto-submit");
+includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "currentTestFlightBuildProcessed");
+includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "currentReleaseBuildSelectedForVersion");
+includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "Final Add for Review and Submit for Review still require separate explicit user");
 
 for (const [file, content] of [
   ["docs/app-store-connect-build41-packet.md", packet],
   ["docs/app-store-connect-build42-packet.md", build42Packet],
+  ["docs/app-store-connect-next-build-packet.md", nextBuildPacket],
   ["docs/app-store-connect-build40-packet.md", build40Packet],
   ["docs/app-store-connect-build39-packet.md", build39Packet],
   ["docs/app-store-connect-build38-packet.md", build38Packet],
