@@ -105,5 +105,16 @@ Result:
 7. Record `realIphoneTestFlightInstallLaunchPassed` only after the user's
    iPhone launches build 43 without the crash dialog.
 
+API status check harness:
+
+```bash
+node scripts/app-store-connect-build-status.mjs --build 43
+```
+
+This requires `APPLE_APP_STORE_ISSUER_ID`, `APPLE_APP_STORE_KEY_ID`, and
+`APPLE_APP_STORE_PRIVATE_KEY`. The current local `.env.local` has issuer/key id
+values but `APPLE_APP_STORE_PRIVATE_KEY` is empty, so App Store Connect browser
+login is still required unless the private key is supplied.
+
 Final Add for Review and Submit for Review still require separate explicit user
 confirmation.

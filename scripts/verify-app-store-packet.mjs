@@ -141,6 +141,8 @@ includes("docs/app-store-connect-build43-packet.md", build43Packet, "EAS submiss
 includes("docs/app-store-connect-build43-packet.md", build43Packet, "Uploaded to Apple; processing pending");
 includes("docs/app-store-connect-build43-packet.md", build43Packet, "currentTestFlightBuildProcessed");
 includes("docs/app-store-connect-build43-packet.md", build43Packet, "realIphoneTestFlightInstallLaunchPassed");
+includes("docs/app-store-connect-build43-packet.md", build43Packet, "node scripts/app-store-connect-build-status.mjs --build 43");
+includes("docs/app-store-connect-build43-packet.md", build43Packet, "APPLE_APP_STORE_PRIVATE_KEY");
 includes("docs/app-store-connect-build43-packet.md", build43Packet, "Final Add for Review and Submit for Review still require separate explicit user");
 includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "Source commit | Verify immediately before upload with `git rev-parse --short HEAD`");
 includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "EAS remote auto-increment after build 42");

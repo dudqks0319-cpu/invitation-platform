@@ -1,7 +1,7 @@
 # InviteHub Goal Completion Audit - 90점 Release Readiness
 
 Date: 2026-05-01
-Latest update: 2026-05-08 18:52 KST
+Latest update: 2026-05-08 19:03 KST
 
 ## Objective
 
@@ -148,6 +148,10 @@ Manual Apple-side confirmation path:
   submission `595cd20f-6d0d-4c72-887f-ffcc7b614dd6`, artifact
   `https://expo.dev/artifacts/eas/k435zPEohnNNZiQAiAB9Wq.ipa`. Apple processing
   is pending, so current-build external evidence is not complete yet.
+- App Store Connect API status harness is available at
+  `scripts/app-store-connect-build-status.mjs`, but local API querying is
+  blocked until `APPLE_APP_STORE_PRIVATE_KEY` is supplied. Browser login remains
+  the active path for build 43 processing/group verification.
 - `npm run test -- --exclude=**/.claude/**`: 58 test files / 177 tests passed
   in the latest release gate.
 - Focused mobile/API tests: 9 test files / 34 tests passed in the latest
