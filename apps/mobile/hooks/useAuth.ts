@@ -28,12 +28,20 @@ export function useAuth() {
 
     let mounted = true;
 
-    void supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      setSession(data.session ?? null);
-      setUser(data.session?.user ?? null);
-      setStatus(data.session?.user ? "authenticated" : "anonymous");
-    });
+    void supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!mounted) return;
+        setSession(data.session ?? null);
+        setUser(data.session?.user ?? null);
+        setStatus(data.session?.user ? "authenticated" : "anonymous");
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setSession(null);
+        setUser(null);
+        setStatus("anonymous");
+      });
 
     const {
       data: { subscription }

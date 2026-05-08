@@ -4,20 +4,45 @@ import {
   getDefaultInvitationSample,
   type InvitationDraft,
   type PendingPhotoUpload
-} from "@/lib/invitation-shared";
+} from "./invitation-shared";
 
 export type MobileInvitationDraft = InvitationDraft & {
   sourcePayload?: Record<string, unknown>;
 };
 
 const DRAFT_STORAGE_KEY = "invitehub:mobile:drafts";
+const CORRUPT_DRAFT_STORAGE_PREFIX = `${DRAFT_STORAGE_KEY}:corrupt`;
 const PREVIEW_OWNER_ID = "local-preview-owner";
 
 type DraftMap = Record<string, MobileInvitationDraft>;
 
+function isDraftMap(value: unknown): value is DraftMap {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
 async function readDraftMap(): Promise<DraftMap> {
   const raw = await AsyncStorage.getItem(DRAFT_STORAGE_KEY);
-  return raw ? (JSON.parse(raw) as DraftMap) : {};
+  if (!raw) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (isDraftMap(parsed)) {
+      return parsed;
+    }
+  } catch {
+    // A corrupted local draft cache must not prevent the app from launching.
+  }
+
+  try {
+    await AsyncStorage.setItem(`${CORRUPT_DRAFT_STORAGE_PREFIX}:${Date.now()}`, raw);
+    await AsyncStorage.removeItem(DRAFT_STORAGE_KEY);
+  } catch {
+    await AsyncStorage.removeItem(DRAFT_STORAGE_KEY).catch(() => undefined);
+  }
+
+  return {};
 }
 
 async function writeDraftMap(drafts: DraftMap) {
