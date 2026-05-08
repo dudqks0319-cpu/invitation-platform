@@ -22,7 +22,11 @@ build train.
 | EAS submission id | `023a9129-d68b-406a-a5b5-58e03c98a13a` |
 | EAS build status | `FINISHED` |
 | IPA artifact | `https://expo.dev/artifacts/eas/afGx9mRBMme34vyPZ7Jyu1.ipa` |
-| App Store Connect state | Uploaded to Apple; processing pending |
+| App Store Connect build upload state | `완료` |
+| App Store Connect TestFlight state | `제출 준비 완료`, expires in 90 days |
+| Internal TestFlight group | `Team (Expo)` |
+| Internal invites | `1` |
+| App Store Connect created time | `May 8, 2026 10:21 PM` |
 
 ## Why Build 46
 
@@ -75,14 +79,25 @@ Your binary has been successfully uploaded to App Store Connect.
 It is now being processed by Apple.
 ```
 
+## App Store Connect Browser Evidence
+
+Checked in Chrome after EAS Submit completed:
+
+```txt
+Build upload row: 1.0.1 (46) / status 완료 / May 8, 2026 10:21 PM
+TestFlight build row: build 46 / 제출 준비 완료 / 90일 후 만료
+Group: Team (Expo)
+Invites: 1
+Install/session/crash/feedback: –
+```
+
 ## Required Real iPhone Test
 
-1. Wait for App Store Connect processing to finish.
-2. In TestFlight, install `1.0.1 (46)`.
-3. Prefer deleting the existing installed app first to clear old container data.
-4. Launch `초대장허브` from TestFlight.
-5. Confirm no iOS crash dialog appears.
-6. Smoke test: home -> template selection -> builder step 1 -> preview.
+1. In TestFlight, install `1.0.1 (46)`.
+2. Prefer deleting the existing installed app first to clear old container data.
+3. Launch `초대장허브` from TestFlight.
+4. Confirm no iOS crash dialog appears.
+5. Smoke test: home -> template selection -> builder step 1 -> preview.
 
 If this clean `1.0.1` build still crashes, the next blocker is a build 46 crash
 report or device crash log.
