@@ -22,11 +22,23 @@ answer requirement, App Review metadata accuracy/completeness guidance, and
 Latest local and App Store Connect evidence after the build 42 TestFlight
 crash-fix update:
 
+- 2026-05-08 startup-surface reduction patch: the home screen no longer imports
+  auth, Supabase, or draft storage at module load. Local Release simulator build
+  passed on iPhone 17 and opened `com.invitehub.app`. Screenshot:
+  `output/testflight-device-watch/20260508-codex-update/evidence/release-simulator-home.png`.
+  This is a next-build candidate only; real iPhone TestFlight evidence is still
+  required.
+- 2026-05-07 real iPhone recording:
+  `/Users/jyb-m3max/Downloads/ScreenRecording_05-07-2026 23-43-37_1.MP4`
+  shows TestFlight build `1.0.0 (42)` and then the iOS crash prompt
+  `'InviteHub (40c8af)' 앱이 충돌함`. Extracted evidence frames are indexed in
+  `docs/testflight-crash-triage-2026-05-07.md`. Build 42 is no longer a valid
+  iPhone release candidate.
 - 2026-05-06 crash follow-up: build 41 is not considered proven because the
   prior `devicectl` launch returned exit code `0` but InviteHub was not present
   in the follow-up process query. New triage lives in
   `docs/testflight-crash-triage-2026-05-06.md`.
-- Build 42 is the emergency crash-fix candidate. It builds React Native iOS
+- Build 42 was the emergency crash-fix candidate. It builds React Native iOS
   from source, removes the embedded prebuilt `React.framework` /
   `ReactNativeDependencies.framework` path, and lazy-loads optional browser/auth
   native modules outside first render.
@@ -37,7 +49,7 @@ crash-fix update:
   `ba6727cf-2c1d-464f-a005-6ce9670d4f81`, `error: null`. App Store Connect
   shows build `1.0.0 (42)` upload status `완료`, version-row status
   `제출 준비 완료`, internal group `Team (Expo)`, and invite count `1`.
-  Real iPhone evidence is still pending.
+  Real iPhone launch evidence is negative, so a newer build is required.
 - Build 42 App Store Connect entry values are consolidated in
   `docs/app-store-connect-build42-packet.md`.
 - `node scripts/eas-build-submission-status.mjs 88c911f5-3c21-41e8-a6a2-a04939fa6179`
@@ -157,8 +169,8 @@ These cannot be fully completed from code alone:
 - App Store Connect app record points to bundle id `com.invitehub.app`.
 - TestFlight build 42 is uploaded through EAS Submit, processed in App Store
   Connect, export-compliance clear on the build row, and assigned to internal
-  group `Team (Expo)`. Real iPhone install/launch evidence is still needed for
-  the current candidate.
+  group `Team (Expo)`. Real iPhone launch failed on 2026-05-07, so build 42
+  must be superseded before App Store build selection.
 - App Privacy labels match collected data: account, invitations, RSVP, guestbook, photos, purchase records.
 - IAP product for photo-included publishing is created, priced, and approved, or
   the paid publish flag remains disabled and paid claims stay hidden.

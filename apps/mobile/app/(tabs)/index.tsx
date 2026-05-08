@@ -3,18 +3,16 @@ import { Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { HeroSection } from "@/components/home/HeroSection";
 import { theme } from "@/components/ui/theme";
-import { getDraftOwnerId } from "@/lib/auth-access";
-import { createAndPersistDraft } from "@/lib/drafts";
-import { useAuth } from "@/hooks/useAuth";
 import type { MobileTemplateGalleryItem } from "@/lib/template-gallery";
+
+const HOME_TEMPLATE_OWNER_ID = "local-home-template-owner";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { status, user } = useAuth();
-  const draftOwnerId = getDraftOwnerId(status === "authenticated" ? user : null);
 
   async function handleUseTemplate(template: MobileTemplateGalleryItem) {
-    const draft = await createAndPersistDraft(draftOwnerId, {
+    const { createAndPersistDraft } = await import("@/lib/drafts");
+    const draft = await createAndPersistDraft(HOME_TEMPLATE_OWNER_ID, {
       templateId: template.id,
       eventType: template.category,
       title: `${template.badge} 초대장`

@@ -8,8 +8,9 @@ build works.
 
 EAS Build and EAS Submit are finished. App Store Connect now shows build
 `1.0.0 (42)` processed, export compliance not blocking, and internal group
-`Team (Expo)` assigned. Do not mark it as proven on the user's iPhone until
-real-device TestFlight install and launch evidence is captured.
+`Team (Expo)` assigned. However, the user-provided real iPhone recording from
+2026-05-07 23:43 KST shows build 42 crashing on launch. Do not mark it as
+proven on the user's iPhone.
 
 ## Candidate Build
 
@@ -28,7 +29,7 @@ real-device TestFlight install and launch evidence is captured.
 | IPA artifact | `https://expo.dev/artifacts/eas/hTEP9Gx8wMFmK6w9aKSmcc.ipa` |
 | Latest EAS status recheck | `2026-05-07 21:44 KST` |
 | Latest App Store Connect check | `2026-05-07 21:49 KST` |
-| TestFlight state | Processed in App Store Connect; `Team (Expo)` assigned; iPhone install/launch pending |
+| TestFlight state | Processed in App Store Connect; `Team (Expo)` assigned; real iPhone launch failed |
 
 ## Why Build 42 Exists
 
@@ -45,7 +46,9 @@ classes coming from both the embedded `React.framework` and the app binary:
 - `_TtC10RCTSwiftUI18ContainerViewModel`
 - `RCTSwiftUIContainerViewWrapper`
 
-That is a stronger native startup-crash candidate than an app-name conflict.
+That was a stronger native startup-crash candidate than an app-name conflict,
+but build 42 still crashes on the user's iPhone after that patch. The current
+follow-up is tracked in `docs/testflight-crash-triage-2026-05-07.md`.
 
 ## What Changed From Build 41
 
@@ -105,10 +108,13 @@ node scripts/eas-build-submission-status.mjs 88c911f5-3c21-41e8-a6a2-a04939fa617
 
 ## Required Next Sequence
 
-1. Install/update InviteHub from TestFlight on the user's iPhone.
-2. Confirm the installed TestFlight build is `1.0.0 (42)`.
-3. Capture real-device launch evidence. Do not count simulator launch as TestFlight proof.
-4. Continue App Store version metadata, screenshots, privacy labels, review
+1. Do not use build 42 as the App Store version candidate.
+2. Capture or share the build 42 crash report from the user's iPhone if
+   possible.
+3. Prepare a newer startup-surface reduction build and verify it through
+   TestFlight on the user's iPhone.
+4. Capture real-device launch evidence. Do not count simulator launch as TestFlight proof.
+5. Continue App Store version metadata, screenshots, privacy labels, review
    notes, contact, IAP state, and build-selection work only with the required
    user approvals.
 

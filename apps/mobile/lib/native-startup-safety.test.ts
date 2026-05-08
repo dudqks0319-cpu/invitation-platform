@@ -8,6 +8,7 @@ describe("native startup safety", () => {
   it("does not load optional auth/browser native modules during the first home render", () => {
     const useAuth = readFileSync(join(mobileRoot, "hooks/useAuth.ts"), "utf8");
     const share = readFileSync(join(mobileRoot, "lib/share.ts"), "utf8");
+    const home = readFileSync(join(mobileRoot, "app/(tabs)/index.tsx"), "utf8");
 
     expect(useAuth).not.toContain('import * as AppleAuthentication from "expo-apple-authentication"');
     expect(useAuth).not.toContain('import * as WebBrowser from "expo-web-browser"');
@@ -16,6 +17,11 @@ describe("native startup safety", () => {
 
     expect(share).not.toContain('import * as WebBrowser from "expo-web-browser"');
     expect(share).toContain('await import("expo-web-browser")');
+
+    expect(home).not.toContain('from "@/hooks/useAuth"');
+    expect(home).not.toContain('from "@/lib/drafts"');
+    expect(home).not.toContain('from "@/lib/auth-access"');
+    expect(home).toContain('await import("@/lib/drafts")');
   });
 
   it("builds React Native iOS from source to avoid duplicate prebuilt runtime classes", () => {

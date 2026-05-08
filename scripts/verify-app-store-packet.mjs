@@ -80,6 +80,7 @@ const supportContact = read("lib/support-contact.ts");
 const supportContactTest = read("lib/support-contact.test.ts");
 const crashTriage = read("docs/testflight-crash-triage-2026-05-03.md");
 const crashTriageBuild42 = read("docs/testflight-crash-triage-2026-05-06.md");
+const crashTriageBuild42Failed = read("docs/testflight-crash-triage-2026-05-07.md");
 const mobileEntry = read("apps/mobile/index.js");
 const mobilePackage = read("apps/mobile/package.json");
 const mobileEntryTest = read("apps/mobile/entry.test.ts");
@@ -112,7 +113,8 @@ includes("docs/app-store-connect-build41-packet.md", packet, "submit only after 
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "EAS submission status | `FINISHED`, `error: null`");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "Latest EAS status recheck | `2026-05-07 21:44 KST`");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "Latest App Store Connect check | `2026-05-07 21:49 KST`");
-includes("docs/app-store-connect-build42-packet.md", build42Packet, "TestFlight state | Processed in App Store Connect; `Team (Expo)` assigned; iPhone install/launch pending");
+includes("docs/app-store-connect-build42-packet.md", build42Packet, "TestFlight state | Processed in App Store Connect; `Team (Expo)` assigned; real iPhone launch failed");
+includes("docs/app-store-connect-build42-packet.md", build42Packet, "docs/testflight-crash-triage-2026-05-07.md");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "React.framework");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "ReactNativeDependencies.framework");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "hermesvm.framework");
@@ -131,7 +133,8 @@ for (const [file, content] of [
   ["docs/goal-completion-audit-90.md", audit],
   ["docs/security-gate-90.md", security],
   ["docs/testflight-crash-triage-2026-05-03.md", crashTriage],
-  ["docs/testflight-crash-triage-2026-05-06.md", crashTriageBuild42]
+  ["docs/testflight-crash-triage-2026-05-06.md", crashTriageBuild42],
+  ["docs/testflight-crash-triage-2026-05-07.md", crashTriageBuild42Failed]
 ]) {
   notIncludes(
     file,
@@ -157,13 +160,16 @@ notIncludes(
 );
 
 includes("docs/app-store-readiness-90.md", readiness, "Build 42 App Store Connect entry values");
+includes("docs/app-store-readiness-90.md", readiness, "Build 42 is no longer a valid");
+includes("docs/app-store-readiness-90.md", readiness, "Real iPhone launch failed on 2026-05-07");
 includes("docs/app-store-readiness-90.md", readiness, "NEXT_PUBLIC_SUPPORT_EMAIL");
 includes("docs/app-store-readiness-90.md", readiness, "returned build 42 `FINISHED`, linked submission `FINISHED`, `error: null`");
 includes("docs/goal-completion-audit-90.md", audit, "## Completion Verdict");
 includes("docs/goal-completion-audit-90.md", audit, "Do not mark the goal complete until");
 includes("docs/goal-completion-audit-90.md", audit, "build 41 is uploaded and submitted");
 includes("docs/goal-completion-audit-90.md", audit, "Build 42 local crash-fix candidate");
-includes("docs/goal-completion-audit-90.md", audit, "processed and assigned to internal group `Team (Expo)`");
+includes("docs/goal-completion-audit-90.md", audit, "Failed on real iPhone");
+includes("docs/goal-completion-audit-90.md", audit, "processed and assigned to `Team (Expo)`");
 includes("docs/goal-completion-audit-90.md", audit, "Build 42 EAS upload and submission evidence");
 includes("docs/goal-completion-audit-90.md", audit, "App Review contact email");
 includes("docs/goal-completion-audit-90.md", audit, "TestFlight device evidence harness");
@@ -179,6 +185,7 @@ includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "호스�
 includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "realIphoneTestFlightInstallLaunchPassed");
 includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "appStoreConnectBuild42Processed");
 includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "build42SelectedForVersion");
+includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "do not select build 42");
 includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "node scripts/verify-goal-completion.mjs");
 includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "Do not use `support@invitehub.co.kr`");
 includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "Do not press final Add for Review or Submit for Review");
@@ -210,6 +217,10 @@ includes("docs/testflight-crash-triage-2026-05-06.md", crashTriageBuild42, "Reac
 includes("docs/testflight-crash-triage-2026-05-06.md", crashTriageBuild42, "ReactNativeDependencies");
 includes("docs/testflight-crash-triage-2026-05-06.md", crashTriageBuild42, "CFBundleVersion`: `42`");
 includes("docs/testflight-crash-triage-2026-05-06.md", crashTriageBuild42, "Do not claim the crash is fixed until build 42 is installed from TestFlight");
+includes("docs/testflight-crash-triage-2026-05-07.md", crashTriageBuild42Failed, "Build `1.0.0 (42)` is not a valid release candidate");
+includes("docs/testflight-crash-triage-2026-05-07.md", crashTriageBuild42Failed, "build42-crash-prompt.png");
+includes("docs/testflight-crash-triage-2026-05-07.md", crashTriageBuild42Failed, "embedded frameworks: `hermesvm.framework` only");
+includes("docs/testflight-crash-triage-2026-05-07.md", crashTriageBuild42Failed, "TurboModule startup");
 includes("apps/mobile/package.json", mobilePackage, "\"main\": \"expo-router/entry\"");
 includes("apps/mobile/index.js", mobileEntry, "expo-router/entry");
 notIncludes("apps/mobile/index.js", mobileEntry, "require.context");
@@ -305,6 +316,7 @@ if (failures.length > 0) {
 console.log("APP STORE PACKET VERIFY RESULT");
 console.log("- Status: pass");
 console.log(`- Checks: ${checks.length}`);
-console.log(`- Current Candidate Build: ${expectedBuild42.appVersion} (${expectedBuild42.buildNumber})`);
-console.log(`- Current EAS Build: ${expectedBuild42.buildId}`);
-console.log("- Required follow-up: iPhone TestFlight install/launch and final metadata still need Apple-side evidence.");
+console.log(`- Latest Uploaded Build: ${expectedBuild42.appVersion} (${expectedBuild42.buildNumber})`);
+console.log(`- Latest EAS Build: ${expectedBuild42.buildId}`);
+console.log("- Device Verdict: build 42 failed real iPhone TestFlight launch.");
+console.log("- Required follow-up: prepare a newer build, pass real iPhone TestFlight launch, then finish Apple-side metadata evidence.");

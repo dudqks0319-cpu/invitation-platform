@@ -2,7 +2,10 @@
 
 Date: 2026-05-07
 
-Use this packet when entering App Store Connect fields for build `1.0.0 (42)`.
+This packet was prepared for build `1.0.0 (42)`, but build 42 failed the real
+iPhone TestFlight launch check on 2026-05-07 23:43 KST. Keep the metadata text
+for reuse, but do not select build 42 for App Store review.
+
 Do not press final Add for Review or Submit for Review until the user
 explicitly confirms that action.
 
@@ -18,8 +21,8 @@ explicitly confirms that action.
 | EAS Submission ID | `ba6727cf-2c1d-464f-a005-6ce9670d4f81` |
 | IPA Artifact | `https://expo.dev/artifacts/eas/hTEP9Gx8wMFmK6w9aKSmcc.ipa` |
 
-Select build `1.0.0 (42)` for the App Store version only after the iPhone
-TestFlight launch check passes.
+Do not select build `1.0.0 (42)` for the App Store version. Use a newer build
+only after the iPhone TestFlight launch check passes.
 
 ## App Information
 
@@ -108,8 +111,9 @@ Local candidate folder:
 output/store-screenshots-submission-build40
 ```
 
-The build 42 code change targets native startup stability and does not change
-the store screenshot UI.
+The build 42 code change targeted native startup stability and did not change
+the store screenshot UI, but build 42 failed on real iPhone. Reuse these
+screenshots only if the newer passing build does not change the UI.
 
 Files:
 
@@ -163,14 +167,14 @@ After each Apple-side save, record structured evidence:
 node scripts/record-app-store-evidence.mjs --key appStoreConnectBuild42Processed --evidence "<App Store Connect TestFlight shows build 1.0.0 (42) processed/available>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/testflight/ios"
 node scripts/record-app-store-evidence.mjs --key build42ExportComplianceSaved --evidence "<build 42 export compliance saved or not requested>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/testflight/ios"
 node scripts/record-app-store-evidence.mjs --key build42AssignedToInternalGroup --evidence "<build 42 assigned to Team (Expo)>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/testflight/ios"
-node scripts/record-app-store-evidence.mjs --key realIphoneTestFlightInstallLaunchPassed --evidence "<real iPhone installed TestFlight build 1.0.0 (42) and launched home/template/builder/preview without the crash dialog>" --artifact "output/testflight-device-watch/<timestamp>/evidence/<timestamp>"
+node scripts/record-app-store-evidence.mjs --key realIphoneTestFlightInstallLaunchPassed --evidence "<real iPhone installed the newer TestFlight build and launched home/template/builder/preview without the crash dialog>" --artifact "output/testflight-device-watch/<timestamp>/evidence/<timestamp>"
 node scripts/record-app-store-evidence.mjs --key appInfoSaved --evidence "<saved App Information summary>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/distribution"
 node scripts/record-app-store-evidence.mjs --key versionMetadataSaved --evidence "<saved version metadata summary>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/distribution"
 node scripts/record-app-store-evidence.mjs --key screenshotsUploaded --evidence "<uploaded screenshot summary>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/distribution"
 node scripts/record-app-store-evidence.mjs --key privacyLabelsSaved --evidence "<saved privacy labels summary>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/appprivacy"
 node scripts/record-app-store-evidence.mjs --key reviewNotesSaved --evidence "<saved review notes summary>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/distribution"
 node scripts/record-app-store-evidence.mjs --key verifiedAppReviewContactSaved --evidence "<saved verified App Review contact summary>" --artifact "user-confirmation:app-review-contact-saved-by-account-holder"
-node scripts/record-app-store-evidence.mjs --key build42SelectedForVersion --evidence "<build 1.0.0 (42) selected for version 1.0.0>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/distribution"
+# Do not record build42SelectedForVersion. Build 42 failed real iPhone launch.
 ```
 
 After recording evidence, rerun:
