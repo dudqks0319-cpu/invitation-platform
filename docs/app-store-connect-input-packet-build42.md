@@ -164,12 +164,13 @@ confirmed.
 After each Apple-side save, record structured evidence:
 
 ```bash
-node scripts/record-app-store-evidence.mjs --key appStoreConnectBuild42Processed --evidence "<App Store Connect TestFlight shows build 1.0.0 (42) processed/available>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/testflight/ios"
-node scripts/record-app-store-evidence.mjs --key build42ExportComplianceSaved --evidence "<build 42 export compliance saved or not requested>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/testflight/ios"
-node scripts/record-app-store-evidence.mjs --key build42AssignedToInternalGroup --evidence "<build 42 assigned to Team (Expo)>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/testflight/ios"
+node scripts/record-app-store-evidence.mjs --key currentTestFlightBuildProcessed --evidence "<App Store Connect TestFlight shows the newer passing build processed/available>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/testflight/ios"
+node scripts/record-app-store-evidence.mjs --key currentBuildExportComplianceSaved --evidence "<newer passing build export compliance saved or not requested>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/testflight/ios"
+node scripts/record-app-store-evidence.mjs --key currentBuildAssignedToInternalGroup --evidence "<newer passing build assigned to Team (Expo)>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/testflight/ios"
 node scripts/record-app-store-evidence.mjs --key realIphoneTestFlightInstallLaunchPassed --evidence "<real iPhone installed the newer TestFlight build and launched home/template/builder/preview without the crash dialog>" --artifact "output/testflight-device-watch/<timestamp>/evidence/<timestamp>"
 node scripts/record-app-store-evidence.mjs --key appInfoSaved --evidence "<saved App Information summary>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/distribution"
 node scripts/record-app-store-evidence.mjs --key versionMetadataSaved --evidence "<saved version metadata summary>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/distribution"
+node scripts/record-app-store-evidence.mjs --key currentReleaseBuildSelectedForVersion --evidence "<newer passing build selected for the App Store version>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/distribution"
 node scripts/record-app-store-evidence.mjs --key screenshotsUploaded --evidence "<uploaded screenshot summary>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/distribution"
 node scripts/record-app-store-evidence.mjs --key privacyLabelsSaved --evidence "<saved privacy labels summary>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/appprivacy"
 node scripts/record-app-store-evidence.mjs --key reviewNotesSaved --evidence "<saved review notes summary>" --artifact "https://appstoreconnect.apple.com/apps/6763630299/distribution"

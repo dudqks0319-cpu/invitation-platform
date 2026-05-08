@@ -2,13 +2,13 @@ import { existsSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 
 export const requiredExternalEvidence = [
-  { key: "appStoreConnectBuild42Processed", label: "App Store Connect shows build 1.0.0 (42) processed/available" },
-  { key: "build42ExportComplianceSaved", label: "Build 42 export compliance is saved if prompted" },
-  { key: "build42AssignedToInternalGroup", label: "Build 42 is assigned to Team (Expo)" },
+  { key: "currentTestFlightBuildProcessed", label: "Current candidate TestFlight build is processed/available" },
+  { key: "currentBuildExportComplianceSaved", label: "Current candidate build export compliance is saved if prompted" },
+  { key: "currentBuildAssignedToInternalGroup", label: "Current candidate build is assigned to Team (Expo)" },
   { key: "realIphoneTestFlightInstallLaunchPassed", label: "A real iPhone TestFlight install and launch smoke test passed" },
   { key: "appInfoSaved", label: "App Information fields are saved" },
   { key: "versionMetadataSaved", label: "Version metadata fields are saved" },
-  { key: "build42SelectedForVersion", label: "Build 42 is selected for the App Store version" },
+  { key: "currentReleaseBuildSelectedForVersion", label: "Current passing build is selected for the App Store version" },
   { key: "privacyLabelsSaved", label: "App Privacy labels are saved" },
   { key: "screenshotsUploaded", label: "Required screenshots are uploaded" },
   { key: "reviewNotesSaved", label: "Review Notes are saved" },
@@ -17,12 +17,12 @@ export const requiredExternalEvidence = [
 ];
 
 const appleConsoleEvidenceKeys = new Set([
-  "appStoreConnectBuild42Processed",
-  "build42ExportComplianceSaved",
-  "build42AssignedToInternalGroup",
+  "currentTestFlightBuildProcessed",
+  "currentBuildExportComplianceSaved",
+  "currentBuildAssignedToInternalGroup",
   "appInfoSaved",
   "versionMetadataSaved",
-  "build42SelectedForVersion",
+  "currentReleaseBuildSelectedForVersion",
   "privacyLabelsSaved",
   "screenshotsUploaded",
   "reviewNotesSaved",

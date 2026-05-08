@@ -1,7 +1,7 @@
 # InviteHub Goal Completion Audit - 90점 Release Readiness
 
 Date: 2026-05-01
-Latest update: 2026-05-08 17:26 KST
+Latest update: 2026-05-08 18:18 KST
 
 ## Objective
 
@@ -111,6 +111,11 @@ Manual Apple-side confirmation path:
 3. Confirm the newer build remains in internal group `Team (Expo)`.
 4. Install/update InviteHub from TestFlight on the user's iPhone and smoke test
    home -> template selection -> builder Step 1 -> preview.
+5. Record the newer passing build with generic evidence keys:
+   `currentTestFlightBuildProcessed`, `currentBuildExportComplianceSaved`,
+   `currentBuildAssignedToInternalGroup`, and
+   `currentReleaseBuildSelectedForVersion`. Do not record build 42 as the
+   selected App Store version.
 
 ## Latest Local Evidence
 
@@ -128,6 +133,10 @@ Manual Apple-side confirmation path:
   passed with 0 errors and 4 warnings on 2026-05-08 17:25 KST, installed and
   opened `com.invitehub.app` on iPhone 17. Screenshot:
   `output/testflight-device-watch/20260508-codex-update/evidence/release-simulator-home.png`.
+- App Store external evidence contract now uses generic current-build keys
+  instead of requiring failed build 42 to be selected for the App Store version.
+  The historical build 42 evidence remains in the manifest, but goal completion
+  requires a newer passing TestFlight build and `currentReleaseBuildSelectedForVersion`.
 - `npm run test -- --exclude=**/.claude/**`: 58 test files / 177 tests passed
   in the latest release gate.
 - Focused mobile/API tests: 9 test files / 34 tests passed in the latest

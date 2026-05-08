@@ -183,8 +183,8 @@ includes("docs/app-store-connect-input-packet-build42.md", inputPacket, expected
 includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "output/store-screenshots-submission-build40");
 includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "호스트가 대시보드에서 승인하거나 숨길 수 있습니다");
 includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "realIphoneTestFlightInstallLaunchPassed");
-includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "appStoreConnectBuild42Processed");
-includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "build42SelectedForVersion");
+includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "currentTestFlightBuildProcessed");
+includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "currentReleaseBuildSelectedForVersion");
 includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "do not select build 42");
 includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "node scripts/verify-goal-completion.mjs");
 includes("docs/app-store-connect-input-packet-build42.md", inputPacket, "Do not use `support@invitehub.co.kr`");

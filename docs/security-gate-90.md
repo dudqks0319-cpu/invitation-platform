@@ -40,7 +40,7 @@ Local security controls are materially in place. A fresh network-enabled
 
 | Risk | Owner | Due |
 | --- | --- | --- |
-| Real-device TestFlight install/launch evidence for the current crash-fix candidate has not been captured. Builds 38, 39, 40, and 41 are unsafe rollback candidates; build 42 is processed in App Store Connect but not yet proven on the user's iPhone. | Store Manager / Release owner | Before final release readiness sign-off |
+| Real-device TestFlight install/launch evidence for the current crash-fix candidate has not been captured. Builds 38, 39, 40, 41, and 42 are unsafe release candidates; build 42 is processed in App Store Connect but failed the user's iPhone launch check. | Store Manager / Release owner | Before final release readiness sign-off |
 | App Store Connect app information, version metadata, build selection, privacy labels, IAP approval, review notes, and screenshots are verified incomplete. | Store Manager / Release owner | Before final App Store submission |
 | Custom domain `invitehub.co.kr` does not resolve by DNS; store URLs must use the verified Vercel deployment or DNS must be connected before submission. | Store Manager / Release owner | Before entering App Store metadata |
 | `support@invitehub.co.kr` has no verified MX/DNS evidence; App Review contact must use a currently verified mailbox and `NEXT_PUBLIC_SUPPORT_EMAIL` until domain email is configured. | Store Manager / Release owner | Before entering App Review contact |
@@ -53,17 +53,18 @@ cd /Users/jyb-m3max/Desktop/codex/invitation-platform
 npm audit --audit-level=high
 ```
 
-Result: exit 0, no high/critical findings. `npm audit` still reports 13
-moderate findings in transitive Expo/Next tooling dependencies. Do not use
+Result: exit 0, no high/critical findings. `npm audit` still reports moderate
+findings in transitive Expo/Next tooling dependencies. Do not use
 `npm audit fix --force` for this release because npm proposes breaking
 downgrades for Next/Expo dependency chains.
 
 ## Current External Gate
 
 EAS iOS build 42 completed and EAS Submit uploaded the binary to App Store
-Connect after the latest user iPhone TestFlight crash report. Build 42 is the
-current crash-fix candidate, but it is not treated as proven until the user's
-iPhone installs and launches it from TestFlight.
+Connect after the latest user iPhone TestFlight crash report. Build 42 is no
+longer a current crash-fix candidate because the user's 2026-05-07 real iPhone
+recording shows it still crashes on launch. A newer post-build-42 candidate is
+required before final release readiness sign-off.
 
 `node scripts/eas-build-submission-status.mjs 61bc2e17-0c5a-45f3-94ee-bf3b63e09f03`
 returned build 41 `FINISHED`, linked submission `FINISHED`, `error: null`.
@@ -89,7 +90,9 @@ finished for build `88c911f5-3c21-41e8-a6a2-a04939fa6179`, submission
 `ba6727cf-2c1d-464f-a005-6ce9670d4f81`, `error: null`. Chrome App Store
 Connect evidence on 2026-05-07 21:49 KST shows build `1.0.0 (42)` processed,
 export compliance not blocking, and internal group `Team (Expo)` assigned with
-invite count `1`. Real-device install/session evidence is still pending.
+invite count `1`. The user-provided real iPhone recording from 2026-05-07
+23:43 KST shows build 42 crashing on launch, so real-device launch evidence is
+negative and a newer build is required.
 
 The remaining external gates are real-device TestFlight install/launch evidence
 and final App Store Connect submission surfaces: app information, version
@@ -107,7 +110,7 @@ but the flag must stay disabled until the product is created and approved.
 The 2026-05-03 13:24 KST fast release gate passed web/mobile lint and
 typecheck, the 58-file web/API test suite with 177 tests, and the focused
 9-file mobile/API suite with 34 tests. The App Store packet verifier is now
-pinned to build 42.
+aware that build 42 is uploaded but failed the real-device launch gate.
 
 The public support page no longer hardcodes the unverified
 `support@invitehub.co.kr` mailbox. It reads `NEXT_PUBLIC_SUPPORT_EMAIL` and only

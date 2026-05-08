@@ -7,13 +7,13 @@ import { describe, expect, it } from "vitest";
 const scriptPath = join(process.cwd(), "scripts/verify-goal-completion.mjs");
 
 const evidenceKeys = [
-  "appStoreConnectBuild42Processed",
-  "build42ExportComplianceSaved",
-  "build42AssignedToInternalGroup",
+  "currentTestFlightBuildProcessed",
+  "currentBuildExportComplianceSaved",
+  "currentBuildAssignedToInternalGroup",
   "realIphoneTestFlightInstallLaunchPassed",
   "appInfoSaved",
   "versionMetadataSaved",
-  "build42SelectedForVersion",
+  "currentReleaseBuildSelectedForVersion",
   "privacyLabelsSaved",
   "screenshotsUploaded",
   "reviewNotesSaved",
