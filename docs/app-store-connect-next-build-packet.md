@@ -15,7 +15,7 @@ before it can be selected for the App Store version.
 | Field | Value |
 | --- | --- |
 | Branch | `codex/testflight-launch-crash-fix` |
-| Source commit | `5908ad0` |
+| Source commit | Verify immediately before upload with `git rev-parse --short HEAD` |
 | App Store Connect app id | `6763630299` |
 | Bundle id | `com.invitehub.app` |
 | App version | `1.0.0` |
@@ -63,6 +63,7 @@ output/testflight-device-watch/20260508-codex-update/evidence/release-simulator-
 Run only after the user explicitly approves a new externally visible upload:
 
 ```bash
+git rev-parse --short HEAD
 EAS_NO_VCS=1 eas build -p ios --profile production --non-interactive --auto-submit
 ```
 

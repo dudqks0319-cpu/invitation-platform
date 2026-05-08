@@ -139,7 +139,9 @@ Manual Apple-side confirmation path:
   requires a newer passing TestFlight build and `currentReleaseBuildSelectedForVersion`.
 - Next-build upload packet is prepared at
   `docs/app-store-connect-next-build-packet.md` for the post-build-42 candidate
-  at source commit `5908ad0`; upload still requires explicit user approval.
+  on the current branch head; upload still requires explicit user approval and
+  the source commit must be captured with `git rev-parse --short HEAD`
+  immediately before running EAS.
 - `npm run test -- --exclude=**/.claude/**`: 58 test files / 177 tests passed
   in the latest release gate.
 - Focused mobile/API tests: 9 test files / 34 tests passed in the latest

@@ -122,8 +122,9 @@ includes("docs/app-store-connect-build42-packet.md", build42Packet, "hermesvm.fr
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "EAS_NO_VCS=1 eas build -p ios --profile production --non-interactive --auto-submit");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "node scripts/eas-build-submission-status.mjs 88c911f5-3c21-41e8-a6a2-a04939fa6179");
 includes("docs/app-store-connect-build42-packet.md", build42Packet, "Do not count simulator launch as TestFlight proof");
-includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "Source commit | `5908ad0`");
+includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "Source commit | Verify immediately before upload with `git rev-parse --short HEAD`");
 includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "EAS remote auto-increment after build 42");
+includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "git rev-parse --short HEAD");
 includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "EAS_NO_VCS=1 eas build -p ios --profile production --non-interactive --auto-submit");
 includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "currentTestFlightBuildProcessed");
 includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "currentReleaseBuildSelectedForVersion");
