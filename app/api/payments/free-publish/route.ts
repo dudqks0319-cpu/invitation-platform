@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
+import { getPublishMissingFields, getPublishMissingFieldsMessage } from "@/lib/invitation-publish-readiness";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
@@ -98,12 +99,21 @@ export async function POST(request: Request) {
   }
 
   const payload = normalizeInvitationPayload(invitation.payload);
-  const publishedPayload = buildPublishedInvitationAssetPayload(invitation.slug, payload);
+  const missingFields = getPublishMissingFields(payload);
+  if (missingFields.length > 0) {
+    return NextResponse.json(
+      { success: false, message: getPublishMissingFieldsMessage(missingFields) },
+      { status: 400 }
+    );
+  }
+
   const pricing = getInvitationPricing(payload);
 
   if (!pricing.isFree) {
     return NextResponse.json({ success: false, message: "유료 항목이 포함되어 있어 무료 발행을 사용할 수 없습니다." }, { status: 409 });
   }
+
+  const publishedPayload = buildPublishedInvitationAssetPayload(invitation.slug, payload);
 
   const { error: updateError } = await admin
     .from("invitations")

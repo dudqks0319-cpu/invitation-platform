@@ -15,3 +15,7 @@ export function getMobileHomeLayoutMode(
 
   return "templates-first";
 }
+
+export function getTemplateScrollTargetY(templateAreaY: number, offset = 12) {
+  return Math.max(templateAreaY - offset, 0);
+}

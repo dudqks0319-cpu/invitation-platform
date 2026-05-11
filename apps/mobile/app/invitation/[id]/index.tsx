@@ -369,11 +369,6 @@ export default function InvitationDetailScreen() {
           </Button>
         </View>
       </Card>
-      <View style={{ gap: 12 }}>
-        <Link asChild href={`/invitation/${id ?? "demo"}/rsvp`}>
-          <Button accessibilityLabel="RSVP 관리 화면으로 이동">RSVP 관리 바로가기</Button>
-        </Link>
-      </View>
     </Screen>
   );
 }

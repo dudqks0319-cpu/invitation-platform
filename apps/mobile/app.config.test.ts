@@ -10,7 +10,8 @@ async function loadConfig(envPatch: Record<string, string | undefined>) {
   };
 
   const configModule = await import("./app.config");
-  return configModule.default as {
+  const appJson = await import("./app.json");
+  return configModule.default({ config: appJson.default.expo } as never) as {
     scheme: string;
     ios: { bundleIdentifier: string };
     android: { package: string };

@@ -83,10 +83,23 @@ function createAuthClient(userId: string | null) {
   };
 }
 
+function createValidInvitationPayload(pricey: boolean) {
+  return {
+    title: "민준 수아 결혼식 초대장",
+    eventDateTime: "2026-05-10T14:00",
+    venueName: "더파인 웨딩홀",
+    venueAddress: "서울 강남구 논현로 456",
+    groomName: "민준",
+    brideName: "수아",
+    ...(pricey ? { mainImageUrl: "https://example.com/main.jpg" } : {})
+  };
+}
+
 function createAdminDouble(options?: {
   existingPayment?: boolean;
   invitationUserId?: string;
   pricey?: boolean;
+  payload?: Record<string, unknown>;
 }) {
   const state = {
     paymentInserts: [] as Array<Record<string, unknown>>,
@@ -97,6 +110,7 @@ function createAdminDouble(options?: {
   const invitationUserId = options?.invitationUserId ?? "user-1";
   const pricey = options?.pricey ?? true;
   const existingPayment = options?.existingPayment ?? false;
+  const invitationPayload = options?.payload ?? createValidInvitationPayload(pricey);
 
   const client = {
     from(table: string) {
@@ -128,9 +142,7 @@ function createAdminDouble(options?: {
                 slug: "invite-123",
                 title: "초대장",
                 user_id: invitationUserId,
-                payload: pricey
-                  ? { mainImageUrl: "https://example.com/main.jpg" }
-                  : {},
+                payload: invitationPayload,
                 status: "draft"
               },
               error: null
@@ -342,6 +354,39 @@ describe("POST /api/payments/store/verify", () => {
 
     expect(response.status).toBe(409);
     expect(payload.message).toContain("무료");
+  });
+
+  it("records a verified store payment but does not publish when required fields are missing", async () => {
+    const admin = createAdminDouble({
+      payload: {
+        title: "결혼식 초대장",
+        eventDateTime: "2026-04-12T14:00",
+        venueName: "서울 더파인 웨딩홀",
+        venueAddress: "서울 강남구 테헤란로 123",
+        groomName: "홍길동",
+        brideName: "김부인",
+        mainImageUrl: "https://example.com/main.jpg"
+      }
+    });
+    createSupabaseAdminClientMock.mockReturnValue(admin.client);
+    isAppleStoreVerificationEnabledMock.mockReturnValue(true);
+
+    const response = await POST(
+      createRequest({
+        invitationId: "invitation-1",
+        provider: "apple_iap",
+        productId: "publish.credit.ios",
+        transactionId: "tx-1",
+        environment: "sandbox"
+      })
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(409);
+    expect(payload.message).toContain("공개 전 입력");
+    expect(admin.state.paymentInserts).toHaveLength(1);
+    expect(admin.state.auditInserts).toHaveLength(1);
+    expect(admin.state.invitationUpdates).toHaveLength(0);
   });
 
   it("rejects unapproved product ids before verification completes", async () => {

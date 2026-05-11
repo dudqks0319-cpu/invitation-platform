@@ -14,6 +14,7 @@ import {
   sanitizeStoreVerification
 } from "@/lib/payments/store-entitlements";
 import { buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
+import { getPublishMissingFields, getPublishMissingFieldsMessage } from "@/lib/invitation-publish-readiness";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
 import { ensureJsonRequest, readJsonBody } from "@/lib/supabase/public-write";
@@ -112,7 +113,6 @@ export async function POST(request: Request) {
   }
 
   const normalizedPayload = normalizeInvitationPayload(invitation.payload);
-  const publishedPayload = buildPublishedInvitationAssetPayload(invitation.slug, normalizedPayload);
   const pricing = getInvitationPricing(normalizedPayload);
 
   if (pricing.isFree) {
@@ -226,6 +226,22 @@ export async function POST(request: Request) {
     },
     response_payload: sanitizedVerification
   });
+
+  const missingFields = getPublishMissingFields(normalizedPayload);
+  if (missingFields.length > 0) {
+    return NextResponse.json(
+      {
+        success: false,
+        message: `결제는 확인됐지만 ${getPublishMissingFieldsMessage(missingFields)}`,
+        paymentId: payment.id,
+        invitationId: invitation.id,
+        slug: invitation.slug
+      },
+      { status: 409 }
+    );
+  }
+
+  const publishedPayload = buildPublishedInvitationAssetPayload(invitation.slug, normalizedPayload);
 
   const { error: updateError } = await admin
     .from("invitations")

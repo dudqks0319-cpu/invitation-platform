@@ -283,7 +283,7 @@ export function CheckoutFlow({
               </div>
               <p className="ops-note">
                 {pricing.isFree
-                  ? "텍스트, 일정, 장소, 이미지, 교통 안내까지 무료로 반영됩니다."
+                  ? "사진을 추가하지 않은 무료 구성입니다. 텍스트, 일정, 장소, 교통 안내를 무료로 발행할 수 있습니다."
                   : "유료 옵션이 포함된 초대장은 웹이 아니라 모바일 앱에서 스토어 결제로 발행합니다."}
               </p>
               {publicSlug ? (

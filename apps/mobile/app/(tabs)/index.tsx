@@ -1,11 +1,13 @@
+import { useRef, useState } from "react";
 import { useRouter } from "expo-router";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import type { ScrollView as ScrollViewType } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { HeroSection } from "@/components/home/HeroSection";
 import { theme } from "@/components/ui/theme";
 import { getDraftOwnerId } from "@/lib/auth-access";
 import { createAndPersistDraft } from "@/lib/drafts";
-import { getMobileHomeLayoutMode } from "@/lib/home-layout";
+import { getMobileHomeLayoutMode, getTemplateScrollTargetY } from "@/lib/home-layout";
 import { useAuth } from "@/hooks/useAuth";
 import type { MobileTemplateGalleryItem } from "@/lib/template-gallery";
 
@@ -14,6 +16,8 @@ export default function HomeScreen() {
   const { status, user } = useAuth();
   const draftOwnerId = getDraftOwnerId(status === "authenticated" ? user : null);
   const homeLayoutMode = getMobileHomeLayoutMode(status, user);
+  const scrollRef = useRef<ScrollViewType>(null);
+  const [templateAreaY, setTemplateAreaY] = useState(0);
 
   async function handleUseTemplate(template: MobileTemplateGalleryItem) {
     const draft = await createAndPersistDraft(draftOwnerId, {
@@ -27,6 +31,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView
+        ref={scrollRef}
         contentContainerStyle={{
           paddingBottom: 44
         }}
@@ -107,7 +112,12 @@ export default function HomeScreen() {
                 <Pressable
                   accessibilityLabel="새 디자인 템플릿 둘러보기"
                   accessibilityRole="button"
-                  onPress={() => {}}
+                  onPress={() => {
+                    scrollRef.current?.scrollTo({
+                      y: getTemplateScrollTargetY(templateAreaY),
+                      animated: true
+                    });
+                  }}
                   style={{
                     flex: 1,
                     minHeight: 44,
@@ -124,11 +134,17 @@ export default function HomeScreen() {
               </View>
             </View>
           ) : null}
-          <HeroSection
-            onUseTemplate={(template) => {
-              void handleUseTemplate(template);
+          <View
+            onLayout={(event) => {
+              setTemplateAreaY(event.nativeEvent.layout.y);
             }}
-          />
+          >
+            <HeroSection
+              onUseTemplate={(template) => {
+                void handleUseTemplate(template);
+              }}
+            />
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>

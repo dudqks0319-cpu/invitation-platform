@@ -46,7 +46,16 @@ function createServerClient(userId: string | null) {
   };
 }
 
-function createAdminClient(pricey = false) {
+const validPublishPayload = {
+  title: "민준 수아 결혼식 초대장",
+  eventDateTime: "2026-05-10T14:00",
+  venueName: "더파인 웨딩홀",
+  venueAddress: "서울 강남구 논현로 456",
+  groomName: "민준",
+  brideName: "수아"
+};
+
+function createAdminClient(pricey = false, payloadOverride: Record<string, unknown> = {}) {
   return {
     from(table: string) {
       if (table === "invitations") {
@@ -65,8 +74,8 @@ function createAdminClient(pricey = false) {
                 title: "초대장",
                 user_id: "user-1",
                 payload: pricey
-                  ? { mainImageUrl: "https://example.com/a.jpg" }
-                  : {},
+                  ? { ...validPublishPayload, mainImageUrl: "https://example.com/a.jpg", ...payloadOverride }
+                  : { ...validPublishPayload, ...payloadOverride },
                 status: "draft"
               },
               error: null
@@ -150,6 +159,49 @@ describe("POST /api/payments/free-publish", () => {
 
     expect(response.status).toBe(409);
     expect(payload.message).toContain("유료 항목");
+  });
+
+  it("rejects free publish when required public fields are empty", async () => {
+    createServerSupabaseClientMock.mockResolvedValue(createServerClient("user-1"));
+    createSupabaseAdminClientMock.mockReturnValue(
+      createAdminClient(false, {
+        title: "",
+        eventDateTime: "",
+        venueName: "",
+        venueAddress: "",
+        groomName: "",
+        brideName: ""
+      })
+    );
+
+    const response = await POST(createRequest());
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload.message).toContain("공개 전 입력");
+    expect(payload.message).toContain("초대장 제목");
+    expect(payload.message).toContain("신부 이름");
+  });
+
+  it("rejects free publish when normalized demo placeholder values remain", async () => {
+    createServerSupabaseClientMock.mockResolvedValue(createServerClient("user-1"));
+    createSupabaseAdminClientMock.mockReturnValue(
+      createAdminClient(false, {
+        title: "결혼식 초대장",
+        eventDateTime: "2026-04-12T14:00",
+        venueName: "서울 더파인 웨딩홀",
+        venueAddress: "서울 강남구 테헤란로 123",
+        groomName: "홍길동",
+        brideName: "김부인"
+      })
+    );
+
+    const response = await POST(createRequest());
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload.message).toContain("공개 전 입력");
+    expect(payload.message).toContain("예식장 주소");
   });
 
   it("rejects non-json publish requests", async () => {

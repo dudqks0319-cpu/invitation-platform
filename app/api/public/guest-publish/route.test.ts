@@ -79,10 +79,10 @@ describe("POST /api/public/guest-publish", () => {
   it("publishes a free guest invitation", async () => {
     const response = await POST(
       createRequest({
-        title: "결혼식 초대장",
+        title: "민준 수아 결혼식 초대장",
         eventDateTime: "2026-05-10T14:00",
         venueName: "더파인 웨딩홀",
-        venueAddress: "서울 강남구 테헤란로 123",
+        venueAddress: "서울 강남구 논현로 456",
         groomName: "민준",
         brideName: "수아",
         templateId: "wedding-classic",
@@ -99,10 +99,10 @@ describe("POST /api/public/guest-publish", () => {
   it("blocks guest publish when paid options are included", async () => {
     const response = await POST(
       createRequest({
-        title: "결혼식 초대장",
+        title: "민준 수아 결혼식 초대장",
         eventDateTime: "2026-05-10T14:00",
         venueName: "더파인 웨딩홀",
-        venueAddress: "서울 강남구 테헤란로 123",
+        venueAddress: "서울 강남구 논현로 456",
         groomName: "민준",
         brideName: "수아",
         templateId: "wedding-classic",
@@ -114,5 +114,16 @@ describe("POST /api/public/guest-publish", () => {
 
     expect(response.status).toBe(409);
     expect(payload.message).toContain("유료 옵션");
+  });
+
+  it("rejects guest publish when draft normalization leaves demo placeholder values", async () => {
+    const response = await POST(createRequest({}));
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload.message).toContain("공개 전 입력");
+    expect(payload.message).toContain("초대장 제목");
+    expect(payload.message).toContain("신부 이름");
+    expect(insertSelectSingleMock).not.toHaveBeenCalled();
   });
 });

@@ -31,33 +31,21 @@ describe("TemplateBrowser", () => {
   it("keeps category switching sticky and presents larger real template results", () => {
     document.body.innerHTML = renderToStaticMarkup(<TemplateBrowser />);
 
-    expect(document.querySelector(".categories")?.className).toContain("sticky-template-categories");
+    expect(document.querySelector(".categories")?.className).not.toContain("sticky-template-categories");
     expect(document.querySelector(".cat-tabs")?.className).toContain("sticky-cat-tabs");
     expect(document.querySelector(".templates-grid")?.className).toContain("templates-grid-showcase");
     expect(document.querySelector(".template-thumb")?.className).toContain("template-thumb-showcase");
   });
 
-  it("opens the builder when a template card is clicked", async () => {
-    const container = document.createElement("div");
-    document.body.appendChild(container);
-    const root = createRoot(container);
+  it("uses explicit template CTAs without nesting buttons inside a card button", () => {
+    document.body.innerHTML = renderToStaticMarkup(<TemplateBrowser />);
 
-    await act(async () => {
-      root.render(<TemplateBrowser />);
-    });
+    const card = document.querySelector(".template-card");
+    const useLink = document.querySelector('a[href="/builder?template=wedding-classic"]');
 
-    const cardButton = container.querySelector('[aria-label="로즈 프레임 템플릿 선택"]');
-    expect(cardButton).not.toBeNull();
-
-    await act(async () => {
-      cardButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-    });
-
-    expect(pushMock).toHaveBeenCalledWith("/builder?template=wedding-classic");
-
-    await act(async () => {
-      root.unmount();
-    });
+    expect(card?.getAttribute("role")).not.toBe("button");
+    expect(card?.getAttribute("tabindex")).toBeNull();
+    expect(useLink?.textContent).toContain("사용하기");
   });
 
   it("opens preview without triggering builder navigation", async () => {
@@ -80,6 +68,8 @@ describe("TemplateBrowser", () => {
 
     expect(pushMock).not.toHaveBeenCalled();
     expect(container.textContent).toContain("로즈 프레임");
+    expect(container.querySelector(".preview-modal-box")?.getAttribute("role")).toBe("dialog");
+    expect(container.querySelector(".preview-modal-box")?.getAttribute("aria-modal")).toBe("true");
 
     await act(async () => {
       root.unmount();

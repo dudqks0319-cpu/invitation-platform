@@ -39,6 +39,27 @@ function getStatusLabel(status: DashboardItem["status"]) {
   }
 }
 
+export function getDashboardPrimaryAction(status: DashboardItem["status"], invitationId = "inv-1") {
+  const checkoutHref = `/checkout?invitationId=${invitationId}`;
+
+  switch (status) {
+    case "payment_pending":
+      return { href: checkoutHref, label: "결제 재시도" };
+    case "paid":
+      return { href: checkoutHref, label: "발행 확인" };
+    case "refund_pending":
+      return { href: "/support", label: "환불 상태" };
+    case "refunded":
+      return { href: checkoutHref, label: "재발행" };
+    case "payment_failed":
+      return { href: checkoutHref, label: "결제 다시 시도" };
+    case "published":
+      return null;
+    default:
+      return { href: checkoutHref, label: "발행하기" };
+  }
+}
+
 export function DashboardShell() {
   const supabase = useMemo(() => createBrowserClient(), []);
   const [items, setItems] = useState<DashboardItem[]>([]);
@@ -240,8 +261,17 @@ export function DashboardShell() {
     }
 
     const publicUrl = `${window.location.origin}/invitations/${item.slug}`;
-    await navigator.clipboard.writeText(publicUrl);
-    setMessage("공개 링크를 복사했습니다.");
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("clipboard unavailable");
+      }
+
+      await navigator.clipboard.writeText(publicUrl);
+      setMessage("공개 링크를 복사했습니다.");
+    } catch {
+      window.prompt("아래 링크를 복사해 주세요.", publicUrl);
+      setMessage("브라우저 권한 때문에 자동 복사가 제한되었습니다.");
+    }
   }
 
   async function deleteInvitation(item: DashboardItem) {
@@ -348,59 +378,80 @@ export function DashboardShell() {
           </article>
         </div>
         <div className="dashboard-dense-list">
-          {items.map((item) => (
-            <article className="dashboard-invitation-row" key={item.id}>
-              {(() => {
-                const isLocalDraft = item.id === "local-draft";
-                const deleteNote = isLocalDraft ? "" : getDeletePolicyNote(item.status);
-                return deleteNote ? <p className="ops-note">{deleteNote}</p> : null;
-              })()}
-              <div className="dashboard-row-main">
-                <span className={`dashboard-status-badge status-${item.status}`}>
-                  {getStatusLabel(item.status)}
-                </span>
-                <div>
-                  <h3>{item.title}</h3>
-                  <p className="ops-note">
-                    {item.category} · {item.templateId} · {item.publishedAt ? `발행일 ${new Date(item.publishedAt).toLocaleDateString("ko-KR")}` : "발행 전"}
-                  </p>
-                  <p className="ops-note">공개 링크 {item.slug}</p>
-                </div>
-              </div>
-              <div className="dashboard-row-metrics" aria-label={`${item.title} 운영 지표`}>
-                <span>조회 <strong>{item.viewCount ?? 0}</strong></span>
-                <span>RSVP <strong>{item.rsvpCount ?? 0}</strong></span>
-                <span>방명록 <strong>{item.guestbookCount ?? 0}</strong></span>
-              </div>
-              <div className="dashboard-row-actions">
-                <Link className="btn-outline" href={`/builder?invitationId=${item.id}`}>
-                  편집
+          {items.length === 0 ? (
+            <article className="ops-card dashboard-empty-state" style={{ textAlign: "center" }}>
+              <h3>아직 저장된 초대장이 없습니다</h3>
+              <p className="ops-note">
+                템플릿을 선택해서 첫 초대장을 만들고, 발행 전까지 초안으로 저장할 수 있습니다.
+              </p>
+              <div className="header-actions" style={{ justifyContent: "center", marginTop: 16 }}>
+                <Link className="btn-primary" href="/builder">
+                  초대장 만들기
                 </Link>
-                {item.status === "published" ? (
-                  <>
-                    <Link className="btn-primary" href={`/invitations/${item.slug}`}>
-                      보기
-                    </Link>
-                    <button className="btn-outline" onClick={() => copyPublicLink(item)} type="button">
-                      링크 복사
-                    </button>
-                  </>
-                ) : (
-                  <Link className="btn-primary" href={`/checkout?invitationId=${item.id}`}>
-                    발행하기
-                  </Link>
-                )}
-                <button className="btn-outline" onClick={() => setSelectedInvitationId(item.id)} type="button">
-                  모더레이션
-                </button>
-                {(item.id === "local-draft" || canDeleteInvitation(item.status)) ? (
-                  <button className="btn-outline" onClick={() => void deleteInvitation(item)} type="button">
-                    삭제
-                  </button>
-                ) : null}
+                <Link className="btn-outline" href="/#templates">
+                  템플릿 보기
+                </Link>
               </div>
             </article>
-          ))}
+          ) : (
+            items.map((item) => {
+              const primaryAction = getDashboardPrimaryAction(item.status, item.id);
+
+              return (
+                <article className="dashboard-invitation-row" key={item.id}>
+                  {(() => {
+                    const isLocalDraft = item.id === "local-draft";
+                    const deleteNote = isLocalDraft ? "" : getDeletePolicyNote(item.status);
+                    return deleteNote ? <p className="ops-note">{deleteNote}</p> : null;
+                  })()}
+                  <div className="dashboard-row-main">
+                    <span className={`dashboard-status-badge status-${item.status}`}>
+                      {getStatusLabel(item.status)}
+                    </span>
+                    <div>
+                      <h3>{item.title}</h3>
+                      <p className="ops-note">
+                        {item.category} · {item.templateId} · {item.publishedAt ? `발행일 ${new Date(item.publishedAt).toLocaleDateString("ko-KR")}` : "발행 전"}
+                      </p>
+                      <p className="ops-note">공개 링크 {item.slug}</p>
+                    </div>
+                  </div>
+                  <div className="dashboard-row-metrics" aria-label={`${item.title} 운영 지표`}>
+                    <span>조회 <strong>{item.viewCount ?? 0}</strong></span>
+                    <span>RSVP <strong>{item.rsvpCount ?? 0}</strong></span>
+                    <span>방명록 <strong>{item.guestbookCount ?? 0}</strong></span>
+                  </div>
+                  <div className="dashboard-row-actions">
+                    <Link className="btn-outline" href={`/builder?invitationId=${item.id}`}>
+                      편집
+                    </Link>
+                    {item.status === "published" ? (
+                      <>
+                        <Link className="btn-primary" href={`/invitations/${item.slug}`}>
+                          보기
+                        </Link>
+                        <button className="btn-outline" onClick={() => copyPublicLink(item)} type="button">
+                          링크 복사
+                        </button>
+                      </>
+                    ) : primaryAction ? (
+                      <Link className="btn-primary" href={primaryAction.href}>
+                        {primaryAction.label}
+                      </Link>
+                    ) : null}
+                    <button className="btn-outline" onClick={() => setSelectedInvitationId(item.id)} type="button">
+                      모더레이션
+                    </button>
+                    {(item.id === "local-draft" || canDeleteInvitation(item.status)) ? (
+                      <button className="btn-outline" onClick={() => void deleteInvitation(item)} type="button">
+                        삭제
+                      </button>
+                    ) : null}
+                  </div>
+                </article>
+              );
+            })
+          )}
         </div>
 
         <div className="ops-grid" style={{ marginTop: "24px" }}>

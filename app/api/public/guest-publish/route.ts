@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
 import { buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
+import { getPublishMissingFields, getPublishMissingFieldsMessage } from "@/lib/invitation-publish-readiness";
 import { createInvitationSlug, normalizeDraft } from "@/lib/invitation-payload";
 import { getInvitationPricing } from "@/lib/payments/pricing";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -16,17 +17,6 @@ const GUEST_PUBLISHER_EMAIL = "guest-publisher@invitehub.app";
 const GUEST_PUBLISH_LIMIT = 10;
 const GUEST_PUBLISH_WINDOW_MS = 60 * 60 * 1000;
 const guestPublishBuckets = new Map<string, { count: number; resetAt: number }>();
-
-function getMissingFields(payload: ReturnType<typeof normalizeDraft>) {
-  return [
-    !payload.title.trim() ? "초대장 제목" : null,
-    !payload.eventDateTime.trim() ? "행사 일시" : null,
-    !payload.venueName.trim() ? "예식장 이름" : null,
-    !payload.venueAddress.trim() ? "예식장 주소" : null,
-    !payload.groomName.trim() ? "신랑 이름" : null,
-    !payload.brideName.trim() ? "신부 이름" : null
-  ].filter(Boolean) as string[];
-}
 
 async function ensureGuestPublisherId() {
   const admin = createSupabaseAdminClient();
@@ -150,10 +140,10 @@ export async function POST(request: Request) {
   }
 
   const payload = normalizeDraft(body.payload ?? {});
-  const missingFields = getMissingFields(payload);
+  const missingFields = getPublishMissingFields(payload);
   if (missingFields.length > 0) {
     return NextResponse.json(
-      { success: false, message: `공개 전 입력이 필요한 항목: ${missingFields.join(", ")}` },
+      { success: false, message: getPublishMissingFieldsMessage(missingFields) },
       { status: 400 }
     );
   }

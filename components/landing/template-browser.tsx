@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { templateCategories, templates, type TemplatePreset } from "@/lib/templates";
 import { TemplateMarkup } from "@/components/landing/template-markup";
 
 export function TemplateBrowser() {
-  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState<string>(templateCategories[0].key);
   const [previewTarget, setPreviewTarget] = useState<TemplatePreset | null>(null);
 
@@ -16,9 +14,24 @@ export function TemplateBrowser() {
     [activeCategory]
   );
 
+  useEffect(() => {
+    if (!previewTarget) {
+      return;
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setPreviewTarget(null);
+      }
+    }
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [previewTarget]);
+
   return (
     <>
-      <section className="categories sticky-template-categories" id="categories">
+      <section className="categories" id="categories">
         <div className="section-inner">
           <p className="section-kicker">행사별 디자인</p>
           <h2 className="section-title">어떤 날을 준비하시나요?</h2>
@@ -45,19 +58,10 @@ export function TemplateBrowser() {
           <p className="section-sub">모든 템플릿은 무료로 미리 볼 수 있고, 바로 빌더로 이어집니다.</p>
           <div className="templates-grid templates-grid-showcase">
             {filteredTemplates.map((template) => (
-              <div
-                aria-label={`${template.name} 템플릿 선택`}
+              <article
+                aria-label={`${template.name} 템플릿`}
                 className="template-card"
                 key={template.id}
-                onClick={() => router.push(`/builder?template=${template.id}`)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    router.push(`/builder?template=${template.id}`);
-                  }
-                }}
-                role="button"
-                tabIndex={0}
               >
                 <div className="template-thumb template-thumb-showcase">
                   <TemplateMarkup template={template} variant="browser" />
@@ -65,8 +69,7 @@ export function TemplateBrowser() {
                     <div className="overlay-btns">
                       <button
                         className="overlay-btn"
-                        onClick={(event) => {
-                          event.stopPropagation();
+                        onClick={() => {
                           setPreviewTarget(template);
                         }}
                         type="button"
@@ -76,7 +79,6 @@ export function TemplateBrowser() {
                       <Link
                         className="overlay-btn primary"
                         href={`/builder?template=${template.id}`}
-                        onClick={(event) => event.stopPropagation()}
                       >
                         사용하기
                       </Link>
@@ -95,22 +97,32 @@ export function TemplateBrowser() {
                     ))}
                   </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         </div>
       </section>
 
-      <div className={`modal-overlay ${previewTarget ? "open" : ""}`} onClick={() => setPreviewTarget(null)}>
-        <div className="preview-modal-box" onClick={(event) => event.stopPropagation()}>
-          <button className="modal-close" onClick={() => setPreviewTarget(null)} type="button">
+      <div
+        aria-hidden={previewTarget ? "false" : "true"}
+        className={`modal-overlay ${previewTarget ? "open" : ""}`}
+        onClick={() => setPreviewTarget(null)}
+      >
+        <div
+          aria-labelledby="template-preview-title"
+          aria-modal="true"
+          className="preview-modal-box"
+          onClick={(event) => event.stopPropagation()}
+          role="dialog"
+        >
+          <button aria-label="미리보기 닫기" className="modal-close" onClick={() => setPreviewTarget(null)} type="button">
             ×
           </button>
           {previewTarget ? (
             <>
               <div style={{ padding: "24px 24px 0" }}>
                 <span className="template-badge">{previewTarget.badge}</span>
-                <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.3rem", margin: "8px 0 4px" }}>
+                <h2 id="template-preview-title" style={{ fontFamily: "var(--font-serif)", fontSize: "1.3rem", margin: "8px 0 4px" }}>
                   {previewTarget.name}
                 </h2>
                 <p style={{ color: "var(--text-mid)", fontSize: "0.85rem", marginBottom: "16px" }}>

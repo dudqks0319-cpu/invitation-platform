@@ -352,6 +352,32 @@ export default function BuilderPreviewScreen() {
           <Text style={{ color: theme.colors.success, lineHeight: 22 }}>공개 필수 항목이 모두 준비되었습니다.</Text>
         )}
       </Card>
+      {!requiresPurchase ? (
+        <View
+          style={{
+            shadowColor: "rgba(201,147,90,0.4)",
+            shadowOffset: { width: 0, height: 6 },
+            shadowOpacity: 1,
+            shadowRadius: 20,
+            elevation: 5
+          }}
+        >
+          <Button
+            accessibilityLabel="공개 링크 발행"
+            onPress={remoteAccessMode === "loading" ? undefined : () => void handleSave("published")}
+          >
+            {pending === "publish"
+              ? "발행 중..."
+              : !configured
+                ? "Supabase 설정 필요"
+                : remoteAccessMode === "loading"
+                  ? "세션 확인 중..."
+                  : draft?.payload.isPublished
+                    ? "공개 상태 다시 저장"
+                    : "공개 링크 발행"}
+          </Button>
+        </View>
+      ) : null}
       <Card eyebrow="준비 정보" title="계좌 · 위치 · 업로드">
         <View style={{ gap: 12 }}>
           <View
@@ -456,32 +482,7 @@ export default function BuilderPreviewScreen() {
               }}
             />
           )
-        ) : (
-          <View
-            style={{
-              shadowColor: "rgba(201,147,90,0.4)",
-              shadowOffset: { width: 0, height: 6 },
-              shadowOpacity: 1,
-              shadowRadius: 20,
-              elevation: 5
-            }}
-          >
-            <Button
-              accessibilityLabel="공개 링크 발행"
-              onPress={remoteAccessMode === "loading" ? undefined : () => void handleSave("published")}
-            >
-              {pending === "publish"
-                ? "발행 중..."
-                : !configured
-                  ? "Supabase 설정 필요"
-                  : remoteAccessMode === "loading"
-                    ? "세션 확인 중..."
-                  : draft?.payload.isPublished
-                    ? "공개 상태 다시 저장"
-                    : "공개 링크 발행"}
-            </Button>
-          </View>
-        )}
+        ) : null}
         <View style={{ flexDirection: "row", gap: 12 }}>
           <View style={{ flex: 1 }}>
             <Link asChild href={{ pathname: "/builder/step5-location", params: localId ? { localId } : {} }}>

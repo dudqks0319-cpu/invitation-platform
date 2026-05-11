@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getMobileHomeLayoutMode } from "./home-layout";
+import { getMobileHomeLayoutMode, getTemplateScrollTargetY } from "./home-layout";
 
 describe("mobile home layout mode", () => {
   it("puts resume actions before templates for full signed-in users", () => {
@@ -19,5 +19,10 @@ describe("mobile home layout mode", () => {
         is_anonymous: true
       })
     ).toBe("templates-first");
+  });
+
+  it("scrolls the new design action near the template gallery without going negative", () => {
+    expect(getTemplateScrollTargetY(240)).toBe(228);
+    expect(getTemplateScrollTargetY(8)).toBe(0);
   });
 });
