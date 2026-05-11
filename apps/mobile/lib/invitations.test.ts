@@ -4,6 +4,7 @@ import { getPublishAccess } from "./publish-access";
 import { getMobileInvitationPricing } from "./payments/pricing";
 
 const fromMock = vi.fn();
+const fetchMock = vi.fn();
 
 vi.mock("./supabase", () => ({
   supabase: {
@@ -22,6 +23,8 @@ function createPayload() {
 describe("mobile publish pricing gate", () => {
   beforeEach(() => {
     fromMock.mockReset();
+    fetchMock.mockReset();
+    vi.stubGlobal("fetch", fetchMock);
   });
 
   it("still requires core fields before direct publish even when pricing is free", () => {
@@ -66,5 +69,48 @@ describe("mobile publish pricing gate", () => {
       "유료 옵션이 포함되어 있어 스토어 결제를 완료해야 공개할 수 있습니다."
     );
     expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects direct free publishing so the server API owns status changes", async () => {
+    const { saveDraftToSupabase } = await import("./invitations");
+    const draft = createEmptyInvitationDraft("owner-1");
+    draft.payload.title = "우리 결혼합니다";
+    draft.payload.eventDateTime = "2026-05-23T14:00";
+    draft.payload.venueName = "더파인 웨딩홀";
+    draft.payload.venueAddress = "서울 강남구";
+    draft.payload.eventData.groom.name = "민준";
+    draft.payload.eventData.bride.name = "수아";
+
+    await expect(saveDraftToSupabase(draft, "owner-1", "published")).rejects.toThrow(
+      "공개 발행은 서버 발행 API를 통해서만 처리할 수 있습니다."
+    );
+    expect(fromMock).not.toHaveBeenCalled();
+  });
+
+  it("publishes authenticated drafts through the free-publish API", async () => {
+    const { publishAuthenticatedInvitation } = await import("./invitations");
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        success: true,
+        invitationId: "invitation-1",
+        slug: "invite-123"
+      })
+    });
+
+    const result = await publishAuthenticatedInvitation("invitation-1", "access-token");
+
+    expect(result).toEqual({
+      invitationId: "invitation-1",
+      slug: "invite-123"
+    });
+    expect(fetchMock).toHaveBeenCalledWith("https://invitehub.co.kr/api/payments/free-publish", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer access-token",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ invitationId: "invitation-1" })
+    });
   });
 });

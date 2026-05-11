@@ -125,8 +125,8 @@ export async function POST(request: Request) {
   let verification: Record<string, unknown>;
 
   if (body.provider === "apple_iap") {
-    if (!body.transactionId && !body.receiptData) {
-      return NextResponse.json({ success: false, message: "Apple 결제 검증에는 transactionId 또는 receiptData가 필요합니다." }, { status: 400 });
+    if (!body.transactionId) {
+      return NextResponse.json({ success: false, message: "Apple 결제 검증에는 transactionId가 필요합니다." }, { status: 400 });
     }
 
     if (!isAppleStoreVerificationEnabled()) {
@@ -135,7 +135,7 @@ export async function POST(request: Request) {
 
     try {
       verification = await verifyAppleTransaction({
-        transactionId: body.transactionId ?? "",
+        transactionId: body.transactionId,
         productId: body.productId,
         environment: body.environment
       }) as Record<string, unknown>;

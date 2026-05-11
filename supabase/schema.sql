@@ -220,12 +220,52 @@ using (auth.uid() = id)
 with check (auth.uid() = id);
 
 drop policy if exists "owners manage invitations" on public.invitations;
-create policy "owners manage invitations"
+drop policy if exists "owners can read own invitations" on public.invitations;
+create policy "owners can read own invitations"
 on public.invitations
-for all
+for select
 to authenticated
-using (auth.uid() = user_id)
-with check (auth.uid() = user_id);
+using (auth.uid() = user_id);
+
+drop policy if exists "owners can create draft invitations" on public.invitations;
+create policy "owners can create draft invitations"
+on public.invitations
+for insert
+to authenticated
+with check (
+  auth.uid() = user_id
+  and status = 'draft'
+  and repurchase_required = false
+  and paid_payload_snapshot is null
+  and published_at is null
+);
+
+drop policy if exists "owners can update draft invitations" on public.invitations;
+create policy "owners can update draft invitations"
+on public.invitations
+for update
+to authenticated
+using (
+  auth.uid() = user_id
+  and status = 'draft'
+)
+with check (
+  auth.uid() = user_id
+  and status = 'draft'
+  and repurchase_required = false
+  and paid_payload_snapshot is null
+  and published_at is null
+);
+
+drop policy if exists "owners can delete draft invitations" on public.invitations;
+create policy "owners can delete draft invitations"
+on public.invitations
+for delete
+to authenticated
+using (
+  auth.uid() = user_id
+  and status = 'draft'
+);
 
 drop policy if exists "public can read published invitations" on public.invitations;
 create policy "public can read published invitations"
@@ -381,6 +421,19 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 values (
   'invitation-assets',
   'invitation-assets',
+  false,
+  5242880,
+  array['image/jpeg', 'image/png', 'image/webp']
+)
+on conflict (id) do update
+set public = excluded.public,
+    file_size_limit = excluded.file_size_limit,
+    allowed_mime_types = excluded.allowed_mime_types;
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'template-assets',
+  'template-assets',
   true,
   5242880,
   array['image/jpeg', 'image/png', 'image/webp']
@@ -391,6 +444,13 @@ set public = excluded.public,
     allowed_mime_types = excluded.allowed_mime_types;
 
 drop policy if exists "public can read invitation assets" on storage.objects;
+drop policy if exists "public can read template assets" on storage.objects;
+create policy "public can read template assets"
+on storage.objects
+for select
+to public
+using (bucket_id = 'template-assets');
+
 drop policy if exists "authenticated users manage own invitation assets" on storage.objects;
 create policy "authenticated users manage own invitation assets"
 on storage.objects

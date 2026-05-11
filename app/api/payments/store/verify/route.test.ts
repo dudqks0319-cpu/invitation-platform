@@ -388,6 +388,25 @@ describe("POST /api/payments/store/verify", () => {
     expect(verifyAppleTransactionMock).not.toHaveBeenCalled();
   });
 
+  it("does not accept Apple receiptData without a transactionId", async () => {
+    createSupabaseAdminClientMock.mockReturnValue(createAdminDouble().client);
+    isAppleStoreVerificationEnabledMock.mockReturnValue(true);
+
+    const response = await POST(
+      createRequest({
+        invitationId: "invitation-1",
+        provider: "apple_iap",
+        productId: "publish.credit.ios",
+        receiptData: "receipt-only"
+      })
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload.message).toContain("transactionId");
+    expect(verifyAppleTransactionMock).not.toHaveBeenCalled();
+  });
+
   it("reuses an existing verified payment for the same purchase token", async () => {
     const admin = createAdminDouble({ existingPayment: true });
     createSupabaseAdminClientMock.mockReturnValue(admin.client);

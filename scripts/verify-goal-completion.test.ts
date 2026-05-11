@@ -81,6 +81,7 @@ function runVerifier(root: string) {
     cwd: root,
     encoding: "utf8",
     env: {
+      ...process.env,
       PATH: process.env.PATH ?? ""
     }
   });

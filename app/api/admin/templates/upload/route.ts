@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { INVITATION_ASSET_BUCKET } from "@/lib/invitation-assets";
+import { TEMPLATE_ASSET_BUCKET } from "@/lib/invitation-assets";
 import { isTemplateAdminEmail } from "@/lib/template-admin";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
 
   const fallbackName = `template-${Date.now()}.jpg`;
   const path = `${user.id}/templates/${Date.now()}-${sanitizeFilename(file.name || fallbackName)}`;
-  const { data, error } = await admin.storage.from(INVITATION_ASSET_BUCKET).upload(path, file, {
+  const { data, error } = await admin.storage.from(TEMPLATE_ASSET_BUCKET).upload(path, file, {
     cacheControl: "31536000",
     contentType: file.type,
     upsert: false
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: "이미지를 저장하지 못했습니다." }, { status: 500 });
   }
 
-  const { data: publicUrlData } = admin.storage.from(INVITATION_ASSET_BUCKET).getPublicUrl(data.path);
+  const { data: publicUrlData } = admin.storage.from(TEMPLATE_ASSET_BUCKET).getPublicUrl(data.path);
 
   return NextResponse.json({
     success: true,
@@ -64,4 +64,3 @@ export async function POST(request: Request) {
     path: data.path
   });
 }
-

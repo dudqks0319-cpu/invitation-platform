@@ -35,9 +35,19 @@ export async function readJsonBody(request: Request, maxBytes = maxJsonBodyBytes
   }
 
   try {
+    const rawBody = await request.text();
+    const actualBytes = new TextEncoder().encode(rawBody).byteLength;
+
+    if (actualBytes > maxBytes) {
+      return {
+        ok: false as const,
+        message: "요청 본문이 너무 큽니다."
+      };
+    }
+
     return {
       ok: true as const,
-      body: await request.json()
+      body: rawBody ? JSON.parse(rawBody) : null
     };
   } catch {
     return {

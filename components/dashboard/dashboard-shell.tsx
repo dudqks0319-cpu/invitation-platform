@@ -347,29 +347,34 @@ export function DashboardShell() {
             <p className="ops-note">승인 전 항목 포함</p>
           </article>
         </div>
-        <div className="ops-grid">
+        <div className="dashboard-dense-list">
           {items.map((item) => (
-            <article className="ops-card" key={item.id}>
+            <article className="dashboard-invitation-row" key={item.id}>
               {(() => {
                 const isLocalDraft = item.id === "local-draft";
                 const deleteNote = isLocalDraft ? "" : getDeletePolicyNote(item.status);
                 return deleteNote ? <p className="ops-note">{deleteNote}</p> : null;
               })()}
-              <h3>{item.title}</h3>
-              <p className="ops-value">{getStatusLabel(item.status)}</p>
-              <p className="ops-line">카테고리 <strong>{item.category}</strong></p>
-              <p className="ops-line">템플릿 <strong>{item.templateId}</strong></p>
-              <p className="ops-line">조회 <strong>{item.viewCount ?? 0}</strong> · RSVP <strong>{item.rsvpCount ?? 0}</strong> · 방명록 <strong>{item.guestbookCount ?? 0}</strong></p>
-              <p className="ops-note">
-                생성일 {new Date(item.createdAt).toLocaleDateString("ko-KR")}
-                <br />
-                공개 링크 {item.slug}
-                <br />
-                {item.publishedAt ? `발행일 ${new Date(item.publishedAt).toLocaleDateString("ko-KR")}` : "아직 발행 전입니다."}
-              </p>
-              <div className="header-actions" style={{ marginTop: "16px" }}>
+              <div className="dashboard-row-main">
+                <span className={`dashboard-status-badge status-${item.status}`}>
+                  {getStatusLabel(item.status)}
+                </span>
+                <div>
+                  <h3>{item.title}</h3>
+                  <p className="ops-note">
+                    {item.category} · {item.templateId} · {item.publishedAt ? `발행일 ${new Date(item.publishedAt).toLocaleDateString("ko-KR")}` : "발행 전"}
+                  </p>
+                  <p className="ops-note">공개 링크 {item.slug}</p>
+                </div>
+              </div>
+              <div className="dashboard-row-metrics" aria-label={`${item.title} 운영 지표`}>
+                <span>조회 <strong>{item.viewCount ?? 0}</strong></span>
+                <span>RSVP <strong>{item.rsvpCount ?? 0}</strong></span>
+                <span>방명록 <strong>{item.guestbookCount ?? 0}</strong></span>
+              </div>
+              <div className="dashboard-row-actions">
                 <Link className="btn-outline" href={`/builder?invitationId=${item.id}`}>
-                  편집하기
+                  편집
                 </Link>
                 {item.status === "published" ? (
                   <>

@@ -137,6 +137,37 @@ export async function publishGuestInvitation(draft: MobileInvitationDraft) {
   };
 }
 
+export async function publishAuthenticatedInvitation(invitationId: string, accessToken: string) {
+  if (!accessToken) {
+    throw new Error("로그인 세션이 만료되었습니다. 다시 로그인해 주세요.");
+  }
+
+  const response = await fetch(`${getInviteHubBaseUrl()}/api/payments/free-publish`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ invitationId })
+  });
+
+  const result = (await response.json().catch(() => ({}))) as {
+    success?: boolean;
+    message?: string;
+    invitationId?: string;
+    slug?: string;
+  };
+
+  if (!response.ok || !result.success || !result.invitationId || !result.slug) {
+    throw new Error(result.message || "무료 발행에 실패했습니다.");
+  }
+
+  return {
+    invitationId: result.invitationId,
+    slug: result.slug
+  };
+}
+
 async function uploadPendingPhoto(
   photo: PendingPhotoUpload,
   userId: string,
@@ -248,19 +279,25 @@ export async function saveDraftToSupabase(
       ...payloadWithUploads.share,
       slug
     },
-    isPublished: status === "published"
+    isPublished: false
   };
 
   if (status === "published") {
-    const readiness = getPublishReadiness(normalizedPayload);
+    const publishPayload = {
+      ...normalizedPayload,
+      isPublished: true
+    };
+    const readiness = getPublishReadiness(publishPayload);
 
     if (!readiness.canPublish) {
       throw new Error(`공개 발행 전 입력이 필요한 항목: ${readiness.missingFields.join(", ")}`);
     }
 
-    if (requiresPaymentBeforePublish(normalizedPayload)) {
+    if (requiresPaymentBeforePublish(publishPayload)) {
       throw new Error("유료 옵션이 포함되어 있어 스토어 결제를 완료해야 공개할 수 있습니다.");
     }
+
+    throw new Error("공개 발행은 서버 발행 API를 통해서만 처리할 수 있습니다.");
   }
 
   const row = {
@@ -269,7 +306,7 @@ export async function saveDraftToSupabase(
     title: normalizedPayload.title || "결혼식 초대장",
     category: "wedding",
     template_id: normalizedPayload.templateId,
-    status,
+    status: "draft",
     payload: {
       ...(draft.sourcePayload ?? {}),
       ...toLegacyInvitationPayload(normalizedPayload),
@@ -277,7 +314,7 @@ export async function saveDraftToSupabase(
       backgroundImagePath,
       galleryImagePaths
     },
-    published_at: status === "published" ? new Date().toISOString() : null
+    published_at: null
   };
 
   const query = draft.serverId

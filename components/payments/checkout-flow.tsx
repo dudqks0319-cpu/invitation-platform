@@ -133,8 +133,9 @@ export function CheckoutFlow({
         published_at: null
       };
 
-      const query = parsed.meta?.id
-        ? supabase.from("invitations").update(invitationInput).eq("id", parsed.meta.id).select().single()
+      const existingDraftId = parsed.meta?.status === "draft" ? parsed.meta.id : undefined;
+      const query = existingDraftId
+        ? supabase.from("invitations").update(invitationInput).eq("id", existingDraftId).select().single()
         : supabase.from("invitations").insert(invitationInput).select().single();
 
       const { data, error } = await query;

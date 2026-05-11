@@ -17,7 +17,7 @@ import { isPaidPublishingEnabled, PAID_PUBLISH_DISABLED_MESSAGE } from "@/lib/re
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 import { openInvitationPublicPage, shareInvitationLink } from "@/lib/share";
 import { getPublicInvitationUrl } from "@/lib/web-links";
-import { publishGuestInvitation } from "@/lib/invitations";
+import { publishAuthenticatedInvitation, publishGuestInvitation } from "@/lib/invitations";
 
 export default function BuilderPreviewScreen() {
   const { localId } = useLocalSearchParams<{ localId?: string }>();
@@ -141,12 +141,22 @@ export default function BuilderPreviewScreen() {
       }
 
       const { userId } = await resolveRemoteUser(false);
-      const nextDraft = await saveToCloud(userId, nextStatus);
-      setMessage(
-        nextStatus === "published"
-          ? `공개 링크를 발행했습니다.\n${nextDraft.payload.share.slug ? getPublicInvitationUrl(nextDraft.payload.share.slug) : ""}`
-          : "서버에 초안을 저장했습니다."
-      );
+
+      if (nextStatus === "published") {
+        const nextDraft = await saveToCloud(userId, "draft");
+
+        if (!nextDraft.serverId) {
+          throw new Error("발행할 서버 초안을 찾지 못했습니다.");
+        }
+
+        const result = await publishAuthenticatedInvitation(nextDraft.serverId, session?.access_token ?? "");
+        applyRemotePublish(result.invitationId, result.slug);
+        setMessage(`공개 링크를 발행했습니다.\n${getPublicInvitationUrl(result.slug)}`);
+        return;
+      }
+
+      await saveToCloud(userId, "draft");
+      setMessage("서버에 초안을 저장했습니다.");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "서버 저장에 실패했습니다.");
     } finally {

@@ -10,6 +10,7 @@ type StoredInvitationAssets = {
 
 export const INVITATION_ASSET_TTL_SECONDS = 60 * 60 * 24 * 7;
 export const INVITATION_ASSET_BUCKET = "invitation-assets";
+export const TEMPLATE_ASSET_BUCKET = "template-assets";
 
 export function buildPublishedAssetUrl(slug: string, path: string) {
   return `/api/public/assets?slug=${encodeURIComponent(slug)}&path=${encodeURIComponent(path)}`;

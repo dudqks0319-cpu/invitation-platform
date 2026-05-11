@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 import { buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -10,17 +11,61 @@ type FreePublishRequest = {
   invitationId?: string;
 };
 
-export async function POST(request: Request) {
-  const supabase = await createServerSupabaseClient();
-  const admin = createSupabaseAdminClient();
+function getBearerToken(request: Request) {
+  const authorization = request.headers.get("authorization") ?? "";
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+  return match?.[1] ?? "";
+}
 
-  if (!supabase || !admin) {
-    return NextResponse.json({ success: false, message: "서버 설정이 완료되지 않았습니다." }, { status: 503 });
+async function getAuthenticatedUser(request: Request) {
+  const supabase = await createServerSupabaseClient();
+
+  if (supabase) {
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      return {
+        user
+      };
+    }
   }
 
+  const token = getBearerToken(request);
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+
+  if (!token || !supabaseUrl || !supabaseAnonKey) {
+    return {
+      user: null
+    };
+  }
+
+  const authClient = createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  });
+
   const {
-    data: { user }
-  } = await supabase.auth.getUser();
+    data: { user },
+    error
+  } = await authClient.auth.getUser(token);
+
+  return {
+    user: error ? null : user
+  };
+}
+
+export async function POST(request: Request) {
+  const admin = createSupabaseAdminClient();
+  const { user } = await getAuthenticatedUser(request);
+
+  if (!admin) {
+    return NextResponse.json({ success: false, message: "서버 설정이 완료되지 않았습니다." }, { status: 503 });
+  }
 
   if (!user) {
     return NextResponse.json({ success: false, message: "로그인이 필요합니다." }, { status: 401 });

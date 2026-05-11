@@ -1,8 +1,13 @@
 import { vi } from "vitest";
 
-const { createServerSupabaseClientMock, createSupabaseAdminClientMock } = vi.hoisted(() => ({
+const { createClientMock, createServerSupabaseClientMock, createSupabaseAdminClientMock } = vi.hoisted(() => ({
+  createClientMock: vi.fn(),
   createServerSupabaseClientMock: vi.fn(),
   createSupabaseAdminClientMock: vi.fn()
+}));
+
+vi.mock("@supabase/supabase-js", () => ({
+  createClient: createClientMock
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -15,10 +20,10 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 import { POST } from "@/app/api/payments/free-publish/route";
 
-function createRequest(invitationId = "invitation-1") {
+function createRequest(invitationId = "invitation-1", headers: Record<string, string> = {}) {
   return new Request("https://invitehub.test/api/payments/free-publish", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ invitationId })
   });
 }
@@ -85,6 +90,13 @@ function createAdminClient(pricey = false) {
 describe("POST /api/payments/free-publish", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    createClientMock.mockReturnValue({
+      auth: {
+        async getUser() {
+          return { data: { user: null }, error: null };
+        }
+      }
+    });
   });
 
   it("publishes when the current draft is free", async () => {
@@ -97,6 +109,36 @@ describe("POST /api/payments/free-publish", () => {
     expect(response.status).toBe(200);
     expect(payload.success).toBe(true);
     expect(payload.slug).toBe("invite-123");
+  });
+
+  it("accepts mobile bearer sessions when cookie auth is unavailable", async () => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://supabase.test";
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";
+    createServerSupabaseClientMock.mockResolvedValue(createServerClient(null));
+    createClientMock.mockReturnValue({
+      auth: {
+        async getUser(token: string) {
+          expect(token).toBe("mobile-token");
+          return { data: { user: { id: "user-1" } }, error: null };
+        }
+      }
+    });
+    createSupabaseAdminClientMock.mockReturnValue(createAdminClient(false));
+
+    const response = await POST(createRequest("invitation-1", { Authorization: "Bearer mobile-token" }));
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.success).toBe(true);
+    expect(createClientMock).toHaveBeenCalledWith(
+      "https://supabase.test",
+      "anon-key",
+      expect.objectContaining({
+        auth: expect.objectContaining({
+          persistSession: false
+        })
+      })
+    );
   });
 
   it("blocks free publish when paid add-ons exist", async () => {

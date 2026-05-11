@@ -290,7 +290,13 @@ export default function InvitationDetailScreen() {
                 ? () => {
                     setError("");
                     setMessage("");
-                    void saveDraftToSupabase(draft, user.id, draft.payload.isPublished ? "published" : "draft")
+
+                    if (draft.payload.isPublished) {
+                      setError("공개 중인 초대장은 발행 화면에서 다시 저장해 주세요.");
+                      return;
+                    }
+
+                    void saveDraftToSupabase(draft, user.id, "draft")
                       .then(async (result) => {
                         const nextDraft: MobileInvitationDraft = {
                           ...draft,
@@ -303,7 +309,7 @@ export default function InvitationDetailScreen() {
                         };
                         await saveDraft(nextDraft);
                         setDraft(nextDraft);
-                        setMessage(result.payload.isPublished ? "공개 상태를 서버에 동기화했습니다." : "운영 화면에서 서버 초안을 저장했습니다.");
+                        setMessage("운영 화면에서 서버 초안을 저장했습니다.");
                       })
                       .catch((caught) => {
                         setError(caught instanceof Error ? caught.message : "서버 저장에 실패했습니다.");

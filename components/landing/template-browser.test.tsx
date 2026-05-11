@@ -28,6 +28,15 @@ describe("TemplateBrowser", () => {
     expect(document.body.textContent).not.toContain("Genspark");
   });
 
+  it("keeps category switching sticky and presents larger real template results", () => {
+    document.body.innerHTML = renderToStaticMarkup(<TemplateBrowser />);
+
+    expect(document.querySelector(".categories")?.className).toContain("sticky-template-categories");
+    expect(document.querySelector(".cat-tabs")?.className).toContain("sticky-cat-tabs");
+    expect(document.querySelector(".templates-grid")?.className).toContain("templates-grid-showcase");
+    expect(document.querySelector(".template-thumb")?.className).toContain("template-thumb-showcase");
+  });
+
   it("opens the builder when a template card is clicked", async () => {
     const container = document.createElement("div");
     document.body.appendChild(container);

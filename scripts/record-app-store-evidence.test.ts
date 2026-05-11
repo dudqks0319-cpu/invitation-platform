@@ -18,6 +18,7 @@ function runRecorder(root: string, args: string[]) {
     cwd: root,
     encoding: "utf8",
     env: {
+      ...process.env,
       PATH: process.env.PATH ?? ""
     }
   });

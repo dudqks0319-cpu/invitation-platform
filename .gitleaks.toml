@@ -1,0 +1,12 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Allow CocoaPods package names in Podfile.lock history"
+paths = ['''apps/mobile/ios/Podfile\.lock''']
+regexes = [
+  '''AppAuth''',
+  '''GTMAppAuth''',
+  '''KakaoSDKAuth''',
+  '''ExpoAppleAuthentication'''
+]

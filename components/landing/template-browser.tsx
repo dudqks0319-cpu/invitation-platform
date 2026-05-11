@@ -18,12 +18,12 @@ export function TemplateBrowser() {
 
   return (
     <>
-      <section className="categories" id="categories">
+      <section className="categories sticky-template-categories" id="categories">
         <div className="section-inner">
           <p className="section-kicker">행사별 디자인</p>
           <h2 className="section-title">어떤 날을 준비하시나요?</h2>
           <p className="section-sub">행사 분위기에 맞는 템플릿을 골라보세요.</p>
-          <div className="cat-tabs">
+          <div className="cat-tabs sticky-cat-tabs">
             {templateCategories.map((category) => (
               <button
                 className={`cat-tab ${category.key === activeCategory ? "active" : ""}`}
@@ -43,7 +43,7 @@ export function TemplateBrowser() {
           <p className="section-kicker">인기 디자인</p>
           <h2 className="section-title">마음에 드는 템플릿을 골라보세요</h2>
           <p className="section-sub">모든 템플릿은 무료로 미리 볼 수 있고, 바로 빌더로 이어집니다.</p>
-          <div className="templates-grid">
+          <div className="templates-grid templates-grid-showcase">
             {filteredTemplates.map((template) => (
               <div
                 aria-label={`${template.name} 템플릿 선택`}
@@ -59,7 +59,7 @@ export function TemplateBrowser() {
                 role="button"
                 tabIndex={0}
               >
-                <div className="template-thumb">
+                <div className="template-thumb template-thumb-showcase">
                   <TemplateMarkup template={template} variant="browser" />
                   <div className="template-overlay">
                     <div className="overlay-btns">

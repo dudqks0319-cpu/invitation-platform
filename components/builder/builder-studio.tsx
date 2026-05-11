@@ -120,7 +120,6 @@ export function BuilderStudio({
     () => templates.find((template) => template.id === payload.templateId) ?? templates[0],
     [payload.templateId]
   );
-  const paidSnapshotRef = useRef<InvitationDraftPayload | null>(meta.status === "published" ? payload : null);
 
   useEffect(() => {
     if (!supabase) {
@@ -163,7 +162,6 @@ export function BuilderStudio({
       setMainImagePreviewUrl(nextPayload.mainImageUrl);
       setBackgroundImagePreviewUrl(nextPayload.backgroundImageUrl);
       setPendingGalleryPreviewUrls([]);
-      paidSnapshotRef.current = data.paid_payload_snapshot ? normalizeDraft(data.paid_payload_snapshot) : null;
     })();
   }, [initialInvitationId, supabase, userId]);
 
@@ -195,8 +193,6 @@ export function BuilderStudio({
     };
   }, []);
 
-  const hasRestrictedPaidChanges = false;
-
   useEffect(() => {
     if (!intentCheckout || checkoutIntentHandledRef.current || !supabase || !userId) {
       return;
@@ -205,7 +201,7 @@ export function BuilderStudio({
     checkoutIntentHandledRef.current = true;
 
     void (async () => {
-      const saved = meta.id ? meta : await persistDraft("draft");
+      const saved = meta.id && meta.status === "draft" ? meta : await persistDraft("draft");
       if (saved?.id) {
         router.replace(`/checkout?invitationId=${saved.id}`);
       }
@@ -608,20 +604,21 @@ export function BuilderStudio({
         return nextMeta;
       }
 
+      const shouldUpdateExistingDraft = Boolean(meta.id && meta.status === "draft");
       const invitationInput = {
         user_id: userId,
         slug: nextSlug,
         title: nextPayload.title,
         category: nextPayload.category,
         template_id: nextPayload.templateId,
-        status,
+        status: "draft",
         payload: nextPayload,
-        repurchase_required: hasRestrictedPaidChanges,
-        paid_payload_snapshot: paidSnapshotRef.current,
-        published_at: status === "published" ? new Date().toISOString() : null
+        repurchase_required: false,
+        paid_payload_snapshot: null,
+        published_at: null
       };
 
-      const query = meta.id
+      const query = shouldUpdateExistingDraft
         ? supabase.from("invitations").update(invitationInput).eq("id", meta.id).select().single()
         : supabase.from("invitations").insert(invitationInput).select().single();
 
@@ -639,9 +636,6 @@ export function BuilderStudio({
 
       setPayload(nextPayload);
       setMeta(savedMeta);
-      if (savedMeta.status === "published") {
-        paidSnapshotRef.current = nextPayload;
-      }
       if (pendingMainImageFile) {
         setPendingMainImageFile(null);
         setMainImagePreviewUrl(nextPayload.mainImageUrl);
@@ -685,7 +679,7 @@ export function BuilderStudio({
 
       setPending(false);
       setUploadProgress(null);
-      setMessage(status === "published" ? "초대장을 발행했습니다." : "초안을 저장했습니다.");
+      setMessage(meta.status === "published" && !shouldUpdateExistingDraft ? "기존 공개본은 유지하고 새 초안을 저장했습니다." : "초안을 저장했습니다.");
       setMessageType("success");
 
       return savedMeta;
@@ -1023,49 +1017,70 @@ export function BuilderStudio({
           </button>
         </div>
 
-        <button className="btn-primary form-submit" disabled={pending} type="submit">
-          {pending ? "저장 중..." : "초안 저장"}
-        </button>
         {currentStep === lastStepIndex ? (
-          <>
-            <button
-              className="btn-primary form-submit"
-              disabled={pending}
-              onClick={async () => {
-                await persistDraft("draft");
-                router.push("/preview");
-              }}
-              type="button"
-            >
-              실제 화면 보기
-            </button>
-            <button
-              className="btn-outline form-submit"
-              disabled={pending}
-              onClick={async () => {
-                if (meta.status === "published" && !hasRestrictedPaidChanges) {
-                  await persistDraft("published");
-                  return;
-                }
-
-                if (!supabase || !userId) {
+          <section aria-label="발행 준비 체크리스트" className="builder-publish-panel">
+            <div className="builder-publish-panel-head">
+              <p className="builder-step-kicker">발행 준비</p>
+              <h3>체크리스트와 공유 CTA</h3>
+              <p className="builder-help">마지막 저장, 실제 화면 검수, 발행 페이지 이동을 한 번에 마무리하세요.</p>
+            </div>
+            <ul className="builder-publish-checklist">
+              <li>
+                <strong>초안 저장</strong>
+                <span>현재 입력값과 업로드 대기 이미지를 먼저 보관합니다.</span>
+              </li>
+              <li>
+                <strong>{meta.status === "published" ? "재발행 확인" : "무료 발행"}</strong>
+                <span>{meta.status === "published" ? "기존 공개본은 유지하고 새 초안을 발행 페이지에서 확인합니다." : "무료 구성은 발행 페이지에서 바로 공개 링크로 전환합니다."}</span>
+              </li>
+              <li>
+                <strong>공유 준비</strong>
+                <span>실제 화면을 확인한 뒤 링크 공유와 하객 응답 수집을 시작합니다.</span>
+              </li>
+            </ul>
+            <div className="builder-publish-actions">
+              <button className="btn-outline" disabled={pending} type="submit">
+                {pending ? "저장 중..." : "초안 저장"}
+              </button>
+              <button
+                className="btn-primary"
+                disabled={pending}
+                onClick={async () => {
                   await persistDraft("draft");
-                  router.push(`/sign-in?next=${encodeURIComponent(normalizeNextPath("/builder?intent=checkout", authDestination.checkout))}`);
-                  return;
-                }
+                  router.push("/preview");
+                }}
+                type="button"
+              >
+                실제 화면 보기
+              </button>
+              <button
+                className="btn-outline"
+                disabled={pending}
+                onClick={async () => {
+                  if (!supabase || !userId) {
+                    await persistDraft("draft");
+                    router.push(`/sign-in?next=${encodeURIComponent(normalizeNextPath("/builder?intent=checkout", authDestination.checkout))}`);
+                    return;
+                  }
 
-                const saved = meta.id ? meta : await persistDraft("draft");
-                if (saved?.id) {
-                  router.push(`/checkout?invitationId=${saved.id}`);
-                }
-              }}
-              type="button"
-            >
-              {meta.status === "published" ? "공개 상태 다시 저장" : "무료 발행 페이지로 이동"}
-            </button>
-          </>
+                  const saved = meta.id && meta.status === "draft" ? meta : await persistDraft("draft");
+                  if (saved?.id) {
+                    router.push(`/checkout?invitationId=${saved.id}`);
+                  }
+                }}
+                type="button"
+              >
+                {meta.status === "published" ? "변경사항 발행 페이지로 이동" : "무료 발행 페이지로 이동"}
+              </button>
+            </div>
+          </section>
         ) : (
-          <p className="builder-help">마지막 단계에서 실제 화면 보기와 무료 발행을 진행할 수 있습니다.</p>
+          <>
+            <button className="btn-primary form-submit" disabled={pending} type="submit">
+              {pending ? "저장 중..." : "초안 저장"}
+            </button>
+            <p className="builder-help">마지막 단계에서 실제 화면 보기와 무료 발행을 진행할 수 있습니다.</p>
+          </>
         )}
         {meta.status && meta.status !== "draft" && meta.status !== "published" ? (
           <p className="form-message error">
