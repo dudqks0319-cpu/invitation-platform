@@ -1,4 +1,7 @@
+import { act } from "react";
+import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
+import { vi } from "vitest";
 import { InvitationView, resolveInvitationPlatformConfig } from "@/components/invitations/invitation-view";
 import { defaultInvitationDraft } from "@/lib/invitation-payload";
 
@@ -38,6 +41,89 @@ describe("InvitationView", () => {
       "미리보기 단계에서는 나만 볼 수 있습니다."
     );
   });
+
+  it("shows guest-facing account and share guidance without dead KakaoPay links", () => {
+    document.body.innerHTML = renderToStaticMarkup(
+      <InvitationView
+        mode="public"
+        payload={{
+          ...defaultInvitationDraft,
+          groomBank: "카카오뱅크",
+          groomBankAccount: "3333-01-1234567",
+          groomBankHolder: "홍길동",
+          kakaoPayLink: ""
+        }}
+        shareUrl="/invitations/demo"
+        slug="demo"
+      />
+    );
+
+    expect(document.body.textContent).toContain("카카오페이 송금 링크가 등록되지 않았습니다.");
+    expect(document.body.textContent).toContain("이 초대장 공유하기");
+    expect(document.body.innerHTML).toContain("카카오톡 공유</button>");
+    expect(document.body.innerHTML).toContain("링크 복사</button>");
+    expect(document.body.innerHTML).not.toContain("기본 공유</button>");
+    expect(document.body.innerHTML).not.toContain("href=\"#\"");
+  });
+
+  it("confirms account copy and disables companion count when RSVP is declined", async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText }
+    });
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <InvitationView
+          mode="public"
+          payload={{
+            ...defaultInvitationDraft,
+            groomBank: "카카오뱅크",
+            groomBankAccount: "3333-01-1234567",
+            groomBankHolder: "홍길동"
+          }}
+          shareUrl="/invitations/demo"
+          slug="demo"
+        />
+      );
+    });
+
+    const accountButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("신랑측 계좌 복사")
+    );
+    expect(accountButton).not.toBeUndefined();
+
+    await act(async () => {
+      accountButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(writeText).toHaveBeenCalledWith("3333-01-1234567");
+    expect(container.textContent).toContain("계좌번호를 복사했습니다.");
+
+    const attendingSelect = container.querySelector('select[name="attending"]') as HTMLSelectElement | null;
+    const guestsInput = container.querySelector('input[name="guests"]') as HTMLInputElement | null;
+
+    expect(attendingSelect).not.toBeNull();
+    expect(guestsInput?.disabled).toBe(false);
+
+    await act(async () => {
+      attendingSelect!.value = "no";
+      attendingSelect!.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    expect(guestsInput?.disabled).toBe(true);
+    expect(guestsInput?.value).toBe("0");
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
+
   it("prefers a server-provided Kakao platform key over client env lookup", () => {
     const config = resolveInvitationPlatformConfig({
       draftKakaoJsKey: "",

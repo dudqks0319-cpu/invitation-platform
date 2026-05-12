@@ -128,6 +128,10 @@ export function InvitationView({
   const [guestbookMessage, setGuestbookMessage] = useState("");
   const [guestbookError, setGuestbookError] = useState("");
   const [shareMessage, setShareMessage] = useState("");
+  const [accountCopyMessage, setAccountCopyMessage] = useState("");
+  const [rsvpAttending, setRsvpAttending] = useState<"yes" | "no">("yes");
+  const [rsvpGuestCount, setRsvpGuestCount] = useState(1);
+  const [rsvpSubmitted, setRsvpSubmitted] = useState(false);
   const [pending, setPending] = useState(false);
   const selectedTemplate = templates.find((template) => template.id === payload.templateId) ?? templates[0];
   const categoryMeta = getInvitationCategoryMeta(payload);
@@ -151,6 +155,15 @@ export function InvitationView({
     await navigator.clipboard.writeText(value);
   }
 
+  async function copyAccount(value: string) {
+    try {
+      await copyToClipboard(value);
+      setAccountCopyMessage("계좌번호를 복사했습니다.");
+    } catch {
+      setAccountCopyMessage("복사가 제한되었습니다. 계좌번호를 직접 선택해 복사해 주세요.");
+    }
+  }
+
   async function submitPublicForm(endpoint: string, payloadBody: object) {
     const response = await fetch(endpoint, {
       method: "POST",
@@ -169,13 +182,15 @@ export function InvitationView({
     return result;
   }
 
-  async function handleRsvpSubmit(formData: FormData) {
+  async function handleRsvpSubmit(formData: FormData, form?: HTMLFormElement) {
+    const attending = rsvpAttending === "yes";
+    const parsedGuestCount = Number(formData.get("guests") || rsvpGuestCount || 1);
     const nextEntry: RsvpEntry = {
       id: crypto.randomUUID(),
       guestName: String(formData.get("guestName") || ""),
       guestPhone: String(formData.get("guestPhone") || ""),
-      attending: String(formData.get("attending") || "yes") === "yes",
-      guests: Number(formData.get("guests") || 1),
+      attending,
+      guests: attending && Number.isFinite(parsedGuestCount) ? Math.max(1, parsedGuestCount) : 0,
       memo: String(formData.get("memo") || ""),
       createdAt: new Date().toISOString()
     };
@@ -207,6 +222,10 @@ export function InvitationView({
       }
 
       setRsvpEntries((current) => [nextEntry, ...current]);
+      form?.reset();
+      setRsvpAttending("yes");
+      setRsvpGuestCount(1);
+      setRsvpSubmitted(true);
     } catch (submissionError) {
       setRsvpError(submissionError instanceof Error ? submissionError.message : "RSVP 저장에 실패했습니다.");
     } finally {
@@ -322,7 +341,7 @@ export function InvitationView({
                 <button
                   className="btn-outline invitation-small-btn"
                   key={entry.copyLabel}
-                  onClick={() => copyToClipboard(entry.copyValue)}
+                  onClick={() => copyAccount(entry.copyValue)}
                   type="button"
                 >
                   {entry.copyLabel}
@@ -330,9 +349,14 @@ export function InvitationView({
               ))}
             </div>
           ) : null}
-          <a className={`btn-primary invitation-wide-btn ${kakaoPayLink ? "" : "is-disabled"}`} href={kakaoPayLink || "#"} rel="noreferrer noopener" target="_blank">
-            카카오페이 송금 링크 열기
-          </a>
+          {accountCopyMessage ? <p className="form-message success">{accountCopyMessage}</p> : null}
+          {kakaoPayLink ? (
+            <a className="btn-primary invitation-wide-btn" href={kakaoPayLink} rel="noreferrer noopener" target="_blank">
+              카카오페이 송금 링크 열기
+            </a>
+          ) : (
+            <p className="form-message">카카오페이 송금 링크가 등록되지 않았습니다.</p>
+          )}
         </article>
 
         <article className="invitation-card">
@@ -401,8 +425,9 @@ export function InvitationView({
         <article className="invitation-card">
           <h2>RSVP</h2>
           <form
-            action={async (formData) => {
-              await handleRsvpSubmit(formData);
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleRsvpSubmit(new FormData(event.currentTarget), event.currentTarget);
             }}
             className="invitation-guestbook-form"
           >
@@ -417,14 +442,33 @@ export function InvitationView({
             </label>
             <label>
               참석 여부
-              <select className="modal-input" defaultValue="yes" name="attending">
+              <select
+                className="modal-input"
+                name="attending"
+                onChange={(event) => {
+                  const nextAttending = event.target.value === "no" ? "no" : "yes";
+                  setRsvpAttending(nextAttending);
+                  setRsvpGuestCount(nextAttending === "no" ? 0 : Math.max(1, rsvpGuestCount));
+                }}
+                value={rsvpAttending}
+              >
                 <option value="yes">참석</option>
                 <option value="no">불참</option>
               </select>
             </label>
             <label>
               동행 인원
-              <input defaultValue={1} max={20} min={0} name="guests" type="number" />
+              <input
+                disabled={rsvpAttending === "no"}
+                max={20}
+                min={rsvpAttending === "no" ? 0 : 1}
+                name="guests"
+                onChange={(event) => {
+                  setRsvpGuestCount(Number(event.target.value || 0));
+                }}
+                type="number"
+                value={rsvpGuestCount}
+              />
             </label>
             <label>
               메모
@@ -436,17 +480,18 @@ export function InvitationView({
           </form>
           {rsvpMessage ? <p className="form-message success">{rsvpMessage}</p> : null}
           {rsvpError ? <p className="form-message error">{rsvpError}</p> : null}
+          {rsvpSubmitted ? <p className="form-message">이미 이 세션에서 RSVP를 보냈습니다. 다시 제출하기 전 입력 내용을 확인해 주세요.</p> : null}
           {rsvpEntries.length ? <p>최근 응답 {rsvpEntries.length}건이 이 세션에 기록되었습니다.</p> : null}
         </article>
 
         <article className="invitation-card">
-          <h2>카카오톡으로 보내기</h2>
+          <h2>이 초대장 공유하기</h2>
           {shareDisabled ? (
             <p className="form-message error" id="invitationShareHint">
               미리보기 단계에서는 나만 볼 수 있습니다. 하객에게 보낼 링크는 발행 후 공개 링크를 사용해 주세요.
             </p>
           ) : (
-            <p id="invitationShareHint">카카오 JavaScript 키를 입력하면 카카오톡 공유창으로 바로 보낼 수 있습니다.</p>
+            <p id="invitationShareHint">카카오톡 공유 또는 링크 복사로 초대장을 전달할 수 있습니다.</p>
           )}
           <div className="invitation-inline-actions">
             <button
@@ -484,22 +529,6 @@ export function InvitationView({
               type="button"
             >
               카카오톡 공유
-            </button>
-            <button
-              className="btn-outline invitation-small-btn"
-              disabled={shareDisabled}
-              onClick={async () => {
-                if (navigator.share) {
-                  await navigator.share({ title: payload.title, text: payload.message, url: resolvedShareUrl });
-                  return;
-                }
-
-                await copyToClipboard(resolvedShareUrl);
-                setShareMessage("공유 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요.");
-              }}
-              type="button"
-            >
-              기본 공유
             </button>
             <button
               className="btn-outline invitation-small-btn"

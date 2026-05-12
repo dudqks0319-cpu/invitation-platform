@@ -89,6 +89,11 @@ export function TemplateBrowser() {
                   <span className="template-badge">{template.badge}</span>
                   <div className="template-name">{template.name}</div>
                   <div className="template-desc">{template.desc}</div>
+                  <div className="template-policy-lines" aria-label={`${template.name} 발행 조건`}>
+                    <span>사진 없이 무료 발행</span>
+                    <span>사진 포함 발행권 3,300원</span>
+                    <span>RSVP · 계좌 · 지도 · 카카오 공유 포함</span>
+                  </div>
                   <div className="template-tags">
                     {template.tags.map((tag) => (
                       <span className="tag" key={tag}>

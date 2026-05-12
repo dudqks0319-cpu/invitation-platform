@@ -312,6 +312,17 @@ a:focus-visible,
 }
 .template-name { font-weight: 700; font-size: 1.05rem; margin-bottom: 6px; }
 .template-desc { font-size: 0.85rem; color: var(--text-mid); line-height: 1.5; }
+.template-policy-lines {
+  display: grid;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(251, 244, 235, 0.72);
+  color: var(--text-dark);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
 .template-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
 .tag {
   background: #F5F5F5; color: var(--text-mid);

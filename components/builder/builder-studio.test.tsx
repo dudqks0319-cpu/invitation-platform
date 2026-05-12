@@ -68,4 +68,39 @@ describe("BuilderStudio publish flow", () => {
       root.unmount();
     });
   });
+
+  it("explains the photo paid publishing policy before upload and on the publish panel", async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(<BuilderStudio />);
+    });
+
+    const nextButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent === "다음 단계"
+    );
+
+    for (let index = 0; index < 2; index += 1) {
+      await act(async () => {
+        nextButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      });
+    }
+
+    expect(container.textContent).toContain("사진을 넣지 않으면 무료로 발행할 수 있습니다.");
+    expect(container.textContent).toContain("사진 포함 발행권 3,300원이 필요합니다.");
+
+    for (let index = 0; index < 2; index += 1) {
+      await act(async () => {
+        nextButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      });
+    }
+
+    expect(container.textContent).toContain("현재 구성은 사진 없는 무료 발행입니다.");
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
 });

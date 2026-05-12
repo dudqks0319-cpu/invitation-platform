@@ -120,6 +120,12 @@ export function BuilderStudio({
     () => templates.find((template) => template.id === payload.templateId) ?? templates[0],
     [payload.templateId]
   );
+  const hasPhotoPublishingCost =
+    Boolean(payload.mainImageUrl || payload.mainImagePath || pendingMainImageFile) ||
+    Boolean(payload.backgroundImageUrl || payload.backgroundImagePath || pendingBackgroundImageFile) ||
+    payload.galleryImages.length > 0 ||
+    payload.galleryImagePaths.length > 0 ||
+    pendingGalleryFiles.length > 0;
 
   useEffect(() => {
     if (!supabase) {
@@ -849,6 +855,9 @@ export function BuilderStudio({
 
         <div className="builder-form-section" hidden={currentStep !== 2}>
           <h3>3. 사진 설정</h3>
+          <p className="builder-help">
+            사진을 넣지 않으면 무료로 발행할 수 있습니다. 메인 사진, 배경 사진, 갤러리 사진을 추가하면 사진 포함 발행권 3,300원이 필요합니다.
+          </p>
           <p className="builder-help">메인 사진과 배경 이미지는 발행 후 교체 시 재결제가 필요합니다. 업로드 전 최종 이미지를 먼저 골라 두는 편이 안전합니다.</p>
             <label>
               메인 사진 업로드
@@ -1023,6 +1032,11 @@ export function BuilderStudio({
               <p className="builder-step-kicker">발행 준비</p>
               <h3>체크리스트와 공유 CTA</h3>
               <p className="builder-help">마지막 저장, 실제 화면 검수, 발행 페이지 이동을 한 번에 마무리하세요.</p>
+              <p className="builder-help">
+                {hasPhotoPublishingCost
+                  ? "사진이 포함되어 있어 모바일 앱에서 사진 포함 발행권 결제가 필요합니다."
+                  : "현재 구성은 사진 없는 무료 발행입니다."}
+              </p>
             </div>
             <ul className="builder-publish-checklist">
               <li>
