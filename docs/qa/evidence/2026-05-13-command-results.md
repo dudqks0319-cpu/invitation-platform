@@ -2,7 +2,7 @@
 
 Date: 2026-05-13
 Branch: codex/invitation-review-fixes
-Head: 56ecdbd Document invitation mobile QA audit plan
+Head at command execution: fdc623c docs: scaffold invitation mobile QA audit
 
 ## Automated Verification
 
