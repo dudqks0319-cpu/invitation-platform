@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 import { TemplateMarkup } from "@/components/landing/template-markup";
 import {
   LOCAL_GUESTBOOK_KEY,
@@ -222,6 +223,12 @@ export function InvitationView({
       }
 
       setRsvpEntries((current) => [nextEntry, ...current]);
+      trackEvent("rsvp_submit", {
+        attending: nextEntry.attending,
+        guests: nextEntry.guests,
+        mode,
+        slug: slug ?? ""
+      });
       form?.reset();
       setRsvpAttending("yes");
       setRsvpGuestCount(1);
@@ -511,6 +518,10 @@ export function InvitationView({
                       },
                       buttonTitle: "초대장 보기"
                     });
+                    trackEvent("share_click", {
+                      method: "kakao",
+                      surface: "public_invitation"
+                    });
                     setShareMessage("카카오톡 공유창을 열었습니다.");
                     return;
                   }
@@ -520,10 +531,18 @@ export function InvitationView({
 
                 if (navigator.share) {
                   await navigator.share({ title: payload.title, text: payload.message, url: resolvedShareUrl });
+                  trackEvent("share_click", {
+                    method: "native_share",
+                    surface: "public_invitation"
+                  });
                   return;
                 }
 
                 await copyToClipboard(resolvedShareUrl);
+                trackEvent("share_click", {
+                  method: "copy_link",
+                  surface: "public_invitation"
+                });
                 setShareMessage("공유 링크를 복사했습니다. 카카오톡 대화창에 붙여넣어 보내 주세요.");
               }}
               type="button"
@@ -535,6 +554,10 @@ export function InvitationView({
               disabled={shareDisabled}
               onClick={async () => {
                 await copyToClipboard(resolvedShareUrl);
+                trackEvent("share_click", {
+                  method: "copy_link",
+                  surface: "public_invitation"
+                });
                 setShareMessage("공유 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요.");
               }}
               type="button"

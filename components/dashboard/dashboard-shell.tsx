@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 import { createBrowserClient } from "@/lib/supabase/browser";
 import { demoDashboardInvitations, demoGuestbookEntries, demoRsvps } from "@/lib/demo-data";
 import { canDeleteInvitation, getDeletePolicyNote } from "@/components/dashboard/dashboard-delete-policy";
@@ -337,6 +338,10 @@ export function DashboardShell() {
     anchor.download = `${selectedInvitation?.slug ?? "rsvp"}-responses.csv`;
     anchor.click();
     window.URL.revokeObjectURL(url);
+    trackEvent("csv_download", {
+      invitation_id: selectedInvitation?.id ?? "",
+      rsvp_count: filteredRsvpEntries.length
+    });
     setMessage("RSVP CSV를 다운로드했습니다.");
   }
 
@@ -564,6 +569,9 @@ export function DashboardShell() {
             <p className="ops-line">참석 <strong>{rsvpSummary.attending}</strong></p>
             <p className="ops-line">불참 <strong>{rsvpSummary.declined}</strong></p>
             <p className="ops-line">예상 총 인원 <strong>{rsvpSummary.totalGuests}</strong></p>
+            <p className="ops-note">
+              RSVP CSV에는 하객 이름과 연락처가 포함됩니다. 행사 운영 목적 외 공유하지 마세요.
+            </p>
             <div className="dashboard-rsvp-controls">
               <input
                 aria-label="RSVP 이름 또는 전화번호 검색"

@@ -4,6 +4,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TemplateBrowser } from "@/components/landing/template-browser";
 
+const { trackEventMock } = vi.hoisted(() => ({
+  trackEventMock: vi.fn()
+}));
 const pushMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
@@ -12,10 +15,18 @@ vi.mock("next/navigation", () => ({
   })
 }));
 
+vi.mock("@/lib/analytics", () => ({
+  trackEvent: trackEventMock
+}));
+
 describe("TemplateBrowser", () => {
+  const originalPaidPublishFlag = process.env.NEXT_PUBLIC_ENABLE_PAID_PUBLISH;
+
   beforeEach(() => {
     pushMock.mockReset();
+    trackEventMock.mockReset();
     document.body.innerHTML = "";
+    process.env.NEXT_PUBLIC_ENABLE_PAID_PUBLISH = originalPaidPublishFlag;
   });
 
   it("shows only category and template sections with user-facing copy", () => {
@@ -48,10 +59,18 @@ describe("TemplateBrowser", () => {
     expect(useLink?.textContent).toContain("사용하기");
   });
 
-  it("shows free start, paid photo policy, and included guest features on template cards", () => {
+  it("syncs template card photo policy with the paid publishing release flag", () => {
+    process.env.NEXT_PUBLIC_ENABLE_PAID_PUBLISH = "false";
     document.body.innerHTML = renderToStaticMarkup(<TemplateBrowser />);
 
     expect(document.body.textContent).toContain("사진 없이 무료 발행");
+    expect(document.body.textContent).toContain("사진 포함 발행은 준비 중");
+    expect(document.body.textContent).not.toContain("사진 포함 발행권 3,300원");
+    expect(document.body.textContent).toContain("RSVP · 지도 · 계좌 · 방명록 포함");
+
+    process.env.NEXT_PUBLIC_ENABLE_PAID_PUBLISH = "true";
+    document.body.innerHTML = renderToStaticMarkup(<TemplateBrowser />);
+
     expect(document.body.textContent).toContain("사진 포함 발행권 3,300원");
     expect(document.body.textContent).toContain("RSVP · 지도 · 계좌 · 방명록 포함");
   });
@@ -75,6 +94,10 @@ describe("TemplateBrowser", () => {
     });
 
     expect(pushMock).not.toHaveBeenCalled();
+    expect(trackEventMock).toHaveBeenCalledWith("template_preview", {
+      category: "wedding",
+      template_id: "wedding-classic"
+    });
     expect(container.textContent).toContain("로즈 프레임");
     expect(container.querySelector(".preview-modal-box")?.getAttribute("role")).toBe("dialog");
     expect(container.querySelector(".preview-modal-box")?.getAttribute("aria-modal")).toBe("true");

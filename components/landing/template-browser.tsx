@@ -2,12 +2,15 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { trackEvent } from "@/lib/analytics";
+import { isPaidPublishingEnabled } from "@/lib/release-flags";
 import { templateCategories, templates, type TemplatePreset } from "@/lib/templates";
 import { TemplateMarkup } from "@/components/landing/template-markup";
 
 export function TemplateBrowser() {
   const [activeCategory, setActiveCategory] = useState<string>(templateCategories[0].key);
   const [previewTarget, setPreviewTarget] = useState<TemplatePreset | null>(null);
+  const paidPublishingEnabled = isPaidPublishingEnabled();
 
   const filteredTemplates = useMemo(
     () => templates.filter((template) => template.category === activeCategory),
@@ -70,6 +73,10 @@ export function TemplateBrowser() {
                       <button
                         className="overlay-btn"
                         onClick={() => {
+                          trackEvent("template_preview", {
+                            category: template.category,
+                            template_id: template.id
+                          });
                           setPreviewTarget(template);
                         }}
                         type="button"
@@ -79,6 +86,12 @@ export function TemplateBrowser() {
                       <Link
                         className="overlay-btn primary"
                         href={`/builder?template=${template.id}`}
+                        onClick={() => {
+                          trackEvent("template_use", {
+                            category: template.category,
+                            template_id: template.id
+                          });
+                        }}
                       >
                         사용하기
                       </Link>
@@ -91,7 +104,7 @@ export function TemplateBrowser() {
                   <div className="template-desc">{template.desc}</div>
                   <div className="template-policy-lines" aria-label={`${template.name} 발행 조건`}>
                     <span>사진 없이 무료 발행</span>
-                    <span>사진 포함 발행권 3,300원</span>
+                    <span>{paidPublishingEnabled ? "사진 포함 발행권 3,300원" : "사진 포함 발행은 준비 중"}</span>
                     <span>RSVP · 지도 · 계좌 · 방명록 포함</span>
                   </div>
                   <div className="template-tags">
@@ -141,7 +154,16 @@ export function TemplateBrowser() {
                 <button className="btn-outline" onClick={() => setPreviewTarget(null)} type="button">
                   닫기
                 </button>
-                <Link className="btn-primary" href={`/builder?template=${previewTarget.id}`}>
+                <Link
+                  className="btn-primary"
+                  href={`/builder?template=${previewTarget.id}`}
+                  onClick={() => {
+                    trackEvent("template_use", {
+                      category: previewTarget.category,
+                      template_id: previewTarget.id
+                    });
+                  }}
+                >
                   이 템플릿으로 만들기
                 </Link>
               </div>

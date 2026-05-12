@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 
 type PublishRecoveryPanelProps = {
   invitationId: string;
@@ -24,6 +25,9 @@ export function PublishRecoveryPanel({
   const [error, setError] = useState("");
 
   async function recoverPublish() {
+    trackEvent("publish_recovery_attempt", {
+      invitation_id: invitationId
+    });
     setPending(true);
     setError("");
     setMessage("");
@@ -47,12 +51,59 @@ export function PublishRecoveryPanel({
       }
 
       setPublicSlug(result.slug ?? slug);
+      trackEvent("publish_recovery_success", {
+        invitation_id: invitationId,
+        slug: result.slug ?? slug
+      });
       setMessage("공개 링크가 준비됐습니다. 이제 하객에게 초대장을 보낼 수 있어요.");
     } catch (recoveryError) {
       setError(recoveryError instanceof Error ? recoveryError.message : "발행 복구에 실패했습니다.");
     } finally {
       setPending(false);
     }
+  }
+
+  async function copyRecoveredLink() {
+    if (!publicSlug || typeof window === "undefined") {
+      return;
+    }
+
+    const publicUrl = `${window.location.origin}/invitations/${publicSlug}`;
+    await navigator.clipboard.writeText(publicUrl);
+    trackEvent("share_click", {
+      method: "copy_link",
+      surface: "publish_recovery"
+    });
+    setMessage("공개 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요.");
+  }
+
+  async function shareRecoveredLink() {
+    if (!publicSlug || typeof window === "undefined") {
+      return;
+    }
+
+    const publicUrl = `${window.location.origin}/invitations/${publicSlug}`;
+
+    if (navigator.share) {
+      await navigator.share({
+        title,
+        text: "초대장을 확인해 주세요.",
+        url: publicUrl
+      });
+      trackEvent("share_click", {
+        method: "native_share",
+        surface: "publish_recovery"
+      });
+      setMessage("공유창을 열었습니다.");
+      return;
+    }
+
+    await navigator.clipboard.writeText(publicUrl);
+    trackEvent("share_click", {
+      method: "copy_link",
+      surface: "publish_recovery"
+    });
+    setMessage("공유 링크를 복사했습니다. 카카오톡 대화창에 붙여넣어 보내 주세요.");
   }
 
   return (
@@ -91,11 +142,17 @@ export function PublishRecoveryPanel({
 
           {publicSlug ? (
             <div className="header-actions" style={{ marginTop: 20 }}>
-              <Link className="btn-primary" href={`/invitations/${publicSlug}`}>
+              <button className="btn-primary" onClick={() => void shareRecoveredLink()} type="button">
+                공유하기
+              </button>
+              <button className="btn-outline" onClick={() => void copyRecoveredLink()} type="button">
+                링크 복사
+              </button>
+              <Link className="btn-outline" href={`/invitations/${publicSlug}`}>
                 실제 화면 보기
               </Link>
               <Link className="btn-outline" href="/dashboard">
-                RSVP 운영하러 가기
+                RSVP 운영
               </Link>
             </div>
           ) : null}

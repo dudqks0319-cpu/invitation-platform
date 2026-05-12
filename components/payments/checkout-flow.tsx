@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { trackEvent } from "@/lib/analytics";
 import { createBrowserClient } from "@/lib/supabase/browser";
 import { authDestination } from "@/lib/auth";
 import { LOCAL_DRAFT_KEY, createInvitationSlug, normalizeDraft, type InvitationDraftPayload } from "@/lib/invitation-payload";
@@ -160,6 +161,10 @@ export function CheckoutFlow({
       return;
     }
 
+    trackEvent("publish_attempt", {
+      invitation_id: invitationId,
+      pricing: "free"
+    });
     setPending(true);
     setError("");
     setMessage("");
@@ -180,6 +185,11 @@ export function CheckoutFlow({
       }
 
       setPublicSlug(result.slug ?? "");
+      trackEvent("publish_success", {
+        invitation_id: invitationId,
+        pricing: "free",
+        slug: result.slug ?? ""
+      });
       setMessage("무료 발행이 완료되었습니다.");
     } catch (publishError) {
       setError(publishError instanceof Error ? publishError.message : "무료 발행에 실패했습니다.");
@@ -195,6 +205,10 @@ export function CheckoutFlow({
 
     const publicUrl = `${window.location.origin}/invitations/${publicSlug}`;
     await navigator.clipboard.writeText(publicUrl);
+    trackEvent("share_click", {
+      method: "copy_link",
+      surface: "checkout_success"
+    });
     setMessage("공개 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요.");
   }
 
@@ -211,11 +225,19 @@ export function CheckoutFlow({
         text: "초대장을 확인해 주세요.",
         url: publicUrl
       });
+      trackEvent("share_click", {
+        method: "native_share",
+        surface: "checkout_success"
+      });
       setMessage("공유창을 열었습니다.");
       return;
     }
 
     await navigator.clipboard.writeText(publicUrl);
+    trackEvent("share_click", {
+      method: "copy_link",
+      surface: "checkout_success"
+    });
     setMessage("공유 링크를 복사했습니다. 카카오톡 대화창에 붙여넣어 보내 주세요.");
   }
 
@@ -261,7 +283,12 @@ export function CheckoutFlow({
             <div className="data-form">
               <label style={{ display: "flex", gap: "10px", alignItems: "center", marginTop: "12px" }}>
                 <input checked={termsChecked} onChange={(event) => setTermsChecked(event.target.checked)} type="checkbox" />
-                발행 정책에 동의합니다.
+                <span>
+                  <Link href="/terms" target="_blank">
+                    발행 정책
+                  </Link>
+                  에 동의합니다.
+                </span>
               </label>
               <button
                 className="btn-primary form-submit"
@@ -297,7 +324,7 @@ export function CheckoutFlow({
               </p>
               {publicSlug ? (
                 <p className="ops-note" style={{ marginTop: "16px" }}>
-                  예정 공개 링크: `/invitations/{publicSlug}`
+                  예정 공개 링크: /invitations/{publicSlug}
                 </p>
               ) : null}
             </div>

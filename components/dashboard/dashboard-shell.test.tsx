@@ -148,6 +148,7 @@ describe("DashboardShell", () => {
     expect(container.querySelector('input[aria-label="RSVP 이름 또는 전화번호 검색"]')).not.toBeNull();
     expect(container.querySelector('select[aria-label="RSVP 참석 여부 필터"]')).not.toBeNull();
     expect(container.textContent).toContain("CSV 다운로드");
+    expect(container.textContent).toContain("RSVP CSV에는 하객 이름과 연락처가 포함됩니다.");
 
     await act(async () => {
       root.unmount();
