@@ -22,4 +22,17 @@ describe("CheckoutFlow", () => {
     expect(markup).not.toContain("010-0000-0000");
     expect(markup).not.toContain("name@example.com");
   });
+
+  it("puts sharing actions first after publish completion", () => {
+    const markup = renderToStaticMarkup(
+      <CheckoutFlow initialInvitationId="inv-1" initialPaymentState="success" />
+    );
+
+    expect(markup).toContain("공개 링크가 준비됐습니다");
+    expect(markup).toContain("이제 하객에게 초대장을 보낼 수 있어요.");
+    expect(markup).toContain("카카오톡으로 공유");
+    expect(markup).toContain("링크 복사");
+    expect(markup).toContain("실제 화면 보기");
+    expect(markup).toContain("다음에 할 수 있는 일");
+  });
 });

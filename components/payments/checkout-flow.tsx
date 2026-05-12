@@ -188,24 +188,69 @@ export function CheckoutFlow({
     }
   }
 
+  async function copyPublicLink() {
+    if (!publicSlug || typeof window === "undefined") {
+      return;
+    }
+
+    const publicUrl = `${window.location.origin}/invitations/${publicSlug}`;
+    await navigator.clipboard.writeText(publicUrl);
+    setMessage("공개 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요.");
+  }
+
+  async function sharePublicLink() {
+    if (!publicSlug || typeof window === "undefined") {
+      return;
+    }
+
+    const publicUrl = `${window.location.origin}/invitations/${publicSlug}`;
+
+    if (navigator.share) {
+      await navigator.share({
+        title: invitationTitle,
+        text: "초대장을 확인해 주세요.",
+        url: publicUrl
+      });
+      setMessage("공유창을 열었습니다.");
+      return;
+    }
+
+    await navigator.clipboard.writeText(publicUrl);
+    setMessage("공유 링크를 복사했습니다. 카카오톡 대화창에 붙여넣어 보내 주세요.");
+  }
+
   return (
     <div className="ops-card">
       <h1 className="section-title" style={{ textAlign: "left" }}>
-        {initialPaymentState === "success" ? "발행이 완료되었습니다" : "무료 발행"}
+        {initialPaymentState === "success" ? "공개 링크가 준비됐습니다" : "무료 발행"}
       </h1>
       {initialPaymentState === "success" ? (
         <>
           <p className="ops-note" style={{ marginTop: "8px" }}>
-            초대장이 정상적으로 공개 링크로 발행되었습니다.
+            이제 하객에게 초대장을 보낼 수 있어요. 카카오톡으로 공유하거나 링크를 복사해 전달하세요.
           </p>
           <div className="header-actions" style={{ marginTop: "20px" }}>
-            <Link className="btn-primary" href={publicSlug ? `/invitations/${publicSlug}` : authDestination.dashboard}>
-              공개 링크 확인
+            <button className="btn-primary" disabled={!publicSlug} onClick={() => void sharePublicLink()} type="button">
+              카카오톡으로 공유
+            </button>
+            <button className="btn-outline" disabled={!publicSlug} onClick={() => void copyPublicLink()} type="button">
+              링크 복사
+            </button>
+            <Link className="btn-outline" href={publicSlug ? `/invitations/${publicSlug}` : authDestination.dashboard}>
+              실제 화면 보기
             </Link>
             <Link className="btn-outline" href={authDestination.dashboard}>
-              대시보드로 이동
+              RSVP 운영
             </Link>
           </div>
+          <p className="ops-note" style={{ marginTop: "16px" }}>
+            공유 주소: {publicSlug ? `/invitations/${publicSlug}` : "발행 정보를 불러오는 중입니다."}
+          </p>
+          <div className="list-box" style={{ marginTop: "16px" }}>
+            <div className="meta">다음에 할 수 있는 일</div>
+            <div className="value">RSVP 응답 확인 · 방명록 승인 · 초대장 수정</div>
+          </div>
+          {message ? <p className="form-message success">{message}</p> : null}
         </>
       ) : (
         <>

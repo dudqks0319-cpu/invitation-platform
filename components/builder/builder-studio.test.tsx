@@ -62,6 +62,9 @@ describe("BuilderStudio publish flow", () => {
     expect(publishPanel?.textContent).toContain("초안 저장");
     expect(publishPanel?.textContent).toContain("무료 발행");
     expect(publishPanel?.textContent).toContain("공유 준비");
+    expect(publishPanel?.textContent).toContain("공개 전 아직");
+    expect(publishPanel?.textContent).toContain("신랑 이름");
+    expect(publishPanel?.textContent).toContain("부족한 항목 수정하기");
     expect(publishPanel?.querySelectorAll("a,button").length).toBeGreaterThanOrEqual(3);
 
     await act(async () => {

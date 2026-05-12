@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createBrowserClient } from "@/lib/supabase/browser";
-import { demoDashboardInvitations, demoRsvps } from "@/lib/demo-data";
+import { demoDashboardInvitations, demoGuestbookEntries, demoRsvps } from "@/lib/demo-data";
 import { canDeleteInvitation, getDeletePolicyNote } from "@/components/dashboard/dashboard-delete-policy";
 import {
   LOCAL_DRAFT_KEY,
@@ -17,8 +17,31 @@ type DashboardItem = InvitationRecord & {
   viewCount?: number;
   rsvpCount?: number;
   guestbookCount?: number;
+  pendingGuestbookCount?: number;
   repurchaseRequired?: boolean;
 };
+
+type RsvpFilter = "all" | "attending" | "declined";
+
+function csvCell(value: unknown) {
+  return `"${String(value ?? "").replace(/"/g, '""')}"`;
+}
+
+export function buildRsvpCsv(entries: RsvpEntry[]) {
+  return [
+    "이름,연락처,참석 여부,동행 인원,메모,응답일",
+    ...entries.map((entry) =>
+      [
+        entry.guestName,
+        entry.guestPhone,
+        entry.attending ? "참석" : "불참",
+        entry.guests,
+        entry.memo,
+        new Date(entry.createdAt).toLocaleString("ko-KR")
+      ].map(csvCell).join(",")
+    )
+  ].join("\n");
+}
 
 function getStatusLabel(status: DashboardItem["status"]) {
   switch (status) {
@@ -46,7 +69,7 @@ export function getDashboardPrimaryAction(status: DashboardItem["status"], invit
     case "payment_pending":
       return { href: checkoutHref, label: "결제 재시도" };
     case "paid":
-      return { href: "/support", label: "발행 상태 문의" };
+      return { href: `/dashboard/invitations/${invitationId}/publish-recovery`, label: "발행 복구" };
     case "refund_pending":
       return { href: "/support", label: "환불 상태" };
     case "refunded":
@@ -62,17 +85,30 @@ export function getDashboardPrimaryAction(status: DashboardItem["status"], invit
 
 export function DashboardShell() {
   const supabase = useMemo(() => createBrowserClient(), []);
+  const operationsRef = useRef<HTMLDivElement>(null);
   const [items, setItems] = useState<DashboardItem[]>([]);
   const [message, setMessage] = useState("불러오는 중...");
   const [selectedInvitationId, setSelectedInvitationId] = useState<string>("");
   const [guestbookEntries, setGuestbookEntries] = useState<GuestbookEntry[]>([]);
   const [rsvpEntries, setRsvpEntries] = useState<RsvpEntry[]>([]);
+  const [rsvpFilter, setRsvpFilter] = useState<RsvpFilter>("all");
+  const [rsvpSearch, setRsvpSearch] = useState("");
 
   useEffect(() => {
     async function loadDashboard() {
       if (!supabase) {
         const localDraft = typeof window !== "undefined" ? window.localStorage.getItem(LOCAL_DRAFT_KEY) : null;
         const parsedDraft = localDraft ? JSON.parse(localDraft) : null;
+        const decorateDemoItems = (entries: InvitationRecord[]) =>
+          entries.map((item) => ({
+            ...item,
+            viewCount: item.id === "demo-invitation" ? 18 : 0,
+            rsvpCount: item.id === "demo-invitation" ? demoRsvps.length : 0,
+            guestbookCount: item.id === "demo-invitation" ? demoGuestbookEntries.length : 0,
+            pendingGuestbookCount: item.id === "demo-invitation"
+              ? demoGuestbookEntries.filter((entry) => !entry.approved).length
+              : 0
+          }));
 
         const localItems =
           parsedDraft?.payload
@@ -89,9 +125,9 @@ export function DashboardShell() {
                   createdAt: new Date().toISOString(),
                   publishedAt: null
                 },
-                ...demoDashboardInvitations
+                ...decorateDemoItems(demoDashboardInvitations)
               ]
-            : demoDashboardInvitations;
+            : decorateDemoItems(demoDashboardInvitations);
 
         setItems(localItems);
         setSelectedInvitationId(localItems[0]?.id ?? "");
@@ -144,7 +180,7 @@ export function DashboardShell() {
       const invitationIds = rows.map((row) => row.id);
       const [{ data: rsvpCountRows }, { data: guestbookCountRows }, { data: viewCountRows }] = await Promise.all([
         supabase.from("rsvps").select("invitation_id").in("invitation_id", invitationIds),
-        supabase.from("guestbook_entries").select("invitation_id").in("invitation_id", invitationIds),
+        supabase.from("guestbook_entries").select("invitation_id, approved").in("invitation_id", invitationIds),
         supabase.from("view_logs").select("invitation_id").in("invitation_id", invitationIds)
       ]);
 
@@ -156,13 +192,20 @@ export function DashboardShell() {
 
       const rsvpCountMap = countByInvitation(rsvpCountRows);
       const guestbookCountMap = countByInvitation(guestbookCountRows);
+      const pendingGuestbookCountMap = (guestbookCountRows ?? []).reduce<Record<string, number>>((acc, entry: { invitation_id: string; approved?: boolean }) => {
+        if (!entry.approved) {
+          acc[entry.invitation_id] = (acc[entry.invitation_id] ?? 0) + 1;
+        }
+        return acc;
+      }, {});
       const viewCountMap = countByInvitation(viewCountRows);
 
       const enrichedRows = rows.map((row) => ({
         ...row,
         viewCount: viewCountMap[row.id] ?? 0,
         rsvpCount: rsvpCountMap[row.id] ?? 0,
-        guestbookCount: guestbookCountMap[row.id] ?? 0
+        guestbookCount: guestbookCountMap[row.id] ?? 0,
+        pendingGuestbookCount: pendingGuestbookCountMap[row.id] ?? 0
       }));
 
       setItems(enrichedRows);
@@ -182,7 +225,7 @@ export function DashboardShell() {
       }
 
       if (!supabase) {
-        setGuestbookEntries([]);
+        setGuestbookEntries(selectedInvitationId === "demo-invitation" ? demoGuestbookEntries : []);
         setRsvpEntries(selectedInvitationId === "demo-invitation" ? demoRsvps : []);
         return;
       }
@@ -274,6 +317,29 @@ export function DashboardShell() {
     }
   }
 
+  function focusOperations(invitationId: string) {
+    setSelectedInvitationId(invitationId);
+    window.requestAnimationFrame(() => {
+      operationsRef.current?.scrollIntoView?.({ behavior: "smooth", block: "start" });
+    });
+  }
+
+  function downloadRsvpCsv() {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const csv = buildRsvpCsv(filteredRsvpEntries);
+    const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+    const url = window.URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${selectedInvitation?.slug ?? "rsvp"}-responses.csv`;
+    anchor.click();
+    window.URL.revokeObjectURL(url);
+    setMessage("RSVP CSV를 다운로드했습니다.");
+  }
+
   async function deleteInvitation(item: DashboardItem) {
     const isLocalDraft = item.id === "local-draft";
     const isDeletable = isLocalDraft || canDeleteInvitation(item.status);
@@ -327,7 +393,10 @@ export function DashboardShell() {
       publishedInvitations: items.filter((item) => item.status === "published").length,
       totalViews: items.reduce((sum, item) => sum + (item.viewCount ?? 0), 0),
       totalRsvps: items.reduce((sum, item) => sum + (item.rsvpCount ?? 0), 0),
-      totalGuestbook: items.reduce((sum, item) => sum + (item.guestbookCount ?? 0), 0)
+      totalGuestbook: items.reduce((sum, item) => sum + (item.guestbookCount ?? 0), 0),
+      pendingGuestbook: items.reduce((sum, item) => sum + (item.pendingGuestbookCount ?? 0), 0),
+      draftInvitations: items.filter((item) => item.status === "draft").length,
+      paymentNeeds: items.filter((item) => ["payment_pending", "paid", "payment_failed"].includes(item.status)).length
     }),
     [items]
   );
@@ -342,6 +411,25 @@ export function DashboardShell() {
       totalGuests: attending.reduce((sum, entry) => sum + entry.guests, 0)
     };
   }, [rsvpEntries]);
+  const filteredRsvpEntries = useMemo(() => {
+    const normalizedSearch = rsvpSearch.trim().toLowerCase();
+
+    return rsvpEntries.filter((entry) => {
+      if (rsvpFilter === "attending" && !entry.attending) {
+        return false;
+      }
+
+      if (rsvpFilter === "declined" && entry.attending) {
+        return false;
+      }
+
+      if (!normalizedSearch) {
+        return true;
+      }
+
+      return `${entry.guestName} ${entry.guestPhone}`.toLowerCase().includes(normalizedSearch);
+    });
+  }, [rsvpEntries, rsvpFilter, rsvpSearch]);
 
   return (
     <section className="builder-section builder-section-page">
@@ -355,6 +443,15 @@ export function DashboardShell() {
             <h3>보관 및 운영 안내</h3>
             <p className="ops-note">발행한 초대장은 대시보드에서 계속 수정할 수 있고, 영상·배경음악·감사 메시지도 이후에 추가할 수 있습니다.</p>
             <p className="ops-note">환불이 완료되면 공개 링크는 비활성화되므로, 다시 공개하려면 재발행이 필요합니다.</p>
+          </article>
+          <article className="ops-card dashboard-today-card" style={{ gridColumn: "1 / -1" }}>
+            <h3>오늘 확인할 일</h3>
+            <div className="dashboard-task-grid">
+              <span>새 RSVP <strong>{dashboardSummary.totalRsvps}</strong></span>
+              <span>승인 대기 방명록 <strong>{dashboardSummary.pendingGuestbook}</strong></span>
+              <span>공개 전 초안 <strong>{dashboardSummary.draftInvitations}</strong></span>
+              <span>결제 확인 필요 <strong>{dashboardSummary.paymentNeeds}</strong></span>
+            </div>
           </article>
           <article className="ops-card">
             <h3>전체 초대장</h3>
@@ -420,6 +517,7 @@ export function DashboardShell() {
                     <span>조회 <strong>{item.viewCount ?? 0}</strong></span>
                     <span>RSVP <strong>{item.rsvpCount ?? 0}</strong></span>
                     <span>방명록 <strong>{item.guestbookCount ?? 0}</strong></span>
+                    <span>승인 대기 <strong>{item.pendingGuestbookCount ?? 0}</strong></span>
                   </div>
                   <div className="dashboard-row-actions">
                     <Link className="btn-outline" href={`/builder?invitationId=${item.id}`}>
@@ -439,8 +537,8 @@ export function DashboardShell() {
                         {primaryAction.label}
                       </Link>
                     ) : null}
-                    <button className="btn-outline" onClick={() => setSelectedInvitationId(item.id)} type="button">
-                      모더레이션
+                    <button className="btn-outline" onClick={() => focusOperations(item.id)} type="button">
+                      모더레이션{item.pendingGuestbookCount ? ` (${item.pendingGuestbookCount})` : ""}
                     </button>
                     {(item.id === "local-draft" || canDeleteInvitation(item.status)) ? (
                       <button className="btn-outline" onClick={() => void deleteInvitation(item)} type="button">
@@ -454,9 +552,9 @@ export function DashboardShell() {
           )}
         </div>
 
-        <div className="ops-grid" style={{ marginTop: "24px" }}>
+        <div className="ops-grid" ref={operationsRef} style={{ marginTop: "24px" }}>
           <article className="ops-card">
-            <h3>RSVP 운영</h3>
+            <h3>RSVP 전체 보기</h3>
             <p className="ops-note">
               {selectedInvitation
                 ? `${selectedInvitation.title}의 RSVP 현황입니다.`
@@ -466,9 +564,32 @@ export function DashboardShell() {
             <p className="ops-line">참석 <strong>{rsvpSummary.attending}</strong></p>
             <p className="ops-line">불참 <strong>{rsvpSummary.declined}</strong></p>
             <p className="ops-line">예상 총 인원 <strong>{rsvpSummary.totalGuests}</strong></p>
+            <div className="dashboard-rsvp-controls">
+              <input
+                aria-label="RSVP 이름 또는 전화번호 검색"
+                className="modal-input"
+                onChange={(event) => setRsvpSearch(event.target.value)}
+                placeholder="이름 또는 전화번호 검색"
+                type="search"
+                value={rsvpSearch}
+              />
+              <select
+                aria-label="RSVP 참석 여부 필터"
+                className="modal-input"
+                onChange={(event) => setRsvpFilter(event.target.value as RsvpFilter)}
+                value={rsvpFilter}
+              >
+                <option value="all">전체</option>
+                <option value="attending">참석</option>
+                <option value="declined">불참</option>
+              </select>
+              <button className="btn-outline" disabled={!filteredRsvpEntries.length} onClick={downloadRsvpCsv} type="button">
+                CSV 다운로드
+              </button>
+            </div>
             <ul className="list-box">
-              {rsvpEntries.length ? (
-                rsvpEntries.slice(0, 10).map((entry) => (
+              {filteredRsvpEntries.length ? (
+                filteredRsvpEntries.map((entry) => (
                   <li key={entry.id}>
                     <div className="meta">
                       {new Date(entry.createdAt).toLocaleString("ko-KR")} · {entry.guestName}

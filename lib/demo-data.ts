@@ -55,6 +55,15 @@ export const demoRsvps: RsvpEntry[] = [
     guests: 2,
     memo: "축하드려요!",
     createdAt: new Date("2026-03-04T04:00:00.000Z").toISOString()
+  },
+  {
+    id: "demo-rsvp-2",
+    guestName: "정하객",
+    guestPhone: "010-0000-0002",
+    attending: false,
+    guests: 0,
+    memo: "마음으로 축하드릴게요.",
+    createdAt: new Date("2026-03-04T05:00:00.000Z").toISOString()
   }
 ];
 
@@ -63,7 +72,7 @@ export const demoGuestbookEntries: GuestbookEntry[] = [
     id: "demo-gb-1",
     nickname: "친구1",
     message: "두 분의 시작을 진심으로 축하합니다.",
-    approved: true,
+    approved: false,
     createdAt: new Date("2026-03-05T06:30:00.000Z").toISOString()
   }
 ];

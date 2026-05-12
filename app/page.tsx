@@ -6,19 +6,19 @@ import { isPaidPublishingEnabled } from "@/lib/release-flags";
 
 const freeFeatures = [
   {
-    title: "기본 청첩장은 무료",
+    title: "5분 안에 초대장 완성",
     description:
-      "현재 공개된 템플릿은 무료로 만들고 미리보기할 수 있어 부담 없이 초대장을 시작할 수 있습니다."
+      "디자인을 고르고 이름, 날짜, 장소만 채우면 하객에게 보낼 공개 링크까지 준비됩니다."
   },
   {
-    title: "참석 여부와 방명록까지",
+    title: "참석 응답과 방명록까지",
     description:
-      "링크를 보낸 뒤에는 참석 여부와 축하 메시지까지 한 번에 받을 수 있습니다."
+      "초대장을 보낸 뒤 RSVP, 방명록 승인, 조회수까지 대시보드에서 함께 확인합니다."
   },
   {
-    title: "링크 하나로 공유",
+    title: "링크 하나로 바로 공유",
     description:
-      "카카오톡, 문자, SNS 어디든. 링크 하나로 초대장, 지도, 계좌 안내, 방명록까지 함께 전달됩니다."
+      "카카오톡, 문자, SNS 어디든. 링크 하나로 초대장, 지도, 계좌 안내, 방명록을 전달합니다."
   }
 ];
 
@@ -103,30 +103,34 @@ export default function HomePage() {
 
       <section className="hero">
         <div className="hero-content">
-          <p className="hero-badge">기본 청첩장은 무료</p>
+          <p className="hero-badge">사진 없이 무료 발행 · RSVP 운영 포함</p>
           <h1 className="hero-title">
-            무료로 만들고,
+            모바일 초대장,
             <br />
-            바로 공유하세요
+            만들고 보내고 관리까지 한 번에
           </h1>
           <p className="hero-subtitle">
-            기본 청첩장은 무료로 만들고 미리보기할 수 있어요.
+            청첩장부터 돌잔치, 브라이덜샤워, 환갑잔치까지.
+            <br />
+            디자인을 고르고 정보를 입력하면 공개 링크가 바로 준비됩니다.
+            <br />
+            RSVP, 계좌, 지도, 방명록도 함께 관리하세요.
             <br />
             {paidPublishingEnabled
-              ? "사진이 포함된 초대장을 발행할 때만 3,300원 발행권이 필요합니다."
+              ? "사진을 넣지 않으면 무료, 사진 포함 발행은 3,300원입니다."
               : "첫 제출 버전은 사진 없는 무료 발행에 집중합니다."}
           </p>
           <div className="hero-proof-list">
-            <span>기본 청첩장 무료</span>
+            <span>5분 완성 흐름</span>
             <span>{paidPublishingEnabled ? "사진 포함 발행권 3,300원" : "사진 기능 준비 중"}</span>
-            <span>링크 공유 · 참석 여부 · 방명록</span>
+            <span>RSVP · 계좌 · 지도 · 방명록</span>
           </div>
           <div className="hero-btns">
             <Link className="btn-hero-primary" href="/builder">
-              무료로 시작하기
+              무료로 초대장 만들기
             </Link>
             <a className="btn-hero-outline" href="#templates">
-              디자인 둘러보기
+              템플릿 먼저 보기
             </a>
           </div>
         </div>
@@ -159,9 +163,9 @@ export default function HomePage() {
         <div className="section-inner">
           <p className="section-kicker">가볍게 시작하세요</p>
           <h2 className="section-title">
-            기본은 무료,
+            초대장 제작부터,
             <br />
-            필요한 정보만 채우면 공유
+            참석 응답 관리까지
           </h2>
           <p className="section-sub">
             {paidPublishingEnabled
@@ -183,7 +187,7 @@ export default function HomePage() {
       <section className="process-section">
         <div className="section-inner">
           <p className="section-kicker">이렇게 진행돼요</p>
-          <h2 className="section-title">디자인 고르고, 내용 넣고, 바로 발행</h2>
+          <h2 className="section-title">디자인 고르고, 내용 넣고, 카카오톡으로 공유</h2>
           <div className="process-grid">
             {processSteps.map((step) => (
               <article className="process-card" key={step.step}>

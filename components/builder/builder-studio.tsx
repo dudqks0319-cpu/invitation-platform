@@ -14,6 +14,7 @@ import {
   type InvitationStatus,
   type InvitationDraftPayload
 } from "@/lib/invitation-payload";
+import { getPublishMissingFields } from "@/lib/invitation-publish-readiness";
 import { templates } from "@/lib/templates";
 import { TemplateMarkup } from "@/components/landing/template-markup";
 import { BUILDER_STEPS, clampBuilderStep, getBuilderStep } from "@/components/builder/builder-steps";
@@ -36,6 +37,14 @@ type StoredDraft = {
 };
 
 const MAX_DEMO_IMAGE_BYTES = 5 * 1024 * 1024;
+const PUBLISH_FIELD_STEPS: Record<string, number> = {
+  "초대장 제목": 0,
+  "행사 일시": 0,
+  "예식장 이름": 0,
+  "예식장 주소": 0,
+  "신랑 이름": 1,
+  "신부 이름": 1
+};
 
 function readStoredDraft() {
   if (typeof window === "undefined") {
@@ -126,6 +135,17 @@ export function BuilderStudio({
     payload.galleryImages.length > 0 ||
     payload.galleryImagePaths.length > 0 ||
     pendingGalleryFiles.length > 0;
+  const missingPublishFields = useMemo(() => getPublishMissingFields(payload), [payload]);
+  const publishChecklistItems = useMemo(
+    () =>
+      Object.entries(PUBLISH_FIELD_STEPS).map(([label, stepIndex]) => ({
+        label,
+        stepIndex,
+        missing: missingPublishFields.includes(label)
+      })),
+    [missingPublishFields]
+  );
+  const firstMissingPublishItem = publishChecklistItems.find((item) => item.missing);
 
   useEffect(() => {
     if (!supabase) {
@@ -1037,6 +1057,36 @@ export function BuilderStudio({
                   ? "사진이 포함되어 있어 모바일 앱에서 사진 포함 발행권 결제가 필요합니다."
                   : "현재 구성은 사진 없는 무료 발행입니다."}
               </p>
+              <div aria-label="공개 전 필수 확인" className="builder-readiness-card">
+                <strong>
+                  {missingPublishFields.length
+                    ? `공개 전 아직 ${missingPublishFields.length}개가 남았어요`
+                    : "하객에게 보내도 되는 공개 정보가 준비됐어요"}
+                </strong>
+                <p className="builder-help">부족한 항목을 누르면 해당 입력 단계로 이동합니다.</p>
+                <div className="builder-readiness-list">
+                  {publishChecklistItems.map((item) => (
+                    <button
+                      className={item.missing ? "readiness-item missing" : "readiness-item complete"}
+                      key={item.label}
+                      onClick={() => setCurrentStep(item.stepIndex)}
+                      type="button"
+                    >
+                      <span>{item.missing ? "필요" : "완료"}</span>
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+                {firstMissingPublishItem ? (
+                  <button
+                    className="btn-outline"
+                    onClick={() => setCurrentStep(firstMissingPublishItem.stepIndex)}
+                    type="button"
+                  >
+                    부족한 항목 수정하기
+                  </button>
+                ) : null}
+              </div>
             </div>
             <ul className="builder-publish-checklist">
               <li>

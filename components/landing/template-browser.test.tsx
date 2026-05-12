@@ -53,7 +53,7 @@ describe("TemplateBrowser", () => {
 
     expect(document.body.textContent).toContain("사진 없이 무료 발행");
     expect(document.body.textContent).toContain("사진 포함 발행권 3,300원");
-    expect(document.body.textContent).toContain("RSVP · 계좌 · 지도 · 카카오 공유 포함");
+    expect(document.body.textContent).toContain("RSVP · 지도 · 계좌 · 방명록 포함");
   });
 
   it("opens preview without triggering builder navigation", async () => {

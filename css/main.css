@@ -1158,6 +1158,46 @@ a:focus-visible,
   color: #4f3a28;
   margin-bottom: 4px;
 }
+.builder-readiness-card {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(183, 121, 31, 0.22);
+  background: rgba(255, 250, 245, 0.86);
+}
+.builder-readiness-card strong {
+  color: #4f3a28;
+}
+.builder-readiness-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+.readiness-item {
+  min-height: 42px;
+  border-radius: 10px;
+  border: 1px solid rgba(232,221,211,0.95);
+  background: #fff;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  text-align: left;
+  font-weight: 700;
+}
+.readiness-item span {
+  color: var(--text-mid);
+  font-size: 0.72rem;
+}
+.readiness-item.missing {
+  border-color: rgba(180, 35, 24, 0.25);
+}
+.readiness-item.complete {
+  border-color: rgba(84, 122, 97, 0.25);
+}
 .builder-publish-checklist {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1644,6 +1684,23 @@ a:focus-visible,
 }
 .form-message.error { color: #b71c1c; }
 .form-message.success { color: #1b5e20; }
+.dashboard-task-grid,
+.dashboard-rsvp-controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.dashboard-task-grid span {
+  border-radius: 10px;
+  border: 1px solid rgba(232,221,211,0.92);
+  background: #fff;
+  color: var(--text-mid);
+  padding: 10px 12px;
+}
+.dashboard-task-grid strong {
+  color: var(--primary-dark);
+}
 .data-panel h3 {
   font-size: 1rem;
   margin-bottom: 12px;
