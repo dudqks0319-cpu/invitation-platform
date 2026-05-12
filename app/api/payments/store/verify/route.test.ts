@@ -383,6 +383,8 @@ describe("POST /api/payments/store/verify", () => {
     const payload = await response.json();
 
     expect(response.status).toBe(409);
+    expect(payload.paymentConfirmed).toBe(true);
+    expect(payload.publishBlocked).toBe(true);
     expect(payload.message).toContain("공개 전 입력");
     expect(admin.state.paymentInserts).toHaveLength(1);
     expect(admin.state.auditInserts).toHaveLength(1);

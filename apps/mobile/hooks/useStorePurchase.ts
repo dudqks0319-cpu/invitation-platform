@@ -3,7 +3,7 @@ import { Platform } from "react-native";
 import { type Product, type Purchase, useIAP } from "react-native-iap";
 import { getInviteHubBaseUrl } from "@/lib/web-links";
 import { getStoreBillingNotice, getStoreBillingProvider } from "@/lib/payments/store-billing";
-import { buildStoreVerifyBody } from "@/lib/payments/store-verification";
+import { buildStoreVerifyBody, getStoreVerifyOutcome, type StoreVerifyResult } from "@/lib/payments/store-verification";
 
 function splitProductIds(raw?: string) {
   return (raw ?? "")
@@ -122,25 +122,26 @@ export function useStorePurchase(options: StorePurchaseOptions = {}) {
         body: JSON.stringify(verificationBody)
       });
 
-      const result = (await response.json().catch(() => ({}))) as {
-        success?: boolean;
-        message?: string;
-        invitationId?: string;
-        slug?: string;
-      };
+      const result = (await response.json().catch(() => ({}))) as StoreVerifyResult;
+      const outcome = getStoreVerifyOutcome(response.ok, result);
 
-      if (!response.ok || !result.success || !result.invitationId || !result.slug) {
-        throw new Error(result.message || "스토어 결제 검증에 실패했습니다.");
+      if (outcome.status === "failed") {
+        throw new Error(outcome.message);
       }
 
       await finishTransaction({ purchase: purchaseToFinish, isConsumable: true });
 
       if (!active) return;
+      if (outcome.status === "publish-blocked") {
+        setMessage(outcome.message);
+        return;
+      }
+
       onVerified?.({
-        invitationId: result.invitationId,
-        slug: result.slug
+        invitationId: outcome.invitationId,
+        slug: outcome.slug
       });
-      setMessage("스토어 결제가 완료되어 초대장을 발행했습니다.");
+      setMessage(outcome.message);
     }
 
     void verifyPendingPurchase()

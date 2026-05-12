@@ -232,6 +232,8 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
+        paymentConfirmed: true,
+        publishBlocked: true,
         message: `결제는 확인됐지만 ${getPublishMissingFieldsMessage(missingFields)}`,
         paymentId: payment.id,
         invitationId: invitation.id,

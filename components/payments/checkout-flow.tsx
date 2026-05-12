@@ -29,30 +29,11 @@ export function CheckoutFlow({
   const [invitationId, setInvitationId] = useState(initialInvitationId ?? "");
   const [invitationTitle, setInvitationTitle] = useState("초대장 결제");
   const [publicSlug, setPublicSlug] = useState("");
-  const [buyerName, setBuyerName] = useState("");
-  const [buyerPhone, setBuyerPhone] = useState("");
-  const [buyerEmail, setBuyerEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
   const [pricing, setPricing] = useState(() => getInvitationPricing(normalizeDraft({})));
-
-  useEffect(() => {
-    if (!supabase) {
-      return;
-    }
-
-    void (async () => {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        setBuyerEmail((current) => current || user.email || "");
-      }
-    })();
-  }, [supabase]);
 
   useEffect(() => {
     if (!supabase) {
@@ -165,12 +146,7 @@ export function CheckoutFlow({
 
   async function handleCheckout() {
     if (!termsChecked) {
-      setError("약관에 동의해 주세요.");
-      return;
-    }
-
-    if (!buyerName || !buyerPhone || !buyerEmail) {
-      setError("이름, 연락처, 이메일을 모두 입력해 주세요.");
+      setError("발행 정책에 동의해 주세요.");
       return;
     }
 
@@ -234,22 +210,10 @@ export function CheckoutFlow({
       ) : (
         <>
           <p className="ops-note" style={{ marginTop: "8px" }}>
-            무료 구성은 웹에서 바로 발행할 수 있고, 유료 옵션이 포함된 초대장은 모바일 앱에서 스토어 결제로 발행합니다.
+            사진을 추가하지 않은 무료 구성은 별도 결제 정보 없이 바로 공개 링크를 발행할 수 있습니다.
           </p>
           <div className="form-grid" style={{ marginTop: "24px" }}>
             <div className="data-form">
-              <label>
-                발행 전 이름
-                <input className="modal-input" value={buyerName} onChange={(event) => setBuyerName(event.target.value)} placeholder="예: 홍길동" />
-              </label>
-              <label>
-                연락처
-                <input className="modal-input" value={buyerPhone} onChange={(event) => setBuyerPhone(event.target.value)} placeholder="010-0000-0000" />
-              </label>
-              <label>
-                이메일
-                <input className="modal-input" value={buyerEmail} onChange={(event) => setBuyerEmail(event.target.value)} placeholder="name@example.com" />
-              </label>
               <label style={{ display: "flex", gap: "10px", alignItems: "center", marginTop: "12px" }}>
                 <input checked={termsChecked} onChange={(event) => setTermsChecked(event.target.checked)} type="checkbox" />
                 발행 정책에 동의합니다.

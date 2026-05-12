@@ -65,8 +65,8 @@ describe("DashboardShell", () => {
       label: "결제 재시도"
     });
     expect(getDashboardPrimaryAction("paid")).toEqual({
-      href: "/checkout?invitationId=inv-1",
-      label: "발행 확인"
+      href: "/support",
+      label: "발행 상태 문의"
     });
     expect(getDashboardPrimaryAction("refund_pending")).toEqual({
       href: "/support",

@@ -7,7 +7,7 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { theme } from "@/components/ui/theme";
 import { getDraftOwnerId } from "@/lib/auth-access";
 import { createAndPersistDraft } from "@/lib/drafts";
-import { getMobileHomeLayoutMode, getTemplateScrollTargetY } from "@/lib/home-layout";
+import { getMobileHomeHeaderAction, getMobileHomeLayoutMode, getTemplateScrollTargetY } from "@/lib/home-layout";
 import { useAuth } from "@/hooks/useAuth";
 import type { MobileTemplateGalleryItem } from "@/lib/template-gallery";
 
@@ -16,6 +16,7 @@ export default function HomeScreen() {
   const { status, user } = useAuth();
   const draftOwnerId = getDraftOwnerId(status === "authenticated" ? user : null);
   const homeLayoutMode = getMobileHomeLayoutMode(status, user);
+  const headerAction = getMobileHomeHeaderAction(status, user);
   const scrollRef = useRef<ScrollViewType>(null);
   const [templateAreaY, setTemplateAreaY] = useState(0);
 
@@ -50,9 +51,9 @@ export default function HomeScreen() {
         >
           <Text style={{ color: theme.colors.accent, fontSize: 20, fontWeight: "800" }}>💌 InviteHub</Text>
           <Pressable
-            accessibilityLabel="로그인"
+            accessibilityLabel={headerAction.accessibilityLabel}
             onPress={() => {
-              router.push("/login");
+              router.push(headerAction.pathname);
             }}
             style={{
               minHeight: 44,
@@ -65,7 +66,9 @@ export default function HomeScreen() {
               justifyContent: "center"
             }}
           >
-            <Text style={{ color: theme.colors.accent, fontSize: 13, fontWeight: "700" }}>로그인</Text>
+            <Text style={{ color: theme.colors.accent, fontSize: 13, fontWeight: "700" }}>
+              {headerAction.label}
+            </Text>
           </Pressable>
         </View>
 

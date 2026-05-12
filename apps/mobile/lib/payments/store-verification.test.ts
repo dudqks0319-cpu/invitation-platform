@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildStoreVerifyBody } from "./store-verification";
+import { buildStoreVerifyBody, getStoreVerifyOutcome } from "./store-verification";
 
 describe("buildStoreVerifyBody", () => {
   it("builds the apple verification body from a transaction", () => {
@@ -48,5 +48,24 @@ describe("buildStoreVerifyBody", () => {
         }
       })
     ).toThrow("transactionId");
+  });
+
+  it("treats verified payment with blocked publishing as a finishable partial success", () => {
+    expect(
+      getStoreVerifyOutcome(false, {
+        success: false,
+        paymentConfirmed: true,
+        publishBlocked: true,
+        message: "결제는 확인됐지만 공개 전 입력이 필요한 항목: 행사 일시",
+        invitationId: "invitation-1",
+        slug: "invite-123"
+      })
+    ).toEqual({
+      invitationId: "invitation-1",
+      message: "결제는 확인됐지만 공개 전 입력이 필요한 항목: 행사 일시",
+      shouldFinishTransaction: true,
+      slug: "invite-123",
+      status: "publish-blocked"
+    });
   });
 });

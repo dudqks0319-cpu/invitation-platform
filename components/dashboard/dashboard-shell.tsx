@@ -46,7 +46,7 @@ export function getDashboardPrimaryAction(status: DashboardItem["status"], invit
     case "payment_pending":
       return { href: checkoutHref, label: "결제 재시도" };
     case "paid":
-      return { href: checkoutHref, label: "발행 확인" };
+      return { href: "/support", label: "발행 상태 문의" };
     case "refund_pending":
       return { href: "/support", label: "환불 상태" };
     case "refunded":
