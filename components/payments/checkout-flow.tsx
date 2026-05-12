@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { trackEvent } from "@/lib/analytics";
+import { copyTextWithFallback } from "@/lib/clipboard";
 import { createBrowserClient } from "@/lib/supabase/browser";
 import { authDestination } from "@/lib/auth";
 import { LOCAL_DRAFT_KEY, createInvitationSlug, normalizeDraft, type InvitationDraftPayload } from "@/lib/invitation-payload";
@@ -204,12 +205,16 @@ export function CheckoutFlow({
     }
 
     const publicUrl = `${window.location.origin}/invitations/${publicSlug}`;
-    await navigator.clipboard.writeText(publicUrl);
+    const copied = await copyTextWithFallback(publicUrl, "아래 공개 링크를 복사해 주세요.");
     trackEvent("share_click", {
-      method: "copy_link",
+      method: copied ? "copy_link" : "manual_copy_prompt",
       surface: "checkout_success"
     });
-    setMessage("공개 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요.");
+    setMessage(
+      copied
+        ? "공개 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요."
+        : "브라우저 권한 때문에 자동 복사가 제한되었습니다. 열린 창의 링크를 직접 복사해 주세요."
+    );
   }
 
   async function sharePublicLink() {
@@ -220,25 +225,33 @@ export function CheckoutFlow({
     const publicUrl = `${window.location.origin}/invitations/${publicSlug}`;
 
     if (navigator.share) {
-      await navigator.share({
-        title: invitationTitle,
-        text: "초대장을 확인해 주세요.",
-        url: publicUrl
-      });
-      trackEvent("share_click", {
-        method: "native_share",
-        surface: "checkout_success"
-      });
-      setMessage("공유창을 열었습니다.");
-      return;
+      try {
+        await navigator.share({
+          title: invitationTitle,
+          text: "초대장을 확인해 주세요.",
+          url: publicUrl
+        });
+        trackEvent("share_click", {
+          method: "native_share",
+          surface: "checkout_success"
+        });
+        setMessage("공유창을 열었습니다.");
+        return;
+      } catch {
+        // Fall back to copy prompt below when native share is cancelled or blocked.
+      }
     }
 
-    await navigator.clipboard.writeText(publicUrl);
+    const copied = await copyTextWithFallback(publicUrl, "아래 공개 링크를 복사해 주세요.");
     trackEvent("share_click", {
-      method: "copy_link",
+      method: copied ? "copy_link" : "manual_copy_prompt",
       surface: "checkout_success"
     });
-    setMessage("공유 링크를 복사했습니다. 카카오톡 대화창에 붙여넣어 보내 주세요.");
+    setMessage(
+      copied
+        ? "공유 링크를 복사했습니다. 카카오톡 대화창에 붙여넣어 보내 주세요."
+        : "공유가 제한되어 링크 복사 창을 열었습니다. 직접 복사해 전달해 주세요."
+    );
   }
 
   return (
@@ -249,11 +262,11 @@ export function CheckoutFlow({
       {initialPaymentState === "success" ? (
         <>
           <p className="ops-note" style={{ marginTop: "8px" }}>
-            이제 하객에게 초대장을 보낼 수 있어요. 카카오톡으로 공유하거나 링크를 복사해 전달하세요.
+            이제 하객에게 초대장을 보낼 수 있어요. 카카오톡, 문자, SNS로 초대장을 보낼 수 있습니다.
           </p>
           <div className="header-actions" style={{ marginTop: "20px" }}>
             <button className="btn-primary" disabled={!publicSlug} onClick={() => void sharePublicLink()} type="button">
-              카카오톡으로 공유
+              공유하기
             </button>
             <button className="btn-outline" disabled={!publicSlug} onClick={() => void copyPublicLink()} type="button">
               링크 복사
@@ -286,6 +299,10 @@ export function CheckoutFlow({
                 <span>
                   <Link href="/terms" target="_blank">
                     발행 정책
+                  </Link>
+                  {" 및 "}
+                  <Link href="/privacy" target="_blank">
+                    개인정보처리방침
                   </Link>
                   에 동의합니다.
                 </span>

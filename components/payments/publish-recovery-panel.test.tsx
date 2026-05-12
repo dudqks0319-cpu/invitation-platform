@@ -14,6 +14,7 @@ describe("PublishRecoveryPanel", () => {
     );
 
     expect(markup).toContain("공개 링크가 준비됐습니다");
+    expect(markup).toContain("카카오톡, 문자, SNS로 초대장을 보낼 수 있습니다.");
     expect(markup).toContain("공유하기");
     expect(markup).toContain("링크 복사");
     expect(markup).toContain("실제 화면 보기");

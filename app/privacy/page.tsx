@@ -52,6 +52,12 @@ export default function PrivacyPage() {
               운영, 서비스 개선 및 통계 분석 목적으로만 사용됩니다.
             </p>
 
+            <p style={{ marginBottom: 24 }}>
+              서비스 개선을 위해 Google Analytics 등 분석 도구로 템플릿 미리보기, 발행 시도,
+              공유 클릭 같은 이용 이벤트를 집계할 수 있습니다. 광고성 메시지는 별도 동의가 있는
+              경우에만 발송하며, 수신 거부 요청을 존중합니다.
+            </p>
+
             <h2 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "28px 0 12px" }}>
               3. 개인정보 보유 및 파기
             </h2>

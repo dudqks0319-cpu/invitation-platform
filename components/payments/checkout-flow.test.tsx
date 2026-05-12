@@ -41,7 +41,8 @@ describe("CheckoutFlow", () => {
 
     expect(markup).toContain("공개 링크가 준비됐습니다");
     expect(markup).toContain("이제 하객에게 초대장을 보낼 수 있어요.");
-    expect(markup).toContain("카카오톡으로 공유");
+    expect(markup).toContain("카카오톡, 문자, SNS로 초대장을 보낼 수 있습니다.");
+    expect(markup).toContain("공유하기");
     expect(markup).toContain("링크 복사");
     expect(markup).toContain("실제 화면 보기");
     expect(markup).toContain("다음에 할 수 있는 일");
@@ -88,6 +89,7 @@ describe("CheckoutFlow", () => {
     expect(container.textContent).toContain("예정 공개 링크: /invitations/minjun-sua");
     expect(container.textContent).not.toContain("{publicSlug}");
     expect(container.querySelector('a[href="/terms"]')?.textContent).toContain("발행 정책");
+    expect(container.querySelector('a[href="/privacy"]')?.textContent).toContain("개인정보처리방침");
 
     await act(async () => {
       root.unmount();
