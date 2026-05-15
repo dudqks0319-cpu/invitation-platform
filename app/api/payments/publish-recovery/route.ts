@@ -5,13 +5,17 @@ import { getPublishMissingFields, getPublishMissingFieldsMessage } from "@/lib/i
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { ensureJsonRequest, readJsonBody } from "@/lib/supabase/public-write";
+import { ensureJsonRequest, ensureSameOriginRequest, readJsonBody } from "@/lib/supabase/public-write";
 
 const publishRecoverySchema = z.object({
   invitationId: z.string().trim().min(1).max(120)
 });
 
 export async function POST(request: Request) {
+  if (!ensureSameOriginRequest(request)) {
+    return NextResponse.json({ success: false, message: "허용되지 않은 요청입니다." }, { status: 403 });
+  }
+
   const supabase = await createServerSupabaseClient();
   const admin = createSupabaseAdminClient();
 

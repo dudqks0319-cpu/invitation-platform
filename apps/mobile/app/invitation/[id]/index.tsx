@@ -107,7 +107,7 @@ export default function InvitationDetailScreen() {
           {[draft?.payload.venueName, draft?.payload.venueAddress].filter(Boolean).join(" · ") || "장소 미입력"}
         </Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
-          <Pill active={Boolean(draft?.serverId)} label={draft?.serverId ? "원격 저장됨" : "로컬 초안"} />
+          <Pill active={Boolean(draft?.serverId)} label={draft?.serverId ? "온라인 저장됨" : "로컬 초안"} />
           <Pill active={Boolean(draft?.isDirty)} label={draft?.isDirty ? "미저장 변경" : "동기화 안정"} />
           <Pill active={Boolean(draft?.payload.isPublished)} label={draft?.payload.isPublished ? "공개 중" : "비공개"} />
         </View>
@@ -168,7 +168,7 @@ export default function InvitationDetailScreen() {
         </Text>
         {!configured ? (
           <Text style={{ color: "#8d5a2b", lineHeight: 22 }}>
-            원격 기능 안내: {configMessage}
+            온라인 기능 안내: {configMessage}
           </Text>
         ) : null}
       </Card>
@@ -203,8 +203,8 @@ export default function InvitationDetailScreen() {
               웹에서 이어서 편집
             </Button>
           ) : (
-            <Button accessibilityLabel="운영 화면에서 서버 저장" onPress={undefined}>
-              서버 저장 후 사용 가능
+            <Button accessibilityLabel="운영 화면에서 온라인 저장" onPress={undefined}>
+              온라인 저장 후 사용 가능
             </Button>
           )}
           <View style={{ flexDirection: "row", gap: 10 }}>
@@ -284,7 +284,7 @@ export default function InvitationDetailScreen() {
       <Card eyebrow="운영 도구" title="관리 메뉴">
         <View style={{ gap: 10 }}>
           <Button
-            accessibilityLabel="운영 화면에서 서버 저장"
+            accessibilityLabel="운영 화면에서 온라인 저장"
             onPress={
               configured && status === "authenticated" && user?.id && draft
                 ? () => {
@@ -309,10 +309,10 @@ export default function InvitationDetailScreen() {
                         };
                         await saveDraft(nextDraft);
                         setDraft(nextDraft);
-                        setMessage("운영 화면에서 서버 초안을 저장했습니다.");
+                        setMessage("운영 화면에서 초안을 저장했습니다.");
                       })
                       .catch((caught) => {
-                        setError(caught instanceof Error ? caught.message : "서버 저장에 실패했습니다.");
+                        setError(caught instanceof Error ? caught.message : "초안 저장에 실패했습니다.");
                       });
                   }
                 : undefined
@@ -320,10 +320,10 @@ export default function InvitationDetailScreen() {
             variant="outline"
           >
             {!configured
-              ? "Supabase 설정 필요"
+              ? "온라인 저장 준비 중"
               : configured && status === "authenticated"
-                ? "서버 저장"
-                : "로그인 후 서버 저장"}
+                ? "온라인 저장"
+                : "로그인 후 온라인 저장"}
           </Button>
           <View style={{ flexDirection: "row", gap: 10 }}>
             <View style={{ flex: 1 }}>
@@ -344,7 +344,7 @@ export default function InvitationDetailScreen() {
       </Card>
       <Card eyebrow="주의" title="위험 작업">
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
-          초대장을 삭제하면 로컬 초안과 서버 저장본이 함께 제거될 수 있습니다.
+          초대장을 삭제하면 로컬 초안과 온라인 저장본이 함께 제거될 수 있습니다.
         </Text>
         <View style={{ marginTop: 10 }}>
           <Button

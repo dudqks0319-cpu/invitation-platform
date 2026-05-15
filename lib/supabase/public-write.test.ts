@@ -1,4 +1,14 @@
-import { ensureJsonRequest, publicGuestbookSchema, publicRsvpSchema, readJsonBody } from "@/lib/supabase/public-write";
+import {
+  ensureJsonRequest,
+  ensureSameOriginRequest,
+  exceedsMultipartUploadLimit,
+  isValidImageFile,
+  maxMultipartEnvelopeBytes,
+  maxUploadBytes,
+  publicGuestbookSchema,
+  publicRsvpSchema,
+  readJsonBody
+} from "@/lib/supabase/public-write";
 
 describe("public write validation", () => {
   it("rejects honeypot-filled RSVP payloads", () => {
@@ -30,6 +40,57 @@ describe("public write validation", () => {
     });
 
     expect(ensureJsonRequest(request)).toBe(true);
+  });
+
+  it("allows same-origin mutating requests and browserless clients without an origin", () => {
+    const sameOrigin = new Request("https://invitehub.test/api/uploads", {
+      method: "POST",
+      headers: {
+        host: "invitehub.test",
+        origin: "https://invitehub.test"
+      }
+    });
+    const browserless = new Request("https://invitehub.test/api/uploads", {
+      method: "POST"
+    });
+
+    expect(ensureSameOriginRequest(sameOrigin)).toBe(true);
+    expect(ensureSameOriginRequest(browserless)).toBe(true);
+  });
+
+  it("blocks cross-origin mutating requests", () => {
+    const request = new Request("https://invitehub.test/api/uploads", {
+      method: "POST",
+      headers: {
+        host: "invitehub.test",
+        origin: "https://evil.test"
+      }
+    });
+
+    expect(ensureSameOriginRequest(request)).toBe(false);
+  });
+
+  it("rejects oversized multipart requests before parsing form data", () => {
+    const request = new Request("https://invitehub.test/api/uploads", {
+      method: "POST",
+      headers: {
+        "content-length": String(maxUploadBytes + maxMultipartEnvelopeBytes + 1)
+      }
+    });
+
+    expect(exceedsMultipartUploadLimit(request)).toBe(true);
+  });
+
+  it("validates image magic bytes against the declared MIME type", async () => {
+    const png = new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x00])], "safe.png", {
+      type: "image/png"
+    });
+    const spoofed = new File([new TextEncoder().encode("<script>alert(1)</script>")], "spoof.png", {
+      type: "image/png"
+    });
+
+    await expect(isValidImageFile(png)).resolves.toBe(true);
+    await expect(isValidImageFile(spoofed)).resolves.toBe(false);
   });
 
   it("returns a friendly message for malformed json bodies", async () => {

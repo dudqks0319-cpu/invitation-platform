@@ -18,6 +18,24 @@ describe("invitation payload helpers", () => {
     expect(draft.thankYouMessage).toBe("");
   });
 
+  it("preserves intentionally cleared publish fields", () => {
+    const draft = normalizeDraft({
+      title: "",
+      eventDateTime: "",
+      venueName: "",
+      venueAddress: "",
+      groomName: "",
+      brideName: ""
+    });
+
+    expect(draft.title).toBe("");
+    expect(draft.eventDateTime).toBe("");
+    expect(draft.venueName).toBe("");
+    expect(draft.venueAddress).toBe("");
+    expect(draft.groomName).toBe("");
+    expect(draft.brideName).toBe("");
+  });
+
   it("preserves optional media and thank-you fields", () => {
     const draft = normalizeDraft({
       videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",

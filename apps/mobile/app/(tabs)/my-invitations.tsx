@@ -59,11 +59,11 @@ export default function MyInvitationsScreen() {
 
   function getStatusSummary(draft: MobileInvitationDraft) {
     if (draft.serverId && draft.isDirty) {
-      return "서버 저장본 있음 · 로컬 수정 대기";
+      return "온라인 저장본 있음 · 수정 내용 저장 대기";
     }
 
     if (draft.serverId) {
-      return "서버 저장 완료";
+      return "온라인 저장 완료";
     }
 
     return "로컬 초안만 존재";
@@ -99,11 +99,11 @@ export default function MyInvitationsScreen() {
         {error ? <ErrorView description={error} title="목록 불러오기 실패" /> : null}
         <Card eyebrow="목록 상태" title="초안 동기화">
           <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
-            로컬 초안과 서버 저장본을 함께 보여줍니다. 로컬 전용 초안은 여기서 바로 지울 수 있습니다.
+            이 기기에 저장된 초안과 온라인 저장본을 함께 보여줍니다. 기기 전용 초안은 여기서 바로 지울 수 있습니다.
           </Text>
           {!configured ? (
             <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginTop: 8 }}>
-              원격 기능 안내: {configMessage}
+              온라인 기능 안내: {configMessage}
             </Text>
           ) : null}
           <View style={{ marginTop: 12 }}>
@@ -137,13 +137,13 @@ export default function MyInvitationsScreen() {
           </Text>
           <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 6 }}>{getStatusSummary(draft)}</Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
-            <Pill active={Boolean(draft.serverId)} label={draft.serverId ? "원격 저장됨" : "로컬 전용"} />
+            <Pill active={Boolean(draft.serverId)} label={draft.serverId ? "온라인 저장됨" : "기기 전용"} />
             <Pill active={draft.isDirty} label={draft.isDirty ? "미저장 변경" : "동기화 안정"} />
             <Pill active={draft.pendingPhotos.length > 0} label={`업로드 대기 ${draft.pendingPhotos.length}`} />
             <Pill active={Boolean(draft.payload.isPublished)} label={draft.payload.isPublished ? "공개 중" : "비공개"} />
           </View>
           <View style={{ marginTop: 12, gap: 10 }}>
-            <Link asChild href={{ pathname: "/invitation/[id]/index", params: { id: draft.serverId ?? draft.localId } }}>
+            <Link asChild href={{ pathname: "/invitation/[id]", params: { id: draft.serverId ?? draft.localId } }}>
               <Button accessibilityLabel="초대장 운영 화면으로 이동">
                 운영 화면 열기
               </Button>

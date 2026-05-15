@@ -18,7 +18,7 @@ describe("InvitationView", () => {
     expect(document.body.textContent).toContain(
       "미리보기 단계에서는 나만 볼 수 있습니다. 하객에게 보낼 링크는 발행 후 공개 링크를 사용해 주세요."
     );
-    expect(document.body.innerHTML).toContain("카카오톡 공유</button>");
+    expect(document.body.innerHTML).toContain("공유하기</button>");
     expect(document.body.innerHTML).toContain("링크 복사</button>");
     expect(document.body.innerHTML).toContain("disabled=\"\"");
   });
@@ -36,10 +36,36 @@ describe("InvitationView", () => {
     expect(document.body.textContent).toContain(
       "방명록은 관리자 승인 후 공개됩니다. 작성 직후 목록에 보이지 않아도 정상입니다."
     );
-    expect(document.body.innerHTML).toContain("카카오톡 공유</button>");
+    expect(document.body.innerHTML).toContain("공유하기</button>");
     expect(document.body.innerHTML).not.toContain(
       "미리보기 단계에서는 나만 볼 수 있습니다."
     );
+  });
+
+  it("hides optional empty contact and account sections from guest-facing invitations", () => {
+    document.body.innerHTML = renderToStaticMarkup(
+      <InvitationView
+        mode="public"
+        payload={{
+          ...defaultInvitationDraft,
+          groomPhone: "",
+          bridePhone: "",
+          groomBank: "",
+          groomBankAccount: "",
+          groomBankHolder: "",
+          brideBank: "",
+          brideBankAccount: "",
+          brideBankHolder: "",
+          kakaoPayLink: ""
+        }}
+        shareUrl="/invitations/demo"
+        slug="demo"
+      />
+    );
+
+    expect(document.body.textContent).not.toContain("연락처를 입력해 주세요.");
+    expect(document.body.textContent).not.toContain("계좌 정보를 입력해 주세요.");
+    expect(document.body.textContent).not.toContain("카카오페이 송금 링크가 등록되지 않았습니다.");
   });
 
   it("shows guest-facing account and share guidance without dead KakaoPay links", () => {
@@ -58,9 +84,8 @@ describe("InvitationView", () => {
       />
     );
 
-    expect(document.body.textContent).toContain("카카오페이 송금 링크가 등록되지 않았습니다.");
     expect(document.body.textContent).toContain("이 초대장 공유하기");
-    expect(document.body.innerHTML).toContain("카카오톡 공유</button>");
+    expect(document.body.innerHTML).toContain("공유하기</button>");
     expect(document.body.innerHTML).toContain("링크 복사</button>");
     expect(document.body.innerHTML).not.toContain("기본 공유</button>");
     expect(document.body.innerHTML).not.toContain("href=\"#\"");
@@ -131,5 +156,55 @@ describe("InvitationView", () => {
     });
 
     expect(config.kakaoJsKey).toBe("server-kakao-key");
+  });
+
+  it("keeps guestbook input values when the server submission fails", async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ message: "서버 설정이 완료되지 않았습니다." }), {
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      })
+    ) as typeof fetch;
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <InvitationView
+          mode="public"
+          payload={defaultInvitationDraft}
+          shareUrl="/invitations/demo"
+          slug="demo"
+        />
+      );
+    });
+
+    const nicknameInput = container.querySelector('input[name="nickname"]') as HTMLInputElement | null;
+    const messageInput = container.querySelector('textarea[name="guestbookMessage"]') as HTMLTextAreaElement | null;
+    const guestbookForm = messageInput?.closest("form");
+
+    expect(nicknameInput).not.toBeNull();
+    expect(messageInput).not.toBeNull();
+    expect(guestbookForm).not.toBeNull();
+
+    await act(async () => {
+      nicknameInput!.value = "축하객";
+      nicknameInput!.dispatchEvent(new Event("input", { bubbles: true }));
+      messageInput!.value = "진심으로 축하드립니다";
+      messageInput!.dispatchEvent(new Event("input", { bubbles: true }));
+      guestbookForm!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    });
+
+    expect(container.textContent).toContain("서버 설정이 완료되지 않았습니다.");
+    expect(nicknameInput?.value).toBe("축하객");
+    expect(messageInput?.value).toBe("진심으로 축하드립니다");
+
+    await act(async () => {
+      root.unmount();
+    });
+    globalThis.fetch = originalFetch;
   });
 });

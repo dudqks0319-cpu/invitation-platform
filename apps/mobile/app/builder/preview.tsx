@@ -65,7 +65,7 @@ export default function BuilderPreviewScreen() {
       : requiresPurchase
       ? "유료 옵션이 포함되어 있어 이메일 또는 소셜 로그인 후 앱 스토어 결제를 완료해야 발행됩니다."
       : "필수 정보만 채우면 로그인 없이 게스트로 공개 링크를 발행할 수 있습니다.";
-  const urlGuide = publicUrl || (paidPublishUnavailable ? "사진 제거 후 무료 발행 가능" : requiresPurchase ? "스토어 결제 완료 후 자동 생성" : "서버 저장 후 자동 생성");
+  const urlGuide = publicUrl || (paidPublishUnavailable ? "사진 제거 후 무료 발행 가능" : requiresPurchase ? "스토어 결제 완료 후 자동 생성" : "발행하면 자동 생성");
   const missingItemsText = publishReadiness.missingFields.join(" · ");
 
   async function resolveRemoteUser(requireFullAccount = false) {
@@ -146,7 +146,7 @@ export default function BuilderPreviewScreen() {
         const nextDraft = await saveToCloud(userId, "draft");
 
         if (!nextDraft.serverId) {
-          throw new Error("발행할 서버 초안을 찾지 못했습니다.");
+          throw new Error("발행할 초안을 찾지 못했습니다.");
         }
 
         const result = await publishAuthenticatedInvitation(nextDraft.serverId, session?.access_token ?? "");
@@ -156,9 +156,9 @@ export default function BuilderPreviewScreen() {
       }
 
       await saveToCloud(userId, "draft");
-      setMessage("서버에 초안을 저장했습니다.");
+      setMessage("초안을 안전하게 저장했습니다.");
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "서버 저장에 실패했습니다.");
+      setError(caught instanceof Error ? caught.message : "초안 저장에 실패했습니다.");
     } finally {
       setPending("");
     }
@@ -366,10 +366,10 @@ export default function BuilderPreviewScreen() {
             accessibilityLabel="공개 링크 발행"
             onPress={remoteAccessMode === "loading" ? undefined : () => void handleSave("published")}
           >
-            {pending === "publish"
-              ? "발행 중..."
-              : !configured
-                ? "Supabase 설정 필요"
+              {pending === "publish"
+                ? "발행 중..."
+                : !configured
+                ? "온라인 발행 준비 중"
                 : remoteAccessMode === "loading"
                   ? "세션 확인 중..."
                   : draft?.payload.isPublished
@@ -430,9 +430,9 @@ export default function BuilderPreviewScreen() {
       <Card eyebrow="요금 안내" title={requiresPurchase ? "스토어 발행권" : "무료 발행"}>
         <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
           {paidPublishUnavailable
-            ? "현재 제출 버전에서는 사진 없는 무료 발행만 제공합니다. 사진 포함 발행권은 App Store 상품 준비 후 다시 활성화합니다."
+            ? "지금은 사진 없는 무료 발행을 먼저 제공합니다. 사진 포함 발행권은 스토어 상품 준비가 끝나면 다시 열립니다."
             : requiresPurchase
-            ? `사진이 포함된 초대장은 iOS에서는 Apple IAP, Android에서는 Google Play Billing으로 ${pricing.amount.toLocaleString("ko-KR")}원 결제 후 발행됩니다.`
+            ? `사진이 포함된 초대장은 앱 스토어에서 ${pricing.amount.toLocaleString("ko-KR")}원 결제 후 발행됩니다.`
             : "지금 선택한 구성은 무료입니다. 공개 링크를 바로 발행할 수 있습니다."}
         </Text>
         {addOnLines.length > 0 && !paidPublishUnavailable ? (
@@ -446,14 +446,14 @@ export default function BuilderPreviewScreen() {
         ) : null}
       </Card>
       {!configured ? (
-        <Card eyebrow="원격 기능 안내" title="현재는 로컬 프리뷰 모드">
+        <Card eyebrow="온라인 기능 안내" title="지금은 미리보기 모드">
           <Text style={{ color: theme.colors.primaryDark, lineHeight: 22 }}>{configMessage}</Text>
         </Card>
       ) : null}
       <View style={{ gap: 12 }}>
         {requiresPurchase ? (
           paidPublishUnavailable ? (
-            <Card eyebrow="사진 포함 발행" title="현재 제출 버전에서는 준비 중">
+            <Card eyebrow="사진 포함 발행" title="사진 포함 발행 준비 중">
               <Text style={{ color: theme.colors.primaryDark, lineHeight: 22 }}>
                 {PAID_PUBLISH_DISABLED_MESSAGE}
               </Text>
@@ -491,14 +491,14 @@ export default function BuilderPreviewScreen() {
           </View>
           <View style={{ flex: 1.3 }}>
             <Button
-              accessibilityLabel="서버에 초안 저장"
+              accessibilityLabel="초안 저장"
               onPress={remoteAccessMode === "loading" ? undefined : () => void handleSave("draft")}
               variant="outline"
             >
               {pending === "save"
                 ? "저장 중..."
                 : !configured
-                  ? "설정 필요"
+                  ? "온라인 저장 준비 중"
                   : remoteAccessMode === "loading"
                     ? "세션 확인 중..."
                   : "초안 저장"}
@@ -540,7 +540,7 @@ export default function BuilderPreviewScreen() {
         <Link
           asChild
           href={{
-            pathname: "/invitation/[id]/index",
+            pathname: "/invitation/[id]",
             params: { id: localId ?? "demo" }
           }}
         >

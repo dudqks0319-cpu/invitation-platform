@@ -29,12 +29,9 @@ type AuthActionResult = {
 export default function LoginScreen() {
   const {
     configMessage,
-    configMissingKeys,
     configured,
     hasFullAccount,
     isAnonymousSession,
-    nativeGoogleConfigured,
-    nativeKakaoConfigured,
     signInWithGoogle,
     signInWithApple,
     signInWithKakao,
@@ -50,7 +47,6 @@ export default function LoginScreen() {
   const [pendingAction, setPendingAction] = useState<"" | ActionKey>("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const hasEmailCredentials = email.trim().length > 0 && password.trim().length > 0;
-  const showDebugInfo = __DEV__;
 
   async function runAction(actionKey: ActionKey, action: () => Promise<AuthActionResult>) {
     if ((actionKey === "email-sign-in" || actionKey === "email-sign-up") && !hasEmailCredentials) {
@@ -120,21 +116,11 @@ export default function LoginScreen() {
               ? "무료 기능은 게스트 모드로 사용할 수 있습니다."
             : configured
               ? "아직 연결된 계정이 없습니다. 이메일 또는 소셜 로그인을 선택해 주세요."
-              : "Supabase 설정이 없어서 현재는 둘러보기 전용 상태입니다."}
+              : "현재는 초대장 둘러보기와 미리보기를 이용할 수 있습니다."}
         </Text>
         <Text style={{ color: "#766452", lineHeight: 22, marginTop: 8 }}>
-          현재 상태: {hasFullAccount ? "원격 저장과 유료 발행 가능" : "무료 작성과 게스트 저장 가능"}
+          현재 상태: {hasFullAccount ? "온라인 저장과 유료 발행 가능" : "무료 작성과 게스트 저장 가능"}
         </Text>
-        {showDebugInfo ? (
-          <Text style={{ color: "#8d5a2b", lineHeight: 22, marginTop: 8 }}>
-            Native auth: Google {nativeGoogleConfigured ? "on" : "off"} / Kakao {nativeKakaoConfigured ? "on" : "off"}
-          </Text>
-        ) : null}
-        {showDebugInfo && !configured && configMissingKeys.length > 0 ? (
-          <Text style={{ color: "#8d5a2b", lineHeight: 22, marginTop: 8 }}>
-            누락된 환경변수: {configMissingKeys.join(", ")}
-          </Text>
-        ) : null}
       </Card>
 
       {hasFullAccount ? (

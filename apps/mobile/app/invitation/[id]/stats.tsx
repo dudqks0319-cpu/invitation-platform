@@ -100,7 +100,7 @@ export default function InvitationStatsScreen() {
         setSummary(nextSummary);
         setMessage("통계를 새로고침했습니다.");
       } else {
-        setMessage("로컬 초안 상태에서는 서버 통계를 불러올 수 없습니다.");
+        setMessage("아직 온라인에 발행되지 않은 초안이라 통계를 불러올 수 없습니다.");
       }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "통계를 새로고침하지 못했습니다.");
@@ -119,17 +119,17 @@ export default function InvitationStatsScreen() {
       ) : null}
       <Card eyebrow="초안 기준" title={draft?.payload.title || "초대장"}>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-          <Pill active={Boolean(draft?.serverId)} label={draft?.serverId ? "원격 연결" : "로컬 전용"} />
+          <Pill active={Boolean(draft?.serverId)} label={draft?.serverId ? "온라인 연결" : "기기 전용"} />
           <Pill active={Boolean(draft?.isDirty)} label={draft?.isDirty ? "동기화 필요" : "동기화 안정"} />
         </View>
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
           현재 갤러리 장수: {draft?.payload.photos.gallery.length ?? 0}
         </Text>
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
-          pending photo uploads: {draft?.pendingPhotos.length ?? 0}
+          업로드 대기 사진: {draft?.pendingPhotos.length ?? 0}장
         </Text>
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
-          sync status: {draft?.syncStatus ?? "-"}
+          저장 상태: {draft?.syncStatus === "synced" ? "저장 완료" : draft?.syncStatus === "pending" ? "저장 대기" : "기기 저장"}
         </Text>
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
           방문 수: {visitCount}

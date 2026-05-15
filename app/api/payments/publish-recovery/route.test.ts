@@ -24,10 +24,10 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 import { POST } from "@/app/api/payments/publish-recovery/route";
 
-function request(body: unknown) {
+function request(body: unknown, headers: Record<string, string> = {}) {
   return new Request("https://invitehub.test/api/payments/publish-recovery", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify(body)
   });
 }
@@ -93,6 +93,7 @@ function createAdminMock({
 describe("POST /api/payments/publish-recovery", () => {
   beforeEach(() => {
     createSupabaseAdminClientMock.mockReset();
+    createServerSupabaseClientMock.mockReset();
     createServerSupabaseClientMock.mockResolvedValue({
       auth: {
         async getUser() {
@@ -135,6 +136,24 @@ describe("POST /api/payments/publish-recovery", () => {
         mainImageUrl: "/api/public/assets?slug=paid-invite&path=main%2Fphoto.jpg"
       })
     });
+  });
+
+  it("rejects cross-origin recovery requests before loading the session", async () => {
+    const response = await POST(
+      request(
+        { invitationId: "inv-1" },
+        {
+          host: "invitehub.test",
+          origin: "https://evil.test"
+        }
+      )
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(payload.message).toContain("허용되지 않은 요청");
+    expect(createServerSupabaseClientMock).not.toHaveBeenCalled();
+    expect(createSupabaseAdminClientMock).not.toHaveBeenCalled();
   });
 
   it("blocks recovery when paid payment exists but required fields are still missing", async () => {

@@ -119,13 +119,13 @@ export default function BuilderStep3PhotosScreen() {
       subtitle={
         paidPublishingEnabled
           ? "메인, 배경, 갤러리 사진을 로컬 초안에 연결합니다."
-          : "현재 제출 버전에서는 사진 없는 무료 발행을 먼저 제공합니다."
+          : "지금은 사진 없는 무료 발행을 먼저 제공합니다."
       }
       title="초대장 만들기"
     >
-      <StepIndicator current={3} title="사진 설정" />
+      <StepIndicator current={3} localId={localId} title="사진 설정" />
       {!paidPublishingEnabled ? (
-        <Card eyebrow="출시 설정" title="사진 포함 발행 준비 중">
+        <Card eyebrow="사진 안내" title="사진 포함 발행 준비 중">
           <Text style={{ color: theme.colors.primaryDark, lineHeight: 22 }}>
             {PAID_PUBLISH_DISABLED_MESSAGE}
           </Text>

@@ -4,7 +4,7 @@ import {
   getDefaultInvitationSample,
   type InvitationDraft,
   type PendingPhotoUpload
-} from "@/lib/invitation-shared";
+} from "./invitation-shared";
 
 export type MobileInvitationDraft = InvitationDraft & {
   sourcePayload?: Record<string, unknown>;
@@ -28,34 +28,46 @@ export function createLocalDraft(ownerId: string): MobileInvitationDraft {
   return createEmptyInvitationDraft(ownerId);
 }
 
-function createSampleDraft(ownerId: string, localId?: string, eventType?: string): MobileInvitationDraft {
-  const draft = createEmptyInvitationDraft(ownerId);
-  const sample = getDefaultInvitationSample(eventType);
+function clearSeededSampleValues(draft: MobileInvitationDraft): MobileInvitationDraft {
+  if (draft.isDirty) {
+    return draft;
+  }
+
+  const sample = getDefaultInvitationSample(draft.payload.eventType);
+  const isSeededSample =
+    draft.payload.title === sample.title &&
+    draft.payload.eventDateTime === sample.eventDateTime &&
+    draft.payload.venueName === sample.venueName &&
+    draft.payload.venueAddress === sample.venueAddress &&
+    draft.payload.message === sample.message &&
+    draft.payload.eventData.groom.name === sample.groomName &&
+    draft.payload.eventData.bride.name === sample.brideName;
+
+  if (!isSeededSample) {
+    return draft;
+  }
+
   return {
     ...draft,
-    localId: localId ?? draft.localId,
     payload: {
       ...draft.payload,
-      eventType: eventType ?? draft.payload.eventType,
-      title: sample.title,
-      eventDateTime: sample.eventDateTime,
-      venueName: sample.venueName,
-      venueAddress: sample.venueAddress,
-      message: sample.message,
+      title: "",
+      eventDateTime: "",
+      venueName: "",
+      venueAddress: "",
+      message: "",
       eventData: {
         ...draft.payload.eventData,
-        type: eventType ?? draft.payload.eventData.type,
         groom: {
           ...draft.payload.eventData.groom,
-          name: sample.groomName
+          name: ""
         },
         bride: {
           ...draft.payload.eventData.bride,
-          name: sample.brideName
+          name: ""
         }
       }
-    },
-    isDirty: false
+    }
   };
 }
 
@@ -79,12 +91,25 @@ function needsPreviewSampleReset(draft: MobileInvitationDraft) {
 
 export async function listDrafts() {
   const drafts = await readDraftMap();
-  return Object.values(drafts).sort((a, b) => b.localUpdatedAt.localeCompare(a.localUpdatedAt));
+  return Object.values(drafts)
+    .map(clearSeededSampleValues)
+    .sort((a, b) => b.localUpdatedAt.localeCompare(a.localUpdatedAt));
 }
 
 export async function loadDraft(localId: string) {
   const drafts = await readDraftMap();
-  return drafts[localId] ?? null;
+  const draft = drafts[localId] ?? null;
+  if (!draft) {
+    return null;
+  }
+
+  const sanitized = clearSeededSampleValues(draft);
+  if (sanitized !== draft) {
+    drafts[sanitized.localId] = sanitized;
+    await writeDraftMap(drafts);
+  }
+
+  return sanitized;
 }
 
 export async function saveDraft(draft: MobileInvitationDraft) {
@@ -105,17 +130,28 @@ export async function ensureDraft(ownerId: string, localId?: string) {
     .sort((a, b) => b.localUpdatedAt.localeCompare(a.localUpdatedAt))[0];
 
   if (latest) {
-    if (ownerId === PREVIEW_OWNER_ID && needsPreviewSampleReset(latest)) {
-      const sample = createSampleDraft(ownerId, latest.localId, latest.payload.eventType);
-      drafts[sample.localId] = sample;
+    const sanitized = clearSeededSampleValues(latest);
+    if (sanitized !== latest) {
+      drafts[sanitized.localId] = sanitized;
       await writeDraftMap(drafts);
-      return sample;
+      return sanitized;
+    }
+
+    if (ownerId === PREVIEW_OWNER_ID && needsPreviewSampleReset(latest)) {
+      const resetDraft = createLocalDraft(ownerId);
+      resetDraft.localId = latest.localId;
+      resetDraft.payload.eventType = latest.payload.eventType;
+      resetDraft.payload.eventData.type = latest.payload.eventType;
+      resetDraft.payload.templateId = latest.payload.templateId;
+      drafts[resetDraft.localId] = resetDraft;
+      await writeDraftMap(drafts);
+      return resetDraft;
     }
 
     return latest;
   }
 
-  const created = ownerId === PREVIEW_OWNER_ID ? createSampleDraft(ownerId) : createLocalDraft(ownerId);
+  const created = createLocalDraft(ownerId);
   drafts[created.localId] = created;
   await writeDraftMap(drafts);
   return created;
@@ -126,8 +162,7 @@ export async function createAndPersistDraft(
   options?: { eventType?: string; templateId?: string; title?: string }
 ) {
   const drafts = await readDraftMap();
-  const shouldSeedSample = Boolean(options?.templateId || options?.eventType);
-  const created = shouldSeedSample ? createSampleDraft(ownerId, undefined, options?.eventType) : createLocalDraft(ownerId);
+  const created = createLocalDraft(ownerId);
   if (options?.templateId) {
     created.payload.templateId = options.templateId;
   }
@@ -135,7 +170,7 @@ export async function createAndPersistDraft(
     created.payload.eventType = options.eventType;
     created.payload.eventData.type = options.eventType;
   }
-  if (options?.title && !shouldSeedSample) {
+  if (options?.title) {
     created.payload.title = options.title;
   }
   drafts[created.localId] = created;

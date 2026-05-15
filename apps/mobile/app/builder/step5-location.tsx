@@ -42,7 +42,7 @@ export default function BuilderStep5LocationScreen() {
 
   return (
     <Screen subtitle="지도 링크와 교통 안내를 마지막으로 점검합니다." title="초대장 만들기">
-      <StepIndicator current={5} title="오시는 길" />
+      <StepIndicator current={5} localId={localId} title="오시는 길" />
       <Card eyebrow="공개 페이지" title="카카오 · 네이버 지도와 교통 안내">
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>예식장 주소</Text>

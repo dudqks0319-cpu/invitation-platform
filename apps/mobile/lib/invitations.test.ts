@@ -33,7 +33,34 @@ describe("mobile publish pricing gate", () => {
 
     expect(getMobileInvitationPricing(payload).isFree).toBe(true);
     expect(access.canPublishDirectly).toBe(false);
+    expect(access.missingFields).toContain("초대장 제목");
     expect(access.missingFields).toContain("행사 일시");
+  });
+
+  it("treats known demo values as missing publish fields", async () => {
+    const { getPublishReadiness } = await import("./invitations");
+    const payload = createPayload();
+    payload.title = "우리 결혼합니다";
+    payload.eventDateTime = "2026-09-20T12:30";
+    payload.venueName = "라비에벨 가든홀";
+    payload.venueAddress = "서울 강남구 테헤란로 123";
+    payload.eventData.groom.name = "이준서";
+    payload.eventData.bride.name = "김은재";
+
+    const access = getPublishAccess(payload);
+    const readiness = getPublishReadiness(payload);
+
+    expect(access.canPublishDirectly).toBe(false);
+    expect(access.missingFields).toEqual([
+      "초대장 제목",
+      "행사 일시",
+      "예식장 이름",
+      "예식장 주소",
+      "신랑 이름",
+      "신부 이름"
+    ]);
+    expect(readiness.canPublish).toBe(false);
+    expect(readiness.missingFields).toEqual(access.missingFields);
   });
 
   it("blocks direct publish when paid add-ons are present", () => {
@@ -57,7 +84,7 @@ describe("mobile publish pricing gate", () => {
   it("rejects paid drafts before saving a published invitation", async () => {
     const { saveDraftToSupabase } = await import("./invitations");
     const draft = createEmptyInvitationDraft("owner-1");
-    draft.payload.title = "우리 결혼합니다";
+    draft.payload.title = "민준 수아의 결혼식";
     draft.payload.eventDateTime = "2026-05-23T14:00";
     draft.payload.venueName = "더파인 웨딩홀";
     draft.payload.venueAddress = "서울 강남구";
@@ -74,7 +101,7 @@ describe("mobile publish pricing gate", () => {
   it("rejects direct free publishing so the server API owns status changes", async () => {
     const { saveDraftToSupabase } = await import("./invitations");
     const draft = createEmptyInvitationDraft("owner-1");
-    draft.payload.title = "우리 결혼합니다";
+    draft.payload.title = "민준 수아의 결혼식";
     draft.payload.eventDateTime = "2026-05-23T14:00";
     draft.payload.venueName = "더파인 웨딩홀";
     draft.payload.venueAddress = "서울 강남구";
@@ -82,7 +109,7 @@ describe("mobile publish pricing gate", () => {
     draft.payload.eventData.bride.name = "수아";
 
     await expect(saveDraftToSupabase(draft, "owner-1", "published")).rejects.toThrow(
-      "공개 발행은 서버 발행 API를 통해서만 처리할 수 있습니다."
+      "공개 링크 발행 화면에서만 공개할 수 있습니다."
     );
     expect(fromMock).not.toHaveBeenCalled();
   });

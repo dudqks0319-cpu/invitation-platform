@@ -22,7 +22,7 @@ export function getPreviewFlowState(options: {
 
   if (purchaseUnavailable) {
     return {
-      note: "현재 제출 버전에서는 사진 포함 발행 결제 단계가 열리지 않습니다. 사진을 제거하면 무료 발행으로 진행할 수 있습니다.",
+      note: "사진 포함 발행 결제는 곧 제공될 예정입니다. 사진을 제거하면 무료 발행으로 진행할 수 있습니다.",
       steps: [
         { label: "미리보기", status: "done" as const },
         { label: "사진 제거", status: "current" as const },

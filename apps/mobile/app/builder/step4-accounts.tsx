@@ -27,7 +27,7 @@ export default function BuilderStep4AccountsScreen() {
 
   return (
     <Screen subtitle="축의금 계좌와 카카오페이 링크를 준비합니다." title="초대장 만들기">
-      <StepIndicator current={4} title="계좌 정보" />
+      <StepIndicator current={4} localId={localId} title="계좌 정보" />
       <Card eyebrow="공유 준비" title="신랑측 · 신부측 계좌">
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>신랑측 은행</Text>

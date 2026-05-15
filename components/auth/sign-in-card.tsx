@@ -196,7 +196,7 @@ export function SignInCard({
       </form>
       {!isConfigured ? (
         <p className="form-message error">
-          `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`가 없어서 인증이 비활성화되었습니다.
+          현재 미리보기 환경에서는 로그인이 잠시 비활성화되어 있습니다. 배포 환경 설정 후 다시 이용해 주세요.
         </p>
       ) : null}
       {message ? <p className="form-message success">{message}</p> : null}

@@ -1,4 +1,4 @@
-import type { InvitationPayload, PendingPhotoUpload } from "./invitation-shared";
+import { getMobilePublishMissingFields, type InvitationPayload, type PendingPhotoUpload } from "./invitation-shared";
 import { getMobileInvitationPricing } from "./payments/pricing";
 export { getPublishAccess } from "./publish-access";
 import { supabase } from "./supabase";
@@ -44,14 +44,7 @@ function ensureSlug(payload: InvitationPayload) {
 }
 
 export function getPublishReadiness(payload: InvitationPayload): PublishReadiness {
-  const missingFields: string[] = [];
-
-  if (!payload.title.trim()) missingFields.push("초대장 제목");
-  if (!payload.eventDateTime.trim()) missingFields.push("행사 일시");
-  if (!payload.venueName.trim()) missingFields.push("예식장 이름");
-  if (!payload.venueAddress.trim()) missingFields.push("예식장 주소");
-  if (!payload.eventData.groom.name.trim()) missingFields.push("신랑 이름");
-  if (!payload.eventData.bride.name.trim()) missingFields.push("신부 이름");
+  const missingFields = getMobilePublishMissingFields(payload);
 
   return {
     canPublish: missingFields.length === 0,
@@ -174,7 +167,7 @@ async function uploadPendingPhoto(
   localId: string
 ) {
   if (!supabase) {
-    throw new Error("Supabase 환경 변수가 없어 사진 업로드를 할 수 없습니다.");
+    throw new Error("현재 사진 업로드 기능을 준비 중입니다. 잠시 후 다시 이용해 주세요.");
   }
 
   const response = await fetch(photo.localUri);
@@ -216,7 +209,7 @@ export async function saveDraftToSupabase(
   status: "draft" | "published" = "draft"
 ) {
   if (!supabase) {
-    throw new Error("Supabase 환경 변수가 없어 서버 저장을 할 수 없습니다.");
+    throw new Error("현재 온라인 저장 기능을 준비 중입니다. 초대장 미리보기는 계속 이용할 수 있습니다.");
   }
 
   let payloadWithUploads = draft.payload;
@@ -297,7 +290,7 @@ export async function saveDraftToSupabase(
       throw new Error("유료 옵션이 포함되어 있어 스토어 결제를 완료해야 공개할 수 있습니다.");
     }
 
-    throw new Error("공개 발행은 서버 발행 API를 통해서만 처리할 수 있습니다.");
+    throw new Error("공개 링크 발행 화면에서만 공개할 수 있습니다.");
   }
 
   const row = {
@@ -323,7 +316,7 @@ export async function saveDraftToSupabase(
 
   const { data, error } = await query;
   if (error || !data) {
-    throw new Error(error?.message || "서버 저장에 실패했습니다.");
+    throw new Error(error?.message || "초대장 저장에 실패했습니다.");
   }
 
   return {
@@ -593,7 +586,7 @@ export async function getRemoteVisitCount(invitationId: string) {
 
 export async function updateRemoteGuestbookApproval(entryId: string, approved: boolean) {
   if (!supabase) {
-    throw new Error("Supabase 환경 변수가 없어 방명록 상태를 바꿀 수 없습니다.");
+    throw new Error("현재 방명록 관리 기능을 준비 중입니다. 잠시 후 다시 이용해 주세요.");
   }
 
   const { error } = await supabase
@@ -608,7 +601,7 @@ export async function updateRemoteGuestbookApproval(entryId: string, approved: b
 
 export async function deleteRemoteInvitation(serverId: string, userId: string) {
   if (!supabase) {
-    throw new Error("Supabase 환경 변수가 없어 서버 삭제를 할 수 없습니다.");
+    throw new Error("현재 온라인 삭제 기능을 준비 중입니다. 잠시 후 다시 이용해 주세요.");
   }
 
   const { error } = await supabase

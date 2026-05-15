@@ -68,7 +68,7 @@ export function PricingCards() {
       <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24, textAlign: "center" }}>
         {paidPublishingEnabled
           ? "가격 안내는 짧게 유지하고, 사용자가 완성 화면을 먼저 판단할 수 있게 했습니다."
-          : "첫 제출 버전은 사진 없는 무료 발행에 집중합니다."}
+          : "지금은 사진 없는 무료 발행을 먼저 제공합니다."}
       </Text>
       <View style={{ gap: 12 }}>
         {visiblePricingCards.map((item, index) => (
@@ -117,7 +117,7 @@ export function PricingCards() {
       </View>
       {!paidPublishingEnabled ? (
         <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 21, textAlign: "center" }}>
-          사진 포함 발행권은 App Store 상품 준비 후 다시 활성화합니다.
+          사진 포함 발행권은 스토어 상품 준비가 끝나면 다시 열립니다.
         </Text>
       ) : null}
     </View>

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { generatedTemplateIds } from "./generated-template-assets";
 import { mobileTemplateGallery } from "./template-gallery";
 import { bundledTemplateCanvasIds, bundledTemplatePreviewIds } from "./template-preview-manifest";
 
@@ -16,5 +17,11 @@ describe("template-preview-source", () => {
     const missingCanvasIds = mobileTemplateGallery.map((template) => template.id).filter((id) => !canvasIds.has(id));
 
     expect(missingCanvasIds).toEqual([]);
+  });
+
+  it("tracks the generated image templates in both thumbnail and canvas manifests", () => {
+    expect(generatedTemplateIds).toHaveLength(40);
+    expect(bundledTemplatePreviewIds).toEqual(expect.arrayContaining([...generatedTemplateIds]));
+    expect(bundledTemplateCanvasIds).toEqual(expect.arrayContaining([...generatedTemplateIds]));
   });
 });

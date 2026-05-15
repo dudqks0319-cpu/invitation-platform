@@ -120,6 +120,21 @@ describe("POST /api/payments/free-publish", () => {
     expect(payload.slug).toBe("invite-123");
   });
 
+  it("rejects cross-origin browser publish requests before auth work", async () => {
+    const response = await POST(
+      createRequest("invitation-1", {
+        host: "invitehub.test",
+        origin: "https://evil.test"
+      })
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(payload.message).toContain("허용되지 않은 요청");
+    expect(createServerSupabaseClientMock).not.toHaveBeenCalled();
+    expect(createSupabaseAdminClientMock).not.toHaveBeenCalled();
+  });
+
   it("accepts mobile bearer sessions when cookie auth is unavailable", async () => {
     process.env.NEXT_PUBLIC_SUPABASE_URL = "https://supabase.test";
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "anon-key";

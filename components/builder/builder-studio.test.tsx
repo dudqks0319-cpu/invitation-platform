@@ -21,6 +21,11 @@ describe("BuilderStudio publish flow", () => {
   beforeEach(() => {
     pushMock.mockReset();
     replaceMock.mockReset();
+    Element.prototype.scrollIntoView = vi.fn();
+    window.requestAnimationFrame = (callback: FrameRequestCallback) => {
+      callback(0);
+      return 0;
+    };
     const localStore = new Map<string, string>();
     Object.defineProperty(window, "localStorage", {
       configurable: true,
@@ -66,6 +71,52 @@ describe("BuilderStudio publish flow", () => {
     expect(publishPanel?.textContent).toContain("신랑 이름");
     expect(publishPanel?.textContent).toContain("부족한 항목 수정하기");
     expect(publishPanel?.querySelectorAll("a,button").length).toBeGreaterThanOrEqual(3);
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
+
+  it("starts required user fields empty instead of showing demo values as real input", async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(<BuilderStudio />);
+    });
+
+    expect((container.querySelector('input[placeholder="예: 민준 수아 결혼식 초대장"]') as HTMLInputElement | null)?.value).toBe("");
+    expect((container.querySelector('input[placeholder="예: 서울 더파인 웨딩홀"]') as HTMLInputElement | null)?.value).toBe("");
+    expect(container.textContent).not.toContain("홍길동 ♡ 김부인");
+    expect(container.textContent).toContain("신랑 ♡ 신부");
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
+
+  it("scrolls the active step header into view when moving between steps", async () => {
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(<BuilderStudio />);
+    });
+
+    const nextButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent === "다음 단계"
+    );
+
+    await act(async () => {
+      nextButton?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    });
+
+    expect(Element.prototype.scrollIntoView).toHaveBeenCalledWith({
+      behavior: "smooth",
+      block: "start"
+    });
 
     await act(async () => {
       root.unmount();

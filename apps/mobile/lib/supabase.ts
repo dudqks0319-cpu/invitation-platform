@@ -28,8 +28,8 @@ export function getAuthRedirectUrl(path = "auth/callback") {
 
 export function getSupabaseConfigMessage() {
   if (isSupabaseConfigured) {
-    return "Supabase 원격 기능을 사용할 수 있습니다.";
+    return "온라인 발행과 계정 기능을 사용할 수 있습니다.";
   }
 
-  return `원격 기능을 쓰려면 ${supabaseMissingKeys.join(", ")} 값을 설정해야 합니다.`;
+  return "현재 온라인 발행 기능을 준비 중입니다. 초대장 작성과 미리보기는 계속 이용할 수 있습니다.";
 }

@@ -10,6 +10,7 @@ import {
   LOCAL_DRAFT_KEY,
   createInvitationSlug,
   defaultInvitationDraft,
+  formatEventDateTime,
   normalizeDraft,
   type InvitationStatus,
   type InvitationDraftPayload
@@ -46,6 +47,34 @@ const PUBLISH_FIELD_STEPS: Record<string, number> = {
   "신부 이름": 1
 };
 
+const BUILDER_DEMO_VALUES: Partial<Record<keyof InvitationDraftPayload, string>> = {
+  title: "결혼식 초대장",
+  eventDateTime: "2026-04-12T14:00",
+  venueName: "서울 더파인 웨딩홀",
+  venueAddress: "서울 강남구 테헤란로 123",
+  mapAddress: "서울 강남구 테헤란로 123",
+  groomName: "홍길동",
+  brideName: "김부인",
+  groomFatherName: "홍아버지",
+  groomMotherName: "이어머니",
+  brideFatherName: "김아버지",
+  brideMotherName: "박어머니"
+};
+
+const builderEmptyDraft = clearBuilderDemoValues(defaultInvitationDraft);
+
+function clearBuilderDemoValues(payload: InvitationDraftPayload) {
+  const nextPayload = { ...payload };
+
+  for (const [key, demoValue] of Object.entries(BUILDER_DEMO_VALUES) as Array<[keyof InvitationDraftPayload, string]>) {
+    if (nextPayload[key] === demoValue) {
+      nextPayload[key] = "" as never;
+    }
+  }
+
+  return nextPayload;
+}
+
 function readStoredDraft() {
   if (typeof window === "undefined") {
     return null;
@@ -59,7 +88,7 @@ function readStoredDraft() {
 
     const parsed = JSON.parse(raw) as { payload?: unknown; meta?: DraftMeta };
     return {
-      payload: normalizeDraft(parsed.payload ?? {}),
+      payload: clearBuilderDemoValues(normalizeDraft(parsed.payload ?? {})),
       meta: parsed.meta ?? {}
     } satisfies StoredDraft;
   } catch {
@@ -94,22 +123,23 @@ export function BuilderStudio({
   const router = useRouter();
   const supabase = useMemo(() => createBrowserClient(), []);
   const createdUrlsRef = useRef<string[]>([]);
+  const stepHeaderRef = useRef<HTMLDivElement>(null);
   const checkoutIntentHandledRef = useRef(false);
   const loadedInvitationIdRef = useRef<string | null>(null);
   const [payload, setPayload] = useState<InvitationDraftPayload>(() => {
     const stored = readStoredDraft();
-    const base = stored?.payload ?? defaultInvitationDraft;
+    const base = stored?.payload ?? builderEmptyDraft;
     const matched = initialTemplateId
       ? templates.find((template) => template.id === initialTemplateId)
       : null;
 
     return matched
-      ? normalizeDraft({
+      ? {
           ...base,
           templateId: matched.id,
           category: matched.category
-        })
-      : normalizeDraft(base);
+        }
+      : base;
   });
   const [meta, setMeta] = useState<DraftMeta>(() => readStoredDraft()?.meta ?? {});
   const [message, setMessage] = useState("");
@@ -725,8 +755,26 @@ export function BuilderStudio({
   const currentStepMeta = getBuilderStep(currentStep);
   const lastStepIndex = BUILDER_STEPS.length - 1;
 
+  function scrollStepHeaderIntoView() {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      stepHeaderRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    });
+  }
+
+  function goToStep(stepIndex: number) {
+    setCurrentStep(clampBuilderStep(stepIndex));
+    scrollStepHeaderIntoView();
+  }
+
   function moveStep(delta: number) {
-    setCurrentStep((step) => clampBuilderStep(step + delta));
+    goToStep(currentStep + delta);
   }
 
   return (
@@ -738,7 +786,7 @@ export function BuilderStudio({
           await persistDraft("draft");
         }}
       >
-        <div className="builder-step-header" role="group" aria-label="빌더 단계">
+        <div className="builder-step-header" role="group" aria-label="빌더 단계" ref={stepHeaderRef}>
           <div className="builder-step-copy">
             <p className="builder-step-kicker">빌더 진행</p>
             <h3>{`STEP ${currentStepMeta.index + 1}. ${currentStepMeta.title}`}</h3>
@@ -757,7 +805,7 @@ export function BuilderStudio({
                   key={step.id}
                   className={`builder-step-pill ${step.index === currentStepMeta.index ? "is-active" : ""}`}
                   disabled={pending}
-                  onClick={() => setCurrentStep(step.index)}
+                  onClick={() => goToStep(step.index)}
                   type="button"
                 >
                   {step.shortLabel}
@@ -815,19 +863,19 @@ export function BuilderStudio({
           </label>
           <label>
             행사 제목
-            <input className={inputClassName} value={payload.title} onChange={(event) => updateField("title", event.target.value)} />
+            <input className={inputClassName} placeholder="예: 민준 수아 결혼식 초대장" value={payload.title} onChange={(event) => updateField("title", event.target.value)} />
           </label>
           <label>
             행사 일시
-            <input className={inputClassName} type="datetime-local" value={payload.eventDateTime} onChange={(event) => updateField("eventDateTime", event.target.value)} />
+            <input className={inputClassName} placeholder="날짜와 시간을 선택해 주세요" type="datetime-local" value={payload.eventDateTime} onChange={(event) => updateField("eventDateTime", event.target.value)} />
           </label>
           <label>
             행사장 이름
-            <input className={inputClassName} value={payload.venueName} onChange={(event) => updateField("venueName", event.target.value)} />
+            <input className={inputClassName} placeholder="예: 서울 더파인 웨딩홀" value={payload.venueName} onChange={(event) => updateField("venueName", event.target.value)} />
           </label>
           <label>
             행사장 주소
-            <input className={inputClassName} value={payload.venueAddress} onChange={(event) => updateField("venueAddress", event.target.value)} />
+            <input className={inputClassName} placeholder="예: 서울 강남구 테헤란로 123" value={payload.venueAddress} onChange={(event) => updateField("venueAddress", event.target.value)} />
           </label>
           <label>
             초대 메시지
@@ -840,11 +888,11 @@ export function BuilderStudio({
           <div className="form-two-col">
             <label>
               신랑 성함
-              <input className={inputClassName} value={payload.groomName} onChange={(event) => updateField("groomName", event.target.value)} />
+              <input className={inputClassName} placeholder="예: 김민준" value={payload.groomName} onChange={(event) => updateField("groomName", event.target.value)} />
             </label>
             <label>
               신부 성함
-              <input className={inputClassName} value={payload.brideName} onChange={(event) => updateField("brideName", event.target.value)} />
+              <input className={inputClassName} placeholder="예: 이수아" value={payload.brideName} onChange={(event) => updateField("brideName", event.target.value)} />
             </label>
             <label>
               신랑 연락처
@@ -1011,7 +1059,7 @@ export function BuilderStudio({
           <h3>5. 오시는 길</h3>
           <label>
             지도 주소
-            <input className={inputClassName} value={payload.mapAddress} onChange={(event) => updateField("mapAddress", event.target.value)} />
+            <input className={inputClassName} placeholder="예: 서울 강남구 테헤란로 123" value={payload.mapAddress} onChange={(event) => updateField("mapAddress", event.target.value)} />
           </label>
           <label>
             네이버 지도 링크
@@ -1069,7 +1117,7 @@ export function BuilderStudio({
                     <button
                       className={item.missing ? "readiness-item missing" : "readiness-item complete"}
                       key={item.label}
-                      onClick={() => setCurrentStep(item.stepIndex)}
+                      onClick={() => goToStep(item.stepIndex)}
                       type="button"
                     >
                       <span>{item.missing ? "필요" : "완료"}</span>
@@ -1080,7 +1128,7 @@ export function BuilderStudio({
                 {firstMissingPublishItem ? (
                   <button
                     className="btn-outline"
-                    onClick={() => setCurrentStep(firstMissingPublishItem.stepIndex)}
+                    onClick={() => goToStep(firstMissingPublishItem.stepIndex)}
                     type="button"
                   >
                     부족한 항목 수정하기
@@ -1175,15 +1223,7 @@ export function BuilderStudio({
                   {(payload.groomName || "신랑") + " ♡ " + (payload.brideName || "신부")}
                 </h2>
                 <p className="builder-preview-date">
-                  {payload.eventDateTime
-                    ? new Date(payload.eventDateTime).toLocaleString("ko-KR", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "numeric",
-                        minute: "2-digit"
-                      })
-                    : "날짜와 시간을 선택하세요"}
+                  {payload.eventDateTime ? formatEventDateTime(payload.eventDateTime) : "날짜와 시간을 선택하세요"}
                 </p>
                 <p className="builder-preview-venue">
                   {payload.venueName || payload.venueAddress

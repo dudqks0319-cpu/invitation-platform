@@ -2,7 +2,13 @@ import { NextResponse } from "next/server";
 import { INVITATION_ASSET_BUCKET, INVITATION_ASSET_TTL_SECONDS } from "@/lib/invitation-assets";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { maxUploadBytes, storageMimeTypes } from "@/lib/supabase/public-write";
+import {
+  ensureSameOriginRequest,
+  exceedsMultipartUploadLimit,
+  isStorageMimeType,
+  isValidImageFile,
+  maxUploadBytes
+} from "@/lib/supabase/public-write";
 
 function sanitizeFilename(filename: string) {
   return filename.replace(/[^a-zA-Z0-9._-]/g, "-");
@@ -32,6 +38,10 @@ async function getAuthenticatedClients() {
 }
 
 export async function POST(request: Request) {
+  if (!ensureSameOriginRequest(request)) {
+    return NextResponse.json({ success: false, message: "허용되지 않은 요청입니다." }, { status: 403 });
+  }
+
   const { supabase, admin, user } = await getAuthenticatedClients();
 
   if (!supabase || !admin) {
@@ -48,6 +58,13 @@ export async function POST(request: Request) {
     );
   }
 
+  if (exceedsMultipartUploadLimit(request)) {
+    return NextResponse.json(
+      { success: false, message: "이미지 크기는 5MB 이하여야 합니다." },
+      { status: 413 }
+    );
+  }
+
   const formData = await request.formData();
   const file = formData.get("file");
 
@@ -58,7 +75,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!storageMimeTypes.includes(file.type as (typeof storageMimeTypes)[number])) {
+  if (!isStorageMimeType(file.type)) {
     return NextResponse.json(
       { success: false, message: "JPEG, PNG, WebP 이미지만 업로드할 수 있습니다." },
       { status: 400 }
@@ -68,6 +85,13 @@ export async function POST(request: Request) {
   if (file.size > maxUploadBytes) {
     return NextResponse.json(
       { success: false, message: "이미지 크기는 5MB 이하여야 합니다." },
+      { status: 400 }
+    );
+  }
+
+  if (!(await isValidImageFile(file))) {
+    return NextResponse.json(
+      { success: false, message: "이미지 파일 형식이 올바르지 않습니다." },
       { status: 400 }
     );
   }
@@ -107,6 +131,10 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  if (!ensureSameOriginRequest(request)) {
+    return NextResponse.json({ success: false, message: "허용되지 않은 요청입니다." }, { status: 403 });
+  }
+
   const { supabase, admin, user } = await getAuthenticatedClients();
 
   if (!supabase || !admin) {

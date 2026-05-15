@@ -74,12 +74,12 @@ export function useAuth() {
       session,
       signInWithGoogle: async () => {
         if (!supabase) {
-          return { error: new Error("Supabase 환경 변수가 없어 Google 로그인을 시작할 수 없습니다.") };
+          return { error: new Error("현재 온라인 로그인 기능을 준비 중입니다. 잠시 후 다시 이용해 주세요.") };
         }
 
         if (!isNativeGoogleConfigured()) {
           return {
-            error: new Error("Google 네이티브 로그인을 사용하려면 Google 클라이언트 ID 설정이 필요합니다.")
+            error: new Error("현재 Google 로그인을 사용할 수 없습니다. 이메일 로그인 또는 둘러보기를 이용해 주세요.")
           };
         }
 
@@ -101,12 +101,12 @@ export function useAuth() {
       },
       signInWithApple: async () => {
         if (!supabase) {
-          return { error: new Error("Supabase 환경 변수가 없어 Apple 로그인을 시작할 수 없습니다.") };
+          return { error: new Error("현재 온라인 로그인 기능을 준비 중입니다. 잠시 후 다시 이용해 주세요.") };
         }
 
         const available = await AppleAuthentication.isAvailableAsync();
         if (!available) {
-          return { error: new Error("현재 환경에서는 Apple 로그인을 사용할 수 없습니다.") };
+          return { error: new Error("이 기기에서는 Apple 로그인을 사용할 수 없습니다.") };
         }
 
         const nonce = createNonce();
@@ -130,12 +130,12 @@ export function useAuth() {
       },
       signInWithKakao: async () => {
         if (!supabase) {
-          return { error: new Error("Supabase 환경 변수가 없어 Kakao 로그인을 시작할 수 없습니다.") };
+          return { error: new Error("현재 온라인 로그인 기능을 준비 중입니다. 잠시 후 다시 이용해 주세요.") };
         }
 
         if (!isNativeKakaoConfigured()) {
           return {
-            error: new Error("Kakao 네이티브 로그인을 사용하려면 Kakao Native App Key 설정이 필요합니다.")
+            error: new Error("현재 Kakao 로그인을 사용할 수 없습니다. 이메일 로그인 또는 둘러보기를 이용해 주세요.")
           };
         }
 
@@ -152,7 +152,7 @@ export function useAuth() {
       },
       ensureAnonymousSession: async () => {
         if (!supabase) {
-          return { error: new Error("Supabase 환경 변수가 없어 게스트 세션을 시작할 수 없습니다.") };
+          return { error: new Error("현재 게스트 발행 기능을 준비 중입니다. 잠시 후 다시 이용해 주세요.") };
         }
 
         const currentSession = await supabase.auth.getSession();
@@ -170,14 +170,14 @@ export function useAuth() {
       },
       signInWithPassword: async (email: string, password: string) => {
         if (!supabase) {
-          return { error: new Error("Supabase 환경 변수가 없어 이메일 로그인을 시작할 수 없습니다.") };
+          return { error: new Error("현재 이메일 로그인을 준비 중입니다. 잠시 후 다시 이용해 주세요.") };
         }
 
         return supabase.auth.signInWithPassword({ email, password });
       },
       signUpWithPassword: async (email: string, password: string) => {
         if (!supabase) {
-          return { error: new Error("Supabase 환경 변수가 없어 이메일 가입을 시작할 수 없습니다.") };
+          return { error: new Error("현재 이메일 가입을 준비 중입니다. 잠시 후 다시 이용해 주세요.") };
         }
 
         return supabase.auth.signUp({ email, password });

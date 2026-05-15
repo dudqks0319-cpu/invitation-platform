@@ -1,3 +1,5 @@
+import { generatedMobileTemplateGallery } from "./generated-template-data";
+
 export type MobileTemplateCategory = {
   key: string;
   label: string;
@@ -34,6 +36,7 @@ export const mobileTemplateCategories: MobileTemplateCategory[] = [
 ];
 
 export const mobileTemplateGallery: MobileTemplateGalleryItem[] = [
+  ...generatedMobileTemplateGallery,
   { id: "wedding-classic", category: "wedding", name: "로즈 프레임", badge: "결혼식", desc: "로즈 가득한 보더 프레임 위에 정갈하게 올리는 클래식 웨딩 카드.", tags: ["#로즈", "#프레임", "#클래식"], previewPath: "/images/custom/wedding/wedding-01.jpeg" },
   { id: "wedding-modern", category: "wedding", name: "유칼립투스 아치", badge: "결혼식", desc: "은은한 보태니컬 아치가 둘러주는 산뜻하고 차분한 웨딩 카드.", tags: ["#보태니컬", "#그린", "#아치"], previewPath: "/images/custom/wedding/wedding-02.jpeg" },
   { id: "wedding-floral", category: "wedding", name: "미니멀 블룸", badge: "결혼식", desc: "여백이 넓은 미니멀 카드에 작은 꽃다발을 더한 단정한 초대장.", tags: ["#미니멀", "#화이트", "#블룸"], previewPath: "/images/custom/wedding/wedding-03.jpeg" },
@@ -68,46 +71,56 @@ export const mobileTemplateGallery: MobileTemplateGalleryItem[] = [
 ];
 
 export const featuredMobileTemplateIds = [
-  "wedding-rose-gold",
-  "wedding-nature",
-  "wedding-classic",
-  "wedding-modern",
-  "wedding-minimal",
-  "wedding-floral",
-  "dol-nature",
-  "hwangap-floral"
+  "wedding-anime-blossom",
+  "wedding-anime-moonlight",
+  "wedding-peach-morning",
+  "wedding-sage-garden",
+  "wedding-lilac-veil",
+  "wedding-champagne-ribbon",
+  "dol-teddy-pastel",
+  "dol-cloud-moon",
+  "dol-candy-balloon",
+  "dol-picnic-bear",
+  "hwangap-royal-bojagi",
+  "hwangap-jade-crane",
+  "hwangap-champagne-peony",
+  "hwangap-sky-garden",
+  "house-cozy-sage",
+  "house-city-night",
+  "house-sunny-kitchen",
+  "house-plant-loft"
 ] as const;
 
 export const homeTemplateSections: HomeTemplateSection[] = [
   {
     key: "wedding",
     title: "청첩장 템플릿",
-    subtitle: "로맨틱하고 단정한 웨딩 디자인",
-    templateIds: ["wedding-rose-gold", "wedding-nature", "wedding-classic"]
+    subtitle: "밝고 현대적인 모바일 청첩장 디자인",
+    templateIds: ["wedding-anime-blossom", "wedding-anime-moonlight", "wedding-peach-morning", "wedding-sage-garden", "wedding-lilac-veil"]
   },
   {
     key: "dol",
     title: "돌잔치 템플릿",
     subtitle: "아기 사진과 잘 어울리는 밝은 디자인",
-    templateIds: ["dol-nature", "dol-cute", "dol-pastel"]
-  },
-  {
-    key: "bridal",
-    title: "브라이덜샤워 템플릿",
-    subtitle: "친구들과 나누기 좋은 화사한 디자인",
-    templateIds: ["bridal-pink", "bridal-modern", "bridal-mint"]
+    templateIds: ["dol-teddy-pastel", "dol-cloud-moon", "dol-candy-balloon", "dol-picnic-bear", "dol-dino-sprout"]
   },
   {
     key: "hwangap",
     title: "환갑잔치 템플릿",
-    subtitle: "격식과 따뜻함을 담은 초대장",
-    templateIds: ["hwangap-floral", "hwangap-classic", "hwangap-red"]
+    subtitle: "밝고 젊게 풀어낸 생신 초대장",
+    templateIds: ["hwangap-royal-bojagi", "hwangap-jade-crane", "hwangap-champagne-peony", "hwangap-coral-silk", "hwangap-sky-garden"]
+  },
+  {
+    key: "housewarming",
+    title: "집들이 템플릿",
+    subtitle: "새 보금자리와 홈파티에 어울리는 디자인",
+    templateIds: ["house-cozy-sage", "house-city-night", "house-sunny-kitchen", "house-plant-loft", "house-terrace-brunch"]
   },
   {
     key: "party",
     title: "파티 초대장",
     subtitle: "생일, 집들이, 베이비샤워까지",
-    templateIds: ["birthday-fun", "house-warm", "baby-shower"]
+    templateIds: ["dol-rainbow-milk", "house-rooftop-sunset", "birthday-fun", "baby-shower"]
   }
 ];
 

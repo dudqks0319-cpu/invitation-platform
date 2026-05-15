@@ -98,7 +98,7 @@ export function useStorePurchase(options: StorePurchaseOptions = {}) {
       }
 
       if (!provider || !invitationId) {
-        throw new Error("결제할 초대장을 먼저 서버에 저장해 주세요.");
+        throw new Error("결제할 초대장을 먼저 온라인에 저장해 주세요.");
       }
 
       const verificationBody = buildStoreVerifyBody({
@@ -191,7 +191,7 @@ export function useStorePurchase(options: StorePurchaseOptions = {}) {
     }
 
     if (!invitationId) {
-      setError("결제할 초대장을 먼저 서버에 저장해 주세요.");
+      setError("결제할 초대장을 먼저 온라인에 저장해 주세요.");
       return;
     }
 
@@ -201,7 +201,7 @@ export function useStorePurchase(options: StorePurchaseOptions = {}) {
     }
 
     if (productIds.length === 0) {
-      setError("스토어 상품 ID가 설정되지 않았습니다.");
+      setError("스토어 상품을 준비 중입니다.");
       return;
     }
 

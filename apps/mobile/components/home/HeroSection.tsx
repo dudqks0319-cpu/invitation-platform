@@ -1,9 +1,9 @@
-/* eslint-disable jsx-a11y/alt-text */
-
-import { Image, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { TemplateCanvasPreview } from "@/components/invitation/TemplateCanvasPreview";
 import { theme } from "@/components/ui/theme";
+import { getHomeTemplateCardMetrics } from "@/lib/home-layout";
+import { createTemplatePreviewPayload } from "@/lib/template-preview-payload";
 import { getHomeTemplateSections, type MobileTemplateGalleryItem } from "@/lib/template-gallery";
-import { getBundledTemplatePreviewSource } from "@/lib/template-preview-source";
 
 type HeroSectionProps = {
   onUseTemplate: (template: MobileTemplateGalleryItem) => void;
@@ -12,13 +12,16 @@ type HeroSectionProps = {
 function TemplateCard({
   cardWidth,
   onUseTemplate,
+  previewHeight,
   template
 }: {
   cardWidth: number;
   onUseTemplate: (template: MobileTemplateGalleryItem) => void;
+  previewHeight: number;
   template: MobileTemplateGalleryItem;
 }) {
-  const previewSource = getBundledTemplatePreviewSource(template.id);
+  const previewPayload = createTemplatePreviewPayload(template);
+  const canvasWidth = Math.round(previewHeight * 768 / 1376);
 
   return (
     <Pressable
@@ -42,7 +45,7 @@ function TemplateCard({
     >
       <View
         style={{
-          height: 244,
+          height: previewHeight,
           backgroundColor: "#F7EFE6",
           alignItems: "center",
           justifyContent: "center",
@@ -66,44 +69,19 @@ function TemplateCard({
         >
           <Text style={{ color: "#fff", fontSize: 12, fontWeight: "800" }}>선택</Text>
         </View>
-        {previewSource ? (
-          <Image
-            accessibilityIgnoresInvertColors
-            accessibilityLabel={`${template.name} 초대장 완성 예시`}
-            resizeMode="contain"
-            source={previewSource}
-            style={{ width: "100%", height: "100%", borderRadius: 6 }}
-          />
-        ) : (
-          <View
-            style={{
-              width: "72%",
-              aspectRatio: 0.58,
-              borderRadius: 8,
-              backgroundColor: theme.colors.paper,
-              borderWidth: 1,
-              borderColor: "rgba(172,137,102,0.18)",
-              alignItems: "center",
-              justifyContent: "center",
-              paddingHorizontal: 18
-            }}
-          >
-            <Text style={{ color: theme.colors.gold, fontSize: 12, fontWeight: "800", textAlign: "center" }}>
-              INVITATION
-            </Text>
-            <Text style={{ color: theme.colors.ink, fontSize: 24, fontWeight: "800", lineHeight: 31, marginTop: 12, textAlign: "center" }}>
-              {template.name}
-            </Text>
-          </View>
-        )}
+        <TemplateCanvasPreview
+          payload={previewPayload}
+          scale="thumbnail"
+          style={{ height: "100%", width: canvasWidth, borderRadius: 6, overflow: "hidden" }}
+        />
       </View>
 
       <View style={{ padding: 13, gap: 7 }}>
         <Text style={{ color: theme.colors.gold, fontSize: 12, fontWeight: "800" }}>{template.badge}</Text>
-        <Text numberOfLines={1} style={{ color: theme.colors.ink, fontSize: 18, fontWeight: "800", lineHeight: 24 }}>
+        <Text numberOfLines={2} style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "800", lineHeight: 23 }}>
           {template.name}
         </Text>
-        <Text numberOfLines={2} style={{ color: theme.colors.muted, fontSize: 14, lineHeight: 21 }}>
+        <Text numberOfLines={3} style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 20 }}>
           {template.desc}
         </Text>
       </View>
@@ -113,7 +91,7 @@ function TemplateCard({
 
 export function HeroSection({ onUseTemplate }: HeroSectionProps) {
   const { width } = useWindowDimensions();
-  const cardWidth = Math.min(224, Math.max(176, width * 0.52));
+  const { cardGap, cardWidth, previewHeight } = getHomeTemplateCardMetrics(width);
   const sections = getHomeTemplateSections();
 
   return (
@@ -156,14 +134,15 @@ export function HeroSection({ onUseTemplate }: HeroSectionProps) {
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 12, paddingRight: 18 }}
-            snapToInterval={cardWidth + 12}
+            contentContainerStyle={{ gap: cardGap }}
+            snapToInterval={cardWidth + cardGap}
           >
             {section.templates.map((template) => (
               <TemplateCard
                 cardWidth={cardWidth}
                 key={template.id}
                 onUseTemplate={onUseTemplate}
+                previewHeight={previewHeight}
                 template={template}
               />
             ))}

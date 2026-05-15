@@ -11,7 +11,7 @@ export default function AuthCallbackScreen() {
   const router = useRouter();
   const params = useGlobalSearchParams<{ code?: string; error?: string }>();
   const initialError = !supabase
-    ? "Supabase 환경 변수가 없어 인증 콜백을 처리할 수 없습니다."
+    ? "현재 온라인 로그인 연결을 준비 중입니다. 잠시 후 다시 이용해 주세요."
     : params.error
       ? String(params.error)
       : !params.code

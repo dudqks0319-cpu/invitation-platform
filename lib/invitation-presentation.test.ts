@@ -2,7 +2,10 @@ import { defaultInvitationDraft } from "@/lib/invitation-payload";
 import {
   applyCategoryTemplateDefaults,
   buildAbsoluteShareUrl,
-  getCategoryPresentation
+  buildInvitationKakaoSharePayload,
+  DEFAULT_INVITATION_OG_IMAGE,
+  getCategoryPresentation,
+  getInvitationShareImageUrl
 } from "@/lib/invitation-presentation";
 
 describe("invitation presentation helpers", () => {
@@ -31,5 +34,48 @@ describe("invitation presentation helpers", () => {
     expect(next.templateId).toBe("dol-cute");
     expect(next.title).toBe("첫돌 초대장");
     expect(next.message).toContain("첫 번째 생일");
+  });
+
+  it("builds absolute share image URLs and falls back from non-public preview blobs", () => {
+    expect(
+      getInvitationShareImageUrl(
+        {
+          ...defaultInvitationDraft,
+          mainImageUrl: "/api/public/assets?slug=demo&path=main.jpg"
+        },
+        "https://invitehub.test"
+      )
+    ).toBe("https://invitehub.test/api/public/assets?slug=demo&path=main.jpg");
+
+    expect(
+      getInvitationShareImageUrl(
+        {
+          ...defaultInvitationDraft,
+          mainImageUrl: "data:image/png;base64,abc",
+          backgroundImageUrl: ""
+        },
+        "https://invitehub.test"
+      )
+    ).toBe(`https://invitehub.test${DEFAULT_INVITATION_OG_IMAGE}`);
+  });
+
+  it("builds a Kakao feed payload with image preview support", () => {
+    const payload = buildInvitationKakaoSharePayload({
+      title: "민준 수아 결혼식 초대장",
+      description: "두 사람의 시작을 함께 축복해 주세요.",
+      imageUrl: "https://invitehub.test/og.jpg",
+      shareUrl: "https://invitehub.test/i/minjun-sua"
+    });
+
+    expect(payload.objectType).toBe("feed");
+    expect(payload.content).toMatchObject({
+      title: "민준 수아 결혼식 초대장",
+      imageUrl: "https://invitehub.test/og.jpg",
+      link: {
+        mobileWebUrl: "https://invitehub.test/i/minjun-sua",
+        webUrl: "https://invitehub.test/i/minjun-sua"
+      }
+    });
+    expect(payload.buttons[0].title).toBe("초대장 보기");
   });
 });

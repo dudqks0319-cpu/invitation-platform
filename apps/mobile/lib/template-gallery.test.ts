@@ -38,4 +38,32 @@ describe("mobile template gallery", () => {
     expect(sections[0].title).toBe("청첩장 템플릿");
     expect(sections.every((section) => section.templates.length >= 3)).toBe(true);
   });
+
+  it("shows the generated image template set on the home showcase", () => {
+    const sections = getHomeTemplateSections();
+    const templateIds = sections.flatMap((section) => section.templates.map((template) => template.id));
+
+    expect(templateIds).toEqual(
+      expect.arrayContaining([
+        "wedding-anime-blossom",
+        "wedding-peach-morning",
+        "dol-teddy-pastel",
+        "dol-candy-balloon",
+        "hwangap-royal-bojagi",
+        "hwangap-champagne-peony",
+        "house-cozy-sage",
+        "house-sunny-kitchen"
+      ])
+    );
+  });
+
+  it("provides ten modern generated templates for each core event category", () => {
+    for (const category of ["wedding", "dol", "hwangap", "housewarming"]) {
+      const generatedTemplates = getMobileTemplatesByCategory(category).filter((template) =>
+        template.previewPath?.includes("/generated-2026/")
+      );
+
+      expect(generatedTemplates).toHaveLength(10);
+    }
+  });
 });

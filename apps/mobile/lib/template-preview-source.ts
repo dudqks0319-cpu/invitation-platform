@@ -1,12 +1,14 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 import type { ImageSourcePropType } from "react-native";
+import { generatedTemplateCanvasSource, generatedTemplatePreviewSource } from "./generated-template-assets";
 import { bundledTemplateCanvasIds, bundledTemplatePreviewIds } from "./template-preview-manifest";
 
 type BundledTemplatePreviewId = (typeof bundledTemplatePreviewIds)[number];
 type BundledTemplateCanvasId = (typeof bundledTemplateCanvasIds)[number];
 
 const bundledTemplatePreviewSource: Record<BundledTemplatePreviewId, ImageSourcePropType> = {
+  ...generatedTemplatePreviewSource,
   "wedding-classic": require("../assets/template-previews/generated/wedding/wedding-classic.jpg"),
   "wedding-modern": require("../assets/template-previews/generated/wedding/wedding-modern.jpg"),
   "wedding-floral": require("../assets/template-previews/generated/wedding/wedding-floral.jpg"),
@@ -41,6 +43,7 @@ const bundledTemplatePreviewSource: Record<BundledTemplatePreviewId, ImageSource
 };
 
 const bundledTemplateCanvasSource: Record<BundledTemplateCanvasId, ImageSourcePropType> = {
+  ...generatedTemplateCanvasSource,
   "wedding-classic": require("../assets/template-previews/custom/wedding/wedding-01.jpeg"),
   "wedding-modern": require("../assets/template-previews/custom/wedding/wedding-02.jpeg"),
   "wedding-floral": require("../assets/template-previews/custom/wedding/wedding-03.jpeg"),

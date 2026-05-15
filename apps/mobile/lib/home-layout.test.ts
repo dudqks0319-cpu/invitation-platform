@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { getMobileHomeHeaderAction, getMobileHomeLayoutMode, getTemplateScrollTargetY } from "./home-layout";
+import {
+  getHomeTemplateCardMetrics,
+  getMobileHomeHeaderAction,
+  getMobileHomeLayoutMode,
+  getTemplateScrollTargetY
+} from "./home-layout";
 
 describe("mobile home layout mode", () => {
   it("puts resume actions before templates for full signed-in users", () => {
@@ -24,6 +29,15 @@ describe("mobile home layout mode", () => {
   it("scrolls the new design action near the template gallery without going negative", () => {
     expect(getTemplateScrollTargetY(240)).toBe(228);
     expect(getTemplateScrollTargetY(8)).toBe(0);
+  });
+
+  it("keeps two home template cards fully visible on common mobile widths", () => {
+    for (const width of [360, 390, 430]) {
+      const metrics = getHomeTemplateCardMetrics(width);
+
+      expect(metrics.cardWidth * 2 + metrics.cardGap).toBeLessThanOrEqual(width - 36);
+      expect(metrics.previewHeight).toBeGreaterThan(metrics.cardWidth);
+    }
   });
 
   it("does not show the login header action to full signed-in users", () => {

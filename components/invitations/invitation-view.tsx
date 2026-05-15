@@ -4,6 +4,7 @@
 
 import { useState } from "react";
 import { trackEvent } from "@/lib/analytics";
+import { copyTextWithFallback } from "@/lib/clipboard";
 import { TemplateMarkup } from "@/components/landing/template-markup";
 import {
   LOCAL_GUESTBOOK_KEY,
@@ -17,10 +18,12 @@ import {
 } from "@/lib/invitation-payload";
 import {
   getInvitationAccountEntries,
+  buildInvitationKakaoSharePayload,
   getInvitationCategoryMeta,
   getInvitationContactLines,
   getInvitationHeroSubtitle,
   getInvitationHeroTitle,
+  getInvitationShareImageUrl,
   getInvitationPersonLines,
   getPublicShareUrl
 } from "@/lib/invitation-presentation";
@@ -30,15 +33,7 @@ type KakaoShareApi = {
   isInitialized(): boolean;
   init(key: string): void;
   Share: {
-    sendDefault(payload: {
-      objectType: "text";
-      text: string;
-      link: {
-        mobileWebUrl: string;
-        webUrl: string;
-      };
-      buttonTitle: string;
-    }): void;
+    sendDefault(payload: ReturnType<typeof buildInvitationKakaoSharePayload>): void;
   };
 };
 
@@ -145,24 +140,76 @@ export function InvitationView({
     draftKakaoJsKey: payload.kakaoJsKey,
     platformKakaoJsKey
   });
-  const resolvedShareUrl = getPublicShareUrl(
-    shareUrl,
-    typeof window === "undefined" ? process.env.NEXT_PUBLIC_SITE_URL : window.location.origin
-  );
+  const shareOrigin = typeof window === "undefined" ? process.env.NEXT_PUBLIC_SITE_URL : window.location.origin;
+  const resolvedShareUrl = getPublicShareUrl(shareUrl, shareOrigin);
+  const shareImageUrl = getInvitationShareImageUrl(payload, shareOrigin);
   const shareDisabled = mode === "preview";
-
-  async function copyToClipboard(value: string) {
-    if (!value) return;
-    await navigator.clipboard.writeText(value);
-  }
+  const hasContactSection = contactLines.length > 0;
+  const hasAccountSection = accountEntries.length > 0 || Boolean(normalizeUrl(payload.kakaoPayLink));
 
   async function copyAccount(value: string) {
+    const copied = await copyTextWithFallback(value, "아래 계좌번호를 복사해 주세요.");
+    setAccountCopyMessage(
+      copied
+        ? "계좌번호를 복사했습니다."
+        : "브라우저 권한 때문에 자동 복사가 제한되었습니다. 안내창의 계좌번호를 복사해 주세요."
+    );
+  }
+
+  async function copyShareLink() {
+    const copied = await copyTextWithFallback(resolvedShareUrl, "아래 초대장 링크를 복사해 주세요.");
+    setShareMessage(
+      copied
+        ? "공유 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요."
+        : "브라우저 권한 때문에 자동 복사가 제한되었습니다. 안내창의 링크를 복사해 주세요."
+    );
+    trackEvent("share_click", {
+      method: copied ? "copy_link" : "copy_link_fallback",
+      surface: "public_invitation"
+    });
+  }
+
+  async function shareInvitation() {
+    setShareMessage("");
+
     try {
-      await copyToClipboard(value);
-      setAccountCopyMessage("계좌번호를 복사했습니다.");
+      const kakao = await ensureKakaoSdk(kakaoJsKey);
+
+      if (kakao) {
+        kakao.Share.sendDefault(
+          buildInvitationKakaoSharePayload({
+            title: payload.title || "InviteHub 초대장",
+            description: payload.message || "모바일 초대장을 확인해 주세요.",
+            imageUrl: shareImageUrl,
+            shareUrl: resolvedShareUrl
+          })
+        );
+        trackEvent("share_click", {
+          method: "kakao",
+          surface: "public_invitation"
+        });
+        setShareMessage("카카오톡 공유창을 열었습니다.");
+        return;
+      }
     } catch {
-      setAccountCopyMessage("복사가 제한되었습니다. 계좌번호를 직접 선택해 복사해 주세요.");
+      // Fall through to native share or copy fallback.
     }
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: payload.title, text: payload.message, url: resolvedShareUrl });
+        trackEvent("share_click", {
+          method: "native_share",
+          surface: "public_invitation"
+        });
+        setShareMessage("공유창을 열었습니다. 카카오톡, 문자, SNS로 보낼 수 있습니다.");
+        return;
+      }
+    } catch {
+      // User cancellation or browser failure should still leave a recoverable copy path.
+    }
+
+    await copyShareLink();
   }
 
   async function submitPublicForm(endpoint: string, payloadBody: object) {
@@ -240,7 +287,7 @@ export function InvitationView({
     }
   }
 
-  async function handleGuestbookSubmit(formData: FormData) {
+  async function handleGuestbookSubmit(formData: FormData, form?: HTMLFormElement) {
     const nextEntry: GuestbookEntry = {
       id: crypto.randomUUID(),
       nickname: String(formData.get("nickname") || ""),
@@ -275,6 +322,7 @@ export function InvitationView({
       if (nextEntry.approved) {
         setGuestbookEntries((current) => [nextEntry, ...current]);
       }
+      form?.reset();
     } catch (submissionError) {
       setGuestbookError(submissionError instanceof Error ? submissionError.message : "방명록 저장에 실패했습니다.");
     } finally {
@@ -330,19 +378,24 @@ export function InvitationView({
           </p>
         </article>
 
-        <article className="invitation-card">
-          <h2>{categoryMeta.contactTitle}</h2>
-          <p style={{ whiteSpace: "pre-line" }}>
-            {contactLines.length ? contactLines.join("\n") : "연락처를 입력해 주세요."}
-          </p>
-        </article>
+        {hasContactSection ? (
+          <article className="invitation-card">
+            <h2>{categoryMeta.contactTitle}</h2>
+            <p style={{ whiteSpace: "pre-line" }}>
+              {contactLines.join("\n")}
+            </p>
+          </article>
+        ) : null}
 
-        <article className="invitation-card">
-          <h2>{categoryMeta.accountTitle}</h2>
-          <p style={{ whiteSpace: "pre-line" }}>
-            {accountEntries.length ? accountEntries.map((entry) => entry.value).join("\n") : "계좌 정보를 입력해 주세요."}
-          </p>
-          {accountEntries.length ? (
+        {hasAccountSection ? (
+          <article className="invitation-card">
+            <h2>{categoryMeta.accountTitle}</h2>
+            {accountEntries.length ? (
+              <p style={{ whiteSpace: "pre-line" }}>
+                {accountEntries.map((entry) => entry.value).join("\n")}
+              </p>
+            ) : null}
+            {accountEntries.length ? (
             <div className="invitation-inline-actions">
               {accountEntries.map((entry) => (
                 <button
@@ -355,16 +408,15 @@ export function InvitationView({
                 </button>
               ))}
             </div>
-          ) : null}
-          {accountCopyMessage ? <p className="form-message success">{accountCopyMessage}</p> : null}
-          {kakaoPayLink ? (
-            <a className="btn-primary invitation-wide-btn" href={kakaoPayLink} rel="noreferrer noopener" target="_blank">
-              카카오페이 송금 링크 열기
-            </a>
-          ) : (
-            <p className="form-message">카카오페이 송금 링크가 등록되지 않았습니다.</p>
-          )}
-        </article>
+            ) : null}
+            {accountCopyMessage ? <p className="form-message success">{accountCopyMessage}</p> : null}
+            {kakaoPayLink ? (
+              <a className="btn-primary invitation-wide-btn" href={kakaoPayLink} rel="noreferrer noopener" target="_blank">
+                카카오페이 송금 링크 열기
+              </a>
+            ) : null}
+          </article>
+        ) : null}
 
         <article className="invitation-card">
           <h2>위치</h2>
@@ -498,68 +550,21 @@ export function InvitationView({
               미리보기 단계에서는 나만 볼 수 있습니다. 하객에게 보낼 링크는 발행 후 공개 링크를 사용해 주세요.
             </p>
           ) : (
-            <p id="invitationShareHint">카카오톡 공유 또는 링크 복사로 초대장을 전달할 수 있습니다.</p>
+            <p id="invitationShareHint">카카오톡, 문자, SNS 공유 또는 링크 복사로 초대장을 전달할 수 있습니다.</p>
           )}
           <div className="invitation-inline-actions">
             <button
               className="btn-primary invitation-small-btn"
               disabled={shareDisabled}
-              onClick={async () => {
-                try {
-                  const kakao = await ensureKakaoSdk(kakaoJsKey);
-
-                  if (kakao) {
-                    kakao.Share.sendDefault({
-                      objectType: "text",
-                      text: `${payload.title}\n${payload.message}`,
-                      link: {
-                        mobileWebUrl: resolvedShareUrl,
-                        webUrl: resolvedShareUrl
-                      },
-                      buttonTitle: "초대장 보기"
-                    });
-                    trackEvent("share_click", {
-                      method: "kakao",
-                      surface: "public_invitation"
-                    });
-                    setShareMessage("카카오톡 공유창을 열었습니다.");
-                    return;
-                  }
-                } catch {
-                  // fallback below
-                }
-
-                if (navigator.share) {
-                  await navigator.share({ title: payload.title, text: payload.message, url: resolvedShareUrl });
-                  trackEvent("share_click", {
-                    method: "native_share",
-                    surface: "public_invitation"
-                  });
-                  return;
-                }
-
-                await copyToClipboard(resolvedShareUrl);
-                trackEvent("share_click", {
-                  method: "copy_link",
-                  surface: "public_invitation"
-                });
-                setShareMessage("공유 링크를 복사했습니다. 카카오톡 대화창에 붙여넣어 보내 주세요.");
-              }}
+              onClick={() => void shareInvitation()}
               type="button"
             >
-              카카오톡 공유
+              공유하기
             </button>
             <button
               className="btn-outline invitation-small-btn"
               disabled={shareDisabled}
-              onClick={async () => {
-                await copyToClipboard(resolvedShareUrl);
-                trackEvent("share_click", {
-                  method: "copy_link",
-                  surface: "public_invitation"
-                });
-                setShareMessage("공유 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요.");
-              }}
+              onClick={() => void copyShareLink()}
               type="button"
             >
               링크 복사
@@ -571,8 +576,9 @@ export function InvitationView({
         <article className="invitation-card">
           <h2>방명록</h2>
           <form
-            action={async (formData) => {
-              await handleGuestbookSubmit(formData);
+            onSubmit={(event) => {
+              event.preventDefault();
+              void handleGuestbookSubmit(new FormData(event.currentTarget), event.currentTarget);
             }}
             className="invitation-guestbook-form"
           >

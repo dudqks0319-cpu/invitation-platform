@@ -20,6 +20,19 @@ export function getTemplateScrollTargetY(templateAreaY: number, offset = 12) {
   return Math.max(templateAreaY - offset, 0);
 }
 
+export function getHomeTemplateCardMetrics(screenWidth: number) {
+  const horizontalPadding = 36;
+  const cardGap = 12;
+  const usableWidth = Math.max(0, screenWidth - horizontalPadding);
+  const cardWidth = Math.min(224, Math.max(112, Math.floor((usableWidth - cardGap) / 2)));
+
+  return {
+    cardGap,
+    cardWidth,
+    previewHeight: Math.max(196, Math.round(cardWidth * 1.34))
+  };
+}
+
 export function getMobileHomeHeaderAction(status: string, user: HomeLayoutUser) {
   if (status === "authenticated" && user?.id && !user.is_anonymous) {
     return {

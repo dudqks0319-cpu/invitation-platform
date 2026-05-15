@@ -33,7 +33,7 @@ export default function BuilderStep2PeopleScreen() {
 
   return (
     <Screen subtitle="신랑, 신부, 양가 정보 입력 단계입니다." title="초대장 만들기">
-      <StepIndicator current={2} title="인물 정보" />
+      <StepIndicator current={2} localId={localId} title="인물 정보" />
       <Card eyebrow="필수 입력" title="신랑 · 신부 이름">
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>신랑 이름</Text>

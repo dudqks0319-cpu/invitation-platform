@@ -1,4 +1,7 @@
+import { generatedTemplateIds } from "./generated-template-assets";
+
 export const bundledTemplatePreviewIds = [
+  ...generatedTemplateIds,
   "wedding-classic",
   "wedding-modern",
   "wedding-floral",
@@ -33,6 +36,7 @@ export const bundledTemplatePreviewIds = [
 ] as const;
 
 export const bundledTemplateCanvasIds = [
+  ...generatedTemplateIds,
   "wedding-classic",
   "wedding-modern",
   "wedding-floral",

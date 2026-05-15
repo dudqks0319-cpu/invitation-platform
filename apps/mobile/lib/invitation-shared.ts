@@ -173,6 +173,37 @@ export function getDefaultInvitationSample(eventType?: string) {
   ] ?? DEFAULT_WEDDING_SAMPLE;
 }
 
+const PUBLISH_PLACEHOLDER_VALUES = new Set([
+  "결혼식 초대장",
+  "우리 결혼합니다",
+  "2026-09-20T12:30",
+  "라비에벨 가든홀",
+  "서울 강남구 테헤란로 123",
+  "이준서",
+  "김은재",
+  "2026-04-12T14:00",
+  "서울 더파인 웨딩홀",
+  "홍길동",
+  "김부인"
+]);
+
+function isPublishValueMissing(value: unknown) {
+  if (typeof value !== "string") return true;
+  const trimmed = value.trim();
+  return !trimmed || PUBLISH_PLACEHOLDER_VALUES.has(trimmed);
+}
+
+export function getMobilePublishMissingFields(payload: InvitationPayload) {
+  return [
+    isPublishValueMissing(payload.title) ? "초대장 제목" : null,
+    isPublishValueMissing(payload.eventDateTime) ? "행사 일시" : null,
+    isPublishValueMissing(payload.venueName) ? "예식장 이름" : null,
+    isPublishValueMissing(payload.venueAddress) ? "예식장 주소" : null,
+    isPublishValueMissing(payload.eventData.groom.name) ? "신랑 이름" : null,
+    isPublishValueMissing(payload.eventData.bride.name) ? "신부 이름" : null
+  ].filter(Boolean) as string[];
+}
+
 function createLocalId() {
   return `draft-${Math.random().toString(36).slice(2, 10)}`;
 }
@@ -184,7 +215,7 @@ export function createEmptyInvitationDraft(ownerId: string): InvitationDraft {
       schemaVersion: INVITATION_SCHEMA_VERSION,
       eventType: DEFAULT_EVENT_TYPE,
       templateId: "wedding-classic",
-      title: "결혼식 초대장",
+      title: "",
       eventDateTime: "",
       venueName: "",
       venueAddress: "",

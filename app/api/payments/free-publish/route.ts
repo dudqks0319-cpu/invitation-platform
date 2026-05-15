@@ -6,7 +6,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
 import { getInvitationPricing } from "@/lib/payments/pricing";
-import { ensureJsonRequest, readJsonBody } from "@/lib/supabase/public-write";
+import { ensureJsonRequest, ensureSameOriginRequest, readJsonBody } from "@/lib/supabase/public-write";
 
 type FreePublishRequest = {
   invitationId?: string;
@@ -61,6 +61,10 @@ async function getAuthenticatedUser(request: Request) {
 }
 
 export async function POST(request: Request) {
+  if (!ensureSameOriginRequest(request)) {
+    return NextResponse.json({ success: false, message: "허용되지 않은 요청입니다." }, { status: 403 });
+  }
+
   const admin = createSupabaseAdminClient();
   const { user } = await getAuthenticatedUser(request);
 

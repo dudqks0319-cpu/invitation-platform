@@ -15,7 +15,7 @@ export default function MyPageScreen() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [pendingAction, setPendingAction] = useState<"" | "support" | "faq" | "privacy" | "terms" | "delete" | "logout">("");
-  const { configMessage, configMissingKeys, configured, session, signOut, status, user } = useAuth();
+  const { configMessage, configured, session, signOut, status, user } = useAuth();
   const isAuthenticated = hasFullAccount(status === "authenticated" ? user : null);
   const isGuestMode = status === "authenticated" && !isAuthenticated;
   const paidPublishingEnabled = isPaidPublishingEnabled();
@@ -98,35 +98,30 @@ export default function MyPageScreen() {
           {isAuthenticated ? user?.email ?? "이메일 정보 없음" : isGuestMode ? "무료 기능을 게스트 모드로 사용 중입니다." : "아직 연결된 계정이 없습니다."}
         </Text>
         <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>
-          Supabase 설정: {configured ? "활성" : "비활성"}
+          온라인 발행: {configured ? "사용 가능" : "준비 중"}
         </Text>
         <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>
-          계정 상태: {isAuthenticated ? "원격 저장 · RSVP · 방명록 관리 가능" : isGuestMode ? "무료 초대장 저장 · 발행 가능" : "로컬 초안만 관리"}
+          계정 상태: {isAuthenticated ? "온라인 저장 · RSVP · 방명록 관리 가능" : isGuestMode ? "무료 초대장 저장 · 발행 가능" : "기기 안에 초안 저장"}
         </Text>
         <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>
           {isAuthenticated
-            ? "지금은 서버 저장본을 불러오고 공개 링크를 발행할 수 있습니다."
+            ? "지금은 온라인 저장본을 불러오고 공개 링크를 발행할 수 있습니다."
             : isGuestMode
               ? paidPublishingEnabled
                 ? "사진 포함 발행과 계정 삭제는 이메일 또는 소셜 로그인 후 사용할 수 있습니다."
-                : "계정 삭제와 원격 저장 관리는 이메일 또는 소셜 로그인 후 사용할 수 있습니다."
+                : "계정 삭제와 온라인 저장 관리는 이메일 또는 소셜 로그인 후 사용할 수 있습니다."
               : paidPublishingEnabled
                 ? "로그인하면 사진 포함 발행과 계정 관리를 사용할 수 있습니다."
-                : "로그인하면 원격 저장과 계정 관리를 사용할 수 있습니다."}
+                : "로그인하면 온라인 저장과 계정 관리를 사용할 수 있습니다."}
         </Text>
         <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>{configMessage}</Text>
-        {!configured && configMissingKeys.length > 0 ? (
-          <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginTop: 8 }}>
-            누락된 환경변수: {configMissingKeys.join(", ")}
-          </Text>
-        ) : null}
       </Card>
 
-      <Card eyebrow="요금제" title={paidPublishingEnabled ? "무료로 시작 · 사진 포함은 스토어 결제" : "첫 제출 버전 · 무료 발행"}>
+      <Card eyebrow="요금제" title={paidPublishingEnabled ? "무료로 시작 · 사진 포함은 스토어 결제" : "무료 발행"}>
         <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
           {paidPublishingEnabled
-            ? "무료 초대장은 로그인 없이 시작할 수 있고, 사진이 포함된 유료 발행은 iOS IAP 또는 Google Play Billing으로 진행합니다."
-            : "첫 제출 버전은 사진 없는 무료 초대장 발행을 제공합니다. 사진 포함 발행은 스토어 상품 준비 후 다시 활성화합니다."}
+            ? "무료 초대장은 로그인 없이 시작할 수 있고, 사진이 포함된 유료 발행은 앱 스토어 결제로 진행합니다."
+            : "지금은 사진 없는 무료 초대장 발행을 먼저 제공합니다. 사진 포함 발행은 스토어 상품 준비가 끝나면 다시 열립니다."}
         </Text>
       </Card>
 

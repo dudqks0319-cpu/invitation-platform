@@ -5,7 +5,7 @@ import { InvitationView } from "@/components/invitations/invitation-view";
 import { SiteHeader } from "@/components/shared/site-header";
 import { findDemoInvitationBySlug } from "@/lib/demo-data";
 import { buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
-import { getPublicShareUrl } from "@/lib/invitation-presentation";
+import { getInvitationShareImageUrl, getPublicShareUrl } from "@/lib/invitation-presentation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -34,7 +34,11 @@ type ViewLogsTable = {
 };
 
 const VIEW_LOG_COOLDOWN_MS = 30 * 60 * 1000;
-const DEFAULT_OG_IMAGE = "/images/genspark/cncrue0H.jpg";
+
+type PublicInvitationPageProps = {
+  params: Promise<{ slug: string }>;
+  pathPrefix?: "/i" | "/invitations";
+};
 
 export function resolveRequestOrigin(headerList: HeaderSource) {
   const forwardedHost = headerList.get("x-forwarded-host");
@@ -136,15 +140,17 @@ async function loadPublishedInvitation(slug: string) {
   };
 }
 
-export async function generateMetadata({
-  params
+export async function generatePublicInvitationMetadata({
+  params,
+  pathPrefix = "/invitations"
 }: {
   params: Promise<{ slug: string }>;
+  pathPrefix?: "/i" | "/invitations";
 }): Promise<Metadata> {
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug);
   const origin = resolveRequestOrigin(await headers());
-  const shareUrl = getPublicShareUrl(`/invitations/${decodedSlug}`, origin);
+  const shareUrl = getPublicShareUrl(`${pathPrefix}/${decodedSlug}`, origin);
   const { invitation } = await loadPublishedInvitation(decodedSlug);
 
   if (invitation) {
@@ -152,13 +158,12 @@ export async function generateMetadata({
       invitation.slug,
       normalizeInvitationPayload(invitation.payload)
     );
-    const imageUrl = getPublicShareUrl(payload.mainImageUrl || payload.backgroundImageUrl || DEFAULT_OG_IMAGE, origin);
 
     return buildPublicInvitationMetadata({
       title: invitation.title || payload.title,
       description: payload.message || `${invitation.title || payload.title} 안내`,
       shareUrl,
-      imageUrl
+      imageUrl: getInvitationShareImageUrl(payload, origin)
     });
   }
 
@@ -168,7 +173,7 @@ export async function generateMetadata({
       title: demoInvitation.title,
       description: demoInvitation.payload.message || `${demoInvitation.title} 안내`,
       shareUrl,
-      imageUrl: getPublicShareUrl(DEFAULT_OG_IMAGE, origin)
+      imageUrl: getInvitationShareImageUrl(demoInvitation.payload, origin)
     });
   }
 
@@ -176,15 +181,22 @@ export async function generateMetadata({
     title: "InviteHub",
     description: "모바일 초대장을 손쉽게 만들고 공유하세요.",
     shareUrl,
-    imageUrl: getPublicShareUrl(DEFAULT_OG_IMAGE, origin)
+    imageUrl: getInvitationShareImageUrl({ backgroundImageUrl: "", mainImageUrl: "" }, origin)
   });
 }
 
-export default async function PublicInvitationPage({
+export async function generateMetadata({
   params
 }: {
   params: Promise<{ slug: string }>;
-}) {
+}): Promise<Metadata> {
+  return generatePublicInvitationMetadata({ params, pathPrefix: "/invitations" });
+}
+
+export async function renderPublicInvitationPage({
+  params,
+  pathPrefix = "/invitations"
+}: PublicInvitationPageProps) {
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug);
   const headerList = await headers();
@@ -224,7 +236,7 @@ export default async function PublicInvitationPage({
             mode="public"
             payload={payload}
             platformKakaoJsKey={platformKakaoJsKey}
-            shareUrl={getPublicShareUrl(`/invitations/${invitation.slug}`, origin)}
+            shareUrl={getPublicShareUrl(`${pathPrefix}/${invitation.slug}`, origin)}
             slug={invitation.slug}
           />
         </div>
@@ -246,10 +258,18 @@ export default async function PublicInvitationPage({
           mode="public"
           payload={demoInvitation.payload}
           platformKakaoJsKey={platformKakaoJsKey}
-          shareUrl={getPublicShareUrl(`/invitations/${demoInvitation.slug}`, origin)}
+          shareUrl={getPublicShareUrl(`${pathPrefix}/${demoInvitation.slug}`, origin)}
           slug={demoInvitation.slug}
         />
       </div>
     </>
   );
+}
+
+export default async function PublicInvitationPage({
+  params
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  return renderPublicInvitationPage({ params, pathPrefix: "/invitations" });
 }

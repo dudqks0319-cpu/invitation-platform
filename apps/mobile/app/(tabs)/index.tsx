@@ -23,8 +23,7 @@ export default function HomeScreen() {
   async function handleUseTemplate(template: MobileTemplateGalleryItem) {
     const draft = await createAndPersistDraft(draftOwnerId, {
       templateId: template.id,
-      eventType: template.category,
-      title: `${template.badge} 초대장`
+      eventType: template.category
     });
     router.push({ pathname: "/builder/step1-basic", params: { localId: draft.localId } });
   }

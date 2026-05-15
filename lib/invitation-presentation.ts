@@ -1,5 +1,7 @@
 import { defaultInvitationDraft, type InvitationDraftPayload } from "@/lib/invitation-payload";
 
+export const DEFAULT_INVITATION_OG_IMAGE = "/images/genspark/cncrue0H.jpg";
+
 export type CategoryPresentation = {
   categoryBadge: string;
   detailSectionTitle: string;
@@ -386,4 +388,49 @@ export function getInvitationAccountEntries(payload: InvitationDraftPayload): Ac
 
 export function getPublicShareUrl(pathOrUrl: string, origin?: string | null) {
   return buildAbsoluteShareUrl(pathOrUrl, origin || "http://localhost:3000");
+}
+
+export function getInvitationShareImageUrl(
+  payload: Pick<InvitationDraftPayload, "backgroundImageUrl" | "mainImageUrl">,
+  origin?: string | null
+) {
+  const imageUrl = [payload.mainImageUrl, payload.backgroundImageUrl].find((value) => {
+    const trimmed = value.trim();
+    return /^https?:\/\//i.test(trimmed) || trimmed.startsWith("/");
+  });
+
+  return getPublicShareUrl(imageUrl || DEFAULT_INVITATION_OG_IMAGE, origin);
+}
+
+export function buildInvitationKakaoSharePayload({
+  description,
+  imageUrl,
+  shareUrl,
+  title
+}: {
+  description: string;
+  imageUrl: string;
+  shareUrl: string;
+  title: string;
+}) {
+  const link = {
+    mobileWebUrl: shareUrl,
+    webUrl: shareUrl
+  };
+
+  return {
+    objectType: "feed" as const,
+    content: {
+      title,
+      description,
+      imageUrl,
+      link
+    },
+    buttons: [
+      {
+        title: "초대장 보기",
+        link
+      }
+    ]
+  };
 }

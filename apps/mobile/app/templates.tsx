@@ -1,8 +1,7 @@
-/* eslint-disable jsx-a11y/alt-text */
-
 import { useMemo, useState } from "react";
 import { useRouter } from "expo-router";
-import { Image, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { TemplateCanvasPreview } from "@/components/invitation/TemplateCanvasPreview";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Pill } from "@/components/ui/Pill";
 import { theme } from "@/components/ui/theme";
@@ -10,24 +9,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { getDraftOwnerId } from "@/lib/auth-access";
 import { createAndPersistDraft } from "@/lib/drafts";
 import { mobileTemplateCategories, mobileTemplateGallery, type MobileTemplateGalleryItem } from "@/lib/template-gallery";
-import { getInviteHubBaseUrl } from "@/lib/web-links";
-import { getBundledTemplatePreviewSource } from "@/lib/template-preview-source";
+import { createTemplatePreviewPayload } from "@/lib/template-preview-payload";
 
-function getTemplatePreviewUrl(template: MobileTemplateGalleryItem) {
-  if (!template.previewPath) return null;
-  if (template.previewPath.startsWith("http")) return template.previewPath;
-  return `${getInviteHubBaseUrl()}${template.previewPath}`;
-}
-
-function getTemplatePreviewSource(template: MobileTemplateGalleryItem) {
-  const bundledSource = getBundledTemplatePreviewSource(template.id);
-  if (bundledSource) {
-    return bundledSource;
-  }
-
-  const imageUrl = getTemplatePreviewUrl(template);
-  return imageUrl ? { uri: imageUrl } : null;
-}
+const templateCanvasAspectRatio = 768 / 1376;
 
 export default function TemplatesScreen() {
   const router = useRouter();
@@ -36,6 +20,10 @@ export default function TemplatesScreen() {
   const draftOwnerId = getDraftOwnerId(status === "authenticated" ? user : null);
   const [category, setCategory] = useState<string>(mobileTemplateCategories[0].key);
   const cardWidth = Math.max(148, Math.floor((width - 54) / 2));
+  const maxCanvasWidth = Math.max(112, cardWidth - 20);
+  const rawPreviewHeight = Math.round(maxCanvasWidth / templateCanvasAspectRatio);
+  const templatePreviewHeight = Math.min(292, Math.max(232, rawPreviewHeight));
+  const templateCanvasWidth = Math.min(maxCanvasWidth, Math.round(templatePreviewHeight * templateCanvasAspectRatio));
 
   const filteredTemplates = useMemo(
     () => mobileTemplateGallery.filter((template) => template.category === category),
@@ -45,8 +33,7 @@ export default function TemplatesScreen() {
   async function handleUseTemplate(template: MobileTemplateGalleryItem) {
     const draft = await createAndPersistDraft(draftOwnerId, {
       templateId: template.id,
-      eventType: template.category,
-      title: `${template.badge} 초대장`
+      eventType: template.category
     });
     router.push({ pathname: "/builder/step1-basic", params: { localId: draft.localId } });
   }
@@ -106,8 +93,7 @@ export default function TemplatesScreen() {
 
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
           {filteredTemplates.map((template) => {
-            const previewSource = getTemplatePreviewSource(template);
-            const isDarkFallback = template.id === "business-dark";
+            const previewPayload = createTemplatePreviewPayload(template);
             return (
               <Pressable
                 accessibilityLabel={`${template.name} 템플릿으로 시작`}
@@ -129,58 +115,18 @@ export default function TemplatesScreen() {
               >
                 <View
                   style={{
-                    height: 236,
+                    height: templatePreviewHeight,
                     backgroundColor: "#F7EFE6",
                     padding: 10,
                     alignItems: "center",
                     justifyContent: "center"
                   }}
                 >
-                  {previewSource ? (
-                    <Image
-                      accessibilityIgnoresInvertColors
-                      accessibilityLabel={`${template.name} 템플릿 미리보기`}
-                      source={previewSource}
-                      style={{ width: "100%", height: "100%", borderRadius: 18 }}
-                      resizeMode="contain"
-                    />
-                  ) : (
-                    <View
-                      style={{
-                        width: "72%",
-                        aspectRatio: 0.58,
-                        borderRadius: 28,
-                        backgroundColor: isDarkFallback ? "#111827" : "rgba(255,250,244,0.92)",
-                        borderWidth: 1,
-                        borderColor: isDarkFallback ? "rgba(214,179,106,0.42)" : "rgba(172,137,102,0.12)",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        paddingHorizontal: 18
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: isDarkFallback ? "#D6B36A" : "#b28a5f",
-                          fontSize: 12,
-                          letterSpacing: 0,
-                          textAlign: "center"
-                        }}
-                      >
-                        {isDarkFallback ? "PREMIUM EVENT" : "INVITATION"}
-                      </Text>
-                      <Text
-                        style={{
-                          color: isDarkFallback ? "#F5E7C8" : "#7d5d42",
-                          fontSize: 28,
-                          fontStyle: "italic",
-                          marginTop: 12,
-                          textAlign: "center"
-                        }}
-                      >
-                        {template.name}
-                      </Text>
-                    </View>
-                  )}
+                  <TemplateCanvasPreview
+                    payload={previewPayload}
+                    scale="thumbnail"
+                    style={{ height: "100%", width: templateCanvasWidth, borderRadius: 18, overflow: "hidden" }}
+                  />
                 </View>
 
                 <View style={{ padding: 14, gap: 9 }}>
