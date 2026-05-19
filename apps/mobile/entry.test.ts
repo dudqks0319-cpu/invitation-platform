@@ -33,4 +33,29 @@ describe("mobile entry", () => {
     expect(babelConfig).toContain("expoRouterBabelPlugin");
     expect(babelConfig).toContain("plugins: [expoRouterBabelPlugin]");
   });
+
+  it("keeps mobile routes and libraries in the EAS archive", () => {
+    const rootEasIgnore = readFileSync(join(process.cwd(), ".easignore"), "utf8");
+
+    expect(rootEasIgnore).not.toMatch(/^app\/$/m);
+    expect(rootEasIgnore).not.toMatch(/^app\/\*\*$/m);
+    expect(rootEasIgnore).not.toMatch(/^lib\/$/m);
+    expect(rootEasIgnore).not.toMatch(/^lib\/\*\*$/m);
+    expect(rootEasIgnore).not.toMatch(/^components\/$/m);
+    expect(rootEasIgnore).not.toMatch(/^components\/\*\*$/m);
+    expect(rootEasIgnore).toContain("/app/");
+    expect(rootEasIgnore).toContain("/lib/");
+    expect(rootEasIgnore).toContain("/components/");
+    expect(existsSync(join(mobileRoot, "app/_layout.tsx"))).toBe(true);
+    expect(existsSync(join(mobileRoot, "lib/drafts.ts"))).toBe(true);
+  });
+
+  it("uses the Korean app name for iOS crash dialogs and TestFlight metadata", () => {
+    const infoPlist = readFileSync(join(mobileRoot, "ios/InviteHub/Info.plist"), "utf8");
+
+    expect(infoPlist).toContain("<key>CFBundleDisplayName</key>");
+    expect(infoPlist).toContain("<string>초대장허브</string>");
+    expect(infoPlist).toContain("<key>CFBundleName</key>");
+    expect(infoPlist).not.toContain("<string>$(PRODUCT_NAME)</string>");
+  });
 });

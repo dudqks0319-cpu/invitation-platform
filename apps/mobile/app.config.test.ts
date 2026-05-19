@@ -28,11 +28,16 @@ describe("mobile app config", () => {
     const config = await loadConfig({
       APP_VARIANT: undefined,
       EAS_BUILD_PROFILE: "production"
-    });
+    }) as {
+      ios: { bundleIdentifier: string; infoPlist?: Record<string, unknown> };
+      android: { package: string };
+      scheme: string;
+    };
 
     expect(config.ios.bundleIdentifier).toBe("com.invitehub.app");
     expect(config.android.package).toBe("com.invitehub.app");
     expect(config.scheme).toBe("invitehub");
+    expect(config.ios.infoPlist?.CFBundleName).toBe("초대장허브");
   });
 
   it("keeps dev identifiers outside production builds", async () => {

@@ -11,6 +11,7 @@
       "supportsTablet": false,
       "usesAppleSignIn": true,
       "infoPlist": {
+        "CFBundleName": "초대장허브",
         "NSCameraUsageDescription": "초대장에 넣을 사진을 촬영하기 위해 카메라 접근이 필요합니다.",
         "NSPhotoLibraryUsageDescription": "초대장에 넣을 사진을 선택하기 위해 사진 라이브러리 접근이 필요합니다.",
         "LSApplicationQueriesSchemes": [

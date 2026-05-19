@@ -13,7 +13,7 @@ const expected = {
   commit: "0655ced",
   liveBaseUrl: "https://invitation-platform-youngbeens-projects.vercel.app"
 };
-const currentNativeBuildNumber = "47";
+const currentNativeBuildNumber = "48";
 const expectedBuild42 = {
   appId: "6763630299",
   bundleId: "com.invitehub.app",
@@ -126,6 +126,7 @@ const build40Packet = read("docs/app-store-connect-build40-packet.md");
 const executionChecklist = read("docs/app-store-connect-execution-checklist.md");
 const supportPage = read("app/support/page.tsx");
 const envExample = read(".env.example");
+const easIgnore = read(".easignore");
 const supportContact = read("lib/support-contact.ts");
 const supportContactTest = read("lib/support-contact.test.ts");
 const crashTriage = read("docs/testflight-crash-triage-2026-05-03.md");
@@ -133,9 +134,11 @@ const crashTriageBuild42 = read("docs/testflight-crash-triage-2026-05-06.md");
 const crashTriageBuild42Failed = read("docs/testflight-crash-triage-2026-05-07.md");
 const mobileEntry = read("apps/mobile/index.js");
 const mobilePackage = read("apps/mobile/package.json");
+const mobileAppConfig = read("apps/mobile/app.json");
 const mobileEntryTest = read("apps/mobile/entry.test.ts");
 const mobileMetroConfig = read("apps/mobile/metro.config.js");
 const mobileBabelConfig = read("apps/mobile/babel.config.js");
+const iosInfoPlist = read("apps/mobile/ios/InviteHub/Info.plist");
 const iosProject = read("apps/mobile/ios/InviteHub.xcodeproj/project.pbxproj");
 const iosPodfileProperties = read("apps/mobile/ios/Podfile.properties.json");
 const iosPodfileLock = read("apps/mobile/ios/Podfile.lock");
@@ -329,6 +332,12 @@ includes("app/support/page.tsx", supportPage, "getSupportEmail");
 includes("app/support/page.tsx", supportPage, "App Store Connect에 등록된 지원 연락처");
 includes(".env.example", envExample, "NEXT_PUBLIC_SUPPORT_EMAIL=");
 includes(".env.example", envExample, "NEXT_PUBLIC_ENABLE_PAID_PUBLISH=false");
+notIncludes(".easignore", easIgnore, "\napp/\n", "Root .easignore must not exclude nested apps/mobile/app routes");
+notIncludes(".easignore", easIgnore, "\napp/**\n", "Root .easignore must not exclude nested apps/mobile/app routes");
+notIncludes(".easignore", easIgnore, "\nlib/\n", "Root .easignore must not exclude nested apps/mobile/lib modules");
+notIncludes(".easignore", easIgnore, "\nlib/**\n", "Root .easignore must not exclude nested apps/mobile/lib modules");
+includes(".easignore", easIgnore, "\n/app/\n");
+includes(".easignore", easIgnore, "\n/lib/\n");
 includes("lib/support-contact.ts", supportContact, "normalizeSupportEmail");
 includes("lib/support-contact.ts", supportContact, "NEXT_PUBLIC_SUPPORT_EMAIL");
 includes("lib/support-contact.test.ts", supportContactTest, "normalizeSupportEmail");
@@ -351,6 +360,7 @@ includes("docs/testflight-crash-triage-2026-05-07.md", crashTriageBuild42Failed,
 includes("docs/testflight-crash-triage-2026-05-07.md", crashTriageBuild42Failed, "embedded frameworks: `hermesvm.framework` only");
 includes("docs/testflight-crash-triage-2026-05-07.md", crashTriageBuild42Failed, "TurboModule startup");
 includes("apps/mobile/package.json", mobilePackage, "\"main\": \"expo-router/entry\"");
+includes("apps/mobile/app.json", mobileAppConfig, "\"CFBundleName\": \"초대장허브\"");
 includes("apps/mobile/index.js", mobileEntry, "expo-router/entry");
 notIncludes("apps/mobile/index.js", mobileEntry, "require.context");
 notIncludes("apps/mobile/index.js", mobileEntry, "ExpoRoot");
@@ -364,6 +374,8 @@ includes(
   iosProject,
   `CURRENT_PROJECT_VERSION = ${currentNativeBuildNumber}`
 );
+includes("apps/mobile/ios/InviteHub/Info.plist", iosInfoPlist, "<key>CFBundleName</key>");
+includes("apps/mobile/ios/InviteHub/Info.plist", iosInfoPlist, "<string>초대장허브</string>");
 includes("apps/mobile/ios/Podfile.properties.json", iosPodfileProperties, "\"ios.buildReactNativeFromSource\": \"true\"");
 notIncludes(
   "apps/mobile/ios/Podfile.lock",
