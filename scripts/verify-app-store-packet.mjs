@@ -57,6 +57,17 @@ const expectedBuild46 = {
   submissionId: "023a9129-d68b-406a-a5b5-58e03c98a13a",
   artifact: "https://expo.dev/artifacts/eas/afGx9mRBMme34vyPZ7Jyu1.ipa"
 };
+const expectedBuild47 = {
+  appId: "6763630299",
+  bundleId: "com.invitehub.app",
+  displayName: "초대장허브",
+  appVersion: "1.0.1",
+  buildNumber: "47",
+  sourceCommit: "4221622",
+  buildId: "52514ba4-4f26-4a35-bb21-a565b3a471a9",
+  submissionId: "37ac90b7-1af6-43ed-a92d-5c3135917a33",
+  artifact: "https://expo.dev/artifacts/eas/bayNvUjUads2HBqsoiZ3Rg.ipa"
+};
 
 const checks = [];
 const failures = [];
@@ -99,6 +110,7 @@ const build42Packet = read("docs/app-store-connect-build42-packet.md");
 const build43Packet = read("docs/app-store-connect-build43-packet.md");
 const build45Packet = read("docs/app-store-connect-build45-packet.md");
 const build46Packet = read("docs/app-store-connect-build46-packet.md");
+const build47Packet = read("docs/app-store-connect-build47-packet.md");
 const build46InputPacket = read("docs/app-store-connect-input-packet-build46.md");
 const currentReleaseState = read("docs/current-release-state.md");
 const readiness = read("docs/app-store-readiness-90.md");
@@ -152,6 +164,10 @@ for (const value of Object.values(expectedBuild46)) {
   includes("docs/app-store-connect-build46-packet.md", build46Packet, value);
 }
 
+for (const value of Object.values(expectedBuild47)) {
+  includes("docs/app-store-connect-build47-packet.md", build47Packet, value);
+}
+
 for (const value of [
   expectedBuild46.appId,
   expectedBuild46.bundleId,
@@ -198,6 +214,11 @@ includes("docs/app-store-connect-build46-packet.md", build46Packet, "App Version
 includes("docs/app-store-connect-build46-packet.md", build46Packet, "Build number:  46");
 includes("docs/app-store-connect-build46-packet.md", build46Packet, "TestFlight build row: build 46 / 제출 준비 완료 / 90일 후 만료");
 includes("docs/app-store-connect-build46-packet.md", build46Packet, "Required Real iPhone Test");
+includes("docs/app-store-connect-build47-packet.md", build47Packet, "Build `1.0.1 (47)`");
+includes("docs/app-store-connect-build47-packet.md", build47Packet, "EAS submission status | `FINISHED`, `error: null`");
+includes("docs/app-store-connect-build47-packet.md", build47Packet, "NEXT_PUBLIC_NAVER_MAP_CLIENT_ID");
+includes("docs/app-store-connect-build47-packet.md", build47Packet, "naverEnabled: false");
+includes("docs/app-store-connect-build47-packet.md", build47Packet, "real iPhone smoke test");
 includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "Source commit | Verify immediately before upload with `git rev-parse --short HEAD`");
 includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "EAS remote auto-increment after build 42");
 includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "git rev-parse --short HEAD");
@@ -212,6 +233,7 @@ for (const [file, content] of [
   ["docs/app-store-connect-build43-packet.md", build43Packet],
   ["docs/app-store-connect-build45-packet.md", build45Packet],
   ["docs/app-store-connect-build46-packet.md", build46Packet],
+  ["docs/app-store-connect-build47-packet.md", build47Packet],
   ["docs/app-store-connect-input-packet-build46.md", build46InputPacket],
   ["docs/current-release-state.md", currentReleaseState],
   ["docs/app-store-connect-next-build-packet.md", nextBuildPacket],
@@ -284,11 +306,15 @@ includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "사진 포함 유료 발행 및 인앱 결제 기능은 현재 제출 빌드에서 비활성화");
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "TestFlight에서 다음 빌드를 설치");
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "currentReleaseBuildSelectedForVersion");
-includes("docs/current-release-state.md", currentReleaseState, "Current candidate | No valid TestFlight release candidate");
+includes("docs/current-release-state.md", currentReleaseState, "Current candidate | Build `1.0.1 (47)` uploaded to App Store Connect");
 includes("docs/current-release-state.md", currentReleaseState, "Native local build number | `47`");
+includes("docs/current-release-state.md", currentReleaseState, expectedBuild47.buildId);
+includes("docs/current-release-state.md", currentReleaseState, expectedBuild47.submissionId);
+includes("docs/current-release-state.md", currentReleaseState, expectedBuild47.artifact);
 includes("docs/current-release-state.md", currentReleaseState, "Real-device result | Failed for installed `com.invitehub.app` `1.0.1 (46)`");
 includes("docs/current-release-state.md", currentReleaseState, "Do not select build 42");
-includes("docs/current-release-state.md", currentReleaseState, "Do not select build 46");
+includes("docs/current-release-state.md", currentReleaseState, "Do not select build 42 or build 46");
+includes("docs/current-release-state.md", currentReleaseState, "build 47 until it passes real-device launch");
 includes("docs/current-release-state.md", currentReleaseState, "Unhandled JS Exception: Error: No routes found");
 includes("docs/app-store-connect-build46-packet.md", build46Packet, "Build 46 is not a valid App Store candidate");
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "Do not use it to select build 46");
@@ -419,7 +445,7 @@ if (failures.length > 0) {
 console.log("APP STORE PACKET VERIFY RESULT");
 console.log("- Status: pass");
 console.log(`- Checks: ${checks.length}`);
-console.log(`- Latest Uploaded Build: ${expectedBuild46.appVersion} (${expectedBuild46.buildNumber})`);
-console.log(`- Latest EAS Build: ${expectedBuild46.buildId}`);
-console.log("- Device Verdict: builds 42 and 46 failed real iPhone launch evidence; build 46 must not be selected for App Store review.");
-console.log("- Required follow-up: create a newer TestFlight build, pass the real iPhone smoke test, then finish Apple-side metadata evidence.");
+console.log(`- Latest Uploaded Build: ${expectedBuild47.appVersion} (${expectedBuild47.buildNumber})`);
+console.log(`- Latest EAS Build: ${expectedBuild47.buildId}`);
+console.log("- Device Verdict: builds 42 and 46 failed real iPhone launch evidence; build 47 still needs TestFlight real-device smoke proof.");
+console.log("- Required follow-up: wait for Apple processing, assign build 47 to TestFlight, pass the real iPhone smoke test, then finish Apple-side metadata evidence.");

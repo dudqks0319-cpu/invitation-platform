@@ -1,6 +1,6 @@
 # InviteHub Current Release State
 
-Last updated: 2026-05-19 21:45 KST
+Last updated: 2026-05-19 21:59 KST
 
 This ledger is the single current-state reference for the App Store release
 track. Historical packets remain useful evidence, but this file decides what is
@@ -10,16 +10,16 @@ current.
 | --- | --- |
 | Local repo | `/Users/jyb-m3max/Desktop/codex/invitation-platform` |
 | Branch | `codex/testflight-launch-crash-fix` |
-| Local/remote state | Local map/share changes are pending commit/push for the next TestFlight build |
-| Latest local commit at inspection | `44ccac4` |
-| Current candidate | No valid TestFlight release candidate. `1.0.1 (46)` is uploaded but failed real-device launch evidence. |
+| Local/remote state | Map/share implementation is committed and pushed on `codex/testflight-launch-crash-fix` |
+| Latest implementation commit uploaded | `4221622` |
+| Current candidate | Build `1.0.1 (47)` uploaded to App Store Connect and awaiting Apple processing/TestFlight real-device proof. |
 | Native local build number | `47` |
 | App Store Connect app id | `6763630299` |
 | Bundle id | `com.invitehub.app` |
 | Display name | `초대장허브` |
-| EAS build id | `4aefa47b-ca9e-4d90-8029-a8ab6f45a528` |
-| EAS submission id | `023a9129-d68b-406a-a5b5-58e03c98a13a` |
-| App Store Connect / TestFlight state | Build 46 uploaded, row shows `제출 준비 완료`, internal group `Team (Expo)`, invite count `1` per `docs/app-store-connect-build46-packet.md` |
+| EAS build id | `52514ba4-4f26-4a35-bb21-a565b3a471a9` |
+| EAS submission id | `37ac90b7-1af6-43ed-a92d-5c3135917a33` |
+| App Store Connect / TestFlight state | Build 47 binary uploaded to App Store Connect; Apple processing/TestFlight group assignment not yet verified |
 | Simulator result | Release simulator build can install and render InviteHub home; built app `Info.plist` shows `CFBundleVersion=46` |
 | Real-device result | Failed for installed `com.invitehub.app` `1.0.1 (46)`: connected iPhone launch produced iOS crash prompt and console launch terminated with `Unhandled JS Exception: Error: No routes found` / signal 6. Current local source can build and install a Release app to the iPhone, but post-install console launch is blocked by CoreDeviceService timeout. |
 | App Store version selection | Not verified as selected; App Store Connect browser session redirects to login |
@@ -29,15 +29,14 @@ current.
 
 ## Current Verdict
 
-Do not mark the app as release-complete yet. The local/native Build 42 drift has
-been corrected by setting the native iOS project build number to `46`, and the
-production free-publish backend now passes. However, the connected iPhone launch
-check for the installed `1.0.1 (46)` app failed with `No routes found`, so build
-46 must not be selected for App Store review.
+Do not mark the app as release-complete yet. Build `1.0.1 (47)` has been built
+and uploaded to App Store Connect, and the production map/share web deployment
+is live. However, Apple processing, TestFlight internal-group assignment, and a
+real iPhone launch/free-publish smoke test for build 47 are still required.
 
-Do not select build 42 for the App Store version. Build `1.0.0 (42)` failed the
-real iPhone launch check. Do not select build 46 either until a new build
-passes real-device launch and free-publish smoke QA.
+Do not select build 42 or build 46 for the App Store version. Build `1.0.0 (42)`
+and build `1.0.1 (46)` both failed real iPhone launch evidence. Do not select
+build 47 until it passes real-device launch and free-publish smoke QA.
 
 The current Vercel production deployment has `SUPABASE_GUEST_PUBLISHER_USER_ID`
 set and has been redeployed. Production smoke evidence from 2026-05-19:
@@ -46,22 +45,23 @@ returned `HEAD 200`, RSVP returned `200`, and guestbook returned `200`.
 
 ## Required P0 Evidence
 
-1. Prepare a next TestFlight build after the current local fixes are committed.
-2. Install the next TestFlight build on the real iPhone.
-3. Prefer deleting the existing installed app before install to clear stale
+1. Wait for App Store Connect to finish processing build `1.0.1 (47)`.
+2. Assign build 47 to the internal TestFlight group.
+3. Install build 47 on the real iPhone.
+4. Prefer deleting the existing installed app before install to clear stale
    container data.
-4. Confirm the app launches without an iOS crash prompt.
-5. Smoke test:
+5. Confirm the app launches without an iOS crash prompt.
+6. Smoke test:
    `home -> template selection -> builder Step 1 -> preview -> free publish -> public link -> RSVP/guestbook`.
-6. Record evidence with generic current-build keys:
+7. Record evidence with generic current-build keys:
    `currentTestFlightBuildProcessed`,
    `currentBuildAssignedToInternalGroup`,
    `realIphoneTestFlightInstallLaunchPassed`,
   `currentReleaseBuildSelectedForVersion`.
-7. Backend prerequisite is complete: Supabase project was resumed, the guest
+8. Backend prerequisite is complete: Supabase project was resumed, the guest
    publisher UUID exists, Vercel Production has
    `SUPABASE_GUEST_PUBLISHER_USER_ID`, and the production API smoke test passed.
-8. Re-authenticate App Store Connect in Chrome or provide the App Store Connect
+9. Re-authenticate App Store Connect in Chrome or provide the App Store Connect
    API private key so Codex can verify/save the remaining Apple-side surfaces.
 
 ## Required P1 App Store Connect Evidence
@@ -81,10 +81,9 @@ returned `HEAD 200`, RSVP returned `200`, and guestbook returned `200`.
 
 ## Next Action
 
+Use `docs/app-store-connect-build47-packet.md` as the current upload evidence.
 Do not use `docs/app-store-connect-input-packet-build46.md` for final build
-selection unless a later real-device run disproves the 2026-05-19 crash
-evidence. Prepare the next build packet after the code branch is pushed and the
-new TestFlight build exists. Latest local simulator evidence screenshot:
+selection. Latest local simulator evidence screenshot:
 `/private/tmp/invitehub-build46-release-home.png`.
 
 ## 2026-05-19 Real iPhone Evidence
@@ -121,3 +120,16 @@ new TestFlight build exists. Latest local simulator evidence screenshot:
 - `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID` is still missing in local env and Vercel, so
   Naver embedded map rendering remains configuration-blocked. The Naver map open
   button remains active as a fallback.
+
+## 2026-05-19 Build 47 Upload
+
+- Source commit uploaded: `4221622`.
+- Native build number: `47`.
+- EAS build id: `52514ba4-4f26-4a35-bb21-a565b3a471a9`.
+- EAS submission id: `37ac90b7-1af6-43ed-a92d-5c3135917a33`.
+- IPA artifact: `https://expo.dev/artifacts/eas/bayNvUjUads2HBqsoiZ3Rg.ipa`.
+- EAS status recheck returned build `FINISHED`, submission `FINISHED`, and
+  submission `error: null`.
+- EAS CLI reported the binary was uploaded to App Store Connect and is being
+  processed by Apple. TestFlight processing/internal-group assignment remains
+  unverified.
