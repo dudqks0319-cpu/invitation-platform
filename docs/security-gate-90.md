@@ -1,13 +1,14 @@
 # InviteHub Security Gate - 90점 Release Readiness
 
-Date: 2026-05-01
+Date: 2026-05-19
 Owner: Orchestrator / Security Engineer harness
 
 ## Verdict
 
 Local security controls are materially in place. A fresh network-enabled
 `npm audit --audit-level=high` passed for the current lockfile on
-2026-05-03 13:24 KST with no high or critical findings.
+2026-05-19 after updating Next and `eslint-config-next` to `16.2.6`, with no
+high or critical findings.
 
 ## Checklist
 
@@ -20,8 +21,8 @@ Local security controls are materially in place. A fresh network-enabled
 | Output/sensitive data | Store verification writes sanitized provider verification payloads through `sanitizeStoreVerification` before audit/payment storage. | Pass |
 | Request controls | JSON-only checks and body-size limits are centralized in `lib/supabase/public-write.ts`; store verification uses an 80 KB limit. | Pass |
 | Abuse controls | `consume_rate_limit` exists in Supabase and public RSVP/guestbook/guest-publish routes call it before writes. | Pass |
-| Negative-path tests | Latest local code-gate run passed 58 files / 177 tests and focused mobile/API run passed 9 files / 34 tests, including auth, ownership, invalid body, payment, public write, and rate-limit coverage. | Pass |
-| Dependencies | `npm audit --audit-level=high` exited 0. Current findings are moderate-only transitive advisories: PostCSS below 8.5.10 under Expo/Next and uuid below 14 under Expo config tooling. | Pass for high gate |
+| Negative-path tests | Latest local code-gate run passed 61 files / 189 tests and focused mobile/API run passed 9 files / 34 tests, including auth, ownership, invalid body, payment, public write, and rate-limit coverage. | Pass |
+| Dependencies | `npm audit --audit-level=high` exited 0. Current remaining findings are moderate-only transitive PostCSS advisories under Expo/Next tooling. | Pass for high gate |
 
 ## Key Code Evidence
 
@@ -35,12 +36,15 @@ Local security controls are materially in place. A fresh network-enabled
 - `supabase/schema.sql`: `consume_rate_limit` function and RLS policies for
   owner-only invitations, payments, audit logs, RSVPs, guestbook moderation, and
   view logs.
+- `app/api/public/guest-publish/route.ts`: free guest publish uses server-side
+  rate limiting and can use `SUPABASE_GUEST_PUBLISHER_USER_ID` to avoid relying
+  on Auth Admin user listing in production.
 
 ## Residual Risks
 
 | Risk | Owner | Due |
 | --- | --- | --- |
-| Real-device TestFlight install/launch evidence for the current crash-fix candidate has not been captured. Builds 38, 39, 40, 41, and 42 are unsafe release candidates; build 42 is processed in App Store Connect but failed the user's iPhone launch check. | Store Manager / Release owner | Before final release readiness sign-off |
+| Real-device TestFlight install/launch evidence failed for build 46 on 2026-05-19 with `Unhandled JS Exception: Error: No routes found`. Builds 38, 39, 40, 41, 42, and 46 are unsafe release candidates. A newer build must pass connected iPhone launch and free-publish smoke QA. | Store Manager / Release owner | Before final release readiness sign-off |
 | App Store Connect app information, version metadata, build selection, privacy labels, IAP approval, review notes, and screenshots are verified incomplete. | Store Manager / Release owner | Before final App Store submission |
 | Custom domain `invitehub.co.kr` does not resolve by DNS; store URLs must use the verified Vercel deployment or DNS must be connected before submission. | Store Manager / Release owner | Before entering App Store metadata |
 | `support@invitehub.co.kr` has no verified MX/DNS evidence; App Review contact must use a currently verified mailbox and `NEXT_PUBLIC_SUPPORT_EMAIL` until domain email is configured. | Store Manager / Release owner | Before entering App Review contact |
@@ -54,17 +58,41 @@ npm audit --audit-level=high
 ```
 
 Result: exit 0, no high/critical findings. `npm audit` still reports moderate
-findings in transitive Expo/Next tooling dependencies. Do not use
+PostCSS findings in transitive Expo/Next tooling dependencies. Do not use
 `npm audit fix --force` for this release because npm proposes breaking
 downgrades for Next/Expo dependency chains.
 
 ## Current External Gate
 
-EAS iOS build 42 completed and EAS Submit uploaded the binary to App Store
-Connect after the latest user iPhone TestFlight crash report. Build 42 is no
-longer a current crash-fix candidate because the user's 2026-05-07 real iPhone
-recording shows it still crashes on launch. A newer post-build-42 candidate is
-required before final release readiness sign-off.
+EAS iOS build 46 completed and EAS Submit uploaded the binary to App Store
+Connect after the build 42 real-iPhone crash report and subsequent
+startup-stability patches. Build 42 is not a valid candidate because the user's
+2026-05-07 real iPhone recording shows it still crashes on launch. Build 46 is
+also not a valid candidate: the connected iPhone check on 2026-05-19 found
+installed `com.invitehub.app` version `1.0.1` bundle version `46`, then launch
+failed with the user-visible iOS crash prompt and console
+`Unhandled JS Exception: Error: No routes found`; signal 6.
+
+Build 46 details: build `4aefa47b-ca9e-4d90-8029-a8ab6f45a528`, submission
+`023a9129-d68b-406a-a5b5-58e03c98a13a`, artifact
+`https://expo.dev/artifacts/eas/afGx9mRBMme34vyPZ7Jyu1.ipa`, App Store version
+`1.0.1`, build number `46`, internal group `Team (Expo)`. The native local iOS
+project is now aligned to `CURRENT_PROJECT_VERSION = 46` so local Release
+simulator builds do not produce stale `CFBundleVersion=42` artifacts. The
+2026-05-19 Release simulator build installed and opened `com.invitehub.app` on
+iPhone 17, and the built app `Info.plist` showed `CFBundleVersion=46`. Current
+local source also builds and installs a Release app to the connected iPhone, but
+post-install console launch is blocked by CoreDeviceService timeout, so this is
+not a launch pass.
+
+The production free-publish blocker is resolved as of 2026-05-19. The Supabase
+project was resumed, `SUPABASE_GUEST_PUBLISHER_USER_ID` was added to Vercel
+Production, Vercel was redeployed to `https://invitation-platform-plum.vercel.app`,
+and the production API smoke test passed: free guest publish `200`, public
+invitation `HEAD 200`, RSVP `200`, and guestbook `200`. The Supabase
+`consume_rate_limit` function now avoids PL/pgSQL `bucket_key` ambiguity by
+using positional parameters and `ON CONFLICT ON CONSTRAINT rate_limits_pkey`;
+direct REST RPC verification returned `200`.
 
 EAS iOS build 43 now finished and EAS Submit uploaded it to App Store Connect:
 build `9a4a25a7-c362-4ba0-9c01-fdac8b0f942c`, submission

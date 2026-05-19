@@ -101,3 +101,19 @@ Install/session/crash/feedback: –
 
 If this clean `1.0.1` build still crashes, the next blocker is a build 46 crash
 report or device crash log.
+
+## 2026-05-19 Real iPhone Result
+
+Build 46 is not a valid App Store candidate after the connected-device check:
+
+- `devicectl` found `com.invitehub.app` installed as version `1.0.1`, bundle
+  version `46`, display name `초대장허브`.
+- User-visible iOS prompt appeared: `'InviteHub (40c8af)' 앱이 충돌함`.
+- Console launch terminated with signal 6 and
+  `Unhandled JS Exception: Error: No routes found`.
+- Current local source can still export, build, and install a Release app to the
+  iPhone, but CoreDeviceService timed out before post-install launch evidence
+  could be captured.
+
+Do not select build 46 on the App Store version page. Prepare a newer build and
+repeat real-device launch plus the free-publish smoke path.

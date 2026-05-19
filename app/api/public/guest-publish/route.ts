@@ -16,6 +16,7 @@ const GUEST_PUBLISHER_EMAIL = "guest-publisher@invitehub.app";
 const GUEST_PUBLISH_LIMIT = 10;
 const GUEST_PUBLISH_WINDOW_MS = 60 * 60 * 1000;
 const guestPublishBuckets = new Map<string, { count: number; resetAt: number }>();
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function getMissingFields(payload: ReturnType<typeof normalizeDraft>) {
   return [
@@ -35,6 +36,22 @@ async function ensureGuestPublisherId() {
     return {
       ok: false as const,
       message: "서버 설정이 완료되지 않았습니다."
+    };
+  }
+
+  const configuredUserId = (process.env.SUPABASE_GUEST_PUBLISHER_USER_ID ?? "").trim();
+  if (configuredUserId) {
+    if (!UUID_PATTERN.test(configuredUserId)) {
+      return {
+        ok: false as const,
+        message: "게스트 발행 계정 설정이 올바르지 않습니다."
+      };
+    }
+
+    return {
+      ok: true as const,
+      admin,
+      userId: configuredUserId
     };
   }
 

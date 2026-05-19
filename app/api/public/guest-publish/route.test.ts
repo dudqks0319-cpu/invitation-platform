@@ -25,6 +25,21 @@ function createRequest(payload: Record<string, unknown>) {
   });
 }
 
+function createFreePayload() {
+  return {
+    title: "결혼식 초대장",
+    eventDateTime: "2026-05-10T14:00",
+    venueName: "더파인 웨딩홀",
+    venueAddress: "서울 강남구 테헤란로 123",
+    groomName: "민준",
+    brideName: "수아",
+    templateId: "wedding-classic",
+    category: "wedding"
+  };
+}
+
+const insertMock = vi.fn();
+
 function createAdminDouble() {
   return {
     auth: {
@@ -40,7 +55,8 @@ function createAdminDouble() {
       }
 
       return {
-        insert() {
+        insert(payload: unknown) {
+          insertMock(payload);
           return {
             select() {
               return {
@@ -57,6 +73,7 @@ function createAdminDouble() {
 describe("POST /api/public/guest-publish", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    delete process.env.SUPABASE_GUEST_PUBLISHER_USER_ID;
     createSupabaseAdminClientMock.mockReturnValue(createAdminDouble());
     listUsersMock.mockResolvedValue({
       data: { users: [{ id: "guest-user-1", email: "guest-publisher@invitehub.app" }] },
@@ -77,18 +94,7 @@ describe("POST /api/public/guest-publish", () => {
   });
 
   it("publishes a free guest invitation", async () => {
-    const response = await POST(
-      createRequest({
-        title: "결혼식 초대장",
-        eventDateTime: "2026-05-10T14:00",
-        venueName: "더파인 웨딩홀",
-        venueAddress: "서울 강남구 테헤란로 123",
-        groomName: "민준",
-        brideName: "수아",
-        templateId: "wedding-classic",
-        category: "wedding"
-      })
-    );
+    const response = await POST(createRequest(createFreePayload()));
     const payload = await response.json();
 
     expect(response.status).toBe(200);
@@ -96,17 +102,37 @@ describe("POST /api/public/guest-publish", () => {
     expect(payload.invitationId).toBe("inv-1");
   });
 
+  it("uses a configured guest publisher user id without listing auth users", async () => {
+    process.env.SUPABASE_GUEST_PUBLISHER_USER_ID = "00000000-0000-4000-8000-000000000001";
+
+    const response = await POST(createRequest(createFreePayload()));
+    const payload = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(payload.success).toBe(true);
+    expect(listUsersMock).not.toHaveBeenCalled();
+    expect(createUserMock).not.toHaveBeenCalled();
+    expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({
+      user_id: "00000000-0000-4000-8000-000000000001"
+    }));
+  });
+
+  it("rejects an invalid configured guest publisher user id", async () => {
+    process.env.SUPABASE_GUEST_PUBLISHER_USER_ID = "guest-publisher";
+
+    const response = await POST(createRequest(createFreePayload()));
+    const payload = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(payload.message).toBe("게스트 발행 계정 설정이 올바르지 않습니다.");
+    expect(listUsersMock).not.toHaveBeenCalled();
+    expect(insertMock).not.toHaveBeenCalled();
+  });
+
   it("blocks guest publish when paid options are included", async () => {
     const response = await POST(
       createRequest({
-        title: "결혼식 초대장",
-        eventDateTime: "2026-05-10T14:00",
-        venueName: "더파인 웨딩홀",
-        venueAddress: "서울 강남구 테헤란로 123",
-        groomName: "민준",
-        brideName: "수아",
-        templateId: "wedding-classic",
-        category: "wedding",
+        ...createFreePayload(),
         mainImageUrl: "https://example.com/main.jpg"
       })
     );

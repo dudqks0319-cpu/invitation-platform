@@ -150,24 +150,24 @@ begin
   select *
   into current_limit
   from public.rate_limits
-  where rate_limits.bucket_key = consume_rate_limit.bucket_key
+  where rate_limits.bucket_key = $1
   for update;
 
   if not found or current_limit.reset_at <= now() then
     insert into public.rate_limits (bucket_key, count, reset_at, updated_at)
-    values (consume_rate_limit.bucket_key, 1, next_reset, now())
-    on conflict (bucket_key)
+    values ($1, 1, next_reset, now())
+    on conflict on constraint rate_limits_pkey
     do update
       set count = 1,
           reset_at = excluded.reset_at,
           updated_at = now();
 
     return query
-    select true, greatest(max_hits - 1, 0), next_reset;
+    select true, greatest($2 - 1, 0), next_reset;
     return;
   end if;
 
-  if current_limit.count >= max_hits then
+  if current_limit.count >= $2 then
     return query
     select false, 0, current_limit.reset_at;
     return;
@@ -176,10 +176,10 @@ begin
   update public.rate_limits
   set count = current_limit.count + 1,
       updated_at = now()
-  where rate_limits.bucket_key = consume_rate_limit.bucket_key;
+  where rate_limits.bucket_key = $1;
 
   return query
-  select true, greatest(max_hits - (current_limit.count + 1), 0), current_limit.reset_at;
+  select true, greatest($2 - (current_limit.count + 1), 0), current_limit.reset_at;
 end;
 $$;
 

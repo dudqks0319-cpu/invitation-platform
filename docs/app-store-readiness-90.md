@@ -19,9 +19,38 @@ answer requirement, App Review metadata accuracy/completeness guidance, and
 | Store | Production bundle id is `com.invitehub.app`, production scheme is `invitehub`, dev scheme is separate. |
 | QA | Simulator evidence exists for home and template-to-builder flow; TestFlight evidence required before external review. |
 
-Latest local and App Store Connect evidence after the build 42 TestFlight
-crash-fix update:
+Latest local and App Store Connect evidence after the build 46 TestFlight
+stabilization pass:
 
+- 2026-05-19 real iPhone launch evidence is negative for the installed
+  `1.0.1 (46)` app. Device access recovered enough to inspect and launch
+  `com.invitehub.app`; installed app metadata showed version `1.0.1`, bundle
+  version `46`, and display name `초대장허브`. The user-visible iOS dialog showed
+  `'InviteHub (40c8af)' 앱이 충돌함`, and console launch terminated with signal 6
+  after `Unhandled JS Exception: Error: No routes found`. Build 46 is therefore
+  not a selectable App Store candidate until a later build passes real-device
+  launch and smoke QA.
+- Current local source still builds on device: `npm --prefix apps/mobile run ios
+  -- --device "영빈" --configuration Release --no-bundler` bundled
+  `apps/mobile/node_modules/expo-router/entry.js`, built successfully, and
+  installed the Release app on the iPhone. Follow-up console launch is blocked
+  by CoreDeviceService initialization timeout, so this is install evidence, not
+  a real-device launch pass.
+- 2026-05-19 local drift fix: the native Xcode project build number now matches
+  the current TestFlight candidate. `CURRENT_PROJECT_VERSION` is `46` for the
+  iOS project, so local Release simulator builds no longer produce
+  `CFBundleVersion=42` while the release docs point at build 46. Current state
+  is tracked in `docs/current-release-state.md`.
+- 2026-05-08 build 46 upload: EAS iOS build
+  `4aefa47b-ca9e-4d90-8029-a8ab6f45a528` finished for `1.0.1 (46)` and EAS
+  submission `023a9129-d68b-406a-a5b5-58e03c98a13a` uploaded to App Store
+  Connect. App Store Connect browser evidence in
+  `docs/app-store-connect-build46-packet.md` shows the build row as `완료`, the
+  TestFlight row as `제출 준비 완료`, internal group `Team (Expo)`, and invite
+  count `1`. The later 2026-05-19 real iPhone launch evidence failed, so build
+  46 cannot be selected for the App Store version.
+- Build 46 App Store Connect entry values and review-note copy are consolidated
+  in `docs/app-store-connect-input-packet-build46.md`.
 - 2026-05-08 build 43 upload: EAS iOS build
   `9a4a25a7-c362-4ba0-9c01-fdac8b0f942c` finished for `1.0.0 (43)` and EAS
   submission `595cd20f-6d0d-4c72-887f-ffcc7b614dd6` finished with `error:
@@ -42,7 +71,7 @@ crash-fix update:
   shows TestFlight build `1.0.0 (42)` and then the iOS crash prompt
   `'InviteHub (40c8af)' 앱이 충돌함`. Extracted evidence frames are indexed in
   `docs/testflight-crash-triage-2026-05-07.md`. Build 42 is no longer a valid
-  iPhone release candidate.
+  iPhone release candidate. Real iPhone launch failed on 2026-05-07.
 - 2026-05-06 crash follow-up: build 41 is not considered proven because the
   prior `devicectl` launch returned exit code `0` but InviteHub was not present
   in the follow-up process query. New triage lives in
@@ -66,15 +95,22 @@ crash-fix update:
 - Build 41 superseded build 40 after Mac TestFlight logs showed
   `Unhandled JS Exception: Error: No routes found`.
 - `SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh`
-  passed code gates on 2026-05-03 13:24 KST through web/mobile lint,
-  web/mobile typecheck, the 58-file web/API test suite with 177 tests, and the
-  focused 9-file mobile/API test suite with 34 tests. The App Store packet
-  verifier is now pinned to build 42 and includes the build 42 App Store Connect
-  input packet.
-- Escalated local iOS Release simulator build passed with 0 errors and 2
-  warnings and opened `com.invitehub.app` on iPhone 17.
+  passed code gates on 2026-05-19 through web/mobile lint, web/mobile
+  typecheck, the 61-file web/API test suite with 189 tests, and the focused
+  9-file mobile/API test suite with 34 tests. The App Store packet verifier is
+  now pinned to current candidate build 46 while retaining
+  historical build 42 failure evidence.
+- Free guest publish now has a production owner-id override through
+  `SUPABASE_GUEST_PUBLISHER_USER_ID`, with tests for the configured-id and
+  invalid-id paths. The production blocker is resolved: Supabase has the guest
+  publisher UUID, Vercel Production has the env var, production redeploy
+  completed, and the live API smoke passed for guest publish, public invitation
+  `HEAD`, RSVP, and guestbook.
+- Escalated local iOS Release simulator build passed with 0 errors and 4
+  warnings, opened `com.invitehub.app` on iPhone 17, and the built app
+  `Info.plist` verified as `1.0.1 (46)`.
 - Release home screenshot:
-  `/private/tmp/invitehub-release-home-current.png`.
+  `/private/tmp/invitehub-build46-release-home.png`.
 - Fixed invitation preview screenshot from real Simulator taps:
   `/private/tmp/invitehub-preview-fit-to-viewport.png`.
 - Latest post-canvas preview screenshot from real Simulator taps:
@@ -91,9 +127,9 @@ crash-fix update:
 - `scripts/verify-store-screenshots.sh output/store-screenshots-verified`
   passed for the verified preview PNGs at `1206x2622`.
 - Security gate evidence is documented in `docs/security-gate-90.md`.
-- Fresh `npm audit --audit-level=high` exited 0 on 2026-05-03 13:24 KST with
-  no high or critical findings. Audit output still has moderate-only transitive
-  findings in Expo/Next tooling chains.
+- Fresh `npm audit --audit-level=high` exited 0 on 2026-05-19 after updating
+  `next` and `eslint-config-next` to `16.2.6`. Audit output still has
+  moderate-only transitive PostCSS findings in Expo/Next tooling chains.
 - EAS iOS build 37 (`4d995997-e952-4ada-83bf-bc6a929be412`) finished
   successfully after upgrading `expo-image-picker` to `55.0.19`.
 - EAS submission `bb2999db-8820-42a7-9bdf-fb2bfd7f6d21` finished with no
@@ -176,10 +212,10 @@ SKIP_IOS_RELEASE_BUILD=1 zsh scripts/invitehub-release-gate.sh
 These cannot be fully completed from code alone:
 
 - App Store Connect app record points to bundle id `com.invitehub.app`.
-- TestFlight build 42 is uploaded through EAS Submit, processed in App Store
-  Connect, export-compliance clear on the build row, and assigned to internal
-  group `Team (Expo)`. Real iPhone launch failed on 2026-05-07, so build 42
-  must be superseded before App Store build selection.
+- TestFlight build 46 is uploaded through EAS Submit, processed in App Store
+  Connect, visible as `제출 준비 완료`, and assigned to internal group
+  `Team (Expo)`. Real iPhone launch proof is still required before App Store
+  build selection.
 - App Privacy labels match collected data: account, invitations, RSVP, guestbook, photos, purchase records.
 - IAP product for photo-included publishing is created, priced, and approved, or
   the paid publish flag remains disabled and paid claims stay hidden.
@@ -193,11 +229,9 @@ These cannot be fully completed from code alone:
 - Public support/privacy/terms URLs are live. `invitehub.co.kr` currently does
   not resolve by DNS; the verified live fallback is
   `https://invitation-platform-youngbeens-projects.vercel.app`.
-- Current build 42 App Store Connect entry values are consolidated in
-  `docs/app-store-connect-build42-packet.md`.
-- Current build 43 upload values are consolidated in
-  `docs/app-store-connect-build43-packet.md`; App Store Connect processing and
-  iPhone TestFlight launch evidence are still pending.
+- Current build 46 App Store Connect entry values are consolidated in
+  `docs/app-store-connect-build46-packet.md`, and App Store input copy is in
+  `docs/app-store-connect-input-packet-build46.md`.
 - App Review contact email must be a currently verified mailbox. The
   `support@invitehub.co.kr` address is not verified while the domain has no
   DNS/MX records. Mirror the verified mailbox in `NEXT_PUBLIC_SUPPORT_EMAIL`
