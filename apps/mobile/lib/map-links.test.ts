@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createEmptyInvitationDraft } from "./invitation-shared";
 import {
   getInvitationMapLinks,
+  getKakaoMapWebSearchUrl,
   getKakaoMapSearchUrl,
   getMapSearchQuery,
   getNaverMapSearchUrl,
@@ -19,6 +20,9 @@ describe("mobile map links", () => {
     const query = "더파인 웨딩홀 서울 강남구";
 
     expect(getKakaoMapSearchUrl(query)).toBe(
+      "kakaomap://search?q=%EB%8D%94%ED%8C%8C%EC%9D%B8%20%EC%9B%A8%EB%94%A9%ED%99%80%20%EC%84%9C%EC%9A%B8%20%EA%B0%95%EB%82%A8%EA%B5%AC"
+    );
+    expect(getKakaoMapWebSearchUrl(query)).toBe(
       "https://map.kakao.com/link/search/%EB%8D%94%ED%8C%8C%EC%9D%B8%20%EC%9B%A8%EB%94%A9%ED%99%80%20%EC%84%9C%EC%9A%B8%20%EA%B0%95%EB%82%A8%EA%B5%AC"
     );
     expect(getNaverMapSearchUrl(query)).toBe(
@@ -38,7 +42,8 @@ describe("mobile map links", () => {
 
     expect(getInvitationMapLinks(payload)).toMatchObject({
       naverUrl: "https://map.naver.com/p/entry/place/123",
-      kakaoUrl: "https://place.map.kakao.com/123"
+      kakaoUrl: "https://place.map.kakao.com/123",
+      kakaoFallbackUrl: "https://map.kakao.com/link/search/%EB%8D%94%ED%8C%8C%EC%9D%B8%20%EC%9B%A8%EB%94%A9%ED%99%80%20%EC%84%9C%EC%9A%B8%20%EA%B0%95%EB%82%A8%EA%B5%AC"
     });
   });
 });

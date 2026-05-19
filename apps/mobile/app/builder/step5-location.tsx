@@ -7,6 +7,7 @@ import { FocusInput } from "@/components/ui/FocusInput";
 import { Screen } from "@/components/ui/Screen";
 import { theme } from "@/components/ui/theme";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
+import { useMapApiConfig } from "@/hooks/useMapApiConfig";
 import { getInvitationMapLinks } from "@/lib/map-links";
 
 const inputStyle = {
@@ -37,6 +38,7 @@ async function openMapUrl(url: string, fallbackUrl?: string) {
 export default function BuilderStep5LocationScreen() {
   const { localId } = useLocalSearchParams<{ localId?: string }>();
   const { draft, updateBasics, updateLocation } = useInvitationDraft("local-preview-owner", localId);
+  const mapApi = useMapApiConfig();
   const mapLinks = draft ? getInvitationMapLinks(draft.payload) : null;
   const canPreviewMap = Boolean(mapLinks?.query || mapLinks?.naverUrl || mapLinks?.kakaoUrl);
 
@@ -84,6 +86,36 @@ export default function BuilderStep5LocationScreen() {
           }}
         >
           <Text style={{ color: theme.colors.primaryDark, fontSize: 12, fontWeight: "800" }}>지도 미리보기</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            <Text
+              style={{
+                borderRadius: 999,
+                overflow: "hidden",
+                backgroundColor: mapApi.config?.kakao.enabled ? "#FEE500" : theme.colors.surfaceSoft,
+                color: mapApi.config?.kakao.enabled ? "#332800" : theme.colors.textLight,
+                fontSize: 12,
+                fontWeight: "800",
+                paddingHorizontal: 10,
+                paddingVertical: 6
+              }}
+            >
+              카카오 API {mapApi.config?.kakao.enabled ? "연동" : "대기"}
+            </Text>
+            <Text
+              style={{
+                borderRadius: 999,
+                overflow: "hidden",
+                backgroundColor: mapApi.config?.naver.enabled ? "#03C75A" : theme.colors.surfaceSoft,
+                color: mapApi.config?.naver.enabled ? "#fff" : theme.colors.textLight,
+                fontSize: 12,
+                fontWeight: "800",
+                paddingHorizontal: 10,
+                paddingVertical: 6
+              }}
+            >
+              네이버 API {mapApi.config?.naver.enabled ? "연동" : "대기"}
+            </Text>
+          </View>
           <View
             style={{
               minHeight: 120,
@@ -134,7 +166,7 @@ export default function BuilderStep5LocationScreen() {
               accessibilityRole="button"
               onPress={
                 canPreviewMap && mapLinks?.kakaoUrl
-                  ? () => void openMapUrl(mapLinks.kakaoUrl)
+                  ? () => void openMapUrl(mapLinks.kakaoUrl, mapLinks.kakaoFallbackUrl)
                   : undefined
               }
               style={{
@@ -175,7 +207,7 @@ export default function BuilderStep5LocationScreen() {
             </Pressable>
           </View>
           <Text style={{ color: theme.colors.muted, fontSize: 12, lineHeight: 18 }}>
-            링크를 붙여 넣으면 해당 장소 링크를 우선 사용하고, 없으면 예식장 이름과 주소로 검색합니다.
+            {mapApi.label}. 링크를 붙여 넣으면 해당 장소 링크를 우선 사용하고, 없으면 예식장 이름과 주소로 검색합니다.
           </Text>
         </View>
         <View style={{ gap: 14 }}>

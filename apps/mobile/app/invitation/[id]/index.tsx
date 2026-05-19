@@ -13,6 +13,7 @@ import { deleteDraft, loadDraft, saveDraft } from "@/lib/drafts";
 import { deleteRemoteInvitation, loadRemoteInvitation, saveDraftToSupabase } from "@/lib/invitations";
 import { getPublicInvitationUrl, openInvitationPublicPage, openWebBuilder, shareInvitationLink } from "@/lib/share";
 import { useAuth } from "@/hooks/useAuth";
+import { useMapApiConfig } from "@/hooks/useMapApiConfig";
 import { getInvitationMapLinks } from "@/lib/map-links";
 
 async function openMapUrl(url: string, fallbackUrl?: string) {
@@ -36,6 +37,7 @@ export default function InvitationDetailScreen() {
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
   const { configMessage, configured, status, user } = useAuth();
+  const mapApi = useMapApiConfig();
   const publicUrl = draft?.payload.share.slug ? getPublicInvitationUrl(draft.payload.share.slug) : "";
   const shareSlug = draft?.payload.share.slug ?? "";
   const mapLinks = draft ? getInvitationMapLinks(draft.payload) : null;
@@ -168,11 +170,18 @@ export default function InvitationDetailScreen() {
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
           지도: {draft?.payload.location.kakaoMapUrl || draft?.payload.location.naverMapUrl || (mapLinks?.query ? "주소 검색 링크 자동 생성" : "미입력")}
         </Text>
+        <Text style={{ color: "#6a5645", lineHeight: 22 }}>
+          지도 API: {mapApi.label}
+        </Text>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+          <Pill active={Boolean(mapApi.config?.kakao.enabled)} label={`카카오 API ${mapApi.config?.kakao.enabled ? "연동" : "대기"}`} />
+          <Pill active={Boolean(mapApi.config?.naver.enabled)} label={`네이버 API ${mapApi.config?.naver.enabled ? "연동" : "대기"}`} />
+        </View>
         <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
           <Pressable
             accessibilityLabel="카카오 지도 열기"
             accessibilityRole="button"
-            onPress={mapLinks?.kakaoUrl ? () => void openMapUrl(mapLinks.kakaoUrl) : undefined}
+            onPress={mapLinks?.kakaoUrl ? () => void openMapUrl(mapLinks.kakaoUrl, mapLinks.kakaoFallbackUrl) : undefined}
             style={{
               flex: 1,
               minHeight: 42,

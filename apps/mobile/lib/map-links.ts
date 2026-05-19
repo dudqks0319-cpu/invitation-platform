@@ -14,6 +14,7 @@ export type InvitationMapLinks = {
   naverUrl: string;
   naverFallbackUrl: string;
   kakaoUrl: string;
+  kakaoFallbackUrl: string;
 };
 
 function normalizeExternalUrl(value?: string) {
@@ -49,17 +50,26 @@ export function getKakaoMapSearchUrl(query: string) {
   const normalizedQuery = query.trim();
   if (!normalizedQuery) return "";
 
+  return `kakaomap://search?q=${encodeURIComponent(normalizedQuery)}`;
+}
+
+export function getKakaoMapWebSearchUrl(query: string) {
+  const normalizedQuery = query.trim();
+  if (!normalizedQuery) return "";
+
   return `${KAKAO_MAP_WEB_ORIGIN}/link/search/${encodeURIComponent(normalizedQuery)}`;
 }
 
 export function getInvitationMapLinks(payload: MapLinkInput): InvitationMapLinks {
   const query = getMapSearchQuery(payload);
   const naverFallbackUrl = getNaverMapWebSearchUrl(query);
+  const kakaoFallbackUrl = getKakaoMapWebSearchUrl(query);
 
   return {
     query,
     naverUrl: normalizeExternalUrl(payload.location.naverMapUrl) || getNaverMapSearchUrl(query),
     naverFallbackUrl,
-    kakaoUrl: normalizeExternalUrl(payload.location.kakaoMapUrl) || getKakaoMapSearchUrl(query)
+    kakaoUrl: normalizeExternalUrl(payload.location.kakaoMapUrl) || getKakaoMapSearchUrl(query),
+    kakaoFallbackUrl
   };
 }
