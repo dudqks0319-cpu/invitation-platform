@@ -4,6 +4,7 @@
 
 import { useState } from "react";
 import { TemplateMarkup } from "@/components/landing/template-markup";
+import { InvitationMapEmbed } from "@/components/invitations/invitation-map-embed";
 import {
   LOCAL_GUESTBOOK_KEY,
   LOCAL_RSVP_KEY,
@@ -259,7 +260,8 @@ export function InvitationView({
   const kakaoPayLink = normalizeUrl(payload.kakaoPayLink);
   const videoUrl = normalizeUrl(payload.videoUrl);
   const backgroundMusicUrl = normalizeUrl(payload.backgroundMusicUrl);
-  const mapQuery = encodeURIComponent(payload.mapAddress || payload.venueAddress || payload.venueName);
+  const rawMapQuery = payload.mapAddress || payload.venueAddress || payload.venueName;
+  const mapQuery = encodeURIComponent(rawMapQuery);
   const mapLink =
     normalizeUrl(payload.naverMapLink) ||
     `https://map.naver.com/p/search/${mapQuery}`;
@@ -339,14 +341,11 @@ export function InvitationView({
           <h2>위치</h2>
           <p>{payload.mapAddress || payload.venueAddress || "위치 정보를 입력해 주세요."}</p>
           <p className="invitation-transport">{payload.transportNote}</p>
-          <div className="invitation-inline-actions">
-            <a className="btn-primary invitation-small-btn" href={mapLink} rel="noreferrer noopener" target="_blank">
-              네이버 지도 열기
-            </a>
-            <a className="btn-outline invitation-small-btn" href={kakaoMapLink} rel="noreferrer noopener" target="_blank">
-              카카오맵 열기
-            </a>
-          </div>
+          <InvitationMapEmbed
+            kakaoMapLink={kakaoMapLink}
+            naverMapLink={mapLink}
+            query={rawMapQuery}
+          />
         </article>
 
         {payload.galleryImages.length ? (
@@ -446,7 +445,7 @@ export function InvitationView({
               미리보기 단계에서는 나만 볼 수 있습니다. 하객에게 보낼 링크는 발행 후 공개 링크를 사용해 주세요.
             </p>
           ) : (
-            <p id="invitationShareHint">카카오 JavaScript 키를 입력하면 카카오톡 공유창으로 바로 보낼 수 있습니다.</p>
+            <p id="invitationShareHint">카카오톡 공유창으로 공개 초대장 링크를 바로 보낼 수 있습니다.</p>
           )}
           <div className="invitation-inline-actions">
             <button

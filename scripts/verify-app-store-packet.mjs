@@ -13,7 +13,7 @@ const expected = {
   commit: "0655ced",
   liveBaseUrl: "https://invitation-platform-youngbeens-projects.vercel.app"
 };
-const currentNativeBuildNumber = "46";
+const currentNativeBuildNumber = "47";
 const expectedBuild42 = {
   appId: "6763630299",
   bundleId: "com.invitehub.app",
@@ -285,7 +285,7 @@ includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "TestFlight에서 다음 빌드를 설치");
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "currentReleaseBuildSelectedForVersion");
 includes("docs/current-release-state.md", currentReleaseState, "Current candidate | No valid TestFlight release candidate");
-includes("docs/current-release-state.md", currentReleaseState, "Native local build number | `46`");
+includes("docs/current-release-state.md", currentReleaseState, "Native local build number | `47`");
 includes("docs/current-release-state.md", currentReleaseState, "Real-device result | Failed for installed `com.invitehub.app` `1.0.1 (46)`");
 includes("docs/current-release-state.md", currentReleaseState, "Do not select build 42");
 includes("docs/current-release-state.md", currentReleaseState, "Do not select build 46");

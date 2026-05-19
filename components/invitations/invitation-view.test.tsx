@@ -17,6 +17,8 @@ describe("InvitationView", () => {
     );
     expect(document.body.innerHTML).toContain("카카오톡 공유</button>");
     expect(document.body.innerHTML).toContain("링크 복사</button>");
+    expect(document.body.innerHTML).toContain("카카오 지도");
+    expect(document.body.innerHTML).toContain("네이버 지도");
     expect(document.body.innerHTML).toContain("disabled=\"\"");
   });
 
@@ -34,6 +36,8 @@ describe("InvitationView", () => {
       "방명록은 관리자 승인 후 공개됩니다. 작성 직후 목록에 보이지 않아도 정상입니다."
     );
     expect(document.body.innerHTML).toContain("카카오톡 공유</button>");
+    expect(document.body.textContent).toContain("카카오톡 공유창으로 공개 초대장 링크를 바로 보낼 수 있습니다.");
+    expect(document.body.textContent).toContain("네이버 지도 API 키가 설정되면 이 영역에 지도가 표시됩니다.");
     expect(document.body.innerHTML).not.toContain(
       "미리보기 단계에서는 나만 볼 수 있습니다."
     );

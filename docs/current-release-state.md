@@ -1,6 +1,6 @@
 # InviteHub Current Release State
 
-Last updated: 2026-05-19 21:25 KST
+Last updated: 2026-05-19 21:45 KST
 
 This ledger is the single current-state reference for the App Store release
 track. Historical packets remain useful evidence, but this file decides what is
@@ -10,10 +10,10 @@ current.
 | --- | --- |
 | Local repo | `/Users/jyb-m3max/Desktop/codex/invitation-platform` |
 | Branch | `codex/testflight-launch-crash-fix` |
-| Local/remote state | Local release-blocker fixes are pending commit/push after the 2026-05-19 external-access pass |
+| Local/remote state | Local map/share changes are pending commit/push for the next TestFlight build |
 | Latest local commit at inspection | `44ccac4` |
 | Current candidate | No valid TestFlight release candidate. `1.0.1 (46)` is uploaded but failed real-device launch evidence. |
-| Native local build number | `46` |
+| Native local build number | `47` |
 | App Store Connect app id | `6763630299` |
 | Bundle id | `com.invitehub.app` |
 | Display name | `초대장허브` |
@@ -25,6 +25,7 @@ current.
 | App Store version selection | Not verified as selected; App Store Connect browser session redirects to login |
 | App Store metadata/privacy/screenshots | Not verified as fully saved; App Store Connect browser session redirects to login |
 | Live guest publish API | Passed on `https://invitation-platform-plum.vercel.app`: free guest publish `200`, public invitation `HEAD 200`, RSVP `200`, guestbook `200` |
+| Maps/share deployment | Vercel Production now serves `/api/maps/config`; Kakao JS key is present and Naver map Client ID is not present. Public invitation HTML includes Kakao/Naver map tabs, map links, and KakaoTalk share UI. |
 
 ## Current Verdict
 
@@ -104,3 +105,19 @@ new TestFlight build exists. Latest local simulator evidence screenshot:
 - App Store Connect browser/API checks remain blocked by account auth:
   Chrome redirects to login and the CLI status script requires
   `APPLE_APP_STORE_PRIVATE_KEY`.
+
+## 2026-05-19 Map And Share Deployment
+
+- Added `/api/maps/config` so the web client reads public map SDK configuration
+  from the deployed Vercel environment.
+- Vercel Production deployment:
+  `https://invitation-platform-nrw74l0qm-youngbeens-projects.vercel.app`,
+  aliased to `https://invitation-platform-plum.vercel.app`.
+- Production `/api/maps/config` check returned Kakao enabled and Naver disabled
+  without printing secret/public key values.
+- Public invitation `https://invitation-platform-plum.vercel.app/invitations/kim-lee-demo`
+  returns `200` and includes Kakao/Naver map tabs, external map buttons, and the
+  KakaoTalk share action in server-rendered HTML.
+- `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID` is still missing in local env and Vercel, so
+  Naver embedded map rendering remains configuration-blocked. The Naver map open
+  button remains active as a fallback.

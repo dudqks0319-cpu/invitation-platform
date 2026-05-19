@@ -1374,6 +1374,57 @@ ul { list-style: none; }
   padding: 0 10px;
   font-size: 0.86rem;
 }
+.invitation-map-panel {
+  margin-top: 12px;
+}
+.invitation-map-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.invitation-map-tabs button {
+  min-height: 38px;
+  border: 1px solid rgba(201, 147, 90, 0.28);
+  border-radius: 10px;
+  background: #fffaf4;
+  color: #7b5c3d;
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+.invitation-map-tabs button.active {
+  background: var(--primary);
+  color: #fff;
+}
+.invitation-map-canvas {
+  display: none;
+  width: 100%;
+  min-height: 260px;
+  overflow: hidden;
+  border: 1px solid rgba(201, 147, 90, 0.22);
+  border-radius: 12px;
+  background: #f5efe8;
+}
+.invitation-map-canvas.active {
+  display: block;
+}
+.invitation-map-empty {
+  display: flex;
+  min-height: 260px;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  color: var(--text-mid);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  text-align: center;
+}
+.invitation-map-status {
+  min-height: 20px;
+  margin-top: 8px;
+  color: var(--text-mid);
+  font-size: 0.82rem;
+}
 .invitation-wide-btn {
   display: inline-flex;
   width: 100%;
