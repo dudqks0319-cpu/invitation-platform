@@ -20,9 +20,9 @@ builds.
 | EAS build id | `6456cecd-d38d-40c9-a804-85189d1c9400` |
 | EAS submission id | `2dfa0414-c11f-4899-a094-3fbf263c7c19` |
 | EAS build status | `FINISHED` |
-| EAS submission status | `IN_QUEUE`, `error: null` at 2026-05-19 22:54 KST |
+| EAS submission status | `FINISHED`, `error: null` |
 | IPA artifact | `https://expo.dev/artifacts/eas/doCY1SirwjM6oM9C2ZkDmu.ipa` |
-| App Store Connect upload result | Submission queued in EAS; Apple upload completion not yet verified |
+| App Store Connect upload result | Binary uploaded to App Store Connect; Apple processing pending |
 | App Store Connect TestFlight state | Not verified in App Store Connect UI |
 
 ## Root Cause
@@ -143,11 +143,11 @@ Build finished
 iOS app: https://expo.dev/artifacts/eas/doCY1SirwjM6oM9C2ZkDmu.ipa
 ```
 
-EAS status recheck at 2026-05-19 22:54 KST:
+EAS status recheck at 2026-05-19 22:58 KST:
 
 ```txt
 build status: FINISHED
-submission status: IN_QUEUE
+submission status: FINISHED
 submission error: null
 ```
 

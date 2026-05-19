@@ -239,7 +239,7 @@ includes("docs/app-store-connect-build47-packet.md", build47Packet, "NEXT_PUBLIC
 includes("docs/app-store-connect-build47-packet.md", build47Packet, "naverEnabled: false");
 includes("docs/app-store-connect-build47-packet.md", build47Packet, "real iPhone smoke test");
 includes("docs/app-store-connect-build48-packet.md", build48Packet, "Build `1.0.1 (48)`");
-includes("docs/app-store-connect-build48-packet.md", build48Packet, "EAS submission status | `IN_QUEUE`, `error: null`");
+includes("docs/app-store-connect-build48-packet.md", build48Packet, "EAS submission status | `FINISHED`, `error: null`");
 includes("docs/app-store-connect-build48-packet.md", build48Packet, "apps/mobile/app/_layout.tsx: present");
 includes("docs/app-store-connect-build48-packet.md", build48Packet, "route marker step1-basic: present");
 includes("docs/app-store-connect-build48-packet.md", build48Packet, "Previously uploaded TestFlight builds cannot be fully deleted");
@@ -331,7 +331,7 @@ includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "사진 포함 유료 발행 및 인앱 결제 기능은 현재 제출 빌드에서 비활성화");
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "TestFlight에서 다음 빌드를 설치");
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "currentReleaseBuildSelectedForVersion");
-includes("docs/current-release-state.md", currentReleaseState, "Current candidate | Build `1.0.1 (48)` built by EAS");
+includes("docs/current-release-state.md", currentReleaseState, "Current candidate | Build `1.0.1 (48)` uploaded to App Store Connect");
 includes("docs/current-release-state.md", currentReleaseState, "Native local build number | `48`");
 includes("docs/current-release-state.md", currentReleaseState, expectedBuild48.buildId);
 includes("docs/current-release-state.md", currentReleaseState, expectedBuild48.submissionId);
@@ -482,4 +482,4 @@ console.log(`- Checks: ${checks.length}`);
 console.log(`- Latest Built Candidate: ${expectedBuild48.appVersion} (${expectedBuild48.buildNumber})`);
 console.log(`- Latest EAS Build: ${expectedBuild48.buildId}`);
 console.log("- Device Verdict: builds 42 and 46 failed real iPhone launch evidence; build 48 still needs TestFlight real-device smoke proof.");
-console.log("- Required follow-up: wait for Build 48 submission and Apple processing, assign build 48 to TestFlight, pass the real iPhone smoke test, then finish Apple-side metadata evidence.");
+console.log("- Required follow-up: wait for Apple processing, assign build 48 to TestFlight, pass the real iPhone smoke test, then finish Apple-side metadata evidence.");
