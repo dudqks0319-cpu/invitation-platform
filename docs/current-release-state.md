@@ -1,6 +1,6 @@
 # InviteHub Current Release State
 
-Last updated: 2026-05-20 18:34 KST
+Last updated: 2026-05-20 20:20 KST
 
 This ledger is the single current-state reference for the App Store release
 track. Historical packets remain useful evidence, but this file decides what is
@@ -10,15 +10,19 @@ current.
 | --- | --- |
 | Local repo | `/Users/jyb-m3max/Desktop/codex/invitation-platform` |
 | Branch | `codex/testflight-launch-crash-fix` |
-| Local/remote state | Map/share implementation is committed and pushed on `codex/testflight-launch-crash-fix` |
-| Latest implementation commit uploaded | `dbe4ef7` |
-| Current candidate | Build `1.0.1 (49)` uploaded to App Store Connect and awaiting Apple processing/TestFlight real-device proof. |
+| Local/remote state | iOS map/share implementation and Android release preparation are committed and pushed on `codex/testflight-launch-crash-fix` |
+| Latest implementation commit uploaded | `c5714cc` |
+| Current candidate | iOS Build `1.0.1 (49)` is uploaded to App Store Connect and awaiting Apple processing/TestFlight real-device proof. Android Build `1.0.1 (51)` has a finished Play Store AAB and is blocked only on Google Play service-account submission setup. |
 | Native local build number | `49` |
 | App Store Connect app id | `6763630299` |
 | Bundle id | `com.invitehub.app` |
+| Android package | `com.invitehub.app` |
 | Display name | `초대장허브` |
-| EAS build id | `441a4e1a-662b-404b-8143-1c016cbc4a77` |
+| EAS iOS build id | `441a4e1a-662b-404b-8143-1c016cbc4a77` |
+| EAS Android build id | `b09d5796-44c7-4004-8068-541163bc0729` |
 | EAS submission id | `fe4a28ea-1467-44ed-a498-d7ace915dd6f` |
+| Google Play submission state | Android AAB build finished; `eas submit -p android --id b09d5796-44c7-4004-8068-541163bc0729 --profile production --non-interactive` is blocked because Google Service Account Keys are not set up for `com.invitehub.app`. |
+| Android AAB artifact | `https://expo.dev/artifacts/eas/nNVUbw1EtVUo4tw1ES1EnP.aab` |
 | App Store Connect / TestFlight state | Build 49 binary uploaded to App Store Connect; Apple processing/TestFlight group assignment are not yet verified |
 | Simulator result | Release simulator build can install and render InviteHub home; built app `Info.plist` shows `CFBundleVersion=46` |
 | Real-device result | Failed for installed `com.invitehub.app` `1.0.1 (46)`: connected iPhone launch produced iOS crash prompt and console launch terminated with `Unhandled JS Exception: Error: No routes found` / signal 6. Current local source can build and install a Release app to the iPhone, but post-install console launch is blocked by CoreDeviceService timeout. |
@@ -85,10 +89,44 @@ returned `HEAD 200`, RSVP returned `200`, and guestbook returned `200`.
 
 ## Next Action
 
-Use `docs/app-store-connect-build48-packet.md` as the current build evidence.
+For iOS, verify App Store Connect processing for Build 49, assign it to the
+internal TestFlight group, install on a real iPhone, and run the launch/free
+publish smoke test before selecting it for App Store review.
+
+For Android, create/link the Google Play Console app for package
+`com.invitehub.app`, connect a Play Console service account with internal-track
+release permission, then rerun:
+`eas submit -p android --id b09d5796-44c7-4004-8068-541163bc0729 --profile production`.
+
 Do not use `docs/app-store-connect-input-packet-build46.md` for final build
 selection. Latest local simulator evidence screenshot:
 `/private/tmp/invitehub-build46-release-home.png`.
+
+## 2026-05-20 Android Build 51 Google Play Candidate
+
+- Source commit uploaded: `c5714cc`.
+- Android package: `com.invitehub.app`.
+- App version: `1.0.1`.
+- Android versionCode: `51`.
+- EAS Android build id: `b09d5796-44c7-4004-8068-541163bc0729`.
+- AAB artifact: `https://expo.dev/artifacts/eas/nNVUbw1EtVUo4tw1ES1EnP.aab`.
+- Build status recheck returned `FINISHED`.
+- Local verification passed:
+  `npm run test -- --exclude='**/.claude/**' --run apps/mobile/entry.test.ts apps/mobile/app.config.test.ts apps/mobile/lib/map-api-config.test.ts apps/mobile/lib/map-links.test.ts`,
+  `npm --prefix apps/mobile run typecheck`,
+  `npm --prefix apps/mobile run lint`,
+  `git diff --check`, and JDK 21
+  `./gradlew :app:compileReleaseKotlin --no-daemon`.
+- Fixed Android release blockers before Build 51:
+  `android/app/build.gradle` now imports EAS signing config when
+  `eas-build.gradle` exists, native package is static `com.invitehub.app`, and
+  `MainActivity.kt` / `MainApplication.kt` are in package `com.invitehub.app`.
+- Previous Android Build 50 failed at `:app:compileReleaseKotlin` because native
+  Kotlin sources were still in `com.invitehub.app.dev` after the release package
+  switch.
+- Google Play submit remains blocked by account setup, not by code:
+  EAS reported `Google Service Account Keys cannot be set up in --non-interactive
+  mode` for package `com.invitehub.app`.
 
 ## 2026-05-19 Real iPhone Evidence
 

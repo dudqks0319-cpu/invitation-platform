@@ -353,7 +353,7 @@ includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "사진 포함 유료 발행 및 인앱 결제 기능은 현재 제출 빌드에서 비활성화");
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "TestFlight에서 다음 빌드를 설치");
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "currentReleaseBuildSelectedForVersion");
-includes("docs/current-release-state.md", currentReleaseState, "Current candidate | Build `1.0.1 (49)` uploaded to App Store Connect");
+includes("docs/current-release-state.md", currentReleaseState, "Current candidate | iOS Build `1.0.1 (49)` is uploaded to App Store Connect");
 includes("docs/current-release-state.md", currentReleaseState, "Native local build number | `49`");
 includes("docs/current-release-state.md", currentReleaseState, expectedBuild49.buildId);
 includes("docs/current-release-state.md", currentReleaseState, expectedBuild49.submissionId);
