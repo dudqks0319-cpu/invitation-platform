@@ -58,4 +58,22 @@ describe("mobile entry", () => {
     expect(infoPlist).toContain("<key>CFBundleName</key>");
     expect(infoPlist).not.toContain("<string>$(PRODUCT_NAME)</string>");
   });
+
+  it("keeps Android production metadata ready for Google Play", () => {
+    const buildGradle = readFileSync(join(mobileRoot, "android/app/build.gradle"), "utf8");
+    const manifest = readFileSync(join(mobileRoot, "android/app/src/main/AndroidManifest.xml"), "utf8");
+    const strings = readFileSync(join(mobileRoot, "android/app/src/main/res/values/strings.xml"), "utf8");
+    const easJson = readFileSync(join(mobileRoot, "eas.json"), "utf8");
+
+    expect(buildGradle).toContain('System.getenv("APP_ANDROID_PACKAGE")');
+    expect(buildGradle).toContain("applicationId inviteHubAndroidPackage");
+    expect(buildGradle).toContain("versionCode 49");
+    expect(buildGradle).toContain('versionName "1.0.1"');
+    expect(strings).toContain("<string name=\"app_name\">초대장허브</string>");
+    expect(manifest).not.toContain("com.android.vending.BILLING");
+    expect(manifest).not.toContain("android.permission.SYSTEM_ALERT_WINDOW");
+    expect(manifest).toContain('android:scheme="kakaomap"');
+    expect(manifest).toContain('android:scheme="nmap"');
+    expect(easJson).toContain('"track": "internal"');
+  });
 });
