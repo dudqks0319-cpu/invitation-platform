@@ -1,6 +1,6 @@
 # InviteHub Current Release State
 
-Last updated: 2026-05-20 20:20 KST
+Last updated: 2026-05-20 21:59 KST
 
 This ledger is the single current-state reference for the App Store release
 track. Historical packets remain useful evidence, but this file decides what is
@@ -12,7 +12,7 @@ current.
 | Branch | `codex/testflight-launch-crash-fix` |
 | Local/remote state | iOS map/share implementation and Android release preparation are committed and pushed on `codex/testflight-launch-crash-fix` |
 | Latest implementation commit uploaded | `c5714cc` |
-| Current candidate | iOS Build `1.0.1 (49)` is uploaded to App Store Connect and awaiting Apple processing/TestFlight real-device proof. Android Build `1.0.1 (51)` has a finished Play Store AAB and is blocked only on Google Play service-account submission setup. |
+| Current candidate | iOS Build `1.0.1 (49)` is processed in App Store Connect and assigned to the internal TestFlight group. Android Build `1.0.1 (51)` has a finished Play Store AAB. Both stores are now blocked by external release steps, not by local code. |
 | Native local build number | `49` |
 | App Store Connect app id | `6763630299` |
 | Bundle id | `com.invitehub.app` |
@@ -21,11 +21,11 @@ current.
 | EAS iOS build id | `441a4e1a-662b-404b-8143-1c016cbc4a77` |
 | EAS Android build id | `b09d5796-44c7-4004-8068-541163bc0729` |
 | EAS submission id | `fe4a28ea-1467-44ed-a498-d7ace915dd6f` |
-| Google Play submission state | Android AAB build finished; `eas submit -p android --id b09d5796-44c7-4004-8068-541163bc0729 --profile production --non-interactive` is blocked because Google Service Account Keys are not set up for `com.invitehub.app`. |
+| Google Play submission state | Android AAB build finished. Google Play Console currently shows the developer account creation flow for `dudqks0319@gmail.com`; submission cannot proceed until the user creates/pays for the Play developer account, creates the app/package, and then links a service account. |
 | Android AAB artifact | `https://expo.dev/artifacts/eas/nNVUbw1EtVUo4tw1ES1EnP.aab` |
-| App Store Connect / TestFlight state | Build 49 binary uploaded to App Store Connect; Apple processing/TestFlight group assignment are not yet verified |
+| App Store Connect / TestFlight state | Build 49 is processed/available in TestFlight, export-compliance blocking is not visible, and the build is assigned to internal group `Team (Expo)` with invitation count `1`. |
 | Simulator result | Release simulator build can install and render InviteHub home; built app `Info.plist` shows `CFBundleVersion=46` |
-| Real-device result | Failed for installed `com.invitehub.app` `1.0.1 (46)`: connected iPhone launch produced iOS crash prompt and console launch terminated with `Unhandled JS Exception: Error: No routes found` / signal 6. Current local source can build and install a Release app to the iPhone, but post-install console launch is blocked by CoreDeviceService timeout. |
+| Real-device result | Failed for installed `com.invitehub.app` `1.0.1 (46)`: connected iPhone launch produced iOS crash prompt and console launch terminated with `Unhandled JS Exception: Error: No routes found` / signal 6. Build 49 still needs TestFlight real-device launch/free-publish proof. Current physical iPhone `영빈` is visible to CoreDevice only as `unavailable`, and mobile automation currently sees only simulators. |
 | App Store version selection | Not verified as selected; App Store Connect browser session redirects to login |
 | App Store metadata/privacy/screenshots | Not verified as fully saved; App Store Connect browser session redirects to login |
 | Live guest publish API | Passed on `https://invitation-platform-plum.vercel.app`: free guest publish `200`, public invitation `HEAD 200`, RSVP `200`, guestbook `200` |
@@ -33,16 +33,17 @@ current.
 
 ## Current Verdict
 
-Do not mark the app as release-complete yet. Build `1.0.1 (49)` has been built
-and uploaded after the mobile map API integration. IPA inspection proves
-`/api/maps/config`, `kakaomap://search`, and `CFBundleVersion=49` are embedded.
-However, Apple processing, TestFlight internal-group assignment, and a real
-iPhone launch/free-publish smoke test for build 49 are still required.
+Do not mark the app as release-complete yet. Build `1.0.1 (49)` has been built,
+uploaded, processed by App Store Connect, and assigned to internal TestFlight
+group `Team (Expo)`. IPA inspection proves `/api/maps/config`,
+`kakaomap://search`, and `CFBundleVersion=49` are embedded. The remaining iOS
+P0 blocker is real iPhone TestFlight launch/free-publish smoke evidence for
+build 49.
 
 Do not select build 42, 46, or 47 for the App Store version. Build 42 and 46
 failed real iPhone launch evidence, and Build 47's IPA was built before the EAS
-archive route-exclusion fix. Do not select build 49 until it passes real-device
-launch and free-publish smoke QA.
+archive route-exclusion fix. Do not select build 49 for App Store review until
+it passes real-device launch and free-publish smoke QA.
 
 The current Vercel production deployment has `SUPABASE_GUEST_PUBLISHER_USER_ID`
 set and has been redeployed. Production smoke evidence from 2026-05-19:
@@ -51,8 +52,10 @@ returned `HEAD 200`, RSVP returned `200`, and guestbook returned `200`.
 
 ## Required P0 Evidence
 
-1. Wait for App Store Connect to finish processing Build 49.
-2. Assign build 49 to the internal TestFlight group.
+1. Build 49 App Store Connect processing: complete, recorded locally in
+   `docs/app-store-external-evidence.json`.
+2. Build 49 internal TestFlight group assignment: complete, recorded locally in
+   `docs/app-store-external-evidence.json`.
 3. Remove/expire builds 42, 46, and 47 from active testing if App Store Connect
    allows it.
 4. Install build 49 on the real iPhone.
@@ -70,7 +73,8 @@ returned `HEAD 200`, RSVP returned `200`, and guestbook returned `200`.
    publisher UUID exists, Vercel Production has
    `SUPABASE_GUEST_PUBLISHER_USER_ID`, and the production API smoke test passed.
 10. Re-authenticate App Store Connect in Chrome or provide the App Store Connect
-   API private key so Codex can verify/save the remaining Apple-side surfaces.
+   API private key only if the session expires before saving the remaining
+   Apple-side surfaces.
 
 ## Required P1 App Store Connect Evidence
 
@@ -89,11 +93,12 @@ returned `HEAD 200`, RSVP returned `200`, and guestbook returned `200`.
 
 ## Next Action
 
-For iOS, verify App Store Connect processing for Build 49, assign it to the
-internal TestFlight group, install on a real iPhone, and run the launch/free
-publish smoke test before selecting it for App Store review.
+For iOS, connect/unlock/trust the real iPhone, install Build 49 from TestFlight,
+and run the launch/free-publish smoke test before selecting it for App Store
+review.
 
-For Android, create/link the Google Play Console app for package
+For Android, finish Play Console developer account creation for
+`dudqks0319@gmail.com`, create/link the Google Play Console app for package
 `com.invitehub.app`, connect a Play Console service account with internal-track
 release permission, then rerun:
 `eas submit -p android --id b09d5796-44c7-4004-8068-541163bc0729 --profile production`.
@@ -131,6 +136,28 @@ selection. Latest local simulator evidence screenshot:
 - Google Play submit remains blocked by account setup, not by code:
   EAS reported `Google Service Account Keys cannot be set up in --non-interactive
   mode` for package `com.invitehub.app`.
+- Chrome Play Console check later showed the developer account creation page for
+  `dudqks0319@gmail.com`, with required account type selection and ownership
+  notice. This confirms Google Play submission is blocked before service-account
+  setup; account type, legal identity, payment, and terms must be completed by
+  the account owner.
+
+## 2026-05-20 Build 49 TestFlight Processing Evidence
+
+- Chrome App Store Connect TestFlight iOS page showed uploaded build
+  `1.0.1 (49)` with status `완료`, created May 20, 2026 1:03 AM.
+- The version `1.0.1` TestFlight table showed row `빌드 49`, status
+  `제출 준비 완료`, expiry `90일 후 만료`, group `Team (Expo)`, and invitation
+  count `1`.
+- No export-compliance blocking prompt was visible on the Build 49 TestFlight
+  row.
+- Evidence was recorded in the local, gitignored
+  `docs/app-store-external-evidence.json` for:
+  `currentTestFlightBuildProcessed`, `currentBuildExportComplianceSaved`, and
+  `currentBuildAssignedToInternalGroup`.
+- Real iPhone smoke remains unverified because the paired iPhone `영빈`
+  `8CCEF0FF-05C7-5A6F-BF68-38DF12FA83C4` is currently unavailable to
+  `xcrun devicectl`; mobile automation sees only simulators.
 
 ## 2026-05-19 Real iPhone Evidence
 

@@ -353,7 +353,7 @@ includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "사진 포함 유료 발행 및 인앱 결제 기능은 현재 제출 빌드에서 비활성화");
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "TestFlight에서 다음 빌드를 설치");
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "currentReleaseBuildSelectedForVersion");
-includes("docs/current-release-state.md", currentReleaseState, "Current candidate | iOS Build `1.0.1 (49)` is uploaded to App Store Connect");
+includes("docs/current-release-state.md", currentReleaseState, "Current candidate | iOS Build `1.0.1 (49)` is processed in App Store Connect");
 includes("docs/current-release-state.md", currentReleaseState, "Native local build number | `49`");
 includes("docs/current-release-state.md", currentReleaseState, expectedBuild49.buildId);
 includes("docs/current-release-state.md", currentReleaseState, expectedBuild49.submissionId);
@@ -361,7 +361,7 @@ includes("docs/current-release-state.md", currentReleaseState, expectedBuild49.a
 includes("docs/current-release-state.md", currentReleaseState, "Real-device result | Failed for installed `com.invitehub.app` `1.0.1 (46)`");
 includes("docs/current-release-state.md", currentReleaseState, "Do not select build 42");
 includes("docs/current-release-state.md", currentReleaseState, "Do not select build 42, 46, or 47");
-includes("docs/current-release-state.md", currentReleaseState, "Do not select build 49 until it passes real-device");
+includes("docs/current-release-state.md", currentReleaseState, "Do not select build 49 for App Store review until");
 includes("docs/current-release-state.md", currentReleaseState, "Unhandled JS Exception: Error: No routes found");
 includes("docs/app-store-connect-build46-packet.md", build46Packet, "Build 46 is not a valid App Store candidate");
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "Do not use it to select build 46");
@@ -504,4 +504,4 @@ console.log(`- Checks: ${checks.length}`);
 console.log(`- Latest Built Candidate: ${expectedBuild49.appVersion} (${expectedBuild49.buildNumber})`);
 console.log(`- Latest EAS Build: ${expectedBuild49.buildId}`);
 console.log("- Device Verdict: builds 42 and 46 failed real iPhone launch evidence; build 49 still needs TestFlight real-device smoke proof.");
-console.log("- Required follow-up: wait for Apple processing, assign build 49 to TestFlight, pass the real iPhone smoke test, then finish Apple-side metadata evidence.");
+console.log("- Required follow-up: pass the build 49 real iPhone smoke test, then finish Apple-side metadata/build selection evidence. Android remains blocked on Play Console account creation and service-account setup.");
