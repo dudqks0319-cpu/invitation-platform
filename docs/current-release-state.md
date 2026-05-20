@@ -111,6 +111,10 @@ selection. Latest local simulator evidence screenshot:
 - EAS Android build id: `b09d5796-44c7-4004-8068-541163bc0729`.
 - AAB artifact: `https://expo.dev/artifacts/eas/nNVUbw1EtVUo4tw1ES1EnP.aab`.
 - Build status recheck returned `FINISHED`.
+- AAB artifact was downloaded to
+  `/tmp/invitehub-android-build51/invitehub-1.0.1-51.aab`; it is a 65.8 MB Zip
+  App Bundle containing `BundleConfig.pb`, `base/manifest/AndroidManifest.xml`,
+  `base/dex/classes.dex`, and `base/assets/index.android.bundle`.
 - Local verification passed:
   `npm run test -- --exclude='**/.claude/**' --run apps/mobile/entry.test.ts apps/mobile/app.config.test.ts apps/mobile/lib/map-api-config.test.ts apps/mobile/lib/map-links.test.ts`,
   `npm --prefix apps/mobile run typecheck`,
