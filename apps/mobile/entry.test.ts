@@ -63,6 +63,11 @@ describe("mobile entry", () => {
     const buildGradle = readFileSync(join(mobileRoot, "android/app/build.gradle"), "utf8");
     const manifest = readFileSync(join(mobileRoot, "android/app/src/main/AndroidManifest.xml"), "utf8");
     const strings = readFileSync(join(mobileRoot, "android/app/src/main/res/values/strings.xml"), "utf8");
+    const mainActivity = readFileSync(join(mobileRoot, "android/app/src/main/java/com/invitehub/app/MainActivity.kt"), "utf8");
+    const mainApplication = readFileSync(
+      join(mobileRoot, "android/app/src/main/java/com/invitehub/app/MainApplication.kt"),
+      "utf8"
+    );
     const easJson = readFileSync(join(mobileRoot, "eas.json"), "utf8");
 
     expect(buildGradle).toContain("namespace 'com.invitehub.app'");
@@ -71,6 +76,10 @@ describe("mobile entry", () => {
     expect(buildGradle).toContain('versionName "1.0.1"');
     expect(buildGradle).toContain('file("./eas-build.gradle")');
     expect(buildGradle).toContain("apply from: easBuildGradle");
+    expect(mainActivity).toContain("package com.invitehub.app");
+    expect(mainApplication).toContain("package com.invitehub.app");
+    expect(mainActivity).not.toContain("com.invitehub.app.dev");
+    expect(mainApplication).not.toContain("com.invitehub.app.dev");
     expect(strings).toContain("<string name=\"app_name\">초대장허브</string>");
     expect(manifest).not.toContain("com.android.vending.BILLING");
     expect(manifest).not.toContain("android.permission.SYSTEM_ALERT_WINDOW");
