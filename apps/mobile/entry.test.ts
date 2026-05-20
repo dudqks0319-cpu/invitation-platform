@@ -69,6 +69,8 @@ describe("mobile entry", () => {
     expect(buildGradle).toContain("applicationId 'com.invitehub.app'");
     expect(buildGradle).toContain("versionCode 49");
     expect(buildGradle).toContain('versionName "1.0.1"');
+    expect(buildGradle).toContain('file("./eas-build.gradle")');
+    expect(buildGradle).toContain("apply from: easBuildGradle");
     expect(strings).toContain("<string name=\"app_name\">초대장허브</string>");
     expect(manifest).not.toContain("com.android.vending.BILLING");
     expect(manifest).not.toContain("android.permission.SYSTEM_ALERT_WINDOW");
