@@ -65,8 +65,8 @@ describe("mobile entry", () => {
     const strings = readFileSync(join(mobileRoot, "android/app/src/main/res/values/strings.xml"), "utf8");
     const easJson = readFileSync(join(mobileRoot, "eas.json"), "utf8");
 
-    expect(buildGradle).toContain('System.getenv("APP_ANDROID_PACKAGE")');
-    expect(buildGradle).toContain("applicationId inviteHubAndroidPackage");
+    expect(buildGradle).toContain("namespace 'com.invitehub.app'");
+    expect(buildGradle).toContain("applicationId 'com.invitehub.app'");
     expect(buildGradle).toContain("versionCode 49");
     expect(buildGradle).toContain('versionName "1.0.1"');
     expect(strings).toContain("<string name=\"app_name\">초대장허브</string>");

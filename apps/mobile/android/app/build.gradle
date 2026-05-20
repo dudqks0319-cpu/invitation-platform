@@ -3,8 +3,6 @@ apply plugin: "org.jetbrains.kotlin.android"
 apply plugin: "com.facebook.react"
 
 def projectRoot = rootDir.getAbsoluteFile().getParentFile().getAbsolutePath()
-def inviteHubAppVariant = System.getenv("APP_VARIANT") ?: "development"
-def inviteHubAndroidPackage = System.getenv("APP_ANDROID_PACKAGE") ?: (inviteHubAppVariant == "production" ? "com.invitehub.app" : "com.invitehub.app.dev")
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -89,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace inviteHubAndroidPackage
+    namespace 'com.invitehub.app'
     defaultConfig {
-        applicationId inviteHubAndroidPackage
+        applicationId 'com.invitehub.app'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 49
