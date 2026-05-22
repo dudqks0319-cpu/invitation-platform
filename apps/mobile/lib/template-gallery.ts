@@ -40,6 +40,16 @@ export const mobileTemplateGallery: MobileTemplateGalleryItem[] = [
   { id: "wedding-minimal", category: "wedding", name: "코너 블룸", badge: "결혼식", desc: "좌상단과 우하단 코너 플라워가 공간을 남겨주는 부드러운 웨딩 카드.", tags: ["#코너", "#플라워", "#소프트"], previewPath: "/images/custom/wedding/wedding-04.jpeg" },
   { id: "wedding-nature", category: "wedding", name: "골드 플로럴 보더", badge: "결혼식", desc: "섬세한 골드 라인과 플라워 코너가 어우러진 포멀 웨딩 초대장.", tags: ["#골드", "#포멀", "#보더"], previewPath: "/images/custom/wedding/wedding-05.jpeg" },
   { id: "wedding-rose-gold", category: "wedding", name: "로즈 골드 보더", badge: "결혼식", desc: "로즈 포인트와 골드 라인이 어우러진 화사한 웨딩 보더 카드.", tags: ["#로즈골드", "#보더", "#우아함"], previewPath: "/images/custom/wedding/wedding-06.jpeg" },
+  { id: "wedding-photo-minimal", category: "wedding", name: "아이보리 가든", badge: "결혼식", desc: "아이보리 종이 질감과 보태니컬 프레임이 은은한 웨딩 카드.", tags: ["#아이보리", "#가든", "#여백"], previewPath: "/images/custom/wedding/wedding-07.png" },
+  { id: "wedding-blush-petal", category: "wedding", name: "플라워 테라스", badge: "결혼식", desc: "꽃 장식과 야외 테라스 풍경이 어우러진 화사한 웨딩 카드.", tags: ["#테라스", "#플라워", "#야외"], previewPath: "/images/custom/wedding/wedding-08.png" },
+  { id: "wedding-traditional-knot", category: "wedding", name: "스카이 가든", badge: "결혼식", desc: "맑은 하늘과 화이트 플라워 아치가 열려 있는 야외 웨딩 카드.", tags: ["#스카이", "#가든", "#플라워"], previewPath: "/images/custom/wedding/wedding-09.png" },
+  { id: "wedding-envelope-photo", category: "wedding", name: "채플 가든", badge: "결혼식", desc: "화이트 채플과 풍성한 정원 플라워가 차분한 웨딩 카드.", tags: ["#채플", "#정원", "#화이트"], previewPath: "/images/custom/wedding/wedding-10.png" },
+  { id: "wedding-gold-botanical", category: "wedding", name: "베일 아치", badge: "결혼식", desc: "아이보리 커튼과 플라워 아치가 고급스럽게 감싸는 웨딩 카드.", tags: ["#아치", "#베일", "#플라워"], previewPath: "/images/custom/wedding/wedding-11.png" },
+  { id: "wedding-illustration-curtain", category: "wedding", name: "스카이 채플", badge: "결혼식", desc: "푸른 하늘과 하얀 커튼, 플라워 장식이 시원한 웨딩 카드.", tags: ["#스카이", "#커튼", "#채플"], previewPath: "/images/custom/wedding/wedding-12.png" },
+  { id: "wedding-botanical-vertical", category: "wedding", name: "화이트 아치", badge: "결혼식", desc: "화이트 아치와 보태니컬 플라워가 차분하게 둘러주는 웨딩 카드.", tags: ["#화이트", "#아치", "#보태니컬"], previewPath: "/images/custom/wedding/wedding-13.png" },
+  { id: "wedding-photo-overlay", category: "wedding", name: "섀도우 아치", badge: "결혼식", desc: "빛과 그림자가 드리운 아치 공간으로 고급스러운 여백을 살린 웨딩 카드.", tags: ["#아치", "#섀도우", "#프리미엄"], previewPath: "/images/custom/wedding/wedding-14.png" },
+  { id: "wedding-photo-hero", category: "wedding", name: "로즈 아치", badge: "결혼식", desc: "은은한 골드 아치와 장미 플라워가 우아하게 감싸는 웨딩 카드.", tags: ["#로즈", "#아치", "#골드"], previewPath: "/images/custom/wedding/wedding-15.png" },
+  { id: "wedding-green-arch", category: "wedding", name: "폴라로이드 카드", badge: "결혼식", desc: "폴라로이드 프레임 안에 초대 문구를 넣기 좋은 미니멀 웨딩 카드.", tags: ["#폴라로이드", "#미니멀", "#프레임"], previewPath: "/images/custom/wedding/wedding-16.png" },
   { id: "dol-cute", category: "dol", name: "테디 벌룬", badge: "돌잔치", desc: "곰돌이와 풍선이 반겨주는 따뜻한 노란빛 돌잔치 카드.", tags: ["#곰돌이", "#풍선", "#옐로우"], previewPath: "/images/custom/dol/dol-card-01.jpeg" },
   { id: "dol-pastel", category: "dol", name: "리본 크라운", badge: "돌잔치", desc: "핑크와 라벤더 리본, 왕관 장식이 돋보이는 사랑스러운 돌잔치 카드.", tags: ["#리본", "#크라운", "#핑크"], previewPath: "/images/custom/dol/dol-card-02.jpeg" },
   { id: "dol-blue", category: "dol", name: "우주 로켓", badge: "돌잔치", desc: "달과 로켓, 별 장식이 가득한 블루 우주 테마 돌잔치 카드.", tags: ["#우주", "#블루", "#별"], previewPath: "/images/custom/dol/dol-card-03.jpeg" },
@@ -74,6 +84,8 @@ export const featuredMobileTemplateIds = [
   "wedding-modern",
   "wedding-minimal",
   "wedding-floral",
+  "wedding-photo-hero",
+  "wedding-green-arch",
   "dol-nature",
   "hwangap-floral"
 ] as const;
@@ -83,7 +95,7 @@ export const homeTemplateSections: HomeTemplateSection[] = [
     key: "wedding",
     title: "청첩장 템플릿",
     subtitle: "로맨틱하고 단정한 웨딩 디자인",
-    templateIds: ["wedding-rose-gold", "wedding-nature", "wedding-classic"]
+    templateIds: ["wedding-photo-hero", "wedding-photo-overlay", "wedding-rose-gold"]
   },
   {
     key: "dol",

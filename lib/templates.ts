@@ -43,6 +43,96 @@ export const templates: TemplatePreset[] = [
     html: imageOnly("tmpl-character-card wedding-rose-gold", "/images/custom/wedding/wedding-06.jpeg")
   },
   {
+    id: "wedding-photo-minimal",
+    category: "wedding",
+    name: "아이보리 가든",
+    badge: "결혼식",
+    desc: "아이보리 종이 질감과 보태니컬 프레임이 은은한 웨딩 카드",
+    tags: ["#아이보리", "#가든", "#여백"],
+    html: imageOnly("tmpl-character-card wedding-photo-minimal", "/images/custom/wedding/wedding-07.png")
+  },
+  {
+    id: "wedding-blush-petal",
+    category: "wedding",
+    name: "플라워 테라스",
+    badge: "결혼식",
+    desc: "꽃 장식과 야외 테라스 풍경이 어우러진 화사한 웨딩 카드",
+    tags: ["#테라스", "#플라워", "#야외"],
+    html: imageOnly("tmpl-character-card wedding-blush-petal", "/images/custom/wedding/wedding-08.png")
+  },
+  {
+    id: "wedding-traditional-knot",
+    category: "wedding",
+    name: "스카이 가든",
+    badge: "결혼식",
+    desc: "맑은 하늘과 화이트 플라워 아치가 열려 있는 야외 웨딩 카드",
+    tags: ["#스카이", "#가든", "#플라워"],
+    html: imageOnly("tmpl-character-card wedding-traditional-knot", "/images/custom/wedding/wedding-09.png")
+  },
+  {
+    id: "wedding-envelope-photo",
+    category: "wedding",
+    name: "채플 가든",
+    badge: "결혼식",
+    desc: "화이트 채플과 풍성한 정원 플라워가 차분한 웨딩 카드",
+    tags: ["#채플", "#정원", "#화이트"],
+    html: imageOnly("tmpl-character-card wedding-envelope-photo", "/images/custom/wedding/wedding-10.png")
+  },
+  {
+    id: "wedding-gold-botanical",
+    category: "wedding",
+    name: "베일 아치",
+    badge: "결혼식",
+    desc: "아이보리 커튼과 플라워 아치가 고급스럽게 감싸는 웨딩 카드",
+    tags: ["#아치", "#베일", "#플라워"],
+    html: imageOnly("tmpl-character-card wedding-gold-botanical", "/images/custom/wedding/wedding-11.png")
+  },
+  {
+    id: "wedding-illustration-curtain",
+    category: "wedding",
+    name: "스카이 채플",
+    badge: "결혼식",
+    desc: "푸른 하늘과 하얀 커튼, 플라워 장식이 시원한 웨딩 카드",
+    tags: ["#스카이", "#커튼", "#채플"],
+    html: imageOnly("tmpl-character-card wedding-illustration-curtain", "/images/custom/wedding/wedding-12.png")
+  },
+  {
+    id: "wedding-botanical-vertical",
+    category: "wedding",
+    name: "화이트 아치",
+    badge: "결혼식",
+    desc: "화이트 아치와 보태니컬 플라워가 차분하게 둘러주는 웨딩 카드",
+    tags: ["#화이트", "#아치", "#보태니컬"],
+    html: imageOnly("tmpl-character-card wedding-botanical-vertical", "/images/custom/wedding/wedding-13.png")
+  },
+  {
+    id: "wedding-photo-overlay",
+    category: "wedding",
+    name: "섀도우 아치",
+    badge: "결혼식",
+    desc: "빛과 그림자가 드리운 아치 공간으로 고급스러운 여백을 살린 웨딩 카드",
+    tags: ["#아치", "#섀도우", "#프리미엄"],
+    html: imageOnly("tmpl-character-card wedding-photo-overlay", "/images/custom/wedding/wedding-14.png")
+  },
+  {
+    id: "wedding-photo-hero",
+    category: "wedding",
+    name: "로즈 아치",
+    badge: "결혼식",
+    desc: "은은한 골드 아치와 장미 플라워가 우아하게 감싸는 웨딩 카드",
+    tags: ["#로즈", "#아치", "#골드"],
+    html: imageOnly("tmpl-character-card wedding-photo-hero", "/images/custom/wedding/wedding-15.png")
+  },
+  {
+    id: "wedding-green-arch",
+    category: "wedding",
+    name: "폴라로이드 카드",
+    badge: "결혼식",
+    desc: "폴라로이드 프레임 안에 초대 문구를 넣기 좋은 미니멀 웨딩 카드",
+    tags: ["#폴라로이드", "#미니멀", "#프레임"],
+    html: imageOnly("tmpl-character-card wedding-green-arch", "/images/custom/wedding/wedding-16.png")
+  },
+  {
     id: "dol-cute",
     category: "dol",
     name: "테디 벌룬",
