@@ -1,0 +1,7 @@
+title = "InviteHub gitleaks configuration"
+
+[allowlist]
+description = "Generated CocoaPods lockfiles contain SDK names that can match generic secret patterns."
+paths = [
+  '''apps/mobile/ios/Podfile\.lock''',
+]

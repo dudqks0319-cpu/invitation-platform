@@ -31,4 +31,21 @@ describe("native startup safety", () => {
 
     expect(podfileProperties["ios.buildReactNativeFromSource"]).toBe("true");
   });
+
+  it("keeps Expo Constants manifest generation safe when project paths contain spaces", () => {
+    const podfile = readFileSync(join(mobileRoot, "ios/Podfile"), "utf8");
+
+    expect(podfile).toContain("patch_expo_constants_manifest_script_for_paths_with_spaces");
+    expect(podfile).toContain('PROJECT_DIR_BASENAME=$(basename "$PROJECT_DIR")');
+    expect(podfile).toContain('cd "$PROJECT_ROOT" || exit');
+    expect(podfile).toContain('"$RESOURCE_DEST"');
+  });
+
+  it("keeps ignored development Android package sources out of release compilation", () => {
+    const buildGradle = readFileSync(join(mobileRoot, "android/app/build.gradle"), "utf8");
+
+    expect(buildGradle).toContain("java.exclude '**/dev/**'");
+    expect(buildGradle).toContain("tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile)");
+    expect(buildGradle).toContain("exclude '**/dev/**'");
+  });
 });

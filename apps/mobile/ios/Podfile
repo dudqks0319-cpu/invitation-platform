@@ -12,6 +12,48 @@ def ccache_enabled?(podfile_properties)
   podfile_properties['apple.ccacheEnabled'] == 'true'
 end
 
+def patch_expo_constants_manifest_script_for_paths_with_spaces(installer)
+  installer.pods_project.targets.each do |target|
+    next unless target.name == 'EXConstants'
+
+    target.shell_script_build_phases.each do |phase|
+      next unless phase.name == '[CP-User] Generate app.config for prebuilt Constants.manifest'
+
+      phase.shell_script = <<-'SCRIPT'
+#!/usr/bin/env bash
+
+set -eo pipefail
+
+DEST="$CONFIGURATION_BUILD_DIR"
+RESOURCE_BUNDLE_NAME="EXConstants.bundle"
+EXPO_CONSTANTS_PACKAGE_DIR="$(cd "$PODS_TARGET_SRCROOT/.." && pwd -P)"
+
+PROJECT_DIR_BASENAME=$(basename "$PROJECT_DIR")
+if [ "x$PROJECT_DIR_BASENAME" != "xPods" ]; then
+  exit 0
+fi
+
+PROJECT_ROOT=${PROJECT_ROOT:-"$PROJECT_DIR/../.."}
+PROJECT_ROOT=${PROJECT_ROOT:-"$EXPO_CONSTANTS_PACKAGE_DIR/../.."}
+
+cd "$PROJECT_ROOT" || exit
+
+if [ "$BUNDLE_FORMAT" == "shallow" ]; then
+  RESOURCE_DEST="$DEST/$RESOURCE_BUNDLE_NAME"
+elif [ "$BUNDLE_FORMAT" == "deep" ]; then
+  RESOURCE_DEST="$DEST/$RESOURCE_BUNDLE_NAME/Contents/Resources"
+  mkdir -p "$RESOURCE_DEST"
+else
+  echo "Unsupported bundle format: $BUNDLE_FORMAT"
+  exit 1
+fi
+
+"${EXPO_CONSTANTS_PACKAGE_DIR}/scripts/with-node.sh" "${EXPO_CONSTANTS_PACKAGE_DIR}/scripts/getAppConfig.js" "$PROJECT_ROOT" "$RESOURCE_DEST"
+SCRIPT
+    end
+  end
+end
+
 ENV['EX_DEV_CLIENT_NETWORK_INSPECTOR'] ||= podfile_properties['EX_DEV_CLIENT_NETWORK_INSPECTOR']
 ENV['RCT_USE_RN_DEP'] ||= '1' if podfile_properties['ios.buildReactNativeFromSource'] != 'true'
 ENV['RCT_USE_PREBUILT_RNCORE'] ||= '1' if podfile_properties['ios.buildReactNativeFromSource'] != 'true'
@@ -59,5 +101,6 @@ target 'InviteHub' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => ccache_enabled?(podfile_properties),
     )
+    patch_expo_constants_manifest_script_for_paths_with_spaces(installer)
   end
 end

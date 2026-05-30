@@ -102,6 +102,11 @@ android {
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }
+    sourceSets {
+        main {
+            java.exclude '**/dev/**'
+        }
+    }
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
@@ -135,6 +140,10 @@ android {
     androidResources {
         ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
     }
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    exclude '**/dev/**'
 }
 
 // Apply static values from `gradle.properties` to the `android.packagingOptions`

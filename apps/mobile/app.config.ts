@@ -2,14 +2,66 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 
-const appJson = JSON.parse(
-  readFileSync(path.join(__dirname, "app.json"), "utf8")
+const packageJson = JSON.parse(
+  readFileSync(path.join(__dirname, "package.json"), "utf8")
 );
 const resolveFromMobile = createRequire(path.join(__dirname, "package.json"));
 
 type ExpoPlugin = string | [string, Record<string, unknown>?];
 
-const baseConfig = appJson.expo;
+const baseConfig = {
+  name: "초대장허브",
+  slug: "invitehub",
+  version: "1.0.1",
+  orientation: "portrait",
+  scheme: "invitehub",
+  userInterfaceStyle: "automatic",
+  ios: {
+    bundleIdentifier: "com.invitehub.app.dev",
+    supportsTablet: false,
+    usesAppleSignIn: true,
+    infoPlist: {
+      CFBundleName: "초대장허브",
+      NSCameraUsageDescription: "초대장에 넣을 사진을 촬영하기 위해 카메라 접근이 필요합니다.",
+      NSPhotoLibraryUsageDescription: "초대장에 넣을 사진을 선택하기 위해 사진 라이브러리 접근이 필요합니다.",
+      LSApplicationQueriesSchemes: [
+        "kakaokompassauth",
+        "kakaolink",
+        "kakaomap",
+        "nmap"
+      ]
+    },
+    config: {}
+  },
+  plugins: [
+    "expo-router",
+    "expo-web-browser",
+    [
+      "expo-build-properties",
+      {
+        ios: {
+          deploymentTarget: "15.1"
+        },
+        android: {
+          kotlinVersion: "2.1.20"
+        }
+      }
+    ]
+  ],
+  experiments: {
+    typedRoutes: false
+  },
+  extra: {
+    router: {},
+    eas: {
+      projectId: "e253cb22-fbc1-4f8b-a172-0fdb16ededd3"
+    }
+  },
+  owner: "jyb1126",
+  android: {
+    package: "com.invitehub.app.dev"
+  }
+};
 const buildProfile = process.env.EAS_BUILD_PROFILE ?? "";
 const variant = process.env.APP_VARIANT ?? (buildProfile === "production" ? "production" : "development");
 const isProduction = variant === "production";
@@ -23,6 +75,15 @@ const paidPublishingEnabled = parsePublicBooleanFlag(process.env.EXPO_PUBLIC_ENA
 const nativeSocialAuthEnabled = parsePublicBooleanFlag(process.env.EXPO_PUBLIC_ENABLE_NATIVE_SOCIAL_AUTH);
 
 function hasPackage(packageName: string) {
+  const declaredDependencies = {
+    ...(packageJson.dependencies ?? {}),
+    ...(packageJson.devDependencies ?? {})
+  };
+
+  if (!Object.prototype.hasOwnProperty.call(declaredDependencies, packageName)) {
+    return false;
+  }
+
   try {
     resolveFromMobile.resolve(`${packageName}/package.json`);
     return true;
