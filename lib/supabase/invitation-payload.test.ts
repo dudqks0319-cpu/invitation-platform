@@ -62,4 +62,24 @@ describe("invitation payload normalization", () => {
     expect(payload.backgroundMusicUrl).toBe("https://cdn.example.com/music.mp3");
     expect(payload.thankYouMessage).toBe("함께해 주셔서 감사합니다.");
   });
+
+  it("preserves published template snapshots for public rendering", () => {
+    const payload = normalizeInvitationPayload({
+      templateSnapshot: {
+        templateAssetId: "wedding-classic",
+        templateAssetVersion: 3,
+        backgroundImageUrl: "/images/custom/wedding/wedding-01.jpeg",
+        canvas: { width: 1080, height: 1920 },
+        safeAreas: {},
+        photoSlots: [],
+        palette: {},
+        typography: {}
+      }
+    });
+
+    expect(payload.templateAssetVersion).toBe(3);
+    expect(payload.templateAssetId).toBe("wedding-classic");
+    expect(payload.templateSnapshot?.templateAssetVersion).toBe(3);
+    expect(payload.templateSnapshot?.backgroundImageUrl).toBe("/images/custom/wedding/wedding-01.jpeg");
+  });
 });

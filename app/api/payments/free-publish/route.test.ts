@@ -41,6 +41,8 @@ function createServerClient(userId: string | null) {
   };
 }
 
+const updateMock = vi.fn();
+
 function createAdminClient(withPhotos = false) {
   return {
     from(table: string) {
@@ -67,7 +69,8 @@ function createAdminClient(withPhotos = false) {
               error: null
             };
           },
-          update() {
+          update(payload: unknown) {
+            updateMock(payload);
             return {
               eq() {
                 return Promise.resolve({ error: null });
@@ -85,6 +88,7 @@ function createAdminClient(withPhotos = false) {
 describe("POST /api/payments/free-publish", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    updateMock.mockReset();
   });
 
   it("publishes when the current draft is free", async () => {
@@ -97,6 +101,19 @@ describe("POST /api/payments/free-publish", () => {
     expect(response.status).toBe(200);
     expect(payload.success).toBe(true);
     expect(payload.slug).toBe("invite-123");
+    expect(updateMock).toHaveBeenCalledWith(expect.objectContaining({
+      payload: expect.objectContaining({
+        templateSnapshot: expect.objectContaining({
+          templateAssetId: "wedding-classic",
+          backgroundImageUrl: expect.stringContaining("/images/")
+        })
+      }),
+      paid_payload_snapshot: expect.objectContaining({
+        templateSnapshot: expect.objectContaining({
+          templateAssetId: "wedding-classic"
+        })
+      })
+    }));
   });
 
   it("publishes when the draft includes user photos", async () => {

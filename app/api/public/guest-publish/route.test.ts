@@ -100,6 +100,19 @@ describe("POST /api/public/guest-publish", () => {
     expect(response.status).toBe(200);
     expect(payload.success).toBe(true);
     expect(payload.invitationId).toBe("inv-1");
+    expect(insertMock).toHaveBeenCalledWith(expect.objectContaining({
+      payload: expect.objectContaining({
+        templateSnapshot: expect.objectContaining({
+          templateAssetId: "wedding-classic",
+          backgroundImageUrl: expect.stringContaining("/images/")
+        })
+      }),
+      paid_payload_snapshot: expect.objectContaining({
+        templateSnapshot: expect.objectContaining({
+          templateAssetId: "wedding-classic"
+        })
+      })
+    }));
   });
 
   it("uses a configured guest publisher user id without listing auth users", async () => {

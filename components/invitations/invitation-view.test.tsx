@@ -76,6 +76,33 @@ describe("InvitationView", () => {
     expect(document.body.textContent).not.toContain("방명록");
   });
 
+  it("renders the published template snapshot background when present", () => {
+    const payload = normalizeDraft({
+      templateId: "wedding-classic",
+      templateSnapshot: {
+        templateAssetId: "published-template",
+        templateAssetVersion: 4,
+        backgroundImageUrl: "/images/custom/wedding/wedding-02.jpeg",
+        canvas: { width: 1080, height: 1920 },
+        safeAreas: {},
+        photoSlots: [],
+        palette: {},
+        typography: {}
+      }
+    });
+
+    document.body.innerHTML = renderToStaticMarkup(
+      <InvitationView
+        mode="public"
+        payload={payload}
+        shareUrl="/invitations/demo"
+        slug="demo"
+      />
+    );
+
+    expect(document.body.innerHTML).toContain("/images/custom/wedding/wedding-02.jpeg");
+  });
+
   it("prefers a server-provided Kakao platform key over client env lookup", () => {
     const config = resolveInvitationPlatformConfig({
       draftKakaoJsKey: "",

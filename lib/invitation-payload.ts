@@ -39,6 +39,65 @@ export type InvitationSectionPolicies = Record<InvitationSectionKey, SectionPoli
 
 type SectionAction = "view" | "submit";
 
+export type TemplateSafeArea = {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+};
+
+export type TemplatePhotoSlot = {
+  key: string;
+  shape: "rect" | "roundedRect" | "circle" | "polaroid";
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  radius?: number;
+  rotation?: number;
+  zIndex: number;
+  required: boolean;
+};
+
+export type PhotoPlacement = {
+  slotKey: string;
+  assetPath: string;
+  originalAssetPath?: string;
+  crop: {
+    x: number;
+    y: number;
+    scale: number;
+    rotate?: number;
+  };
+  fit: "cover" | "contain";
+  focalPoint?: {
+    x: number;
+    y: number;
+  };
+};
+
+type TemplateMetadataValue =
+  | string
+  | number
+  | boolean
+  | null
+  | TemplateMetadataValue[]
+  | { [key: string]: TemplateMetadataValue | undefined };
+
+export type PublishedTemplateSnapshot = {
+  templateAssetId: string;
+  templateAssetVersion: number;
+  backgroundImageUrl: string;
+  canvas: {
+    width: number;
+    height: number;
+  };
+  safeAreas: Record<string, TemplateSafeArea>;
+  photoSlots: TemplatePhotoSlot[];
+  palette: Record<string, string>;
+  typography: Record<string, TemplateMetadataValue>;
+};
+
 const submitSections = new Set<InvitationSectionKey>(["rsvp", "guestbook"]);
 
 export const defaultSectionPolicies: InvitationSectionPolicies = invitationSectionKeys.reduce(
@@ -169,12 +228,80 @@ const imageReferenceSchema = z
   .refine(
     (value) =>
       value === "" ||
+      value.startsWith("/") ||
       value.startsWith("http://") ||
       value.startsWith("https://") ||
       value.startsWith("data:"),
     "이미지 참조 형식이 올바르지 않습니다."
   )
   .catch("");
+
+const ratioSchema = z.coerce.number().min(0).max(1);
+
+const templateSafeAreaSchema = z.object({
+  x: ratioSchema,
+  y: ratioSchema,
+  w: ratioSchema,
+  h: ratioSchema
+});
+
+const templatePhotoSlotSchema = z.object({
+  key: z.string().trim().min(1).max(60),
+  shape: z.enum(["rect", "roundedRect", "circle", "polaroid"]).default("roundedRect"),
+  x: ratioSchema,
+  y: ratioSchema,
+  w: ratioSchema,
+  h: ratioSchema,
+  radius: ratioSchema.optional(),
+  rotation: z.coerce.number().min(-180).max(180).optional(),
+  zIndex: z.coerce.number().int().min(0).max(100).default(0),
+  required: z.boolean().default(false)
+});
+
+export const photoPlacementSchema = z.object({
+  slotKey: z.string().trim().min(1).max(60),
+  assetPath: z.string().trim().min(1).max(500),
+  originalAssetPath: z.string().trim().max(500).optional(),
+  crop: z.object({
+    x: ratioSchema.default(0.5),
+    y: ratioSchema.default(0.5),
+    scale: z.coerce.number().min(0.1).max(8).default(1),
+    rotate: z.coerce.number().min(-180).max(180).optional()
+  }),
+  fit: z.enum(["cover", "contain"]).default("cover"),
+  focalPoint: z.object({
+    x: ratioSchema,
+    y: ratioSchema
+  }).optional()
+});
+
+const templateMetadataValueSchema: z.ZodType<TemplateMetadataValue> = z.lazy(() =>
+  z.union([
+    z.string(),
+    z.number(),
+    z.boolean(),
+    z.null(),
+    z.array(templateMetadataValueSchema),
+    z.record(z.string(), templateMetadataValueSchema)
+  ])
+);
+
+const publishedTemplateSnapshotObjectSchema = z
+  .object({
+    templateAssetId: z.string().trim().min(1).max(120),
+    templateAssetVersion: z.coerce.number().int().positive().default(1),
+    backgroundImageUrl: imageReferenceSchema,
+    canvas: z.object({
+      width: z.coerce.number().int().min(1).max(10000).default(1080),
+      height: z.coerce.number().int().min(1).max(10000).default(1920)
+    }).default({ width: 1080, height: 1920 }),
+    safeAreas: z.record(z.string(), templateSafeAreaSchema).default({}),
+    photoSlots: z.array(templatePhotoSlotSchema).default([]),
+    palette: z.record(z.string(), z.string()).default({}),
+    typography: z.record(z.string(), templateMetadataValueSchema).default({})
+  });
+
+export const publishedTemplateSnapshotSchema = publishedTemplateSnapshotObjectSchema.nullable().catch(null);
 
 const legacyInvitationPayloadSchema = z
   .object({
@@ -222,6 +349,11 @@ const legacyInvitationPayloadSchema = z
     galleryImagePaths: z.array(z.string().trim()).optional(),
     mainImageData: imageReferenceSchema.optional(),
     backgroundImageData: imageReferenceSchema.optional(),
+    templateAssetId: z.string().trim().optional(),
+    templateAssetVersion: z.coerce.number().int().positive().optional(),
+    templateSnapshot: publishedTemplateSnapshotSchema.optional(),
+    photoPlacements: z.array(photoPlacementSchema).catch([]).optional(),
+    sectionOrder: z.array(z.enum(invitationSectionKeys)).catch([]).optional(),
     sections: z.unknown().optional()
   })
   .passthrough();
@@ -273,6 +405,11 @@ export const invitationDraftPayloadSchema = legacyInvitationPayloadSchema.transf
   galleryImagePaths: Array.isArray(raw.galleryImagePaths)
     ? raw.galleryImagePaths.filter((item): item is string => typeof item === "string")
     : [],
+  templateAssetId: raw.templateAssetId || raw.templateId || "wedding-classic",
+  templateAssetVersion: raw.templateAssetVersion || raw.templateSnapshot?.templateAssetVersion || 1,
+  templateSnapshot: raw.templateSnapshot ?? null,
+  photoPlacements: raw.photoPlacements ?? [],
+  sectionOrder: raw.sectionOrder?.length ? raw.sectionOrder : [...invitationSectionKeys],
   sections: normalizeSectionPolicies(raw.sections)
 }));
 

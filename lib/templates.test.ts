@@ -1,4 +1,10 @@
-import { templates } from "@/lib/templates";
+import {
+  attachPublishedTemplateSnapshot,
+  buildPublishedTemplateSnapshot,
+  getTemplateBackgroundImageUrl,
+  templates
+} from "@/lib/templates";
+import { normalizeDraft } from "@/lib/invitation-payload";
 
 const newWeddingTemplateIds = [
   "wedding-photo-minimal",
@@ -46,5 +52,33 @@ describe("template artwork mapping", () => {
       expect(template?.html).toContain("/images/custom/wedding/");
       expect(template?.html).toContain(".png");
     }
+  });
+
+  it("builds a stable template snapshot from the selected background artwork", () => {
+    const snapshot = buildPublishedTemplateSnapshot("wedding-classic");
+
+    expect(snapshot).toMatchObject({
+      templateAssetId: "wedding-classic",
+      templateAssetVersion: 1,
+      canvas: {
+        width: 1080,
+        height: 1920
+      }
+    });
+    expect(snapshot?.backgroundImageUrl).toBe(
+      getTemplateBackgroundImageUrl(templates.find((item) => item.id === "wedding-classic")!)
+    );
+    expect(snapshot?.photoSlots[0]).toMatchObject({
+      key: "main",
+      required: false
+    });
+  });
+
+  it("attaches a template snapshot to draft payloads before publishing", () => {
+    const payload = attachPublishedTemplateSnapshot(normalizeDraft({ templateId: "wedding-classic" }));
+
+    expect(payload.templateAssetId).toBe("wedding-classic");
+    expect(payload.templateAssetVersion).toBe(1);
+    expect(payload.templateSnapshot?.backgroundImageUrl).toContain("/images/");
   });
 });

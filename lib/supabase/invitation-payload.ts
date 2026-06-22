@@ -1,6 +1,9 @@
 import { z } from "zod";
 import {
+  invitationSectionKeys,
   normalizeSectionPolicies,
+  photoPlacementSchema,
+  publishedTemplateSnapshotSchema,
   type InvitationSectionPolicies
 } from "@/lib/invitation-payload";
 
@@ -48,6 +51,11 @@ const payloadSchema = z.object({
   backgroundImagePath: z.string().default(""),
   galleryImages: z.array(z.string()).default([]),
   galleryImagePaths: z.array(z.string()).default([]),
+  templateAssetId: z.string().default("wedding-classic"),
+  templateAssetVersion: z.coerce.number().int().positive().default(1),
+  templateSnapshot: publishedTemplateSnapshotSchema.optional().default(null),
+  photoPlacements: z.array(photoPlacementSchema).default([]),
+  sectionOrder: z.array(z.enum(invitationSectionKeys)).default([...invitationSectionKeys]),
   sections: z.unknown().optional()
 });
 
@@ -82,6 +90,8 @@ export function normalizeInvitationPayload(input: unknown) {
 
   return {
     ...parsed,
+    templateAssetId: parsed.templateSnapshot?.templateAssetId || parsed.templateAssetId || parsed.templateId,
+    templateAssetVersion: parsed.templateSnapshot?.templateAssetVersion || parsed.templateAssetVersion,
     sections: normalizeSectionPolicies(raw.sections)
   };
 }

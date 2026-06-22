@@ -1,3 +1,5 @@
+import type { InvitationDraftPayload, PublishedTemplateSnapshot } from "@/lib/invitation-payload";
+
 export type TemplatePreset = {
   id: string;
   category: string;
@@ -8,10 +10,26 @@ export type TemplatePreset = {
   html: string;
 };
 
-function imageOnly(className: string, src: string) {
+export function imageOnly(className: string, src: string) {
   return `<div class="${className} tmpl-standalone-art">
     <img class="tmpl-card-image" src="${src}" alt="" loading="lazy" decoding="async" />
   </div>`;
+}
+
+export function getTemplateBackgroundImageUrl(template: Pick<TemplatePreset, "html">) {
+  const match = template.html.match(/<img\b[^>]*\bsrc="([^"]+)"/i);
+  return match?.[1] ?? "";
+}
+
+export function createTemplatePresetFromSnapshot(
+  snapshot: PublishedTemplateSnapshot,
+  fallback: TemplatePreset
+): TemplatePreset {
+  return {
+    ...fallback,
+    id: snapshot.templateAssetId,
+    html: imageOnly("tmpl-character-card published-template-snapshot", snapshot.backgroundImageUrl)
+  };
 }
 
 export const templates: TemplatePreset[] = [
@@ -220,4 +238,80 @@ export const templateCategories = [
 
 export function getTemplatesByCategory(category: string) {
   return templates.filter((template) => template.category === category);
+}
+
+export function buildPublishedTemplateSnapshot(templateId: string): PublishedTemplateSnapshot | null {
+  const template = templates.find((item) => item.id === templateId);
+  if (!template) {
+    return null;
+  }
+
+  const backgroundImageUrl = getTemplateBackgroundImageUrl(template);
+  if (!backgroundImageUrl) {
+    return null;
+  }
+
+  return {
+    templateAssetId: template.id,
+    templateAssetVersion: 1,
+    backgroundImageUrl,
+    canvas: {
+      width: 1080,
+      height: 1920
+    },
+    safeAreas: {
+      heroText: {
+        x: 0.14,
+        y: 0.34,
+        w: 0.72,
+        h: 0.48
+      },
+      mainPhoto: {
+        x: 0.18,
+        y: 0.08,
+        w: 0.64,
+        h: 0.24
+      }
+    },
+    photoSlots: [
+      {
+        key: "main",
+        shape: "roundedRect",
+        x: 0.18,
+        y: 0.08,
+        w: 0.64,
+        h: 0.24,
+        radius: 0.04,
+        zIndex: 1,
+        required: false
+      }
+    ],
+    palette: {},
+    typography: {
+      source: "static-template-v1",
+      category: template.category
+    }
+  };
+}
+
+export function attachPublishedTemplateSnapshot(payload: InvitationDraftPayload): InvitationDraftPayload {
+  if (payload.templateSnapshot?.backgroundImageUrl) {
+    return {
+      ...payload,
+      templateAssetId: payload.templateSnapshot.templateAssetId,
+      templateAssetVersion: payload.templateSnapshot.templateAssetVersion
+    };
+  }
+
+  const snapshot = buildPublishedTemplateSnapshot(payload.templateId);
+  if (!snapshot) {
+    return payload;
+  }
+
+  return {
+    ...payload,
+    templateAssetId: snapshot.templateAssetId,
+    templateAssetVersion: snapshot.templateAssetVersion,
+    templateSnapshot: snapshot
+  };
 }

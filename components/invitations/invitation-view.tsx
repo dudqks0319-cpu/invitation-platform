@@ -25,7 +25,7 @@ import {
   getInvitationPersonLines,
   getPublicShareUrl
 } from "@/lib/invitation-presentation";
-import { templates } from "@/lib/templates";
+import { createTemplatePresetFromSnapshot, templates } from "@/lib/templates";
 
 type KakaoShareApi = {
   isInitialized(): boolean;
@@ -131,7 +131,10 @@ export function InvitationView({
   const [guestbookError, setGuestbookError] = useState("");
   const [shareMessage, setShareMessage] = useState("");
   const [pending, setPending] = useState(false);
-  const selectedTemplate = templates.find((template) => template.id === payload.templateId) ?? templates[0];
+  const baseTemplate = templates.find((template) => template.id === payload.templateId) ?? templates[0];
+  const selectedTemplate = payload.templateSnapshot?.backgroundImageUrl
+    ? createTemplatePresetFromSnapshot(payload.templateSnapshot, baseTemplate)
+    : baseTemplate;
   const categoryMeta = getInvitationCategoryMeta(payload);
   const showPeople = isInvitationSectionAllowed(payload, "people", "view");
   const showContact = isInvitationSectionAllowed(payload, "contact", "view");

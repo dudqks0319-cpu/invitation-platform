@@ -203,7 +203,10 @@ export async function generateMetadata({
     const payload = buildPublicInvitationPayload(
       buildPublishedInvitationAssetPayload(invitation.slug, normalizedPayload)
     );
-    const imageUrl = getPublicShareUrl(payload.mainImageUrl || payload.backgroundImageUrl || DEFAULT_OG_IMAGE, origin);
+    const imageUrl = getPublicShareUrl(
+      payload.mainImageUrl || payload.backgroundImageUrl || payload.templateSnapshot?.backgroundImageUrl || DEFAULT_OG_IMAGE,
+      origin
+    );
 
     return buildPublicInvitationMetadata({
       title: invitation.title || payload.title,

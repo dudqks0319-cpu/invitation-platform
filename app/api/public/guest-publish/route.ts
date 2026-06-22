@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
 import { createInvitationSlug, normalizeDraft } from "@/lib/invitation-payload";
 import { getInvitationPricing } from "@/lib/payments/pricing";
+import { attachPublishedTemplateSnapshot } from "@/lib/templates";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { consumeRateLimit, getClientIdentifier } from "@/lib/rate-limit";
 import { ensureJsonRequest, readJsonBody } from "@/lib/supabase/public-write";
@@ -184,10 +185,11 @@ export async function POST(request: Request) {
   }
 
   const slug = payload.shareUrl || createInvitationSlug(payload);
-  const publishedPayload = buildPublishedInvitationAssetPayload(slug, {
+  const snapshotPayload = attachPublishedTemplateSnapshot({
     ...payload,
     shareUrl: slug
   });
+  const publishedPayload = buildPublishedInvitationAssetPayload(slug, snapshotPayload);
 
   const { data, error } = await guestPublisher.admin
     .from("invitations")
@@ -200,7 +202,7 @@ export async function POST(request: Request) {
       status: "published",
       payload: publishedPayload,
       repurchase_required: false,
-      paid_payload_snapshot: payload,
+      paid_payload_snapshot: snapshotPayload,
       published_at: new Date().toISOString()
     })
     .select()

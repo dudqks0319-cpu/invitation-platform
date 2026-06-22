@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
 import { getInvitationPricing } from "@/lib/payments/pricing";
+import { attachPublishedTemplateSnapshot } from "@/lib/templates";
 import { ensureJsonRequest, readJsonBody } from "@/lib/supabase/public-write";
 
 type FreePublishRequest = {
@@ -53,7 +54,8 @@ export async function POST(request: Request) {
   }
 
   const payload = normalizeInvitationPayload(invitation.payload);
-  const publishedPayload = buildPublishedInvitationAssetPayload(invitation.slug, payload);
+  const snapshotPayload = attachPublishedTemplateSnapshot(payload);
+  const publishedPayload = buildPublishedInvitationAssetPayload(invitation.slug, snapshotPayload);
   const pricing = getInvitationPricing(payload);
 
   if (!pricing.isFree) {
@@ -67,7 +69,7 @@ export async function POST(request: Request) {
       status: "published",
       published_at: new Date().toISOString(),
       repurchase_required: false,
-      paid_payload_snapshot: payload
+      paid_payload_snapshot: snapshotPayload
     })
     .eq("id", invitation.id);
 

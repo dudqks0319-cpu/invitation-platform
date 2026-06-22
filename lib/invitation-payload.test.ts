@@ -81,6 +81,42 @@ describe("invitation payload helpers", () => {
     expect(draft.thankYouMessage).toBe("함께해 주셔서 감사합니다.");
   });
 
+  it("preserves published template snapshots and photo placements", () => {
+    const draft = normalizeDraft({
+      templateId: "wedding-classic",
+      templateSnapshot: {
+        templateAssetId: "wedding-classic",
+        templateAssetVersion: 2,
+        backgroundImageUrl: "/images/custom/wedding/wedding-01.jpeg",
+        canvas: { width: 1080, height: 1920 },
+        safeAreas: {
+          heroText: { x: 0.1, y: 0.2, w: 0.8, h: 0.4 }
+        },
+        photoSlots: [
+          { key: "main", shape: "circle", x: 0.2, y: 0.1, w: 0.6, h: 0.3, zIndex: 1, required: false }
+        ],
+        palette: { accent: "#C9935A" },
+        typography: { source: "test" }
+      },
+      photoPlacements: [
+        {
+          slotKey: "main",
+          assetPath: "user/inv/main.webp",
+          crop: { x: 0.5, y: 0.5, scale: 1.2 },
+          fit: "cover"
+        }
+      ]
+    });
+
+    expect(draft.templateAssetId).toBe("wedding-classic");
+    expect(draft.templateAssetVersion).toBe(2);
+    expect(draft.templateSnapshot?.safeAreas.heroText).toMatchObject({ w: 0.8 });
+    expect(draft.photoPlacements[0]).toMatchObject({
+      slotKey: "main",
+      fit: "cover"
+    });
+  });
+
   it("creates a readable slug", () => {
     const slug = createInvitationSlug({
       title: "우리의 결혼식",
