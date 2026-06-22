@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { isInvitationSectionAllowed } from "@/lib/invitation-payload";
 import { consumeRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
 import { ensureJsonRequest, publicGuestbookSchema, readJsonBody } from "@/lib/supabase/public-write";
 
 const WINDOW_MS = 60 * 1000;
@@ -75,7 +77,7 @@ export async function POST(
 
   const { data: invitation, error: invitationError } = await admin
     .from("invitations")
-    .select("id, status")
+    .select("id, status, payload")
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
@@ -84,6 +86,14 @@ export async function POST(
     return NextResponse.json(
       { success: false, message: "유효하지 않은 초대장입니다." },
       { status: 404 }
+    );
+  }
+
+  const invitationPayload = normalizeInvitationPayload(invitation.payload);
+  if (!isInvitationSectionAllowed(invitationPayload, "guestbook", "submit")) {
+    return NextResponse.json(
+      { success: false, message: "이 초대장은 방명록 기능이 꺼져 있습니다." },
+      { status: 403 }
     );
   }
 

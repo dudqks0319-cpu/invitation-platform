@@ -11,6 +11,7 @@ import {
   formatEventDateTime,
   formatTimestampLabel,
   formatVenue,
+  isInvitationSectionAllowed,
   type GuestbookEntry,
   type InvitationDraftPayload,
   type RsvpEntry
@@ -132,9 +133,18 @@ export function InvitationView({
   const [pending, setPending] = useState(false);
   const selectedTemplate = templates.find((template) => template.id === payload.templateId) ?? templates[0];
   const categoryMeta = getInvitationCategoryMeta(payload);
+  const showPeople = isInvitationSectionAllowed(payload, "people", "view");
+  const showContact = isInvitationSectionAllowed(payload, "contact", "view");
+  const showAccounts = isInvitationSectionAllowed(payload, "accounts", "view");
+  const showVenue = isInvitationSectionAllowed(payload, "venue", "view");
+  const showGallery = isInvitationSectionAllowed(payload, "gallery", "view");
+  const showVideo = isInvitationSectionAllowed(payload, "video", "view");
+  const showMusic = isInvitationSectionAllowed(payload, "music", "view");
+  const showRsvp = isInvitationSectionAllowed(payload, "rsvp", "view");
+  const showGuestbook = isInvitationSectionAllowed(payload, "guestbook", "view");
   const personLines = getInvitationPersonLines(payload);
-  const contactLines = getInvitationContactLines(payload);
-  const accountEntries = getInvitationAccountEntries(payload);
+  const contactLines = showContact ? getInvitationContactLines(payload) : [];
+  const accountEntries = showAccounts ? getInvitationAccountEntries(payload) : [];
   const heroTitle = getInvitationHeroTitle(payload);
   const heroSubtitle = getInvitationHeroSubtitle(payload);
   const { kakaoJsKey } = resolveInvitationPlatformConfig({
@@ -257,9 +267,9 @@ export function InvitationView({
     }
   }
 
-  const kakaoPayLink = normalizeUrl(payload.kakaoPayLink);
-  const videoUrl = normalizeUrl(payload.videoUrl);
-  const backgroundMusicUrl = normalizeUrl(payload.backgroundMusicUrl);
+  const kakaoPayLink = showAccounts ? normalizeUrl(payload.kakaoPayLink) : "";
+  const videoUrl = showVideo ? normalizeUrl(payload.videoUrl) : "";
+  const backgroundMusicUrl = showMusic ? normalizeUrl(payload.backgroundMusicUrl) : "";
   const rawMapQuery = payload.mapAddress || payload.venueAddress || payload.venueName;
   const mapQuery = encodeURIComponent(rawMapQuery);
   const mapLink =
@@ -299,56 +309,64 @@ export function InvitationView({
       </section>
 
       <section className="invitation-content">
-        <article className="invitation-card">
-          <h2>{categoryMeta.personSectionTitle}</h2>
-          <p style={{ whiteSpace: "pre-line" }}>
-            {personLines.length ? personLines.join("\n") : "행사 정보를 입력해 주세요."}
-          </p>
-        </article>
+        {showPeople ? (
+          <article className="invitation-card">
+            <h2>{categoryMeta.personSectionTitle}</h2>
+            <p style={{ whiteSpace: "pre-line" }}>
+              {personLines.length ? personLines.join("\n") : "행사 정보를 입력해 주세요."}
+            </p>
+          </article>
+        ) : null}
 
-        <article className="invitation-card">
-          <h2>{categoryMeta.contactTitle}</h2>
-          <p style={{ whiteSpace: "pre-line" }}>
-            {contactLines.length ? contactLines.join("\n") : "연락처를 입력해 주세요."}
-          </p>
-        </article>
+        {showContact ? (
+          <article className="invitation-card">
+            <h2>{categoryMeta.contactTitle}</h2>
+            <p style={{ whiteSpace: "pre-line" }}>
+              {contactLines.length ? contactLines.join("\n") : "연락처를 입력해 주세요."}
+            </p>
+          </article>
+        ) : null}
 
-        <article className="invitation-card">
-          <h2>{categoryMeta.accountTitle}</h2>
-          <p style={{ whiteSpace: "pre-line" }}>
-            {accountEntries.length ? accountEntries.map((entry) => entry.value).join("\n") : "계좌 정보를 입력해 주세요."}
-          </p>
-          {accountEntries.length ? (
-            <div className="invitation-inline-actions">
-              {accountEntries.map((entry) => (
-                <button
-                  className="btn-outline invitation-small-btn"
-                  key={entry.copyLabel}
-                  onClick={() => copyToClipboard(entry.copyValue)}
-                  type="button"
-                >
-                  {entry.copyLabel}
-                </button>
-              ))}
-            </div>
-          ) : null}
-          <a className={`btn-primary invitation-wide-btn ${kakaoPayLink ? "" : "is-disabled"}`} href={kakaoPayLink || "#"} rel="noreferrer noopener" target="_blank">
-            카카오페이 송금 링크 열기
-          </a>
-        </article>
+        {showAccounts ? (
+          <article className="invitation-card">
+            <h2>{categoryMeta.accountTitle}</h2>
+            <p style={{ whiteSpace: "pre-line" }}>
+              {accountEntries.length ? accountEntries.map((entry) => entry.value).join("\n") : "계좌 정보를 입력해 주세요."}
+            </p>
+            {accountEntries.length ? (
+              <div className="invitation-inline-actions">
+                {accountEntries.map((entry) => (
+                  <button
+                    className="btn-outline invitation-small-btn"
+                    key={entry.copyLabel}
+                    onClick={() => copyToClipboard(entry.copyValue)}
+                    type="button"
+                  >
+                    {entry.copyLabel}
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            <a className={`btn-primary invitation-wide-btn ${kakaoPayLink ? "" : "is-disabled"}`} href={kakaoPayLink || "#"} rel="noreferrer noopener" target="_blank">
+              카카오페이 송금 링크 열기
+            </a>
+          </article>
+        ) : null}
 
-        <article className="invitation-card">
-          <h2>위치</h2>
-          <p>{payload.mapAddress || payload.venueAddress || "위치 정보를 입력해 주세요."}</p>
-          <p className="invitation-transport">{payload.transportNote}</p>
-          <InvitationMapEmbed
-            kakaoMapLink={kakaoMapLink}
-            naverMapLink={mapLink}
-            query={rawMapQuery}
-          />
-        </article>
+        {showVenue ? (
+          <article className="invitation-card">
+            <h2>위치</h2>
+            <p>{payload.mapAddress || payload.venueAddress || "위치 정보를 입력해 주세요."}</p>
+            <p className="invitation-transport">{payload.transportNote}</p>
+            <InvitationMapEmbed
+              kakaoMapLink={kakaoMapLink}
+              naverMapLink={mapLink}
+              query={rawMapQuery}
+            />
+          </article>
+        ) : null}
 
-        {payload.galleryImages.length ? (
+        {showGallery && payload.galleryImages.length ? (
           <article className="invitation-card">
             <h2>갤러리</h2>
             <div
@@ -379,7 +397,7 @@ export function InvitationView({
           </article>
         ) : null}
 
-        {videoUrl ? (
+        {showVideo && videoUrl ? (
           <article className="invitation-card">
             <h2>식전 영상</h2>
             <p>예식 전 함께 보실 수 있는 영상을 준비했습니다.</p>
@@ -389,7 +407,7 @@ export function InvitationView({
           </article>
         ) : null}
 
-        {backgroundMusicUrl ? (
+        {showMusic && backgroundMusicUrl ? (
           <article className="invitation-card">
             <h2>배경음악</h2>
             <p>초대장과 함께 준비한 음악을 재생해 보세요.</p>
@@ -397,46 +415,48 @@ export function InvitationView({
           </article>
         ) : null}
 
-        <article className="invitation-card">
-          <h2>RSVP</h2>
-          <form
-            action={async (formData) => {
-              await handleRsvpSubmit(formData);
-            }}
-            className="invitation-guestbook-form"
-          >
-            <input autoComplete="off" name="website" style={{ display: "none" }} tabIndex={-1} type="text" />
-            <label>
-              이름
-              <input name="guestName" required type="text" />
-            </label>
-            <label>
-              연락처
-              <input name="guestPhone" type="text" />
-            </label>
-            <label>
-              참석 여부
-              <select className="modal-input" defaultValue="yes" name="attending">
-                <option value="yes">참석</option>
-                <option value="no">불참</option>
-              </select>
-            </label>
-            <label>
-              동행 인원
-              <input defaultValue={1} max={20} min={0} name="guests" type="number" />
-            </label>
-            <label>
-              메모
-              <textarea name="memo" rows={3} />
-            </label>
-            <button className="btn-primary invitation-wide-btn" disabled={pending} type="submit">
-              RSVP 보내기
-            </button>
-          </form>
-          {rsvpMessage ? <p className="form-message success">{rsvpMessage}</p> : null}
-          {rsvpError ? <p className="form-message error">{rsvpError}</p> : null}
-          {rsvpEntries.length ? <p>최근 응답 {rsvpEntries.length}건이 이 세션에 기록되었습니다.</p> : null}
-        </article>
+        {showRsvp ? (
+          <article className="invitation-card">
+            <h2>RSVP</h2>
+            <form
+              action={async (formData) => {
+                await handleRsvpSubmit(formData);
+              }}
+              className="invitation-guestbook-form"
+            >
+              <input autoComplete="off" name="website" style={{ display: "none" }} tabIndex={-1} type="text" />
+              <label>
+                이름
+                <input name="guestName" required type="text" />
+              </label>
+              <label>
+                연락처
+                <input name="guestPhone" type="text" />
+              </label>
+              <label>
+                참석 여부
+                <select className="modal-input" defaultValue="yes" name="attending">
+                  <option value="yes">참석</option>
+                  <option value="no">불참</option>
+                </select>
+              </label>
+              <label>
+                동행 인원
+                <input defaultValue={1} max={20} min={0} name="guests" type="number" />
+              </label>
+              <label>
+                메모
+                <textarea name="memo" rows={3} />
+              </label>
+              <button className="btn-primary invitation-wide-btn" disabled={pending} type="submit">
+                RSVP 보내기
+              </button>
+            </form>
+            {rsvpMessage ? <p className="form-message success">{rsvpMessage}</p> : null}
+            {rsvpError ? <p className="form-message error">{rsvpError}</p> : null}
+            {rsvpEntries.length ? <p>최근 응답 {rsvpEntries.length}건이 이 세션에 기록되었습니다.</p> : null}
+          </article>
+        ) : null}
 
         <article className="invitation-card">
           <h2>카카오톡으로 보내기</h2>
@@ -515,47 +535,49 @@ export function InvitationView({
           {shareMessage ? <p className="form-message success">{shareMessage}</p> : null}
         </article>
 
-        <article className="invitation-card">
-          <h2>방명록</h2>
-          <form
-            action={async (formData) => {
-              await handleGuestbookSubmit(formData);
-            }}
-            className="invitation-guestbook-form"
-          >
-            <input autoComplete="off" name="website" style={{ display: "none" }} tabIndex={-1} type="text" />
-            <label>
-              이름
-              <input name="nickname" required type="text" />
-            </label>
-            <label>
-              메시지
-              <textarea name="guestbookMessage" required rows={3} />
-            </label>
-            <button className="btn-primary invitation-wide-btn" disabled={pending} type="submit">
-              방명록 남기기
-            </button>
-          </form>
-          {mode === "public" ? (
-            <p className="form-message">방명록은 관리자 승인 후 공개됩니다. 작성 직후 목록에 보이지 않아도 정상입니다.</p>
-          ) : null}
-          {guestbookMessage ? <p className="form-message success">{guestbookMessage}</p> : null}
-          {guestbookError ? <p className="form-message error">{guestbookError}</p> : null}
-          <ul className="list-box invitation-guestbook-list">
-            {guestbookEntries.length ? (
-              guestbookEntries.map((entry) => (
-                <li key={entry.id}>
-                  <div className="meta">
-                    {formatTimestampLabel(entry.createdAt)} · {entry.nickname}
-                  </div>
-                  <div className="value">{entry.message}</div>
-                </li>
-              ))
-            ) : (
-              <li className="meta">첫 번째 축하 메시지를 남겨 주세요.</li>
-            )}
-          </ul>
-        </article>
+        {showGuestbook ? (
+          <article className="invitation-card">
+            <h2>방명록</h2>
+            <form
+              action={async (formData) => {
+                await handleGuestbookSubmit(formData);
+              }}
+              className="invitation-guestbook-form"
+            >
+              <input autoComplete="off" name="website" style={{ display: "none" }} tabIndex={-1} type="text" />
+              <label>
+                이름
+                <input name="nickname" required type="text" />
+              </label>
+              <label>
+                메시지
+                <textarea name="guestbookMessage" required rows={3} />
+              </label>
+              <button className="btn-primary invitation-wide-btn" disabled={pending} type="submit">
+                방명록 남기기
+              </button>
+            </form>
+            {mode === "public" ? (
+              <p className="form-message">방명록은 관리자 승인 후 공개됩니다. 작성 직후 목록에 보이지 않아도 정상입니다.</p>
+            ) : null}
+            {guestbookMessage ? <p className="form-message success">{guestbookMessage}</p> : null}
+            {guestbookError ? <p className="form-message error">{guestbookError}</p> : null}
+            <ul className="list-box invitation-guestbook-list">
+              {guestbookEntries.length ? (
+                guestbookEntries.map((entry) => (
+                  <li key={entry.id}>
+                    <div className="meta">
+                      {formatTimestampLabel(entry.createdAt)} · {entry.nickname}
+                    </div>
+                    <div className="value">{entry.message}</div>
+                  </li>
+                ))
+              ) : (
+                <li className="meta">첫 번째 축하 메시지를 남겨 주세요.</li>
+              )}
+            </ul>
+          </article>
+        ) : null}
 
         {payload.thankYouMessage ? (
           <article className="invitation-card">

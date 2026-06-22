@@ -35,6 +35,7 @@ function createRequest(body: object) {
 function createAdminDouble(options?: {
   insertError?: { message: string } | null;
   existingRsvpId?: string | null;
+  invitationPayload?: Record<string, unknown>;
 }) {
   const insertError = options?.insertError ?? null;
   const insertMock = vi.fn(async () => ({ error: insertError }));
@@ -59,7 +60,8 @@ function createAdminDouble(options?: {
               return {
                 data: {
                   id: "invitation-1",
-                  status: "published"
+                  status: "published",
+                  payload: options?.invitationPayload ?? {}
                 },
                 error: null
               };
@@ -184,6 +186,35 @@ describe("POST /api/public/[slug]/rsvp", () => {
     expect(result).toEqual({
       success: true,
       message: "RSVP가 저장되었습니다."
+    });
+  });
+
+  it("rejects RSVP writes when the invitation section policy disables RSVP", async () => {
+    const adminDouble = createAdminDouble({
+      invitationPayload: {
+        sections: {
+          rsvp: false
+        }
+      }
+    });
+    createSupabaseAdminClientMock.mockReturnValue(adminDouble.client);
+
+    const response = await POST(createRequest({
+      guestName: "박하객",
+      attending: "yes",
+      guests: 1,
+      website: ""
+    }), {
+      params: Promise.resolve({ slug: "demo" })
+    });
+    const result = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(adminDouble.insertMock).not.toHaveBeenCalled();
+    expect(adminDouble.updateMock).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      success: false,
+      message: "이 초대장은 RSVP 기능이 꺼져 있습니다."
     });
   });
 });

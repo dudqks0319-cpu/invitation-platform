@@ -1,8 +1,10 @@
 import {
+  buildPublicInvitationPayload,
   createInvitationSlug,
   defaultInvitationDraft,
   formatEventDateTime,
   formatTimestampLabel,
+  isInvitationSectionAllowed,
   normalizeDraft
 } from "@/lib/invitation-payload";
 
@@ -16,6 +18,55 @@ describe("invitation payload helpers", () => {
     expect(draft.videoUrl).toBe("");
     expect(draft.backgroundMusicUrl).toBe("");
     expect(draft.thankYouMessage).toBe("");
+    expect(draft.schemaVersion).toBe(3);
+    expect(isInvitationSectionAllowed(draft, "rsvp", "submit")).toBe(true);
+    expect(isInvitationSectionAllowed(draft, "guestbook", "submit")).toBe(true);
+  });
+
+  it("normalizes disabled section policies and blocks public submit actions", () => {
+    const draft = normalizeDraft({
+      sections: {
+        rsvp: false,
+        guestbook: {
+          enabled: true,
+          publicVisible: true,
+          publicSubmitAllowed: false
+        },
+        accounts: {
+          enabled: false
+        }
+      }
+    });
+
+    expect(isInvitationSectionAllowed(draft, "rsvp", "view")).toBe(false);
+    expect(isInvitationSectionAllowed(draft, "rsvp", "submit")).toBe(false);
+    expect(isInvitationSectionAllowed(draft, "guestbook", "view")).toBe(true);
+    expect(isInvitationSectionAllowed(draft, "guestbook", "submit")).toBe(false);
+    expect(isInvitationSectionAllowed(draft, "accounts", "view")).toBe(false);
+  });
+
+  it("removes account and contact values from public payloads when those sections are off", () => {
+    const draft = normalizeDraft({
+      groomPhone: "010-1111-2222",
+      bridePhone: "010-3333-4444",
+      groomBank: "국민은행",
+      groomBankHolder: "홍길동",
+      groomBankAccount: "123-456",
+      kakaoPayLink: "https://qr.kakaopay.com/demo",
+      sections: {
+        contact: false,
+        accounts: false
+      }
+    });
+
+    const publicPayload = buildPublicInvitationPayload(draft);
+
+    expect(publicPayload.groomPhone).toBe("");
+    expect(publicPayload.bridePhone).toBe("");
+    expect(publicPayload.groomBank).toBe("");
+    expect(publicPayload.groomBankHolder).toBe("");
+    expect(publicPayload.groomBankAccount).toBe("");
+    expect(publicPayload.kakaoPayLink).toBe("");
   });
 
   it("preserves optional media and thank-you fields", () => {

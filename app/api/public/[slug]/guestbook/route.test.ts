@@ -32,7 +32,10 @@ function createRequest(body: object) {
   });
 }
 
-function createAdminDouble(insertError: { message: string } | null = null) {
+function createAdminDouble(
+  insertError: { message: string } | null = null,
+  invitationPayload: Record<string, unknown> = {}
+) {
   const insertMock = vi.fn(async () => ({ error: insertError }));
 
   return {
@@ -51,7 +54,8 @@ function createAdminDouble(insertError: { message: string } | null = null) {
               return {
                 data: {
                   id: "invitation-1",
-                  status: "published"
+                  status: "published",
+                  payload: invitationPayload
                 },
                 error: null
               };
@@ -124,6 +128,31 @@ describe("POST /api/public/[slug]/guestbook", () => {
     expect(result).toEqual({
       success: false,
       message: "방명록 저장에 실패했습니다. 잠시 후 다시 시도해 주세요."
+    });
+  });
+
+  it("rejects guestbook writes when the invitation section policy disables guestbook", async () => {
+    const adminDouble = createAdminDouble(null, {
+      sections: {
+        guestbook: false
+      }
+    });
+    createSupabaseAdminClientMock.mockReturnValue(adminDouble.client);
+
+    const response = await POST(createRequest({
+      nickname: "친구1",
+      message: "축하합니다",
+      website: ""
+    }), {
+      params: Promise.resolve({ slug: "demo" })
+    });
+    const result = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(adminDouble.insertMock).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      success: false,
+      message: "이 초대장은 방명록 기능이 꺼져 있습니다."
     });
   });
 });

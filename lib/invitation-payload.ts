@@ -4,9 +4,164 @@ import type { Database } from "@/lib/supabase/types";
 export const LOCAL_DRAFT_KEY = "invitehub_builder_draft_v3";
 export const LOCAL_GUESTBOOK_KEY = "invitehub_local_guestbook_preview";
 export const LOCAL_RSVP_KEY = "invitehub_local_rsvp_preview";
-export const INVITATION_PAYLOAD_SCHEMA_VERSION = 1;
+export const INVITATION_PAYLOAD_SCHEMA_VERSION = 3;
 
 export type InvitationStatus = Database["public"]["Tables"]["invitations"]["Row"]["status"];
+
+export const invitationSectionKeys = [
+  "intro",
+  "people",
+  "date",
+  "venue",
+  "gallery",
+  "rsvp",
+  "guestbook",
+  "accounts",
+  "contact",
+  "calendar",
+  "video",
+  "music",
+  "transport",
+  "schedule",
+  "gift"
+] as const;
+
+export type InvitationSectionKey = (typeof invitationSectionKeys)[number];
+
+export type SectionPolicy = {
+  enabled: boolean;
+  publicVisible: boolean;
+  publicSubmitAllowed: boolean;
+  ownerOnly: boolean;
+};
+
+export type InvitationSectionPolicies = Record<InvitationSectionKey, SectionPolicy>;
+
+type SectionAction = "view" | "submit";
+
+const submitSections = new Set<InvitationSectionKey>(["rsvp", "guestbook"]);
+
+export const defaultSectionPolicies: InvitationSectionPolicies = invitationSectionKeys.reduce(
+  (policies, section) => {
+    policies[section] = {
+      enabled: true,
+      publicVisible: true,
+      publicSubmitAllowed: submitSections.has(section),
+      ownerOnly: false
+    };
+    return policies;
+  },
+  {} as InvitationSectionPolicies
+);
+
+function readBoolean(value: unknown, fallback: boolean) {
+  return typeof value === "boolean" ? value : fallback;
+}
+
+function readSectionPolicy(value: unknown, section: InvitationSectionKey): SectionPolicy {
+  const defaults = defaultSectionPolicies[section];
+
+  if (typeof value === "boolean") {
+    return {
+      ...defaults,
+      enabled: value,
+      publicVisible: value ? defaults.publicVisible : false,
+      publicSubmitAllowed: value ? defaults.publicSubmitAllowed : false
+    };
+  }
+
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { ...defaults };
+  }
+
+  const raw = value as Partial<Record<keyof SectionPolicy, unknown>>;
+  const enabled = readBoolean(raw.enabled, defaults.enabled);
+  const ownerOnly = readBoolean(raw.ownerOnly, defaults.ownerOnly);
+  const publicVisible = enabled && !ownerOnly && readBoolean(raw.publicVisible, defaults.publicVisible);
+  const publicSubmitAllowed =
+    enabled &&
+    !ownerOnly &&
+    defaults.publicSubmitAllowed &&
+    readBoolean(raw.publicSubmitAllowed, defaults.publicSubmitAllowed);
+
+  return {
+    enabled,
+    publicVisible,
+    publicSubmitAllowed,
+    ownerOnly
+  };
+}
+
+export function normalizeSectionPolicies(value: unknown): InvitationSectionPolicies {
+  const raw = value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+
+  return invitationSectionKeys.reduce((policies, section) => {
+    policies[section] = readSectionPolicy(raw[section], section);
+    return policies;
+  }, {} as InvitationSectionPolicies);
+}
+
+export function isInvitationSectionAllowed(
+  payload: Pick<InvitationDraftPayload, "sections"> | { sections?: unknown },
+  section: InvitationSectionKey,
+  action: SectionAction
+) {
+  const sections = normalizeSectionPolicies(payload.sections);
+  const policy = sections[section];
+
+  if (!policy.enabled) {
+    return false;
+  }
+
+  if (action === "view") {
+    return policy.publicVisible;
+  }
+
+  return policy.publicSubmitAllowed;
+}
+
+export function buildPublicInvitationPayload(payload: InvitationDraftPayload): InvitationDraftPayload {
+  const nextPayload: InvitationDraftPayload = {
+    ...payload,
+    sections: normalizeSectionPolicies(payload.sections)
+  };
+
+  if (!isInvitationSectionAllowed(nextPayload, "accounts", "view")) {
+    nextPayload.groomBank = "";
+    nextPayload.groomBankHolder = "";
+    nextPayload.groomBankAccount = "";
+    nextPayload.brideBank = "";
+    nextPayload.brideBankHolder = "";
+    nextPayload.brideBankAccount = "";
+    nextPayload.kakaoPayLink = "";
+  }
+
+  if (!isInvitationSectionAllowed(nextPayload, "contact", "view")) {
+    nextPayload.groomPhone = "";
+    nextPayload.bridePhone = "";
+    nextPayload.groomFatherPhone = "";
+    nextPayload.groomMotherPhone = "";
+    nextPayload.brideFatherPhone = "";
+    nextPayload.brideMotherPhone = "";
+  }
+
+  if (!isInvitationSectionAllowed(nextPayload, "gallery", "view")) {
+    nextPayload.galleryImages = [];
+    nextPayload.galleryImagePaths = [];
+  }
+
+  if (!isInvitationSectionAllowed(nextPayload, "video", "view")) {
+    nextPayload.videoUrl = "";
+  }
+
+  if (!isInvitationSectionAllowed(nextPayload, "music", "view")) {
+    nextPayload.backgroundMusicUrl = "";
+  }
+
+  return nextPayload;
+}
 
 const imageReferenceSchema = z
   .string()
@@ -66,7 +221,8 @@ const legacyInvitationPayloadSchema = z
     galleryImages: z.array(imageReferenceSchema).optional(),
     galleryImagePaths: z.array(z.string().trim()).optional(),
     mainImageData: imageReferenceSchema.optional(),
-    backgroundImageData: imageReferenceSchema.optional()
+    backgroundImageData: imageReferenceSchema.optional(),
+    sections: z.unknown().optional()
   })
   .passthrough();
 
@@ -116,7 +272,8 @@ export const invitationDraftPayloadSchema = legacyInvitationPayloadSchema.transf
     : [],
   galleryImagePaths: Array.isArray(raw.galleryImagePaths)
     ? raw.galleryImagePaths.filter((item): item is string => typeof item === "string")
-    : []
+    : [],
+  sections: normalizeSectionPolicies(raw.sections)
 }));
 
 export type InvitationDraftPayload = z.infer<typeof invitationDraftPayloadSchema>;

@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { InvitationView, resolveInvitationPlatformConfig } from "@/components/invitations/invitation-view";
-import { defaultInvitationDraft } from "@/lib/invitation-payload";
+import { defaultInvitationDraft, normalizeDraft } from "@/lib/invitation-payload";
 
 describe("InvitationView", () => {
   it("warns that preview links cannot be shared yet", () => {
@@ -42,6 +42,40 @@ describe("InvitationView", () => {
       "미리보기 단계에서는 나만 볼 수 있습니다."
     );
   });
+
+  it("hides public sections that are disabled by section policy", () => {
+    const payload = normalizeDraft({
+      groomPhone: "010-1111-2222",
+      groomBank: "국민은행",
+      groomBankHolder: "홍길동",
+      groomBankAccount: "123-456",
+      sections: {
+        contact: false,
+        accounts: false,
+        venue: false,
+        rsvp: false,
+        guestbook: false
+      }
+    });
+
+    document.body.innerHTML = renderToStaticMarkup(
+      <InvitationView
+        mode="public"
+        payload={payload}
+        shareUrl="/invitations/demo"
+        slug="demo"
+      />
+    );
+
+    expect(document.body.textContent).not.toContain("연락처");
+    expect(document.body.textContent).not.toContain("010-1111-2222");
+    expect(document.body.textContent).not.toContain("마음 전하실 곳");
+    expect(document.body.textContent).not.toContain("국민은행");
+    expect(document.body.textContent).not.toContain("위치");
+    expect(document.body.textContent).not.toContain("RSVP");
+    expect(document.body.textContent).not.toContain("방명록");
+  });
+
   it("prefers a server-provided Kakao platform key over client env lookup", () => {
     const config = resolveInvitationPlatformConfig({
       draftKakaoJsKey: "",

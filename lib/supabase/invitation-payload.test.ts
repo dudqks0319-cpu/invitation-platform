@@ -17,6 +17,27 @@ describe("invitation payload normalization", () => {
 
     expect(payload.templateId).toBe("wedding-classic");
     expect(payload.title).toBe("결혼식 초대장");
+    expect(payload.schemaVersion).toBe(3);
+    expect(payload.sections.rsvp.publicSubmitAllowed).toBe(true);
+    expect(payload.sections.guestbook.publicSubmitAllowed).toBe(true);
+  });
+
+  it("normalizes section policies for persisted payloads", () => {
+    const payload = normalizeInvitationPayload({
+      sections: {
+        rsvp: false,
+        accounts: {
+          enabled: false,
+          publicVisible: true
+        }
+      }
+    });
+
+    expect(payload.sections.rsvp.enabled).toBe(false);
+    expect(payload.sections.rsvp.publicVisible).toBe(false);
+    expect(payload.sections.rsvp.publicSubmitAllowed).toBe(false);
+    expect(payload.sections.accounts.enabled).toBe(false);
+    expect(payload.sections.accounts.publicVisible).toBe(false);
   });
 
   it("preserves gallery images when present", () => {

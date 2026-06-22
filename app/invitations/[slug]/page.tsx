@@ -5,6 +5,7 @@ import { InvitationView } from "@/components/invitations/invitation-view";
 import { SiteHeader } from "@/components/shared/site-header";
 import { findDemoInvitationBySlug } from "@/lib/demo-data";
 import { buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
+import { buildPublicInvitationPayload } from "@/lib/invitation-payload";
 import { getPublicShareUrl } from "@/lib/invitation-presentation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
@@ -198,9 +199,9 @@ export async function generateMetadata({
   const { invitation } = await loadPublishedInvitation(decodedSlug);
 
   if (invitation) {
-    const payload = buildPublishedInvitationAssetPayload(
-      invitation.slug,
-      normalizeInvitationPayload(invitation.payload)
+    const normalizedPayload = normalizeInvitationPayload(invitation.payload);
+    const payload = buildPublicInvitationPayload(
+      buildPublishedInvitationAssetPayload(invitation.slug, normalizedPayload)
     );
     const imageUrl = getPublicShareUrl(payload.mainImageUrl || payload.backgroundImageUrl || DEFAULT_OG_IMAGE, origin);
 
@@ -243,9 +244,9 @@ export default async function PublicInvitationPage({
   const { admin, invitation } = await loadPublishedInvitation(decodedSlug);
 
   if (invitation) {
-    const payload = buildPublishedInvitationAssetPayload(
-      invitation.slug,
-      normalizeInvitationPayload(invitation.payload)
+    const normalizedPayload = normalizeInvitationPayload(invitation.payload);
+    const payload = buildPublicInvitationPayload(
+      buildPublishedInvitationAssetPayload(invitation.slug, normalizedPayload)
     );
     if (admin) {
       await logInvitationView(admin, invitation.id, headerList.get("user-agent") || "");

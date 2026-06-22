@@ -1,7 +1,11 @@
 import { z } from "zod";
+import {
+  normalizeSectionPolicies,
+  type InvitationSectionPolicies
+} from "@/lib/invitation-payload";
 
 const payloadSchema = z.object({
-  schemaVersion: z.coerce.number().int().default(2),
+  schemaVersion: z.coerce.number().int().default(3),
   templateId: z.string().default("wedding-classic"),
   category: z.string().default("wedding"),
   title: z.string().default("결혼식 초대장"),
@@ -43,15 +47,18 @@ const payloadSchema = z.object({
   ,
   backgroundImagePath: z.string().default(""),
   galleryImages: z.array(z.string()).default([]),
-  galleryImagePaths: z.array(z.string()).default([])
+  galleryImagePaths: z.array(z.string()).default([]),
+  sections: z.unknown().optional()
 });
 
-export type SafeInvitationPayload = z.infer<typeof payloadSchema>;
+export type SafeInvitationPayload = z.infer<typeof payloadSchema> & {
+  sections: InvitationSectionPolicies;
+};
 
 export function normalizeInvitationPayload(input: unknown) {
   const raw = (input && typeof input === "object" ? input : {}) as Record<string, unknown>;
 
-  return payloadSchema.parse({
+  const parsed = payloadSchema.parse({
     ...raw,
     mainImageUrl: typeof raw.mainImageUrl === "string" && raw.mainImageUrl
       ? raw.mainImageUrl
@@ -72,4 +79,9 @@ export function normalizeInvitationPayload(input: unknown) {
       ? raw.galleryImagePaths.filter((item): item is string => typeof item === "string")
       : []
   });
+
+  return {
+    ...parsed,
+    sections: normalizeSectionPolicies(raw.sections)
+  };
 }
