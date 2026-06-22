@@ -27,7 +27,7 @@ export function CheckoutFlow({
 }) {
   const supabase = useMemo(() => createBrowserClient(), []);
   const [invitationId, setInvitationId] = useState(initialInvitationId ?? "");
-  const [invitationTitle, setInvitationTitle] = useState("초대장 결제");
+  const [invitationTitle, setInvitationTitle] = useState("초대장 발행");
   const [publicSlug, setPublicSlug] = useState("");
   const [buyerName, setBuyerName] = useState("");
   const [buyerPhone, setBuyerPhone] = useState("");
@@ -61,11 +61,11 @@ export function CheckoutFlow({
 
     void (async () => {
       if (initialPaymentState === "cancelled") {
-        setError("결제가 취소되었습니다. 다시 시도해 주세요.");
+        setError("발행이 취소되었습니다. 다시 시도해 주세요.");
       }
 
       if (initialPaymentState === "failed") {
-        setError("결제 승인에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        setError("발행 승인에 실패했습니다. 잠시 후 다시 시도해 주세요.");
       }
 
       if (initialPaymentState === "success" && initialInvitationId) {
@@ -78,7 +78,7 @@ export function CheckoutFlow({
         if (data) {
           setInvitationTitle(data.title);
           setPublicSlug(data.slug);
-          setMessage("결제가 완료되어 초대장이 발행되었습니다.");
+          setMessage("초대장이 발행되었습니다.");
         }
         return;
       }
@@ -140,7 +140,7 @@ export function CheckoutFlow({
       const { data, error } = await query;
 
       if (error || !data) {
-        setError("초대장 초안을 결제 대상으로 준비하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+        setError("초대장 초안을 발행 대상으로 준비하지 못했습니다. 잠시 후 다시 시도해 주세요.");
         return;
       }
 
@@ -174,12 +174,12 @@ export function CheckoutFlow({
     }
 
     if (!invitationId) {
-      setError("결제할 초대장을 찾지 못했습니다.");
+      setError("발행할 초대장을 찾지 못했습니다.");
       return;
     }
 
     if (!pricing.isFree) {
-      setError("유료 옵션이 포함된 초대장은 웹이 아니라 모바일 앱에서 스토어 결제로 발행해 주세요.");
+      setError("현재 무료 발행 대상이 아닌 항목이 포함되어 있습니다.");
       return;
     }
 
@@ -233,7 +233,7 @@ export function CheckoutFlow({
       ) : (
         <>
           <p className="ops-note" style={{ marginTop: "8px" }}>
-            무료 구성은 웹에서 바로 발행할 수 있고, 유료 옵션이 포함된 초대장은 모바일 앱에서 스토어 결제로 발행합니다.
+            현재 제공되는 템플릿, 사진 업로드, RSVP, 방명록은 무료로 발행할 수 있습니다.
           </p>
           <div className="form-grid" style={{ marginTop: "24px" }}>
             <div className="data-form">
@@ -259,20 +259,20 @@ export function CheckoutFlow({
                 onClick={handleCheckout}
                 type="button"
               >
-                {pending ? "발행 중..." : pricing.isFree ? "무료로 발행하기" : "앱에서 스토어 결제 필요"}
+                {pending ? "발행 중..." : pricing.isFree ? "무료로 발행하기" : "무료 발행 대상 아님"}
               </button>
               {!pricing.isFree ? (
                 <p className="ops-note" style={{ marginTop: "12px" }}>
-                  사진이 포함된 초대장은 웹 결제가 아니라 iOS Apple IAP / Android Play Billing으로 발행합니다.
+                  현재 무료 발행 범위에 포함되지 않은 항목을 제거한 뒤 다시 시도해 주세요.
                 </p>
               ) : null}
             </div>
             <div className="ops-card">
               <h3>주문 요약</h3>
-              <p className="ops-line">상품 <strong>{invitationTitle}</strong></p>
-              <p className="ops-line">가격 <strong>₩{pricing.amount.toLocaleString("ko-KR")}</strong></p>
-              <p className="ops-line">선택 수단 <strong>{pricing.isFree ? "무료 발행" : "앱 스토어 결제"}</strong></p>
-              <p className="ops-line">처리 방식 <strong>{pricing.isFree ? "즉시 발행" : "모바일 앱에서 결제 후 발행"}</strong></p>
+              <p className="ops-line">초대장 <strong>{invitationTitle}</strong></p>
+              <p className="ops-line">이용 금액 <strong>₩{pricing.amount.toLocaleString("ko-KR")}</strong></p>
+              <p className="ops-line">선택 수단 <strong>{pricing.isFree ? "무료 발행" : "무료 발행 대상 아님"}</strong></p>
+              <p className="ops-line">처리 방식 <strong>{pricing.isFree ? "즉시 발행" : "구성 확인 필요"}</strong></p>
               <div style={{ marginTop: "12px", display: "grid", gap: "6px" }}>
                 {pricing.breakdown.map((item) => (
                   <p className="ops-line" key={item.label}>
@@ -283,7 +283,7 @@ export function CheckoutFlow({
               <p className="ops-note">
                 {pricing.isFree
                   ? "텍스트, 일정, 장소, 이미지, 교통 안내까지 무료로 반영됩니다."
-                  : "유료 옵션이 포함된 초대장은 웹이 아니라 모바일 앱에서 스토어 결제로 발행합니다."}
+                  : "현재 무료 발행 범위에 포함되지 않은 항목이 있습니다."}
               </p>
               {publicSlug ? (
                 <p className="ops-note" style={{ marginTop: "16px" }}>

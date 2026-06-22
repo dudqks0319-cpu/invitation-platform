@@ -13,7 +13,7 @@ describe("mobile invitation pricing", () => {
     expect(requiresStorePurchase(payload)).toBe(false);
   });
 
-  it("requires store purchase when paid photo add-ons are present", () => {
+  it("keeps user photos free", () => {
     const payload = createEmptyInvitationDraft("owner-1").payload;
     payload.photos.mainUri = "file:///main.jpg";
     payload.photos.backgroundUri = "file:///bg.jpg";
@@ -23,9 +23,13 @@ describe("mobile invitation pricing", () => {
     }));
 
     expect(getMobileInvitationPricing(payload)).toMatchObject({
-      amount: 3300,
-      isFree: false
+      amount: 0,
+      isFree: true
     });
-    expect(requiresStorePurchase(payload)).toBe(true);
+    expect(getMobileInvitationPricing(payload).breakdown).toContainEqual({
+      label: "사진 업로드",
+      amount: 0
+    });
+    expect(requiresStorePurchase(payload)).toBe(false);
   });
 });

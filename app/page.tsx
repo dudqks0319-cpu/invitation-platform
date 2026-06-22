@@ -2,13 +2,17 @@ import Link from "next/link";
 import { TemplateBrowser } from "@/components/landing/template-browser";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { SiteHeader } from "@/components/shared/site-header";
-import { isPaidPublishingEnabled } from "@/lib/release-flags";
 
 const freeFeatures = [
   {
-    title: "기본 청첩장은 무료",
+    title: "청첩장 제작과 발행 무료",
     description:
-      "현재 공개된 템플릿은 무료로 만들고 미리보기할 수 있어 부담 없이 초대장을 시작할 수 있습니다."
+      "현재 공개된 템플릿은 만들기, 미리보기, 공개 링크 발행까지 무료로 사용할 수 있습니다."
+  },
+  {
+    title: "사진까지 무료로 반영",
+    description:
+      "메인 사진, 배경 사진, 갤러리 이미지를 올려도 추가 비용 없이 초대장에 반영됩니다."
   },
   {
     title: "참석 여부와 방명록까지",
@@ -21,18 +25,6 @@ const freeFeatures = [
       "카카오톡, 문자, SNS 어디든. 링크 하나로 초대장, 지도, 계좌 안내, 방명록까지 함께 전달됩니다."
   }
 ];
-
-const paidFeature = {
-  title: "사진까지 담고 싶다면 3,300원",
-  description:
-    "사진 포함 발행권 한 번이면 프로필 사진, 배경 사진, 갤러리 사진까지 모두 담아 완성할 수 있습니다."
-};
-
-const disabledPhotoFeature = {
-  title: "사진 기능은 준비 중",
-  description:
-    "첫 제출 버전은 사진 없는 무료 초대장 발행에 집중하고, 사진 포함 발행은 스토어 상품 준비 후 다시 엽니다."
-};
 
 const freeProcessSteps = [
   {
@@ -48,55 +40,25 @@ const freeProcessSteps = [
   {
     step: "03",
     title: "바로 발행 · 공유",
-    description: "사진 없는 기본 구성은 무료로 발행하고 링크로 보낼 수 있습니다."
+    description: "사진이 포함된 구성도 무료로 발행하고 링크로 보낼 수 있습니다."
   }
 ];
 
 const pricing = [
   {
     badge: "무료",
-    title: "기본 청첩장",
+    title: "초대장 제작",
     price: "무료",
+    popular: false,
     items: [
       "현재 공개 템플릿 전부 무료",
-      "링크 공유 · 참석 여부 · 방명록 포함",
-      "사진 없이 바로 발행 가능"
-    ]
-  },
-  {
-    badge: "유료",
-    title: "사진 포함 발행권",
-    price: "₩3,300",
-    popular: true,
-    items: [
-      "프로필 사진 포함",
-      "배경 사진 포함",
-      "갤러리 사진 전체 포함",
-      "한 번 구매로 초대장 1건 발행"
+      "메인 · 배경 · 갤러리 사진 포함",
+      "링크 공유 · 참석 여부 · 방명록 포함"
     ]
   }
 ];
 
 export default function HomePage() {
-  const paidPublishingEnabled = isPaidPublishingEnabled();
-  const features = paidPublishingEnabled ? [freeFeatures[0], paidFeature, ...freeFeatures.slice(1)] : [freeFeatures[0], disabledPhotoFeature, ...freeFeatures.slice(1)];
-  const processSteps = paidPublishingEnabled
-    ? freeProcessSteps.map((step) =>
-        step.step === "02"
-          ? {
-              ...step,
-              description: "이름, 장소, 문구를 채우고 사진이 필요하면 사진 포함 발행권으로 한 번에 준비합니다."
-            }
-          : step.step === "03"
-            ? {
-                ...step,
-                description: "기본 구성은 무료로 발행하고, 사진이 포함되면 3,300원 발행권으로 마무리해 링크로 보낼 수 있습니다."
-              }
-            : step
-      )
-    : freeProcessSteps;
-  const visiblePricing = paidPublishingEnabled ? pricing : pricing.slice(0, 1);
-
   return (
     <main className="app-shell">
       <SiteHeader />
@@ -110,15 +72,13 @@ export default function HomePage() {
             바로 공유하세요
           </h1>
           <p className="hero-subtitle">
-            기본 청첩장은 무료로 만들고 미리보기할 수 있어요.
+            청첩장은 무료로 만들고 미리보기할 수 있어요.
             <br />
-            {paidPublishingEnabled
-              ? "사진이 포함된 초대장을 발행할 때만 3,300원 발행권이 필요합니다."
-              : "첫 제출 버전은 사진 없는 무료 발행에 집중합니다."}
+            사용자 사진을 올려도 추가 비용 없이 공개 링크를 발행할 수 있습니다.
           </p>
           <div className="hero-proof-list">
-            <span>기본 청첩장 무료</span>
-            <span>{paidPublishingEnabled ? "사진 포함 발행권 3,300원" : "사진 기능 준비 중"}</span>
+            <span>초대장 제작 무료</span>
+            <span>사진 업로드 무료</span>
             <span>링크 공유 · 참석 여부 · 방명록</span>
           </div>
           <div className="hero-btns">
@@ -164,12 +124,10 @@ export default function HomePage() {
             필요한 정보만 채우면 공유
           </h2>
           <p className="section-sub">
-            {paidPublishingEnabled
-              ? "기본 청첩장은 무료로 만들고, 사진이 포함된 초대장을 발행할 때만 3,300원 발행권을 사용합니다."
-              : "사진 포함 발행은 스토어 상품 준비 후 다시 열고, 현재 제출 버전은 무료 발행 흐름을 안정적으로 제공합니다."}
+            템플릿 선택, 사진 업로드, 초안 작성, 미리보기, 공개 링크 발행까지 무료 발행 흐름으로 제공합니다.
           </p>
           <div className="features-grid">
-            {features.map((feature, index) => (
+            {freeFeatures.map((feature, index) => (
               <article className="feature-card" key={feature.title}>
                 <div className="feature-icon">{String(index + 1).padStart(2, "0")}</div>
                 <h3>{feature.title}</h3>
@@ -185,7 +143,7 @@ export default function HomePage() {
           <p className="section-kicker">이렇게 진행돼요</p>
           <h2 className="section-title">디자인 고르고, 내용 넣고, 바로 발행</h2>
           <div className="process-grid">
-            {processSteps.map((step) => (
+            {freeProcessSteps.map((step) => (
               <article className="process-card" key={step.step}>
                 <span>{step.step}</span>
                 <strong>{step.title}</strong>
@@ -200,15 +158,13 @@ export default function HomePage() {
         <div className="section-inner">
           <p className="section-kicker">요금 안내</p>
           <h2 className="section-title">
-            {paidPublishingEnabled ? "무료로 시작하고, 사진이 들어가면 3,300원" : "첫 제출 버전은 무료 발행부터"}
+            모든 현재 기능을 무료로 시작
           </h2>
           <p className="section-sub">
-            {paidPublishingEnabled
-              ? "사진이 포함된 초대장을 발행할 때만 3,300원 발행권이 필요하며, 프로필·배경·갤러리 사진이 모두 포함됩니다."
-              : "템플릿 선택, 초안 작성, 미리보기, 사진 없는 공개 링크 발행을 무료로 제공합니다."}
+            템플릿 선택, 초안 작성, 미리보기, 사진 업로드, 공개 링크 발행을 무료로 제공합니다.
           </p>
           <div className="pricing-grid">
-            {visiblePricing.map((plan) => (
+            {pricing.map((plan) => (
               <article className={`price-card ${plan.popular ? "popular" : ""}`} key={plan.title}>
                 <div className={`price-badge ${plan.popular ? "popular-badge" : "free"}`}>
                   {plan.badge}

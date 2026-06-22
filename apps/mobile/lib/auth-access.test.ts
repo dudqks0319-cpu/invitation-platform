@@ -16,7 +16,7 @@ describe("auth-access", () => {
     expect(getDraftOwnerId(null)).toBe("local-preview-owner");
   });
 
-  it("treats anonymous users as remote but not paid-capable", () => {
+  it("treats anonymous users as remote guest sessions", () => {
     const user = {
       id: "guest-user",
       is_anonymous: true
@@ -53,11 +53,11 @@ describe("auth-access", () => {
 
     expect(getRemoteAccessMode("authenticated", user)).toBe("guest-session");
     expect(getPaidPublishBlockReason("authenticated", user)).toBe(
-      "유료 발행은 이메일 또는 소셜 로그인 후 사용할 수 있습니다."
+      "계정 관리 기능은 이메일 또는 소셜 로그인 후 사용할 수 있습니다."
     );
   });
 
-  it("allows paid publish only for authenticated full accounts", () => {
+  it("allows account-managed publish for authenticated full accounts", () => {
     const user = {
       id: "real-user",
       is_anonymous: false

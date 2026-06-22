@@ -9,22 +9,32 @@ describe("invitation pricing", () => {
     });
   });
 
-  it("stays free even when photos are added", () => {
+  it("keeps user photos free", () => {
     const payload = normalizeDraft({
       ...defaultInvitationDraft,
       mainImageUrl: "https://example.com/main.jpg",
       backgroundImageUrl: "https://example.com/bg.jpg"
     });
 
-    expect(getInvitationPricing(payload).amount).toBe(3300);
+    expect(getInvitationPricing(payload)).toMatchObject({
+      amount: 0,
+      isFree: true
+    });
+    expect(getInvitationPricing(payload).breakdown).toContainEqual({
+      label: "사진 업로드",
+      amount: 0
+    });
   });
 
-  it("stays free even when multiple gallery images exist", () => {
+  it("keeps gallery images free", () => {
     const payload = normalizeDraft({
       ...defaultInvitationDraft,
       galleryImages: Array.from({ length: 11 }, (_, index) => `https://example.com/${index}.jpg`)
     });
 
-    expect(getInvitationPricing(payload).amount).toBe(3300);
+    expect(getInvitationPricing(payload)).toMatchObject({
+      amount: 0,
+      isFree: true
+    });
   });
 });

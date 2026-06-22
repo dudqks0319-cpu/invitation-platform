@@ -9,7 +9,7 @@ describe("payment entitlement", () => {
     expect(hasPaidChange(edited, original)).toBe(false);
   });
 
-  it("requires repurchase for photo edits", () => {
+  it("does not require repurchase for photo edits", () => {
     const original = defaultInvitationDraft;
     const edited = normalizeDraft({
       ...original,
@@ -17,7 +17,7 @@ describe("payment entitlement", () => {
       galleryImages: Array.from({ length: 11 }, (_, index) => `https://example.com/${index}.png`)
     });
 
-    expect(hasPaidChange(edited, original)).toBe(true);
-    expect(getPaidChangeLabels(edited, original)).toEqual(["사진 포함 발행권"]);
+    expect(hasPaidChange(edited, original)).toBe(false);
+    expect(getPaidChangeLabels(edited, original)).toEqual([]);
   });
 });

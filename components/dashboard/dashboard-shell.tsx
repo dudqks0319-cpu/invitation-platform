@@ -25,15 +25,15 @@ function getStatusLabel(status: DashboardItem["status"]) {
     case "published":
       return "발행됨";
     case "payment_pending":
-      return "결제 대기";
+      return "발행 대기";
     case "paid":
-      return "결제 완료";
+      return "발행 준비됨";
     case "refund_pending":
       return "환불 대기";
     case "refunded":
       return "환불 완료";
     case "payment_failed":
-      return "결제 실패";
+      return "발행 실패";
     default:
       return "초안";
   }

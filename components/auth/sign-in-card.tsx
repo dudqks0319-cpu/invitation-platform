@@ -129,7 +129,7 @@ export function SignInCard({
         {mode === "signin" ? "이메일 로그인" : "새 계정 만들기"}
       </h2>
       <p className="modal-hint">
-        작성과 미리보기는 비회원으로 유지하고, 실제 관리와 결제 단계에서 계정을 연결합니다.
+        작성과 미리보기는 비회원으로 유지하고, 원격 저장과 계정 관리가 필요할 때 계정을 연결합니다.
       </p>
       <button
         className="btn-google"

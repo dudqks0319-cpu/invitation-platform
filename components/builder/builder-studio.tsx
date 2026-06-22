@@ -788,7 +788,7 @@ export function BuilderStudio({
               ))}
             </select>
           </label>
-          <p className="builder-help">발행 후 템플릿을 바꾸면 재결제가 필요합니다. 텍스트와 연락처 수정은 무료로 유지됩니다.</p>
+          <p className="builder-help">발행 후에도 템플릿, 문구, 연락처를 수정하고 무료로 다시 저장할 수 있습니다.</p>
           <label>
             행사 카테고리
             <input className={inputClassName} readOnly value={payload.category} />
@@ -855,7 +855,7 @@ export function BuilderStudio({
 
         <div className="builder-form-section" hidden={currentStep !== 2}>
           <h3>3. 사진 설정</h3>
-          <p className="builder-help">메인 사진과 배경 이미지는 발행 후 교체 시 재결제가 필요합니다. 업로드 전 최종 이미지를 먼저 골라 두는 편이 안전합니다.</p>
+          <p className="builder-help">메인 사진, 배경 사진, 갤러리 이미지는 무료로 업로드하고 발행 후에도 다시 교체할 수 있습니다.</p>
             <label>
               메인 사진 업로드
               <div className="builder-upload-control">

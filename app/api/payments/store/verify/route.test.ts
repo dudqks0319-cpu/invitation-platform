@@ -251,7 +251,7 @@ describe("POST /api/payments/store/verify", () => {
     expect(response.status).toBe(401);
   });
 
-  it("publishes the invitation after a verified apple purchase", async () => {
+  it("blocks store verification when user photos are free", async () => {
     const admin = createAdminDouble();
     createSupabaseAdminClientMock.mockReturnValue(admin.client);
     isAppleStoreVerificationEnabledMock.mockReturnValue(true);
@@ -267,39 +267,14 @@ describe("POST /api/payments/store/verify", () => {
     );
     const payload = await response.json();
 
-    expect(response.status).toBe(200);
-    expect(verifyAppleTransactionMock).toHaveBeenCalledWith({
-      transactionId: "tx-1",
-      productId: "publish.credit.ios",
-      environment: "sandbox"
-    });
-    expect(admin.state.paymentInserts).toHaveLength(1);
-    expect(admin.state.paymentInserts[0]?.provider_order_id).toBe("apple_iap:tx-1");
-    expect(admin.state.paymentInserts[0]?.ready_payload).toEqual({
-      bundleId: null,
-      environment: null,
-      originalTransactionId: null,
-      productId: "publish.credit.ios",
-      transactionId: "tx-1"
-    });
-    expect(admin.state.auditInserts[0]?.response_payload).toEqual({
-      bundleId: null,
-      environment: null,
-      originalTransactionId: null,
-      productId: "publish.credit.ios",
-      transactionId: "tx-1"
-    });
-    expect(admin.state.invitationUpdates).toContainEqual(
-      expect.objectContaining({
-        status: "published",
-        repurchase_required: false
-      })
-    );
+    expect(response.status).toBe(409);
+    expect(payload.message).toContain("무료 구성");
+    expect(verifyAppleTransactionMock).not.toHaveBeenCalled();
+    expect(admin.state.paymentInserts).toHaveLength(0);
+    expect(admin.state.invitationUpdates).toHaveLength(0);
     expect(payload).toEqual(
       expect.objectContaining({
-        success: true,
-        invitationId: "invitation-1",
-        slug: "invite-123"
+        success: false
       })
     );
   });
@@ -388,7 +363,7 @@ describe("POST /api/payments/store/verify", () => {
     expect(verifyAppleTransactionMock).not.toHaveBeenCalled();
   });
 
-  it("reuses an existing verified payment for the same purchase token", async () => {
+  it("does not reuse store payments for invitations now covered by free publish", async () => {
     const admin = createAdminDouble({ existingPayment: true });
     createSupabaseAdminClientMock.mockReturnValue(admin.client);
     isAppleStoreVerificationEnabledMock.mockReturnValue(true);
@@ -404,8 +379,9 @@ describe("POST /api/payments/store/verify", () => {
     );
     const payload = await response.json();
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(409);
+    expect(payload.message).toContain("무료 구성");
     expect(admin.state.paymentInserts).toHaveLength(0);
-    expect(payload.success).toBe(true);
+    expect(payload.success).toBe(false);
   });
 });

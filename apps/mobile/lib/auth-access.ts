@@ -42,7 +42,7 @@ export function getPaidPublishBlockReason(status: AuthStatusLike, user?: UserLik
   }
 
   if (accessMode !== "full-account") {
-    return "유료 발행은 이메일 또는 소셜 로그인 후 사용할 수 있습니다.";
+    return "계정 관리 기능은 이메일 또는 소셜 로그인 후 사용할 수 있습니다.";
   }
 
   return "";

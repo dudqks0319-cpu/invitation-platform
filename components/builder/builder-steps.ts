@@ -2,7 +2,7 @@ export const BUILDER_STEPS = [
   { id: "basic", index: 0, title: "기본 정보", shortLabel: "기본" },
   { id: "people", index: 1, title: "신랑 · 신부 / 혼주 정보", shortLabel: "인물" },
   { id: "photos", index: 2, title: "사진 설정", shortLabel: "사진" },
-  { id: "accounts", index: 3, title: "계좌 · 카카오페이", shortLabel: "결제" },
+  { id: "accounts", index: 3, title: "계좌 · 카카오페이", shortLabel: "계좌" },
   { id: "location", index: 4, title: "오시는 길", shortLabel: "위치" }
 ] as const;
 

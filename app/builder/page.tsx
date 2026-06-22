@@ -15,7 +15,7 @@ export default async function BuilderPage({
         <section className="builder-hero-strip">
           <div className="section-inner">
             <h1>초대장 만들기</h1>
-            <p>정보와 사진을 차근차근 입력하시면 초대장을 저장하고, 결제 후 바로 공유하실 수 있습니다.</p>
+            <p>정보와 사진을 차근차근 입력하시면 초대장을 저장하고, 무료 발행 후 바로 공유하실 수 있습니다.</p>
           </div>
         </section>
         <section className="builder-section builder-section-page">

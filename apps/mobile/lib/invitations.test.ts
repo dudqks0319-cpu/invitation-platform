@@ -33,7 +33,7 @@ describe("mobile publish pricing gate", () => {
     expect(access.missingFields).toContain("행사 일시");
   });
 
-  it("blocks direct publish when paid add-ons are present", () => {
+  it("allows direct publish when photos are present", () => {
     const payload = createPayload();
     payload.title = "우리 결혼합니다";
     payload.eventDateTime = "2026-05-23T14:00";
@@ -46,12 +46,12 @@ describe("mobile publish pricing gate", () => {
     const pricing = getMobileInvitationPricing(payload);
     const access = getPublishAccess(payload);
 
-    expect(pricing.amount).toBe(3300);
-    expect(access.canPublishDirectly).toBe(false);
-    expect(access.paidItems).toContain("사진 포함 발행권");
+    expect(pricing.amount).toBe(0);
+    expect(access.canPublishDirectly).toBe(true);
+    expect(access.paidItems).toEqual([]);
   });
 
-  it("rejects paid drafts before saving a published invitation", async () => {
+  it("saves published invitations with photos", async () => {
     const { saveDraftToSupabase } = await import("./invitations");
     const draft = createEmptyInvitationDraft("owner-1");
     draft.payload.title = "우리 결혼합니다";
@@ -62,9 +62,24 @@ describe("mobile publish pricing gate", () => {
     draft.payload.eventData.bride.name = "수아";
     draft.payload.photos.mainUri = "https://cdn.invitehub.co.kr/main.jpg";
 
-    await expect(saveDraftToSupabase(draft, "owner-1", "published")).rejects.toThrow(
-      "유료 옵션이 포함되어 있어 스토어 결제를 완료해야 공개할 수 있습니다."
-    );
-    expect(fromMock).not.toHaveBeenCalled();
+    fromMock.mockReturnValue({
+      insert() {
+        return {
+          select() {
+            return {
+              single: vi.fn().mockResolvedValue({
+                data: { id: "server-1", slug: "our-wedding", status: "published" },
+                error: null
+              })
+            };
+          }
+        };
+      }
+    });
+
+    await expect(saveDraftToSupabase(draft, "owner-1", "published")).resolves.toMatchObject({
+      serverId: "server-1"
+    });
+    expect(fromMock).toHaveBeenCalledWith("invitations");
   });
 });

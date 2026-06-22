@@ -1,13 +1,10 @@
 import { SiteHeader } from "@/components/shared/site-header";
-import { isPaidPublishingEnabled } from "@/lib/release-flags";
 
 export const metadata = {
   title: "FAQ - InviteHub"
 };
 
 export default function FaqPage() {
-  const paidPublishingEnabled = isPaidPublishingEnabled();
-
   return (
     <main className="app-shell">
       <SiteHeader />
@@ -27,25 +24,19 @@ export default function FaqPage() {
             <div>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 12 }}>초대장은 무료인가요?</h2>
               <p>
-                {paidPublishingEnabled
-                  ? "템플릿 선택, 초안 작성, 미리보기, 사진 없는 공개 링크 발행은 무료입니다. 사진이 포함된 초대장 발행은 앱 스토어 결제 화면에서 안내되는 발행권이 필요합니다."
-                  : "템플릿 선택, 초안 작성, 미리보기, 사진 없는 공개 링크 발행은 무료입니다. 사진 포함 발행은 스토어 상품 준비 후 다시 제공합니다."}
+                템플릿 선택, 초안 작성, 미리보기, 사용자 사진 업로드, 공개 링크 발행은 무료입니다.
               </p>
             </div>
             <div>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 12 }}>로그인 없이 사용할 수 있나요?</h2>
               <p>
-                {paidPublishingEnabled
-                  ? "무료 작성과 사진 없는 무료 발행은 로그인 없이 시작할 수 있습니다. 사진 포함 발행, 원격 저장, 계정 관리가 필요한 경우에만 이메일 또는 소셜 로그인을 요청합니다."
-                  : "무료 작성과 사진 없는 무료 발행은 로그인 없이 시작할 수 있습니다. 원격 저장과 계정 관리가 필요한 경우에만 이메일 또는 소셜 로그인을 요청합니다."}
+                무료 작성과 발행은 로그인 없이 시작할 수 있습니다. 원격 저장과 계정 관리가 필요한 경우에만 이메일 또는 소셜 로그인을 요청합니다.
               </p>
             </div>
             <div>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 12 }}>공개 링크는 어떻게 만드나요?</h2>
               <p>
-                {paidPublishingEnabled
-                  ? "필수 입력을 모두 채운 뒤 발행 화면에서 무료 발행 또는 사진 포함 발행권 사용을 완료하면 공개 링크가 자동으로 생성됩니다."
-                  : "필수 입력을 모두 채운 뒤 발행 화면에서 무료 발행을 진행하면 공개 링크가 자동으로 생성됩니다."}
+                필수 입력을 모두 채운 뒤 발행 화면에서 무료 발행을 진행하면 공개 링크가 자동으로 생성됩니다.
               </p>
             </div>
             <div>

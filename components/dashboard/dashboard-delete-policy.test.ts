@@ -14,9 +14,9 @@ describe("dashboard invitation deletion policy", () => {
     expect(canDeleteInvitation("refund_pending")).toBe(false);
   });
 
-  it("explains why published or paid invitations are not deletable", () => {
+  it("explains why published or operated invitations are not deletable", () => {
     expect(getDeletePolicyNote("published")).toContain("발행");
-    expect(getDeletePolicyNote("paid")).toContain("환불");
+    expect(getDeletePolicyNote("paid")).toContain("상태 변경");
     expect(getDeletePolicyNote("draft")).toBe("");
   });
 });

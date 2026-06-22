@@ -178,7 +178,7 @@ export async function POST(request: Request) {
   const pricing = getInvitationPricing(payload);
   if (!pricing.isFree) {
     return NextResponse.json(
-      { success: false, message: "유료 옵션이 포함되어 있어 로그인 후 앱 스토어 결제로 발행해야 합니다." },
+      { success: false, message: "현재 무료 발행 대상이 아닌 항목이 포함되어 있습니다." },
       { status: 409 }
     );
   }

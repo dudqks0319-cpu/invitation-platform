@@ -1,7 +1,5 @@
 import type { InvitationPayload } from "../invitation-shared";
 
-export const PHOTO_PUBLISH_PASS_PRICE_KRW = 3300;
-
 export type MobileInvitationPricing = {
   amount: number;
   breakdown: Array<{ label: string; amount: number }>;
@@ -10,14 +8,11 @@ export type MobileInvitationPricing = {
 
 export function getMobileInvitationPricing(payload: InvitationPayload): MobileInvitationPricing {
   const breakdown: Array<{ label: string; amount: number }> = [
-    { label: "기본 템플릿", amount: 0 }
+    { label: "초대장 발행", amount: 0 }
   ];
 
   if (payload.photos.mainUri.trim() || payload.photos.backgroundUri.trim() || payload.photos.gallery.length > 0) {
-    breakdown.push({
-      label: "사진 포함 발행권",
-      amount: PHOTO_PUBLISH_PASS_PRICE_KRW
-    });
+    breakdown.push({ label: "사진 업로드", amount: 0 });
   }
 
   const amount = breakdown.reduce((sum, item) => sum + item.amount, 0);

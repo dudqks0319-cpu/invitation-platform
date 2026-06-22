@@ -57,7 +57,7 @@ export async function POST(request: Request) {
   const pricing = getInvitationPricing(payload);
 
   if (!pricing.isFree) {
-    return NextResponse.json({ success: false, message: "유료 항목이 포함되어 있어 무료 발행을 사용할 수 없습니다." }, { status: 409 });
+    return NextResponse.json({ success: false, message: "현재 무료 발행 대상이 아닌 항목이 포함되어 있습니다." }, { status: 409 });
   }
 
   const { error: updateError } = await admin

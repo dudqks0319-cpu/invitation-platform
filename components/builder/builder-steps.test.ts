@@ -20,6 +20,7 @@ describe("builder steps", () => {
       "계좌 · 카카오페이",
       "오시는 길"
     ]);
+    expect(BUILDER_STEPS.map((step) => step.shortLabel)).not.toContain("결제");
   });
 
   it("clamps step indexes and returns the matching step metadata", () => {

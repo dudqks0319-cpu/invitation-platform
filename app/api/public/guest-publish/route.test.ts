@@ -129,7 +129,7 @@ describe("POST /api/public/guest-publish", () => {
     expect(insertMock).not.toHaveBeenCalled();
   });
 
-  it("blocks guest publish when paid options are included", async () => {
+  it("publishes guest invitations with user photos for free", async () => {
     const response = await POST(
       createRequest({
         ...createFreePayload(),
@@ -138,7 +138,7 @@ describe("POST /api/public/guest-publish", () => {
     );
     const payload = await response.json();
 
-    expect(response.status).toBe(409);
-    expect(payload.message).toContain("유료 옵션");
+    expect(response.status).toBe(200);
+    expect(payload.success).toBe(true);
   });
 });

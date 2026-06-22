@@ -9,7 +9,6 @@ import { theme } from "@/components/ui/theme";
 import { hasFullAccount } from "@/lib/auth-access";
 import { useAuth } from "@/hooks/useAuth";
 import { getFaqUrl, getInviteHubBaseUrl, getPrivacyUrl, getSupportUrl, getTermsUrl } from "@/lib/web-links";
-import { isPaidPublishingEnabled } from "@/lib/release-flags";
 
 export default function MyPageScreen() {
   const [error, setError] = useState("");
@@ -18,7 +17,6 @@ export default function MyPageScreen() {
   const { configMessage, configMissingKeys, configured, session, signOut, status, user } = useAuth();
   const isAuthenticated = hasFullAccount(status === "authenticated" ? user : null);
   const isGuestMode = status === "authenticated" && !isAuthenticated;
-  const paidPublishingEnabled = isPaidPublishingEnabled();
 
   async function openUrl(
     action: "support" | "faq" | "privacy" | "terms",
@@ -42,7 +40,7 @@ export default function MyPageScreen() {
   function confirmDeleteAccount() {
     Alert.alert(
       "계정 삭제",
-      "계정을 삭제하면 초대장과 결제 기록이 함께 제거되며 되돌릴 수 없습니다.",
+      "계정을 삭제하면 초대장과 관련 기록이 함께 제거되며 되돌릴 수 없습니다.",
       [
         { text: "취소", style: "cancel" },
         {
@@ -107,12 +105,8 @@ export default function MyPageScreen() {
           {isAuthenticated
             ? "지금은 서버 저장본을 불러오고 공개 링크를 발행할 수 있습니다."
             : isGuestMode
-              ? paidPublishingEnabled
-                ? "사진 포함 발행과 계정 삭제는 이메일 또는 소셜 로그인 후 사용할 수 있습니다."
-                : "계정 삭제와 원격 저장 관리는 이메일 또는 소셜 로그인 후 사용할 수 있습니다."
-              : paidPublishingEnabled
-                ? "로그인하면 사진 포함 발행과 계정 관리를 사용할 수 있습니다."
-                : "로그인하면 원격 저장과 계정 관리를 사용할 수 있습니다."}
+              ? "계정 삭제와 원격 저장 관리는 이메일 또는 소셜 로그인 후 사용할 수 있습니다."
+              : "로그인하면 원격 저장과 계정 관리를 사용할 수 있습니다."}
         </Text>
         <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>{configMessage}</Text>
         {!configured && configMissingKeys.length > 0 ? (
@@ -122,11 +116,9 @@ export default function MyPageScreen() {
         ) : null}
       </Card>
 
-      <Card eyebrow="요금제" title={paidPublishingEnabled ? "무료로 시작 · 사진 포함은 스토어 결제" : "첫 제출 버전 · 무료 발행"}>
+      <Card eyebrow="요금제" title="현재 제공 기능 무료">
         <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
-          {paidPublishingEnabled
-            ? "무료 초대장은 로그인 없이 시작할 수 있고, 사진이 포함된 유료 발행은 iOS IAP 또는 Google Play Billing으로 진행합니다."
-            : "첫 제출 버전은 사진 없는 무료 초대장 발행을 제공합니다. 사진 포함 발행은 스토어 상품 준비 후 다시 활성화합니다."}
+          템플릿 선택, 사진 업로드, 초안 작성, 미리보기, 공개 링크 발행을 무료로 제공합니다.
         </Text>
       </Card>
 

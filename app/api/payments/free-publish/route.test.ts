@@ -41,7 +41,7 @@ function createServerClient(userId: string | null) {
   };
 }
 
-function createAdminClient(pricey = false) {
+function createAdminClient(withPhotos = false) {
   return {
     from(table: string) {
       if (table === "invitations") {
@@ -59,7 +59,7 @@ function createAdminClient(pricey = false) {
                 slug: "invite-123",
                 title: "초대장",
                 user_id: "user-1",
-                payload: pricey
+                payload: withPhotos
                   ? { mainImageUrl: "https://example.com/a.jpg" }
                   : {},
                 status: "draft"
@@ -99,15 +99,16 @@ describe("POST /api/payments/free-publish", () => {
     expect(payload.slug).toBe("invite-123");
   });
 
-  it("blocks free publish when paid add-ons exist", async () => {
+  it("publishes when the draft includes user photos", async () => {
     createServerSupabaseClientMock.mockResolvedValue(createServerClient("user-1"));
     createSupabaseAdminClientMock.mockReturnValue(createAdminClient(true));
 
     const response = await POST(createRequest());
     const payload = await response.json();
 
-    expect(response.status).toBe(409);
-    expect(payload.message).toContain("유료 항목");
+    expect(response.status).toBe(200);
+    expect(payload.success).toBe(true);
+    expect(payload.slug).toBe("invite-123");
   });
 
   it("rejects non-json publish requests", async () => {

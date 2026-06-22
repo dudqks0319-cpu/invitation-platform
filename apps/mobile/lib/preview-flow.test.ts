@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { getPreviewFlowState } from "./preview-flow";
 
 describe("getPreviewFlowState", () => {
-  it("marks payment as current for paid unpublished invitations", () => {
+  it("marks configuration review as current for non-free unpublished invitations", () => {
     const state = getPreviewFlowState({
       isPublished: false,
       requiresPurchase: true
@@ -15,7 +15,7 @@ describe("getPreviewFlowState", () => {
     ]);
   });
 
-  it("skips payment for free unpublished invitations", () => {
+  it("skips configuration review for free unpublished invitations", () => {
     const state = getPreviewFlowState({
       isPublished: false,
       requiresPurchase: false
@@ -28,7 +28,7 @@ describe("getPreviewFlowState", () => {
     ]);
   });
 
-  it("marks photo removal as current when paid publishing is unavailable", () => {
+  it("marks configuration review as current when publishing is unavailable", () => {
     const state = getPreviewFlowState({
       isPublished: false,
       purchaseUnavailable: true,
@@ -37,7 +37,7 @@ describe("getPreviewFlowState", () => {
 
     expect(state.steps.map((step) => step.label)).toEqual([
       "미리보기",
-      "사진 제거",
+      "구성 확인",
       "무료 발행"
     ]);
     expect(state.steps.map((step) => step.status)).toEqual([

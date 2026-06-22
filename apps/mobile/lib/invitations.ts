@@ -259,7 +259,7 @@ export async function saveDraftToSupabase(
     }
 
     if (requiresPaymentBeforePublish(normalizedPayload)) {
-      throw new Error("유료 옵션이 포함되어 있어 스토어 결제를 완료해야 공개할 수 있습니다.");
+      throw new Error("현재 무료 발행 대상이 아닌 항목이 포함되어 있습니다.");
     }
   }
 

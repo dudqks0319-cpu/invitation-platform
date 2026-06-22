@@ -9,5 +9,5 @@ export function getDeletePolicyNote(status: InvitationStatus) {
     return "";
   }
 
-  return "발행되었거나 결제 이력이 있는 초대장은 삭제 대신 환불 또는 상태 변경으로 관리해 주세요.";
+  return "발행되었거나 운영 이력이 있는 초대장은 삭제 대신 상태 변경으로 관리해 주세요.";
 }
