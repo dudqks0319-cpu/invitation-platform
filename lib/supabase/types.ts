@@ -189,6 +189,60 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["guestbook_entries"]["Insert"]>;
         Relationships: [];
       };
+      content_reports: {
+        Row: {
+          id: string;
+          target_type: "invitation" | "guestbook" | "image";
+          target_id: string;
+          invitation_id: string | null;
+          variant_id: string | null;
+          reason: "inappropriate" | "privacy" | "spam" | "copyright" | "other";
+          detail: string | null;
+          reporter_contact: string | null;
+          status: "pending" | "reviewing" | "resolved" | "rejected";
+          admin_note: string | null;
+          created_at: string;
+          resolved_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          target_type: "invitation" | "guestbook" | "image";
+          target_id: string;
+          invitation_id?: string | null;
+          variant_id?: string | null;
+          reason: "inappropriate" | "privacy" | "spam" | "copyright" | "other";
+          detail?: string | null;
+          reporter_contact?: string | null;
+          status?: "pending" | "reviewing" | "resolved" | "rejected";
+          admin_note?: string | null;
+          created_at?: string;
+          resolved_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["content_reports"]["Insert"]>;
+        Relationships: [];
+      };
+      moderation_events: {
+        Row: {
+          id: string;
+          target_type: "invitation" | "guestbook" | "image" | "report";
+          target_id: string;
+          action: "hide" | "restore" | "delete" | "approve" | "reject" | "resolve";
+          reason: string | null;
+          actor_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          target_type: "invitation" | "guestbook" | "image" | "report";
+          target_id: string;
+          action: "hide" | "restore" | "delete" | "approve" | "reject" | "resolve";
+          reason?: string | null;
+          actor_id?: string | null;
+          created_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["moderation_events"]["Insert"]>;
+        Relationships: [];
+      };
       rate_limits: {
         Row: {
           bucket_key: string;

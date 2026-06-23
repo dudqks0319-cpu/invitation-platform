@@ -19,6 +19,23 @@ export const publicGuestbookSchema = z.object({
   website: z.string().trim().max(0).optional().default("")
 });
 
+export const publicContentReportSchema = z.object({
+  targetType: z.enum(["invitation", "guestbook", "image"]).default("invitation"),
+  targetId: z.string().trim().uuid().optional(),
+  reason: z.enum(["inappropriate", "privacy", "spam", "copyright", "other"]),
+  detail: z.string().trim().max(500).optional().default(""),
+  reporterContact: z.string().trim().max(120).optional().default(""),
+  website: z.string().trim().max(0).optional().default("")
+}).superRefine((value, context) => {
+  if (value.targetType !== "invitation" && !value.targetId) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "신고 대상이 필요합니다.",
+      path: ["targetId"]
+    });
+  }
+});
+
 export function ensureJsonRequest(request: Request) {
   const contentType = request.headers.get("content-type") ?? "";
   return contentType.includes("application/json");

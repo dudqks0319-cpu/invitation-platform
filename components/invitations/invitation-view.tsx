@@ -129,6 +129,8 @@ export function InvitationView({
   const [rsvpError, setRsvpError] = useState("");
   const [guestbookMessage, setGuestbookMessage] = useState("");
   const [guestbookError, setGuestbookError] = useState("");
+  const [reportMessage, setReportMessage] = useState("");
+  const [reportError, setReportError] = useState("");
   const [shareMessage, setShareMessage] = useState("");
   const [pending, setPending] = useState(false);
   const baseTemplate = templates.find((template) => template.id === payload.templateId) ?? templates[0];
@@ -265,6 +267,30 @@ export function InvitationView({
       }
     } catch (submissionError) {
       setGuestbookError(submissionError instanceof Error ? submissionError.message : "방명록 저장에 실패했습니다.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function handleReportSubmit(formData: FormData) {
+    setPending(true);
+    setReportError("");
+    setReportMessage("");
+
+    try {
+      if (mode === "public" && slug) {
+        await submitPublicForm(`/api/public/${slug}/report`, {
+          targetType: String(formData.get("targetType") || "invitation"),
+          reason: String(formData.get("reason") || "other"),
+          detail: String(formData.get("detail") || ""),
+          reporterContact: String(formData.get("reporterContact") || ""),
+          website: String(formData.get("website") || "")
+        });
+      }
+
+      setReportMessage("신고가 접수되었습니다. 운영자가 확인하겠습니다.");
+    } catch (submissionError) {
+      setReportError(submissionError instanceof Error ? submissionError.message : "신고 접수에 실패했습니다.");
     } finally {
       setPending(false);
     }
@@ -586,6 +612,45 @@ export function InvitationView({
           <article className="invitation-card">
             <h2>감사 인사</h2>
             <p style={{ whiteSpace: "pre-line" }}>{payload.thankYouMessage}</p>
+          </article>
+        ) : null}
+
+        {mode === "public" ? (
+          <article className="invitation-card invitation-report-card">
+            <h2>신고하기</h2>
+            <p>부적절한 내용, 개인정보 노출, 저작권 문제가 있으면 운영자에게 알려 주세요.</p>
+            <form
+              action={async (formData) => {
+                await handleReportSubmit(formData);
+              }}
+              className="invitation-guestbook-form"
+            >
+              <input autoComplete="off" name="website" style={{ display: "none" }} tabIndex={-1} type="text" />
+              <input name="targetType" type="hidden" value="invitation" />
+              <label>
+                신고 사유
+                <select className="modal-input" defaultValue="inappropriate" name="reason">
+                  <option value="inappropriate">부적절한 내용</option>
+                  <option value="privacy">개인정보 노출</option>
+                  <option value="spam">광고/스팸</option>
+                  <option value="copyright">저작권 문제</option>
+                  <option value="other">기타</option>
+                </select>
+              </label>
+              <label>
+                상세 내용
+                <textarea maxLength={500} name="detail" rows={3} />
+              </label>
+              <label>
+                회신 받을 정보
+                <input maxLength={120} name="reporterContact" placeholder="선택 입력" type="text" />
+              </label>
+              <button className="btn-outline invitation-wide-btn" disabled={pending} type="submit">
+                신고 접수
+              </button>
+            </form>
+            {reportMessage ? <p className="form-message success">{reportMessage}</p> : null}
+            {reportError ? <p className="form-message error">{reportError}</p> : null}
           </article>
         ) : null}
       </section>

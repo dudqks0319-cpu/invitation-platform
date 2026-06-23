@@ -100,6 +100,31 @@ create table if not exists public.guestbook_entries (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.content_reports (
+  id uuid primary key default gen_random_uuid(),
+  target_type text not null check (target_type in ('invitation', 'guestbook', 'image')),
+  target_id uuid not null,
+  invitation_id uuid references public.invitations(id) on delete cascade,
+  variant_id uuid references public.invitation_variants(id) on delete set null,
+  reason text not null check (reason in ('inappropriate', 'privacy', 'spam', 'copyright', 'other')),
+  detail text check (detail is null or char_length(detail) <= 500),
+  reporter_contact text check (reporter_contact is null or char_length(reporter_contact) <= 120),
+  status text not null default 'pending' check (status in ('pending', 'reviewing', 'resolved', 'rejected')),
+  admin_note text,
+  created_at timestamptz not null default now(),
+  resolved_at timestamptz
+);
+
+create table if not exists public.moderation_events (
+  id uuid primary key default gen_random_uuid(),
+  target_type text not null check (target_type in ('invitation', 'guestbook', 'image', 'report')),
+  target_id uuid not null,
+  action text not null check (action in ('hide', 'restore', 'delete', 'approve', 'reject', 'resolve')),
+  reason text,
+  actor_id uuid references auth.users(id) on delete set null,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists public.view_logs (
   id bigint generated always as identity primary key,
   invitation_id uuid not null references public.invitations(id) on delete cascade,
@@ -271,6 +296,8 @@ alter table public.payments enable row level security;
 alter table public.payment_audit_logs enable row level security;
 alter table public.rsvps enable row level security;
 alter table public.guestbook_entries enable row level security;
+alter table public.content_reports enable row level security;
+alter table public.moderation_events enable row level security;
 alter table public.view_logs enable row level security;
 alter table public.rate_limits enable row level security;
 alter table public.invitation_templates enable row level security;
@@ -427,6 +454,20 @@ with check (
   )
 );
 
+drop policy if exists "owners can read content reports" on public.content_reports;
+create policy "owners can read content reports"
+on public.content_reports
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.invitations
+    where invitations.id = content_reports.invitation_id
+      and invitations.user_id = auth.uid()
+  )
+);
+
 drop policy if exists "public can read active invitation templates" on public.invitation_templates;
 create policy "public can read active invitation templates"
 on public.invitation_templates
@@ -478,6 +519,14 @@ create index if not exists idx_rsvps_invitation_id on public.rsvps(invitation_id
 create index if not exists idx_rsvps_variant_id on public.rsvps(variant_id);
 create index if not exists idx_guestbook_invitation_id on public.guestbook_entries(invitation_id);
 create index if not exists idx_guestbook_variant_id on public.guestbook_entries(variant_id);
+create index if not exists idx_content_reports_status_created
+  on public.content_reports(status, created_at desc);
+create index if not exists idx_content_reports_target
+  on public.content_reports(target_type, target_id);
+create index if not exists idx_content_reports_invitation_id
+  on public.content_reports(invitation_id);
+create index if not exists idx_moderation_events_target
+  on public.moderation_events(target_type, target_id);
 create index if not exists idx_view_logs_invitation_id on public.view_logs(invitation_id);
 create index if not exists idx_view_logs_variant_id on public.view_logs(variant_id);
 create index if not exists idx_invitation_templates_category_active

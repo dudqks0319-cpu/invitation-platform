@@ -1559,6 +1559,7 @@ ul { list-style: none; }
   font-weight: 600;
 }
 .invitation-guestbook-form input,
+.invitation-guestbook-form select,
 .invitation-guestbook-form textarea {
   margin-top: 6px;
   width: 100%;
@@ -1567,6 +1568,9 @@ ul { list-style: none; }
   padding: 11px 12px;
   font-size: 0.92rem;
   font-family: inherit;
+}
+.invitation-report-card {
+  border-color: rgba(155, 37, 37, 0.18);
 }
 .invitation-guestbook-list {
   max-height: 420px;

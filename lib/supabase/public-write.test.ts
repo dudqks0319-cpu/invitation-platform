@@ -1,4 +1,10 @@
-import { ensureJsonRequest, publicGuestbookSchema, publicRsvpSchema, readJsonBody } from "@/lib/supabase/public-write";
+import {
+  ensureJsonRequest,
+  publicContentReportSchema,
+  publicGuestbookSchema,
+  publicRsvpSchema,
+  readJsonBody
+} from "@/lib/supabase/public-write";
 
 describe("public write validation", () => {
   it("rejects honeypot-filled RSVP payloads", () => {
@@ -19,6 +25,26 @@ describe("public write validation", () => {
     });
 
     expect(result.success).toBe(true);
+  });
+
+  it("accepts invitation reports without exposing raw contact data requirements", () => {
+    const result = publicContentReportSchema.safeParse({
+      targetType: "invitation",
+      reason: "privacy",
+      detail: "전화번호가 공개되어 있습니다.",
+      reporterContact: "guest@example.com"
+    });
+
+    expect(result.success).toBe(true);
+  });
+
+  it("requires a target id for guestbook and image reports", () => {
+    const result = publicContentReportSchema.safeParse({
+      targetType: "guestbook",
+      reason: "spam"
+    });
+
+    expect(result.success).toBe(false);
   });
 
   it("detects json requests from content-type", () => {

@@ -38,9 +38,23 @@ describe("InvitationView", () => {
     expect(document.body.innerHTML).toContain("카카오톡 공유</button>");
     expect(document.body.textContent).toContain("카카오톡 공유창으로 공개 초대장 링크를 바로 보낼 수 있습니다.");
     expect(document.body.textContent).toContain("네이버 지도 API 키가 설정되면 이 영역에 지도가 표시됩니다.");
+    expect(document.body.textContent).toContain("신고하기");
+    expect(document.body.textContent).toContain("부적절한 내용, 개인정보 노출, 저작권 문제가 있으면 운영자에게 알려 주세요.");
     expect(document.body.innerHTML).not.toContain(
       "미리보기 단계에서는 나만 볼 수 있습니다."
     );
+  });
+
+  it("does not expose the public report form in preview mode", () => {
+    document.body.innerHTML = renderToStaticMarkup(
+      <InvitationView
+        mode="preview"
+        payload={defaultInvitationDraft}
+        shareUrl="/preview"
+      />
+    );
+
+    expect(document.body.textContent).not.toContain("신고하기");
   });
 
   it("hides public sections that are disabled by section policy", () => {
