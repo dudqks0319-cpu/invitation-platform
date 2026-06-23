@@ -87,6 +87,7 @@ create table if not exists public.rsvps (
   attending boolean not null default true,
   guests integer not null default 1 check (guests between 0 and 20),
   memo text check (memo is null or char_length(memo) <= 300),
+  client_hash text check (client_hash is null or client_hash ~ '^[a-f0-9]{64}$'),
   created_at timestamptz not null default now()
 );
 
@@ -97,6 +98,7 @@ create table if not exists public.guestbook_entries (
   nickname text not null check (char_length(nickname) between 1 and 30),
   message text not null check (char_length(message) between 1 and 300),
   approved boolean not null default false,
+  client_hash text check (client_hash is null or client_hash ~ '^[a-f0-9]{64}$'),
   created_at timestamptz not null default now()
 );
 
@@ -109,6 +111,7 @@ create table if not exists public.content_reports (
   reason text not null check (reason in ('inappropriate', 'privacy', 'spam', 'copyright', 'other')),
   detail text check (detail is null or char_length(detail) <= 500),
   reporter_contact text check (reporter_contact is null or char_length(reporter_contact) <= 120),
+  client_hash text check (client_hash is null or client_hash ~ '^[a-f0-9]{64}$'),
   status text not null default 'pending' check (status in ('pending', 'reviewing', 'resolved', 'rejected')),
   admin_note text,
   created_at timestamptz not null default now(),
@@ -125,6 +128,18 @@ create table if not exists public.moderation_events (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.public_abuse_blocks (
+  id uuid primary key default gen_random_uuid(),
+  invitation_id uuid not null references public.invitations(id) on delete cascade,
+  client_hash text not null check (client_hash ~ '^[a-f0-9]{64}$'),
+  target_type text not null check (target_type in ('rsvp', 'guestbook', 'report')),
+  target_id uuid,
+  reason text not null default 'manual' check (reason in ('manual', 'report_threshold')),
+  status text not null default 'active' check (status in ('active', 'expired', 'revoked')),
+  created_at timestamptz not null default now(),
+  expires_at timestamptz
+);
+
 create table if not exists public.view_logs (
   id bigint generated always as identity primary key,
   invitation_id uuid not null references public.invitations(id) on delete cascade,
@@ -135,9 +150,16 @@ create table if not exists public.view_logs (
 
 alter table public.rsvps
   add column if not exists variant_id uuid references public.invitation_variants(id) on delete set null;
+alter table public.rsvps
+  add column if not exists client_hash text check (client_hash is null or client_hash ~ '^[a-f0-9]{64}$');
 
 alter table public.guestbook_entries
   add column if not exists variant_id uuid references public.invitation_variants(id) on delete set null;
+alter table public.guestbook_entries
+  add column if not exists client_hash text check (client_hash is null or client_hash ~ '^[a-f0-9]{64}$');
+
+alter table public.content_reports
+  add column if not exists client_hash text check (client_hash is null or client_hash ~ '^[a-f0-9]{64}$');
 
 alter table public.view_logs
   add column if not exists variant_id uuid references public.invitation_variants(id) on delete set null;
@@ -298,6 +320,7 @@ alter table public.rsvps enable row level security;
 alter table public.guestbook_entries enable row level security;
 alter table public.content_reports enable row level security;
 alter table public.moderation_events enable row level security;
+alter table public.public_abuse_blocks enable row level security;
 alter table public.view_logs enable row level security;
 alter table public.rate_limits enable row level security;
 alter table public.invitation_templates enable row level security;
@@ -468,6 +491,20 @@ using (
   )
 );
 
+drop policy if exists "owners can read public abuse blocks" on public.public_abuse_blocks;
+create policy "owners can read public abuse blocks"
+on public.public_abuse_blocks
+for select
+to authenticated
+using (
+  exists (
+    select 1
+    from public.invitations
+    where invitations.id = public_abuse_blocks.invitation_id
+      and invitations.user_id = auth.uid()
+  )
+);
+
 drop policy if exists "public can read active invitation templates" on public.invitation_templates;
 create policy "public can read active invitation templates"
 on public.invitation_templates
@@ -519,14 +556,25 @@ create index if not exists idx_rsvps_invitation_id on public.rsvps(invitation_id
 create index if not exists idx_rsvps_variant_id on public.rsvps(variant_id);
 create index if not exists idx_guestbook_invitation_id on public.guestbook_entries(invitation_id);
 create index if not exists idx_guestbook_variant_id on public.guestbook_entries(variant_id);
+create index if not exists idx_guestbook_client_hash
+  on public.guestbook_entries(invitation_id, client_hash)
+  where client_hash is not null;
 create index if not exists idx_content_reports_status_created
   on public.content_reports(status, created_at desc);
 create index if not exists idx_content_reports_target
   on public.content_reports(target_type, target_id);
 create index if not exists idx_content_reports_invitation_id
   on public.content_reports(invitation_id);
+create index if not exists idx_content_reports_client_hash
+  on public.content_reports(invitation_id, client_hash)
+  where client_hash is not null;
 create index if not exists idx_moderation_events_target
   on public.moderation_events(target_type, target_id);
+create unique index if not exists idx_public_abuse_blocks_active_client
+  on public.public_abuse_blocks(invitation_id, client_hash)
+  where status = 'active';
+create index if not exists idx_public_abuse_blocks_target
+  on public.public_abuse_blocks(target_type, target_id);
 create index if not exists idx_view_logs_invitation_id on public.view_logs(invitation_id);
 create index if not exists idx_view_logs_variant_id on public.view_logs(variant_id);
 create index if not exists idx_invitation_templates_category_active

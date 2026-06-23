@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { createHash } from "node:crypto";
 import type { Database } from "@/lib/supabase/types";
 
 type RateLimitRow = {
@@ -94,4 +95,8 @@ export function getClientIdentifier(request: Request) {
     request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
     "anonymous"
   );
+}
+
+export function hashClientIdentifier(identifier: string) {
+  return createHash("sha256").update(`invitehub-public-client:${identifier}`).digest("hex");
 }

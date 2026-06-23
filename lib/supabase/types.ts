@@ -151,6 +151,7 @@ export type Database = {
           attending: boolean;
           guests: number;
           memo: string | null;
+          client_hash: string | null;
           created_at: string;
         };
         Insert: {
@@ -162,6 +163,7 @@ export type Database = {
           attending?: boolean;
           guests?: number;
           memo?: string | null;
+          client_hash?: string | null;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["rsvps"]["Insert"]>;
@@ -175,6 +177,7 @@ export type Database = {
           nickname: string;
           message: string;
           approved: boolean;
+          client_hash: string | null;
           created_at: string;
         };
         Insert: {
@@ -184,6 +187,7 @@ export type Database = {
           nickname: string;
           message: string;
           approved?: boolean;
+          client_hash?: string | null;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["guestbook_entries"]["Insert"]>;
@@ -199,6 +203,7 @@ export type Database = {
           reason: "inappropriate" | "privacy" | "spam" | "copyright" | "other";
           detail: string | null;
           reporter_contact: string | null;
+          client_hash: string | null;
           status: "pending" | "reviewing" | "resolved" | "rejected";
           admin_note: string | null;
           created_at: string;
@@ -213,6 +218,7 @@ export type Database = {
           reason: "inappropriate" | "privacy" | "spam" | "copyright" | "other";
           detail?: string | null;
           reporter_contact?: string | null;
+          client_hash?: string | null;
           status?: "pending" | "reviewing" | "resolved" | "rejected";
           admin_note?: string | null;
           created_at?: string;
@@ -241,6 +247,32 @@ export type Database = {
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["moderation_events"]["Insert"]>;
+        Relationships: [];
+      };
+      public_abuse_blocks: {
+        Row: {
+          id: string;
+          invitation_id: string;
+          client_hash: string;
+          target_type: "rsvp" | "guestbook" | "report";
+          target_id: string | null;
+          reason: "manual" | "report_threshold";
+          status: "active" | "expired" | "revoked";
+          created_at: string;
+          expires_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          invitation_id: string;
+          client_hash: string;
+          target_type: "rsvp" | "guestbook" | "report";
+          target_id?: string | null;
+          reason?: "manual" | "report_threshold";
+          status?: "active" | "expired" | "revoked";
+          created_at?: string;
+          expires_at?: string | null;
+        };
+        Update: Partial<Database["public"]["Tables"]["public_abuse_blocks"]["Insert"]>;
         Relationships: [];
       };
       rate_limits: {

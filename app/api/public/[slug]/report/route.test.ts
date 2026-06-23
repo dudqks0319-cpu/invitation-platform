@@ -3,11 +3,15 @@ import { vi } from "vitest";
 const {
   createSupabaseAdminClientMock,
   consumeRateLimitMock,
-  getClientIdentifierMock
+  getClientIdentifierMock,
+  hashClientIdentifierMock,
+  applyGuestbookReportAutoBlockMock
 } = vi.hoisted(() => ({
   createSupabaseAdminClientMock: vi.fn(),
   consumeRateLimitMock: vi.fn(),
-  getClientIdentifierMock: vi.fn()
+  getClientIdentifierMock: vi.fn(),
+  hashClientIdentifierMock: vi.fn(),
+  applyGuestbookReportAutoBlockMock: vi.fn()
 }));
 
 vi.mock("@/lib/supabase/admin", () => ({
@@ -16,7 +20,12 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 vi.mock("@/lib/rate-limit", () => ({
   consumeRateLimit: consumeRateLimitMock,
-  getClientIdentifier: getClientIdentifierMock
+  getClientIdentifier: getClientIdentifierMock,
+  hashClientIdentifier: hashClientIdentifierMock
+}));
+
+vi.mock("@/lib/public-abuse", () => ({
+  applyGuestbookReportAutoBlock: applyGuestbookReportAutoBlockMock
 }));
 
 import { POST } from "@/app/api/public/[slug]/report/route";
@@ -151,6 +160,11 @@ describe("POST /api/public/[slug]/report", () => {
       resetAt: Date.now() + 60_000
     });
     getClientIdentifierMock.mockReturnValue("203.0.113.10");
+    hashClientIdentifierMock.mockReturnValue("client-hash");
+    applyGuestbookReportAutoBlockMock.mockResolvedValue({
+      ok: true,
+      blocked: false
+    });
   });
 
   it("stores invitation reports with variant attribution", async () => {
@@ -180,6 +194,10 @@ describe("POST /api/public/[slug]/report", () => {
       success: true,
       message: "신고가 접수되었습니다. 운영자가 확인하겠습니다."
     });
+    expect(hashClientIdentifierMock).toHaveBeenCalledWith("203.0.113.10");
+    expect(consumeRateLimitMock).toHaveBeenCalledWith(expect.objectContaining({
+      key: "report:demo-friends:client-hash"
+    }));
     expect(adminDouble.insertMock).toHaveBeenCalledWith({
       target_type: "invitation",
       target_id: "invitation-1",
@@ -188,6 +206,7 @@ describe("POST /api/public/[slug]/report", () => {
       reason: "privacy",
       detail: "사진에 연락처가 노출되어 있습니다.",
       reporter_contact: "guest@example.com",
+      client_hash: "client-hash",
       status: "pending"
     });
   });
@@ -248,5 +267,26 @@ describe("POST /api/public/[slug]/report", () => {
     });
 
     expect(response.status).toBe(400);
+  });
+
+  it("checks guestbook report thresholds for auto blocking", async () => {
+    createSupabaseAdminClientMock.mockReturnValue(createAdminDouble().client);
+
+    const response = await POST(createRequest({
+      targetType: "guestbook",
+      targetId: "11111111-1111-4111-8111-111111111111",
+      reason: "spam",
+      website: ""
+    }), {
+      params: Promise.resolve({ slug: "demo" })
+    });
+
+    expect(response.status).toBe(200);
+    expect(applyGuestbookReportAutoBlockMock).toHaveBeenCalledWith({
+      admin: expect.anything(),
+      invitationId: "invitation-1",
+      targetType: "guestbook",
+      targetId: "11111111-1111-4111-8111-111111111111"
+    });
   });
 });

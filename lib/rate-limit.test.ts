@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
-import { consumeRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { consumeRateLimit, getClientIdentifier, hashClientIdentifier } from "@/lib/rate-limit";
 
 describe("rate limit helpers", () => {
   it("prefers trusted platform headers before x-forwarded-for", () => {
@@ -22,6 +22,14 @@ describe("rate limit helpers", () => {
     });
 
     expect(getClientIdentifier(request)).toBe("198.51.100.10");
+  });
+
+  it("hashes client identifiers without storing the raw address", () => {
+    const hashed = hashClientIdentifier("203.0.113.20");
+
+    expect(hashed).toMatch(/^[a-f0-9]{64}$/);
+    expect(hashed).not.toContain("203.0.113.20");
+    expect(hashClientIdentifier("203.0.113.20")).toBe(hashed);
   });
 
   it("uses the persistent rpc backend for rate limiting", async () => {

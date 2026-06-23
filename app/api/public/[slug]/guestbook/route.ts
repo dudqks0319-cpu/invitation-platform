@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isInvitationSectionAllowed } from "@/lib/invitation-payload";
 import { resolvePublishedInvitationBySlug } from "@/lib/invitation-variants";
-import { consumeRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { checkPublicAbuseBlock } from "@/lib/public-abuse";
+import { consumeRateLimit, getClientIdentifier, hashClientIdentifier } from "@/lib/rate-limit";
 import { ensureJsonRequest, publicGuestbookSchema, readJsonBody } from "@/lib/supabase/public-write";
 
 const WINDOW_MS = 60 * 1000;
@@ -28,9 +29,11 @@ export async function POST(
   }
 
   const { slug } = await context.params;
+  const clientIdentifier = getClientIdentifier(request);
+  const clientHash = hashClientIdentifier(clientIdentifier);
   const limitResult = await consumeRateLimit({
     admin,
-    key: `guestbook:${slug}:${getClientIdentifier(request)}`,
+    key: `guestbook:${slug}:${clientHash}`,
     limit: LIMIT,
     windowMs: WINDOW_MS
   });
@@ -91,12 +94,33 @@ export async function POST(
     );
   }
 
+  const abuseBlock = await checkPublicAbuseBlock({
+    admin,
+    invitationId: lookup.invitation.id,
+    clientHash
+  });
+
+  if (!abuseBlock.ok) {
+    return NextResponse.json(
+      { success: false, message: "요청 보호 서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요." },
+      { status: 503 }
+    );
+  }
+
+  if (abuseBlock.blocked) {
+    return NextResponse.json(
+      { success: false, message: "운영 정책에 따라 공개 응답 제출이 제한되었습니다." },
+      { status: 403 }
+    );
+  }
+
   const { error } = await admin.from("guestbook_entries").insert({
     invitation_id: lookup.invitation.id,
     variant_id: lookup.variant?.id ?? null,
     nickname: parsed.data.nickname,
     message: parsed.data.message,
-    approved: false
+    approved: false,
+    client_hash: clientHash
   });
 
   if (error) {

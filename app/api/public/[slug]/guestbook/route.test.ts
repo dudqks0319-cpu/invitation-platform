@@ -3,11 +3,15 @@ import { vi } from "vitest";
 const {
   createSupabaseAdminClientMock,
   consumeRateLimitMock,
-  getClientIdentifierMock
+  getClientIdentifierMock,
+  hashClientIdentifierMock,
+  checkPublicAbuseBlockMock
 } = vi.hoisted(() => ({
   createSupabaseAdminClientMock: vi.fn(),
   consumeRateLimitMock: vi.fn(),
-  getClientIdentifierMock: vi.fn()
+  getClientIdentifierMock: vi.fn(),
+  hashClientIdentifierMock: vi.fn(),
+  checkPublicAbuseBlockMock: vi.fn()
 }));
 
 vi.mock("@/lib/supabase/admin", () => ({
@@ -16,7 +20,12 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 vi.mock("@/lib/rate-limit", () => ({
   consumeRateLimit: consumeRateLimitMock,
-  getClientIdentifier: getClientIdentifierMock
+  getClientIdentifier: getClientIdentifierMock,
+  hashClientIdentifier: hashClientIdentifierMock
+}));
+
+vi.mock("@/lib/public-abuse", () => ({
+  checkPublicAbuseBlock: checkPublicAbuseBlockMock
 }));
 
 import { POST } from "@/app/api/public/[slug]/guestbook/route";
@@ -147,6 +156,11 @@ describe("POST /api/public/[slug]/guestbook", () => {
       resetAt: Date.now() + 60_000
     });
     getClientIdentifierMock.mockReturnValue("203.0.113.10");
+    hashClientIdentifierMock.mockReturnValue("client-hash");
+    checkPublicAbuseBlockMock.mockResolvedValue({
+      ok: true,
+      blocked: false
+    });
   });
 
   it("returns 503 when the persistent rate-limit backend is unavailable", async () => {
@@ -211,12 +225,42 @@ describe("POST /api/public/[slug]/guestbook", () => {
     });
 
     expect(response.status).toBe(200);
+    expect(hashClientIdentifierMock).toHaveBeenCalledWith("203.0.113.10");
+    expect(consumeRateLimitMock).toHaveBeenCalledWith(expect.objectContaining({
+      key: "guestbook:demo-friends:client-hash"
+    }));
     expect(adminDouble.insertMock).toHaveBeenCalledWith({
       invitation_id: "invitation-1",
       variant_id: "variant-1",
       nickname: "친구1",
       message: "축하합니다",
-      approved: false
+      approved: false,
+      client_hash: "client-hash"
+    });
+  });
+
+  it("blocks guestbook writes for clients blocked by moderation", async () => {
+    const adminDouble = createAdminDouble();
+    createSupabaseAdminClientMock.mockReturnValue(adminDouble.client);
+    checkPublicAbuseBlockMock.mockResolvedValue({
+      ok: true,
+      blocked: true
+    });
+
+    const response = await POST(createRequest({
+      nickname: "친구1",
+      message: "축하합니다",
+      website: ""
+    }), {
+      params: Promise.resolve({ slug: "demo" })
+    });
+    const result = await response.json();
+
+    expect(response.status).toBe(403);
+    expect(adminDouble.insertMock).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      success: false,
+      message: "운영 정책에 따라 공개 응답 제출이 제한되었습니다."
     });
   });
 

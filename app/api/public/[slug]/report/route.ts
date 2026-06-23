@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { resolvePublishedInvitationBySlug } from "@/lib/invitation-variants";
-import { consumeRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import { applyGuestbookReportAutoBlock } from "@/lib/public-abuse";
+import { consumeRateLimit, getClientIdentifier, hashClientIdentifier } from "@/lib/rate-limit";
 import { ensureJsonRequest, publicContentReportSchema, readJsonBody } from "@/lib/supabase/public-write";
 
 const WINDOW_MS = 60 * 1000;
@@ -27,9 +28,11 @@ export async function POST(
   }
 
   const { slug } = await context.params;
+  const clientIdentifier = getClientIdentifier(request);
+  const clientHash = hashClientIdentifier(clientIdentifier);
   const limitResult = await consumeRateLimit({
     admin,
-    key: `report:${slug}:${getClientIdentifier(request)}`,
+    key: `report:${slug}:${clientHash}`,
     limit: LIMIT,
     windowMs: WINDOW_MS
   });
@@ -99,6 +102,7 @@ export async function POST(
     reason: parsed.data.reason,
     detail: parsed.data.detail || null,
     reporter_contact: parsed.data.reporterContact || null,
+    client_hash: clientHash,
     status: "pending"
   });
 
@@ -108,6 +112,13 @@ export async function POST(
       { status: 500 }
     );
   }
+
+  await applyGuestbookReportAutoBlock({
+    admin,
+    invitationId: lookup.invitation.id,
+    targetType: parsed.data.targetType,
+    targetId
+  });
 
   return NextResponse.json({
     success: true,
