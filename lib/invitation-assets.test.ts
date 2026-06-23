@@ -17,9 +17,14 @@ describe("invitation assets helpers", () => {
       getStoredInvitationAssetPaths({
         mainImagePath: "main/path.jpg",
         backgroundImagePath: "",
-        galleryImagePaths: ["gallery/1.jpg", "gallery/2.jpg"]
+        galleryImagePaths: ["gallery/1.jpg", "gallery/2.jpg"],
+        photoPlacements: [
+          {
+            assetPath: "slots/main.webp"
+          }
+        ]
       })
-    ).toEqual(["main/path.jpg", "gallery/1.jpg", "gallery/2.jpg"]);
+    ).toEqual(["main/path.jpg", "gallery/1.jpg", "gallery/2.jpg", "slots/main.webp"]);
   });
 
   it("replaces published asset URLs with proxy URLs when paths exist", () => {

@@ -34,7 +34,15 @@ function createRequest(body: object) {
 
 function createAdminDouble(
   insertError: { message: string } | null = null,
-  invitationPayload: Record<string, unknown> = {}
+  invitationPayload: Record<string, unknown> = {},
+  variant?: {
+    id: string;
+    slug: string;
+    audienceKey: string;
+    audienceLabel: string;
+    payloadPatch?: Record<string, unknown>;
+    sectionPatch?: Record<string, unknown>;
+  }
 ) {
   const insertMock = vi.fn(async () => ({ error: insertError }));
 
@@ -43,19 +51,73 @@ function createAdminDouble(
     client: {
       from(table: string) {
         if (table === "invitations") {
+          const filters: Record<string, string> = {};
           return {
             select() {
               return this;
             },
-            eq() {
+            eq(column: string, value: string) {
+              filters[column] = value;
               return this;
             },
             async maybeSingle() {
+              if (variant && filters.slug === variant.slug) {
+                return {
+                  data: null,
+                  error: null
+                };
+              }
+
               return {
                 data: {
                   id: "invitation-1",
+                  slug: "demo",
+                  title: "테스트 초대장",
+                  category: "wedding",
+                  template_id: "wedding-classic",
                   status: "published",
+                  published_at: "2026-04-12T00:00:00.000Z",
                   payload: invitationPayload
+                },
+                error: null
+              };
+            }
+          };
+        }
+
+        if (table === "invitation_variants") {
+          const filters: Record<string, string> = {};
+          return {
+            select() {
+              return this;
+            },
+            eq(column: string, value: string) {
+              filters[column] = value;
+              return this;
+            },
+            async maybeSingle() {
+              if (!variant || filters.slug !== variant.slug || filters.status !== "active") {
+                return {
+                  data: null,
+                  error: null
+                };
+              }
+
+              return {
+                data: {
+                  id: variant.id,
+                  invitation_id: "invitation-1",
+                  audience_key: variant.audienceKey,
+                  audience_label: variant.audienceLabel,
+                  slug: variant.slug,
+                  payload_patch: variant.payloadPatch ?? {},
+                  section_patch: variant.sectionPatch ?? {},
+                  share_image_path: null,
+                  qr_image_path: null,
+                  is_default: false,
+                  status: "active",
+                  created_at: "2026-04-12T00:00:00.000Z",
+                  updated_at: "2026-04-12T00:00:00.000Z"
                 },
                 error: null
               };
@@ -128,6 +190,33 @@ describe("POST /api/public/[slug]/guestbook", () => {
     expect(result).toEqual({
       success: false,
       message: "방명록 저장에 실패했습니다. 잠시 후 다시 시도해 주세요."
+    });
+  });
+
+  it("stores variant attribution when guestbook is submitted through a variant slug", async () => {
+    const adminDouble = createAdminDouble(null, {}, {
+      id: "variant-1",
+      slug: "demo-friends",
+      audienceKey: "friends",
+      audienceLabel: "친구용"
+    });
+    createSupabaseAdminClientMock.mockReturnValue(adminDouble.client);
+
+    const response = await POST(createRequest({
+      nickname: "친구1",
+      message: "축하합니다",
+      website: ""
+    }), {
+      params: Promise.resolve({ slug: "demo-friends" })
+    });
+
+    expect(response.status).toBe(200);
+    expect(adminDouble.insertMock).toHaveBeenCalledWith({
+      invitation_id: "invitation-1",
+      variant_id: "variant-1",
+      nickname: "친구1",
+      message: "축하합니다",
+      approved: false
     });
   });
 

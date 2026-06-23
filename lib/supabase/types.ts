@@ -43,6 +43,40 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["invitations"]["Insert"]>;
         Relationships: [];
       };
+      invitation_variants: {
+        Row: {
+          id: string;
+          invitation_id: string;
+          audience_key: string;
+          audience_label: string;
+          slug: string;
+          payload_patch: Json;
+          section_patch: Json;
+          share_image_path: string | null;
+          qr_image_path: string | null;
+          is_default: boolean;
+          status: "active" | "hidden" | "archived";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          invitation_id: string;
+          audience_key: string;
+          audience_label: string;
+          slug: string;
+          payload_patch?: Json;
+          section_patch?: Json;
+          share_image_path?: string | null;
+          qr_image_path?: string | null;
+          is_default?: boolean;
+          status?: "active" | "hidden" | "archived";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["invitation_variants"]["Insert"]>;
+        Relationships: [];
+      };
       payments: {
         Row: {
           id: string;
@@ -111,6 +145,7 @@ export type Database = {
         Row: {
           id: string;
           invitation_id: string;
+          variant_id: string | null;
           guest_name: string;
           guest_phone: string | null;
           attending: boolean;
@@ -121,6 +156,7 @@ export type Database = {
         Insert: {
           id?: string;
           invitation_id: string;
+          variant_id?: string | null;
           guest_name: string;
           guest_phone?: string | null;
           attending?: boolean;
@@ -135,6 +171,7 @@ export type Database = {
         Row: {
           id: string;
           invitation_id: string;
+          variant_id: string | null;
           nickname: string;
           message: string;
           approved: boolean;
@@ -143,6 +180,7 @@ export type Database = {
         Insert: {
           id?: string;
           invitation_id: string;
+          variant_id?: string | null;
           nickname: string;
           message: string;
           approved?: boolean;
@@ -173,12 +211,14 @@ export type Database = {
         Row: {
           id: number;
           invitation_id: string;
+          variant_id: string | null;
           user_agent: string | null;
           created_at: string;
         };
         Insert: {
           id?: number;
           invitation_id: string;
+          variant_id?: string | null;
           user_agent?: string | null;
           created_at?: string;
         };

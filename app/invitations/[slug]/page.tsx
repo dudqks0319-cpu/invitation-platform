@@ -7,8 +7,8 @@ import { findDemoInvitationBySlug } from "@/lib/demo-data";
 import { buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
 import { buildPublicInvitationPayload } from "@/lib/invitation-payload";
 import { getPublicShareUrl } from "@/lib/invitation-presentation";
+import { resolvePublishedInvitationBySlug } from "@/lib/invitation-variants";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type HeaderSource = {
@@ -16,22 +16,38 @@ type HeaderSource = {
 };
 
 type ViewLogsTable = {
-  select(columns: string): {
-    eq(column: string, value: string): {
-      eq(column: string, value: string): {
-        gte(column: string, value: string): {
-          limit(count: number): Promise<{
-            data: Array<{ id: number }> | null;
-            error: { message?: string } | null;
-          }>;
-        };
-      };
-    };
-  };
+  select(columns: string): ViewLogFilterQuery;
   insert(payload: {
     invitation_id: string;
+    variant_id?: string | null;
     user_agent: string;
   }): Promise<{ error: { message?: string } | null }>;
+};
+
+type ViewLogFilterQuery = {
+  eq(column: string, value: string): ViewLogFilterQuery;
+  is(column: string, value: null): ViewLogFilterQuery;
+  gte(column: string, value: string): {
+    limit(count: number): Promise<{
+      data: Array<{ id: number }> | null;
+      error: { message?: string } | null;
+    }>;
+  };
+};
+
+type GuestbookEntryFilterQuery = {
+  eq(column: string, value: string | boolean): GuestbookEntryFilterQuery;
+  is(column: string, value: null): GuestbookEntryFilterQuery;
+  order(column: string, options: { ascending: boolean }): {
+    limit(count: number): Promise<{
+      data: GuestbookEntryRow[] | null;
+      error: { message?: string } | null;
+    }>;
+  };
+};
+
+type GuestbookEntriesTable = {
+  select(columns: string): GuestbookEntryFilterQuery;
 };
 
 type GuestbookEntryRow = {
@@ -40,21 +56,6 @@ type GuestbookEntryRow = {
   message: string;
   approved: boolean;
   created_at: string;
-};
-
-type GuestbookEntriesTable = {
-  select(columns: string): {
-    eq(column: string, value: string): {
-      eq(column: string, value: boolean): {
-        order(column: string, options: { ascending: boolean }): {
-          limit(count: number): Promise<{
-            data: GuestbookEntryRow[] | null;
-            error: { message?: string } | null;
-          }>;
-        };
-      };
-    };
-  };
 };
 
 const VIEW_LOG_COOLDOWN_MS = 30 * 60 * 1000;
@@ -111,7 +112,8 @@ export async function logInvitationView(
     from(table: string): unknown;
   },
   invitationId: string,
-  userAgent: string
+  userAgent: string,
+  variantId: string | null = null
 ) {
   if (!userAgent) {
     return;
@@ -119,10 +121,14 @@ export async function logInvitationView(
 
   const cutoff = new Date(Date.now() - VIEW_LOG_COOLDOWN_MS).toISOString();
   const viewLogsTable = admin.from("view_logs") as ViewLogsTable;
-  const { data: recentLogs, error: recentError } = await viewLogsTable
+  const recentQuery = viewLogsTable
     .select("id")
     .eq("invitation_id", invitationId)
-    .eq("user_agent", userAgent)
+    .eq("user_agent", userAgent);
+  const scopedRecentQuery = variantId
+    ? recentQuery.eq("variant_id", variantId)
+    : recentQuery.is("variant_id", null);
+  const { data: recentLogs, error: recentError } = await scopedRecentQuery
     .gte("created_at", cutoff)
     .limit(1);
 
@@ -132,13 +138,15 @@ export async function logInvitationView(
 
   await viewLogsTable.insert({
     invitation_id: invitationId,
+    variant_id: variantId,
     user_agent: userAgent
   });
 }
 
 export async function loadApprovedGuestbookEntries(
   admin: { from(table: string): unknown } | null,
-  invitationId: string
+  invitationId: string,
+  variantId: string | null = null
 ) {
   if (!admin) {
     return [];
@@ -146,10 +154,14 @@ export async function loadApprovedGuestbookEntries(
 
   try {
     const guestbookEntriesTable = admin.from("guestbook_entries") as GuestbookEntriesTable;
-    const { data, error } = await guestbookEntriesTable
+    const guestbookQuery = guestbookEntriesTable
       .select("*")
       .eq("invitation_id", invitationId)
-      .eq("approved", true)
+      .eq("approved", true);
+    const scopedGuestbookQuery = variantId
+      ? guestbookQuery.eq("variant_id", variantId)
+      : guestbookQuery.is("variant_id", null);
+    const { data, error } = await scopedGuestbookQuery
       .order("created_at", { ascending: false })
       .limit(20);
 
@@ -170,20 +182,13 @@ async function loadPublishedInvitation(slug: string) {
   if (!supabase) {
     return {
       admin,
-      invitation: null
+      lookup: null
     };
   }
 
-  const { data: invitation } = await supabase
-    .from("invitations")
-    .select("*")
-    .eq("slug", slug)
-    .eq("status", "published")
-    .maybeSingle();
-
   return {
     admin,
-    invitation
+    lookup: await resolvePublishedInvitationBySlug(supabase, slug)
   };
 }
 
@@ -196,12 +201,11 @@ export async function generateMetadata({
   const decodedSlug = decodeURIComponent(slug);
   const origin = resolveRequestOrigin(await headers());
   const shareUrl = getPublicShareUrl(`/invitations/${decodedSlug}`, origin);
-  const { invitation } = await loadPublishedInvitation(decodedSlug);
+  const { lookup } = await loadPublishedInvitation(decodedSlug);
 
-  if (invitation) {
-    const normalizedPayload = normalizeInvitationPayload(invitation.payload);
+  if (lookup) {
     const payload = buildPublicInvitationPayload(
-      buildPublishedInvitationAssetPayload(invitation.slug, normalizedPayload)
+      buildPublishedInvitationAssetPayload(lookup.publicSlug, lookup.payload)
     );
     const imageUrl = getPublicShareUrl(
       payload.mainImageUrl || payload.backgroundImageUrl || payload.templateSnapshot?.backgroundImageUrl || DEFAULT_OG_IMAGE,
@@ -209,8 +213,8 @@ export async function generateMetadata({
     );
 
     return buildPublicInvitationMetadata({
-      title: invitation.title || payload.title,
-      description: payload.message || `${invitation.title || payload.title} 안내`,
+      title: lookup.invitation.title || payload.title,
+      description: payload.message || `${lookup.invitation.title || payload.title} 안내`,
       shareUrl,
       imageUrl
     });
@@ -244,18 +248,17 @@ export default async function PublicInvitationPage({
   const headerList = await headers();
   const origin = resolveRequestOrigin(headerList);
   const platformKakaoJsKey = process.env.NEXT_PUBLIC_KAKAO_JS_KEY ?? "";
-  const { admin, invitation } = await loadPublishedInvitation(decodedSlug);
+  const { admin, lookup } = await loadPublishedInvitation(decodedSlug);
 
-  if (invitation) {
-    const normalizedPayload = normalizeInvitationPayload(invitation.payload);
+  if (lookup) {
     const payload = buildPublicInvitationPayload(
-      buildPublishedInvitationAssetPayload(invitation.slug, normalizedPayload)
+      buildPublishedInvitationAssetPayload(lookup.publicSlug, lookup.payload)
     );
     if (admin) {
-      await logInvitationView(admin, invitation.id, headerList.get("user-agent") || "");
+      await logInvitationView(admin, lookup.invitation.id, headerList.get("user-agent") || "", lookup.variant?.id ?? null);
     }
 
-    const guestbookEntries = await loadApprovedGuestbookEntries(admin, invitation.id);
+    const guestbookEntries = await loadApprovedGuestbookEntries(admin, lookup.invitation.id, lookup.variant?.id ?? null);
 
     return (
       <>
@@ -272,8 +275,8 @@ export default async function PublicInvitationPage({
             mode="public"
             payload={payload}
             platformKakaoJsKey={platformKakaoJsKey}
-            shareUrl={getPublicShareUrl(`/invitations/${invitation.slug}`, origin)}
-            slug={invitation.slug}
+            shareUrl={getPublicShareUrl(`/invitations/${lookup.publicSlug}`, origin)}
+            slug={lookup.publicSlug}
           />
         </div>
       </>

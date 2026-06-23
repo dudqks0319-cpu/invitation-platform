@@ -36,6 +36,14 @@ function createAdminDouble(options?: {
   insertError?: { message: string } | null;
   existingRsvpId?: string | null;
   invitationPayload?: Record<string, unknown>;
+  variant?: {
+    id: string;
+    slug: string;
+    audienceKey: string;
+    audienceLabel: string;
+    payloadPatch?: Record<string, unknown>;
+    sectionPatch?: Record<string, unknown>;
+  };
 }) {
   const insertError = options?.insertError ?? null;
   const insertMock = vi.fn(async () => ({ error: insertError }));
@@ -49,19 +57,73 @@ function createAdminDouble(options?: {
     client: {
       from(table: string) {
         if (table === "invitations") {
+          const filters: Record<string, string> = {};
           return {
             select() {
               return this;
             },
-            eq() {
+            eq(column: string, value: string) {
+              filters[column] = value;
               return this;
             },
             async maybeSingle() {
+              if (options?.variant && filters.slug === options.variant.slug) {
+                return {
+                  data: null,
+                  error: null
+                };
+              }
+
               return {
                 data: {
                   id: "invitation-1",
+                  slug: "demo",
+                  title: "테스트 초대장",
+                  category: "wedding",
+                  template_id: "wedding-classic",
                   status: "published",
+                  published_at: "2026-04-12T00:00:00.000Z",
                   payload: options?.invitationPayload ?? {}
+                },
+                error: null
+              };
+            }
+          };
+        }
+
+        if (table === "invitation_variants") {
+          const filters: Record<string, string> = {};
+          return {
+            select() {
+              return this;
+            },
+            eq(column: string, value: string) {
+              filters[column] = value;
+              return this;
+            },
+            async maybeSingle() {
+              if (!options?.variant || filters.slug !== options.variant.slug || filters.status !== "active") {
+                return {
+                  data: null,
+                  error: null
+                };
+              }
+
+              return {
+                data: {
+                  id: options.variant.id,
+                  invitation_id: "invitation-1",
+                  audience_key: options.variant.audienceKey,
+                  audience_label: options.variant.audienceLabel,
+                  slug: options.variant.slug,
+                  payload_patch: options.variant.payloadPatch ?? {},
+                  section_patch: options.variant.sectionPatch ?? {},
+                  share_image_path: null,
+                  qr_image_path: null,
+                  is_default: false,
+                  status: "active",
+                  created_at: "2026-04-12T00:00:00.000Z",
+                  updated_at: "2026-04-12T00:00:00.000Z"
                 },
                 error: null
               };
@@ -186,6 +248,38 @@ describe("POST /api/public/[slug]/rsvp", () => {
     expect(result).toEqual({
       success: true,
       message: "RSVP가 저장되었습니다."
+    });
+  });
+
+  it("stores variant attribution when RSVP is submitted through a variant slug", async () => {
+    const adminDouble = createAdminDouble({
+      variant: {
+        id: "variant-1",
+        slug: "demo-friends",
+        audienceKey: "friends",
+        audienceLabel: "친구용"
+      }
+    });
+    createSupabaseAdminClientMock.mockReturnValue(adminDouble.client);
+
+    const response = await POST(createRequest({
+      guestName: "박하객",
+      attending: "yes",
+      guests: 1,
+      website: ""
+    }), {
+      params: Promise.resolve({ slug: "demo-friends" })
+    });
+
+    expect(response.status).toBe(200);
+    expect(adminDouble.insertMock).toHaveBeenCalledWith({
+      invitation_id: "invitation-1",
+      variant_id: "variant-1",
+      guest_name: "박하객",
+      guest_phone: null,
+      attending: true,
+      guests: 1,
+      memo: null
     });
   });
 

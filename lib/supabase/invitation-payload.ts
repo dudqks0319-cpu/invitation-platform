@@ -46,8 +46,7 @@ const payloadSchema = z.object({
   transportNote: z.string().default(""),
   mainImageUrl: z.string().default(""),
   mainImagePath: z.string().default(""),
-  backgroundImageUrl: z.string().default("")
-  ,
+  backgroundImageUrl: z.string().default(""),
   backgroundImagePath: z.string().default(""),
   galleryImages: z.array(z.string()).default([]),
   galleryImagePaths: z.array(z.string()).default([]),
@@ -56,6 +55,12 @@ const payloadSchema = z.object({
   templateSnapshot: publishedTemplateSnapshotSchema.optional().default(null),
   photoPlacements: z.array(photoPlacementSchema).default([]),
   sectionOrder: z.array(z.enum(invitationSectionKeys)).default([...invitationSectionKeys]),
+  audience: z.object({
+    variantId: z.string().default(""),
+    audienceKey: z.string().default(""),
+    label: z.string().default(""),
+    slug: z.string().default("")
+  }).default({}),
   sections: z.unknown().optional()
 });
 

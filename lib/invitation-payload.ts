@@ -76,6 +76,13 @@ export type PhotoPlacement = {
   };
 };
 
+export type InvitationAudience = {
+  variantId?: string;
+  audienceKey?: string;
+  label?: string;
+  slug?: string;
+};
+
 type TemplateMetadataValue =
   | string
   | number
@@ -303,6 +310,13 @@ const publishedTemplateSnapshotObjectSchema = z
 
 export const publishedTemplateSnapshotSchema = publishedTemplateSnapshotObjectSchema.nullable().catch(null);
 
+const invitationAudienceSchema = z.object({
+  variantId: z.string().trim().max(120).optional(),
+  audienceKey: z.string().trim().max(80).optional(),
+  label: z.string().trim().max(80).optional(),
+  slug: z.string().trim().max(160).optional()
+}).catch({});
+
 const legacyInvitationPayloadSchema = z
   .object({
     schemaVersion: z.coerce.number().int().optional(),
@@ -354,6 +368,7 @@ const legacyInvitationPayloadSchema = z
     templateSnapshot: publishedTemplateSnapshotSchema.optional(),
     photoPlacements: z.array(photoPlacementSchema).catch([]).optional(),
     sectionOrder: z.array(z.enum(invitationSectionKeys)).catch([]).optional(),
+    audience: invitationAudienceSchema.optional(),
     sections: z.unknown().optional()
   })
   .passthrough();
@@ -410,6 +425,7 @@ export const invitationDraftPayloadSchema = legacyInvitationPayloadSchema.transf
   templateSnapshot: raw.templateSnapshot ?? null,
   photoPlacements: raw.photoPlacements ?? [],
   sectionOrder: raw.sectionOrder?.length ? raw.sectionOrder : [...invitationSectionKeys],
+  audience: raw.audience ?? {},
   sections: normalizeSectionPolicies(raw.sections)
 }));
 

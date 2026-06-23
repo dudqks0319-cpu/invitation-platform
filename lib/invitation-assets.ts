@@ -5,6 +5,10 @@ type StoredInvitationAssets = {
   galleryImages?: string[];
   mainImagePath?: string;
   mainImageUrl?: string;
+  photoPlacements?: Array<{
+    assetPath?: string;
+    originalAssetPath?: string;
+  }>;
   [key: string]: unknown;
 };
 
@@ -19,7 +23,10 @@ export function getStoredInvitationAssetPaths(payload: StoredInvitationAssets) {
   return [
     payload.mainImagePath,
     payload.backgroundImagePath,
-    ...(Array.isArray(payload.galleryImagePaths) ? payload.galleryImagePaths : [])
+    ...(Array.isArray(payload.galleryImagePaths) ? payload.galleryImagePaths : []),
+    ...(Array.isArray(payload.photoPlacements)
+      ? payload.photoPlacements.map((placement) => placement.assetPath)
+      : [])
   ].filter((value): value is string => typeof value === "string" && value.trim().length > 0);
 }
 

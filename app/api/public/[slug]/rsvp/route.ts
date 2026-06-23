@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isInvitationSectionAllowed } from "@/lib/invitation-payload";
+import { resolvePublishedInvitationBySlug } from "@/lib/invitation-variants";
 import { consumeRateLimit, getClientIdentifier } from "@/lib/rate-limit";
-import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
 import { ensureJsonRequest, publicRsvpSchema, readJsonBody } from "@/lib/supabase/public-write";
 
 const WINDOW_MS = 60 * 1000;
@@ -75,22 +75,16 @@ export async function POST(
     return NextResponse.json({ success: true, message: "RSVP가 저장되었습니다." });
   }
 
-  const { data: invitation, error: invitationError } = await admin
-    .from("invitations")
-    .select("id, status, payload")
-    .eq("slug", slug)
-    .eq("status", "published")
-    .maybeSingle();
+  const lookup = await resolvePublishedInvitationBySlug(admin, slug);
 
-  if (invitationError || !invitation) {
+  if (!lookup) {
     return NextResponse.json(
       { success: false, message: "유효하지 않은 초대장입니다." },
       { status: 404 }
     );
   }
 
-  const invitationPayload = normalizeInvitationPayload(invitation.payload);
-  if (!isInvitationSectionAllowed(invitationPayload, "rsvp", "submit")) {
+  if (!isInvitationSectionAllowed(lookup.payload, "rsvp", "submit")) {
     return NextResponse.json(
       { success: false, message: "이 초대장은 RSVP 기능이 꺼져 있습니다." },
       { status: 403 }
@@ -108,12 +102,15 @@ export async function POST(
   const existingRsvpQuery = admin
     .from("rsvps")
     .select("id")
-    .eq("invitation_id", invitation.id)
+    .eq("invitation_id", lookup.invitation.id)
     .eq("guest_name", parsed.data.guestName);
+  const scopedRsvpQuery = lookup.variant
+    ? existingRsvpQuery.eq("variant_id", lookup.variant.id)
+    : existingRsvpQuery.is("variant_id", null);
 
   const { data: existingRsvp, error: existingRsvpError } = guestPhone
-    ? await existingRsvpQuery.eq("guest_phone", guestPhone).maybeSingle()
-    : await existingRsvpQuery.is("guest_phone", null).maybeSingle();
+    ? await scopedRsvpQuery.eq("guest_phone", guestPhone).maybeSingle()
+    : await scopedRsvpQuery.is("guest_phone", null).maybeSingle();
 
   if (existingRsvpError) {
     return NextResponse.json(
@@ -128,7 +125,8 @@ export async function POST(
       .update(rsvpPayload)
       .eq("id", existingRsvp.id)
     : await admin.from("rsvps").insert({
-      invitation_id: invitation.id,
+      invitation_id: lookup.invitation.id,
+      variant_id: lookup.variant?.id ?? null,
       guest_name: parsed.data.guestName,
       ...rsvpPayload
     });

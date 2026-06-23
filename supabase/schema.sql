@@ -23,6 +23,23 @@ create table if not exists public.invitations (
   updated_at timestamptz not null default now()
 );
 
+create table if not exists public.invitation_variants (
+  id uuid primary key default gen_random_uuid(),
+  invitation_id uuid not null references public.invitations(id) on delete cascade,
+  audience_key text not null check (audience_key ~ '^[a-z0-9-]{2,80}$'),
+  audience_label text not null check (char_length(audience_label) between 1 and 80),
+  slug text not null unique,
+  payload_patch jsonb not null default '{}'::jsonb,
+  section_patch jsonb not null default '{}'::jsonb,
+  share_image_path text,
+  qr_image_path text,
+  is_default boolean not null default false,
+  status text not null default 'active' check (status in ('active', 'hidden', 'archived')),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique(invitation_id, audience_key)
+);
+
 create table if not exists public.payments (
   id uuid primary key default gen_random_uuid(),
   invitation_id uuid not null references public.invitations(id) on delete cascade,
@@ -64,6 +81,7 @@ create table if not exists public.payment_audit_logs (
 create table if not exists public.rsvps (
   id uuid primary key default gen_random_uuid(),
   invitation_id uuid not null references public.invitations(id) on delete cascade,
+  variant_id uuid references public.invitation_variants(id) on delete set null,
   guest_name text not null check (char_length(guest_name) between 1 and 40),
   guest_phone text,
   attending boolean not null default true,
@@ -75,6 +93,7 @@ create table if not exists public.rsvps (
 create table if not exists public.guestbook_entries (
   id uuid primary key default gen_random_uuid(),
   invitation_id uuid not null references public.invitations(id) on delete cascade,
+  variant_id uuid references public.invitation_variants(id) on delete set null,
   nickname text not null check (char_length(nickname) between 1 and 30),
   message text not null check (char_length(message) between 1 and 300),
   approved boolean not null default false,
@@ -84,9 +103,19 @@ create table if not exists public.guestbook_entries (
 create table if not exists public.view_logs (
   id bigint generated always as identity primary key,
   invitation_id uuid not null references public.invitations(id) on delete cascade,
+  variant_id uuid references public.invitation_variants(id) on delete set null,
   user_agent text,
   created_at timestamptz not null default now()
 );
+
+alter table public.rsvps
+  add column if not exists variant_id uuid references public.invitation_variants(id) on delete set null;
+
+alter table public.guestbook_entries
+  add column if not exists variant_id uuid references public.invitation_variants(id) on delete set null;
+
+alter table public.view_logs
+  add column if not exists variant_id uuid references public.invitation_variants(id) on delete set null;
 
 create table if not exists public.rate_limits (
   bucket_key text primary key,
@@ -195,6 +224,12 @@ before update on public.invitations
 for each row
 execute procedure public.set_timestamp();
 
+drop trigger if exists invitation_variants_set_timestamp on public.invitation_variants;
+create trigger invitation_variants_set_timestamp
+before update on public.invitation_variants
+for each row
+execute procedure public.set_timestamp();
+
 drop trigger if exists invitation_templates_set_timestamp on public.invitation_templates;
 create trigger invitation_templates_set_timestamp
 before update on public.invitation_templates
@@ -203,6 +238,7 @@ execute procedure public.set_timestamp();
 
 alter table public.profiles enable row level security;
 alter table public.invitations enable row level security;
+alter table public.invitation_variants enable row level security;
 alter table public.payments enable row level security;
 alter table public.payment_audit_logs enable row level security;
 alter table public.rsvps enable row level security;
@@ -233,6 +269,43 @@ on public.invitations
 for select
 to anon, authenticated
 using (status = 'published');
+
+drop policy if exists "owners manage invitation variants" on public.invitation_variants;
+create policy "owners manage invitation variants"
+on public.invitation_variants
+for all
+to authenticated
+using (
+  exists (
+    select 1
+    from public.invitations
+    where invitations.id = invitation_variants.invitation_id
+      and invitations.user_id = auth.uid()
+  )
+)
+with check (
+  exists (
+    select 1
+    from public.invitations
+    where invitations.id = invitation_variants.invitation_id
+      and invitations.user_id = auth.uid()
+  )
+);
+
+drop policy if exists "public can read active invitation variants" on public.invitation_variants;
+create policy "public can read active invitation variants"
+on public.invitation_variants
+for select
+to anon, authenticated
+using (
+  status = 'active'
+  and exists (
+    select 1
+    from public.invitations
+    where invitations.id = invitation_variants.invitation_id
+      and invitations.status = 'published'
+  )
+);
 
 drop policy if exists "owners can read payments" on public.payments;
 create policy "owners can read payments"
@@ -364,6 +437,8 @@ using (
 create index if not exists idx_invitations_user_id on public.invitations(user_id);
 create index if not exists idx_invitations_slug on public.invitations(slug);
 create index if not exists idx_invitations_status on public.invitations(status);
+create index if not exists idx_invitation_variants_invitation_id on public.invitation_variants(invitation_id);
+create index if not exists idx_invitation_variants_slug_status on public.invitation_variants(slug, status);
 create index if not exists idx_payments_invitation_id on public.payments(invitation_id);
 create index if not exists idx_payments_user_id on public.payments(user_id);
 create index if not exists idx_payments_status on public.payments(status);
@@ -372,8 +447,11 @@ create unique index if not exists idx_payments_approve_nonce
   where approve_nonce is not null;
 create index if not exists idx_payment_audit_logs_payment_id on public.payment_audit_logs(payment_id);
 create index if not exists idx_rsvps_invitation_id on public.rsvps(invitation_id);
+create index if not exists idx_rsvps_variant_id on public.rsvps(variant_id);
 create index if not exists idx_guestbook_invitation_id on public.guestbook_entries(invitation_id);
+create index if not exists idx_guestbook_variant_id on public.guestbook_entries(variant_id);
 create index if not exists idx_view_logs_invitation_id on public.view_logs(invitation_id);
+create index if not exists idx_view_logs_variant_id on public.view_logs(variant_id);
 create index if not exists idx_invitation_templates_category_active
   on public.invitation_templates(category, is_active);
 

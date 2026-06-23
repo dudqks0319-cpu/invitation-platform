@@ -82,4 +82,22 @@ describe("invitation payload normalization", () => {
     expect(payload.templateSnapshot?.templateAssetVersion).toBe(3);
     expect(payload.templateSnapshot?.backgroundImageUrl).toBe("/images/custom/wedding/wedding-01.jpeg");
   });
+
+  it("preserves audience variant metadata", () => {
+    const payload = normalizeInvitationPayload({
+      audience: {
+        variantId: "variant-1",
+        audienceKey: "friends",
+        label: "친구용",
+        slug: "kim-lee-friends"
+      }
+    });
+
+    expect(payload.audience).toEqual({
+      variantId: "variant-1",
+      audienceKey: "friends",
+      label: "친구용",
+      slug: "kim-lee-friends"
+    });
+  });
 });

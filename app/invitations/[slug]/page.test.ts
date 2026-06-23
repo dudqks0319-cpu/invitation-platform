@@ -55,6 +55,9 @@ describe("public invitation page helpers", () => {
       eq() {
         return this;
       },
+      is() {
+        return this;
+      },
       gte() {
         return this;
       },
@@ -86,6 +89,56 @@ describe("public invitation page helpers", () => {
     expect(insert).not.toHaveBeenCalled();
   });
 
+  it("stores variant attribution when logging a variant view", async () => {
+    const insert = vi.fn(async () => ({ error: null }));
+    const eqCalls: Array<[string, string]> = [];
+    const isCalls: Array<[string, null]> = [];
+    const recentQuery = {
+      eq(column: string, value: string) {
+        eqCalls.push([column, value]);
+        return recentQuery;
+      },
+      is(column: string, value: null) {
+        isCalls.push([column, value]);
+        return recentQuery;
+      },
+      gte() {
+        return recentQuery;
+      },
+      async limit() {
+        return {
+          data: [],
+          error: null
+        };
+      }
+    };
+
+    const admin = {
+      from(table: string) {
+        if (table === "view_logs") {
+          return {
+            select() {
+              return recentQuery;
+            },
+            insert
+          };
+        }
+
+        throw new Error(`Unexpected table: ${table}`);
+      }
+    };
+
+    await logInvitationView(admin, "invitation-1", "test-agent", "variant-1");
+
+    expect(eqCalls).toContainEqual(["variant_id", "variant-1"]);
+    expect(isCalls).toHaveLength(0);
+    expect(insert).toHaveBeenCalledWith({
+      invitation_id: "invitation-1",
+      variant_id: "variant-1",
+      user_agent: "test-agent"
+    });
+  });
+
   it("returns an empty guestbook when the admin client is unavailable", async () => {
     await expect(loadApprovedGuestbookEntries(null, "invitation-1")).resolves.toEqual([]);
   });
@@ -104,7 +157,8 @@ describe("public invitation page helpers", () => {
       error: null
     }));
     const order = vi.fn(() => ({ limit }));
-    const approvedEq = vi.fn(() => ({ order }));
+    const variantIs = vi.fn(() => ({ order }));
+    const approvedEq = vi.fn(() => ({ is: variantIs }));
     const invitationEq = vi.fn(() => ({ eq: approvedEq }));
     const select = vi.fn(() => ({ eq: invitationEq }));
     const from = vi.fn(() => ({ select }));
@@ -114,9 +168,28 @@ describe("public invitation page helpers", () => {
     expect(from).toHaveBeenCalledWith("guestbook_entries");
     expect(invitationEq).toHaveBeenCalledWith("invitation_id", "invitation-1");
     expect(approvedEq).toHaveBeenCalledWith("approved", true);
+    expect(variantIs).toHaveBeenCalledWith("variant_id", null);
     expect(order).toHaveBeenCalledWith("created_at", { ascending: false });
     expect(limit).toHaveBeenCalledWith(20);
     expect(entries).toHaveLength(1);
+  });
+
+  it("loads approved guestbook entries for a specific variant", async () => {
+    const limit = vi.fn(async () => ({
+      data: [],
+      error: null
+    }));
+    const order = vi.fn(() => ({ limit }));
+    const variantEq = vi.fn(() => ({ order }));
+    const approvedEq = vi.fn(() => ({ eq: variantEq }));
+    const invitationEq = vi.fn(() => ({ eq: approvedEq }));
+    const select = vi.fn(() => ({ eq: invitationEq }));
+    const from = vi.fn(() => ({ select }));
+
+    await loadApprovedGuestbookEntries({ from }, "invitation-1", "variant-1");
+
+    expect(variantEq).toHaveBeenCalledWith("variant_id", "variant-1");
+    expect(order).toHaveBeenCalledWith("created_at", { ascending: false });
   });
 
   it("returns an empty guestbook when the guestbook query fails", async () => {
@@ -125,7 +198,8 @@ describe("public invitation page helpers", () => {
       error: { message: "database unavailable" }
     }));
     const order = vi.fn(() => ({ limit }));
-    const approvedEq = vi.fn(() => ({ order }));
+    const variantIs = vi.fn(() => ({ order }));
+    const approvedEq = vi.fn(() => ({ is: variantIs }));
     const invitationEq = vi.fn(() => ({ eq: approvedEq }));
     const select = vi.fn(() => ({ eq: invitationEq }));
     const from = vi.fn(() => ({ select }));
