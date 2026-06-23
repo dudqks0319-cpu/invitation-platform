@@ -22,6 +22,15 @@ describe("safe template schema", () => {
   it("ships five built-in Korean image-background templates", () => {
     expect(defaultSafeTemplates).toHaveLength(5);
     expect(defaultSafeTemplates.every((template) => template.ornament === "imageBackground")).toBe(true);
+    expect(defaultSafeTemplates.every((template) => template.qaState === "passed")).toBe(true);
+    expect(defaultSafeTemplates.every((template) => template.licenseState === "approved")).toBe(true);
+  });
+
+  it("keeps newly uploaded templates unpublished until QA and license approval", () => {
+    const parsed = safeTemplateCreateSchema.parse(validTemplate);
+
+    expect(parsed.qaState).toBe("pending");
+    expect(parsed.licenseState).toBe("pending");
   });
 
   it("rejects script-like image URLs", () => {
@@ -46,4 +55,3 @@ describe("safe template schema", () => {
     expect(templateSlugFromTitle("한국형 웨딩")).toMatch(/^template-\d+$/);
   });
 });
-

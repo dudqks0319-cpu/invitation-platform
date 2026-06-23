@@ -10,6 +10,25 @@ const categoryOptions: Array<{ value: SafeTemplate["category"]; label: string }>
   { value: "anniversary", label: "기념일" }
 ];
 
+const qaStateOptions: Array<{ value: SafeTemplate["qaState"]; label: string }> = [
+  { value: "pending", label: "검수 대기" },
+  { value: "passed", label: "검수 통과" },
+  { value: "failed", label: "검수 반려" }
+];
+
+const licenseStateOptions: Array<{ value: SafeTemplate["licenseState"]; label: string }> = [
+  { value: "pending", label: "권리 확인 대기" },
+  { value: "approved", label: "사용 승인" },
+  { value: "rejected", label: "사용 불가" }
+];
+
+const rightsSourceTypeOptions: Array<{ value: SafeTemplate["rightsSourceType"]; label: string }> = [
+  { value: "in_house", label: "자체 제작" },
+  { value: "ai_generated", label: "AI 생성" },
+  { value: "licensed", label: "라이선스 구매" },
+  { value: "partner", label: "제휴 제공" }
+];
+
 type TemplateFormState = {
   id: string;
   title: string;
@@ -26,6 +45,13 @@ type TemplateFormState = {
   textAreaHorizontal: number;
   primaryTextHex: string;
   secondaryTextHex: string;
+  qaState: SafeTemplate["qaState"];
+  licenseState: SafeTemplate["licenseState"];
+  rightsSourceType: SafeTemplate["rightsSourceType"];
+  generationPrompt: string;
+  generatorName: string;
+  licenseNote: string;
+  qaNote: string;
 };
 
 type ApiUploadResponse = {
@@ -56,7 +82,14 @@ const initialForm: TemplateFormState = {
   textAreaBottom: 0.24,
   textAreaHorizontal: 0.14,
   primaryTextHex: "#2C2A2A",
-  secondaryTextHex: "#8B7D73"
+  secondaryTextHex: "#8B7D73",
+  qaState: "pending",
+  licenseState: "pending",
+  rightsSourceType: "in_house",
+  generationPrompt: "",
+  generatorName: "",
+  licenseNote: "",
+  qaNote: ""
 };
 
 function clampPercent(value: number, min: number, max: number) {
@@ -103,7 +136,14 @@ export function TemplateAdminStudio({ initialTemplates }: { initialTemplates: Sa
       textAreaHorizontal: clampPercent(form.textAreaHorizontal, 0.08, 0.24),
       primaryTextHex: form.primaryTextHex,
       secondaryTextHex: form.secondaryTextHex,
-      isActive: true
+      isActive: true,
+      qaState: form.qaState,
+      licenseState: form.licenseState,
+      rightsSourceType: form.rightsSourceType,
+      generationPrompt: form.generationPrompt,
+      generatorName: form.generatorName,
+      licenseNote: form.licenseNote,
+      qaNote: form.qaNote
     }),
     [form, previewImage]
   );
@@ -313,6 +353,88 @@ export function TemplateAdminStudio({ initialTemplates }: { initialTemplates: Sa
           </div>
         </div>
 
+        <div className="admin-form-section">
+          <h2>검수와 권리 기록</h2>
+          <p>공개 목록에는 검수 통과와 사용 승인 상태인 템플릿만 노출됩니다.</p>
+          <div className="admin-form-grid">
+            <label>
+              QA 상태
+              <select
+                onChange={(event) => update("qaState", event.target.value as SafeTemplate["qaState"])}
+                value={form.qaState}
+              >
+                {qaStateOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              라이선스 상태
+              <select
+                onChange={(event) => update("licenseState", event.target.value as SafeTemplate["licenseState"])}
+                value={form.licenseState}
+              >
+                {licenseStateOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              제작 출처
+              <select
+                onChange={(event) => update("rightsSourceType", event.target.value as SafeTemplate["rightsSourceType"])}
+                value={form.rightsSourceType}
+              >
+                {rightsSourceTypeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              생성/제작 도구
+              <input
+                maxLength={120}
+                onChange={(event) => update("generatorName", event.target.value)}
+                placeholder="예: in-house, Genspark, Midjourney"
+                value={form.generatorName}
+              />
+            </label>
+            <label className="admin-wide">
+              생성 프롬프트 또는 제작 지시
+              <textarea
+                maxLength={1000}
+                onChange={(event) => update("generationPrompt", event.target.value)}
+                rows={4}
+                value={form.generationPrompt}
+              />
+            </label>
+            <label className="admin-wide">
+              라이선스 메모
+              <textarea
+                maxLength={1000}
+                onChange={(event) => update("licenseNote", event.target.value)}
+                rows={3}
+                value={form.licenseNote}
+              />
+            </label>
+            <label className="admin-wide">
+              QA 메모
+              <textarea
+                maxLength={1000}
+                onChange={(event) => update("qaNote", event.target.value)}
+                rows={3}
+                value={form.qaNote}
+              />
+            </label>
+          </div>
+        </div>
+
         {message ? <p className={`admin-message ${messageType}`}>{message}</p> : null}
 
         <button className="admin-save-button" disabled={pending} type="submit">
@@ -337,6 +459,21 @@ export function TemplateAdminStudio({ initialTemplates }: { initialTemplates: Sa
               <div>
                 <strong>{template.title}</strong>
                 <span>{categoryOptions.find((item) => item.value === template.category)?.label ?? template.category}</span>
+                <span
+                  className={`admin-template-status ${
+                    template.isActive && template.qaState === "passed" && template.licenseState === "approved"
+                      ? "ready"
+                      : "blocked"
+                  }`}
+                >
+                  {template.isActive && template.qaState === "passed" && template.licenseState === "approved"
+                    ? "공개 가능"
+                    : "비공개"}
+                  {" · "}
+                  {qaStateOptions.find((item) => item.value === template.qaState)?.label ?? template.qaState}
+                  {" · "}
+                  {licenseStateOptions.find((item) => item.value === template.licenseState)?.label ?? template.licenseState}
+                </span>
               </div>
             </div>
           ))}
@@ -375,4 +512,3 @@ function TemplatePreview({ template }: { template: SafeTemplate }) {
     </div>
   );
 }
-

@@ -22,7 +22,14 @@ export const safeTemplateSchema = z.object({
   textAreaHorizontal: z.coerce.number().min(0.08).max(0.24).default(0.14),
   primaryTextHex: z.string().trim().regex(/^#[0-9A-Fa-f]{6}$/).default("#2C2A2A"),
   secondaryTextHex: z.string().trim().regex(/^#[0-9A-Fa-f]{6}$/).default("#8B7D73"),
-  isActive: z.boolean().default(true)
+  isActive: z.boolean().default(true),
+  qaState: z.enum(["pending", "passed", "failed"]).default("passed"),
+  licenseState: z.enum(["pending", "approved", "rejected"]).default("approved"),
+  rightsSourceType: z.enum(["ai_generated", "in_house", "licensed", "partner"]).default("in_house"),
+  generationPrompt: z.string().trim().max(1000).default(""),
+  generatorName: z.string().trim().max(120).default(""),
+  licenseNote: z.string().trim().max(1000).default(""),
+  qaNote: z.string().trim().max(1000).default("")
 });
 
 export type SafeTemplate = z.infer<typeof safeTemplateSchema>;
@@ -45,7 +52,14 @@ export const defaultSafeTemplates: SafeTemplate[] = [
     textAreaHorizontal: 0.16,
     primaryTextHex: "#2C2A2A",
     secondaryTextHex: "#8B7D73",
-    isActive: true
+    isActive: true,
+    qaState: "passed",
+    licenseState: "approved",
+    rightsSourceType: "in_house",
+    generationPrompt: "",
+    generatorName: "",
+    licenseNote: "",
+    qaNote: ""
   },
   {
     id: "kr-wedding-ribbon",
@@ -64,7 +78,14 @@ export const defaultSafeTemplates: SafeTemplate[] = [
     textAreaHorizontal: 0.16,
     primaryTextHex: "#2C2A2A",
     secondaryTextHex: "#8B7D73",
-    isActive: true
+    isActive: true,
+    qaState: "passed",
+    licenseState: "approved",
+    rightsSourceType: "in_house",
+    generationPrompt: "",
+    generatorName: "",
+    licenseNote: "",
+    qaNote: ""
   },
   {
     id: "kr-dol-bojagi",
@@ -83,7 +104,14 @@ export const defaultSafeTemplates: SafeTemplate[] = [
     textAreaHorizontal: 0.14,
     primaryTextHex: "#2F2A22",
     secondaryTextHex: "#8B7D73",
-    isActive: true
+    isActive: true,
+    qaState: "passed",
+    licenseState: "approved",
+    rightsSourceType: "in_house",
+    generationPrompt: "",
+    generatorName: "",
+    licenseNote: "",
+    qaNote: ""
   },
   {
     id: "kr-birthday-spring",
@@ -102,7 +130,14 @@ export const defaultSafeTemplates: SafeTemplate[] = [
     textAreaHorizontal: 0.15,
     primaryTextHex: "#2C2A2A",
     secondaryTextHex: "#8B7D73",
-    isActive: true
+    isActive: true,
+    qaState: "passed",
+    licenseState: "approved",
+    rightsSourceType: "in_house",
+    generationPrompt: "",
+    generatorName: "",
+    licenseNote: "",
+    qaNote: ""
   },
   {
     id: "kr-anniversary-moon",
@@ -121,7 +156,14 @@ export const defaultSafeTemplates: SafeTemplate[] = [
     textAreaHorizontal: 0.14,
     primaryTextHex: "#FFF3DC",
     secondaryTextHex: "#E9D8B8",
-    isActive: true
+    isActive: true,
+    qaState: "passed",
+    licenseState: "approved",
+    rightsSourceType: "in_house",
+    generationPrompt: "",
+    generatorName: "",
+    licenseNote: "",
+    qaNote: ""
   }
 ];
 
@@ -129,7 +171,9 @@ export const safeTemplateCreateSchema = safeTemplateSchema
   .omit({ id: true, ornament: true, isActive: true })
   .extend({
     id: z.string().trim().max(80).regex(/^[a-z0-9-]+$/).optional(),
-    isActive: z.boolean().optional().default(true)
+    isActive: z.boolean().optional().default(true),
+    qaState: z.enum(["pending", "passed", "failed"]).default("pending"),
+    licenseState: z.enum(["pending", "approved", "rejected"]).default("pending")
   });
 
 export function normalizeSafeTemplate(value: unknown) {

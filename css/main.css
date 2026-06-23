@@ -670,8 +670,10 @@ ul { list-style: none; }
 }
 .admin-form-grid input,
 .admin-form-grid select,
+.admin-form-grid textarea,
 .admin-form-section input,
-.admin-form-section select {
+.admin-form-section select,
+.admin-form-section textarea {
   width: 100%;
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -679,6 +681,11 @@ ul { list-style: none; }
   color: var(--text-dark);
   font: inherit;
   padding: 11px 12px;
+}
+.admin-form-grid textarea,
+.admin-form-section textarea {
+  min-height: 96px;
+  resize: vertical;
 }
 .admin-form-grid input[type="color"] {
   height: 44px;
@@ -831,6 +838,12 @@ ul { list-style: none; }
   margin-top: 3px;
   color: var(--text-mid);
   font-size: 0.76rem;
+}
+.admin-template-status.ready {
+  color: #236f36;
+}
+.admin-template-status.blocked {
+  color: #9b2525;
 }
 .admin-denied {
   max-width: 560px;

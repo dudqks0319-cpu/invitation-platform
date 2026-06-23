@@ -143,10 +143,38 @@ create table if not exists public.invitation_templates (
   primary_text_hex text not null default '#2C2A2A' check (primary_text_hex ~ '^#[0-9A-Fa-f]{6}$'),
   secondary_text_hex text not null default '#8B7D73' check (secondary_text_hex ~ '^#[0-9A-Fa-f]{6}$'),
   is_active boolean not null default true,
+  qa_state text not null default 'pending' check (qa_state in ('pending', 'passed', 'failed')),
+  license_state text not null default 'pending' check (license_state in ('pending', 'approved', 'rejected')),
+  rights_source_type text not null default 'in_house' check (rights_source_type in ('ai_generated', 'in_house', 'licensed', 'partner')),
+  generation_prompt text not null default '',
+  generator_name text not null default '',
+  license_note text not null default '',
+  qa_note text not null default '',
   created_by uuid references auth.users(id) on delete set null,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.invitation_templates
+  add column if not exists qa_state text not null default 'pending',
+  add column if not exists license_state text not null default 'pending',
+  add column if not exists rights_source_type text not null default 'in_house',
+  add column if not exists generation_prompt text not null default '',
+  add column if not exists generator_name text not null default '',
+  add column if not exists license_note text not null default '',
+  add column if not exists qa_note text not null default '';
+
+alter table public.invitation_templates
+  drop constraint if exists invitation_templates_qa_state_check,
+  add constraint invitation_templates_qa_state_check check (qa_state in ('pending', 'passed', 'failed'));
+
+alter table public.invitation_templates
+  drop constraint if exists invitation_templates_license_state_check,
+  add constraint invitation_templates_license_state_check check (license_state in ('pending', 'approved', 'rejected'));
+
+alter table public.invitation_templates
+  drop constraint if exists invitation_templates_rights_source_type_check,
+  add constraint invitation_templates_rights_source_type_check check (rights_source_type in ('ai_generated', 'in_house', 'licensed', 'partner'));
 
 create or replace function public.set_timestamp()
 returns trigger
@@ -404,7 +432,7 @@ create policy "public can read active invitation templates"
 on public.invitation_templates
 for select
 to anon, authenticated
-using (is_active = true);
+using (is_active = true and qa_state = 'passed' and license_state = 'approved');
 
 drop policy if exists "public can insert view logs for published invitations" on public.view_logs;
 create policy "public can insert view logs for published invitations"
@@ -454,6 +482,8 @@ create index if not exists idx_view_logs_invitation_id on public.view_logs(invit
 create index if not exists idx_view_logs_variant_id on public.view_logs(variant_id);
 create index if not exists idx_invitation_templates_category_active
   on public.invitation_templates(category, is_active);
+create index if not exists idx_invitation_templates_public_ready
+  on public.invitation_templates(category, is_active, qa_state, license_state);
 
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values (
