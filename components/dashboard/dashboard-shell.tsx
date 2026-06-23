@@ -23,6 +23,7 @@ type DashboardItem = InvitationRecord & {
   viewCount?: number;
   rsvpCount?: number;
   guestbookCount?: number;
+  reportCount?: number;
   repurchaseRequired?: boolean;
 };
 
@@ -37,6 +38,21 @@ type DashboardVariant = {
   rsvpCount: number;
   guestbookCount: number;
   createdAt: string;
+};
+
+type ReportStatus = "pending" | "reviewing" | "resolved" | "rejected";
+
+type DashboardContentReport = {
+  id: string;
+  invitationId: string | null;
+  targetType: "invitation" | "guestbook" | "image";
+  targetId: string;
+  reason: "inappropriate" | "privacy" | "spam" | "copyright" | "other";
+  detail: string;
+  reporterContact: string;
+  status: ReportStatus;
+  createdAt: string;
+  resolvedAt: string | null;
 };
 
 const demoDashboardVariants: DashboardVariant[] = [
@@ -63,6 +79,20 @@ const demoDashboardVariants: DashboardVariant[] = [
     rsvpCount: 1,
     guestbookCount: 0,
     createdAt: new Date("2026-03-03T10:00:00.000Z").toISOString()
+  }
+];
+const demoContentReports: DashboardContentReport[] = [
+  {
+    id: "demo-report-privacy",
+    invitationId: "demo-invitation",
+    targetType: "invitation",
+    targetId: "demo-invitation",
+    reason: "privacy",
+    detail: "공개 초대장에 개인 연락처가 노출되어 있습니다.",
+    reporterContact: "guest@example.com",
+    status: "pending",
+    createdAt: new Date("2026-03-04T11:00:00.000Z").toISOString(),
+    resolvedAt: null
   }
 ];
 const DASHBOARD_REQUEST_TIMEOUT_MS = 3000;
@@ -101,6 +131,45 @@ function getStatusLabel(status: DashboardItem["status"]) {
   }
 }
 
+function getReportReasonLabel(reason: DashboardContentReport["reason"]) {
+  switch (reason) {
+    case "privacy":
+      return "개인정보 노출";
+    case "spam":
+      return "광고/스팸";
+    case "copyright":
+      return "저작권 문제";
+    case "other":
+      return "기타";
+    default:
+      return "부적절한 내용";
+  }
+}
+
+function getReportTargetLabel(targetType: DashboardContentReport["targetType"]) {
+  switch (targetType) {
+    case "guestbook":
+      return "방명록";
+    case "image":
+      return "이미지";
+    default:
+      return "초대장";
+  }
+}
+
+function getReportStatusLabel(status: ReportStatus) {
+  switch (status) {
+    case "reviewing":
+      return "검토 중";
+    case "resolved":
+      return "처리 완료";
+    case "rejected":
+      return "기각";
+    default:
+      return "검토 대기";
+  }
+}
+
 export function DashboardShell() {
   const supabase = useMemo(() => createBrowserClient(), []);
   const [items, setItems] = useState<DashboardItem[]>([]);
@@ -108,8 +177,10 @@ export function DashboardShell() {
   const [selectedInvitationId, setSelectedInvitationId] = useState<string>("");
   const [guestbookEntries, setGuestbookEntries] = useState<GuestbookEntry[]>([]);
   const [rsvpEntries, setRsvpEntries] = useState<RsvpEntry[]>([]);
+  const [contentReports, setContentReports] = useState<DashboardContentReport[]>([]);
   const [variants, setVariants] = useState<DashboardVariant[]>([]);
   const [creatingVariantKey, setCreatingVariantKey] = useState("");
+  const [updatingReportId, setUpdatingReportId] = useState("");
 
   useEffect(() => {
     async function loadDashboard() {
@@ -135,10 +206,14 @@ export function DashboardShell() {
                 ...demoDashboardInvitations
               ]
             : demoDashboardInvitations;
+        const localItemsWithReports = localItems.map((item) => ({
+          ...item,
+          reportCount: demoContentReports.filter((report) => report.invitationId === item.id).length
+        }));
 
-        setItems(localItems);
+        setItems(localItemsWithReports);
         setVariants(demoDashboardVariants);
-        setSelectedInvitationId(localItems[0]?.id ?? "");
+        setSelectedInvitationId(localItemsWithReports[0]?.id ?? "");
         setMessage("현재는 데모 모드입니다. 로그인 후 실제 초대장을 저장할 수 있습니다.");
         return;
       }
@@ -161,6 +236,7 @@ export function DashboardShell() {
       if (!userId) {
         setItems([]);
         setVariants([]);
+        setContentReports([]);
         setSelectedInvitationId("");
         setMessage("로그인이 필요합니다.");
         return;
@@ -193,6 +269,7 @@ export function DashboardShell() {
       if (!rows.length) {
         setItems([]);
         setVariants([]);
+        setContentReports([]);
         setSelectedInvitationId("");
         setMessage("아직 저장된 초대장이 없습니다.");
         return;
@@ -203,11 +280,13 @@ export function DashboardShell() {
         { data: rsvpCountRows },
         { data: guestbookCountRows },
         { data: viewCountRows },
+        { data: reportCountRows },
         { data: variantRows }
       ] = await Promise.all([
         supabase.from("rsvps").select("invitation_id, variant_id").in("invitation_id", invitationIds),
         supabase.from("guestbook_entries").select("invitation_id, variant_id").in("invitation_id", invitationIds),
         supabase.from("view_logs").select("invitation_id, variant_id").in("invitation_id", invitationIds),
+        supabase.from("content_reports").select("invitation_id").in("invitation_id", invitationIds),
         supabase.from("invitation_variants").select("*").in("invitation_id", invitationIds).order("created_at", { ascending: true })
       ]);
 
@@ -227,6 +306,7 @@ export function DashboardShell() {
       const rsvpCountMap = countByInvitation(rsvpCountRows);
       const guestbookCountMap = countByInvitation(guestbookCountRows);
       const viewCountMap = countByInvitation(viewCountRows);
+      const reportCountMap = countByInvitation(reportCountRows);
       const rsvpVariantCountMap = countByVariant(rsvpCountRows);
       const guestbookVariantCountMap = countByVariant(guestbookCountRows);
       const viewVariantCountMap = countByVariant(viewCountRows);
@@ -235,7 +315,8 @@ export function DashboardShell() {
         ...row,
         viewCount: viewCountMap[row.id] ?? 0,
         rsvpCount: rsvpCountMap[row.id] ?? 0,
-        guestbookCount: guestbookCountMap[row.id] ?? 0
+        guestbookCount: guestbookCountMap[row.id] ?? 0,
+        reportCount: reportCountMap[row.id] ?? 0
       }));
 
       setItems(enrichedRows);
@@ -265,16 +346,26 @@ export function DashboardShell() {
       if (!selectedInvitationId) {
         setGuestbookEntries([]);
         setRsvpEntries([]);
+        setContentReports([]);
         return;
       }
 
       if (!supabase) {
         setGuestbookEntries([]);
         setRsvpEntries(selectedInvitationId === "demo-invitation" ? demoRsvps : []);
+        setContentReports(
+          selectedInvitationId === "demo-invitation"
+            ? demoContentReports
+            : []
+        );
         return;
       }
 
-      const [{ data: guestbookData, error: guestbookError }, { data: rsvpData, error: rsvpError }] = await Promise.all([
+      const [
+        { data: guestbookData, error: guestbookError },
+        { data: rsvpData, error: rsvpError },
+        { data: reportData, error: reportError }
+      ] = await Promise.all([
         supabase
           .from("guestbook_entries")
           .select("*")
@@ -282,6 +373,11 @@ export function DashboardShell() {
           .order("created_at", { ascending: false }),
         supabase
           .from("rsvps")
+          .select("*")
+          .eq("invitation_id", selectedInvitationId)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("content_reports")
           .select("*")
           .eq("invitation_id", selectedInvitationId)
           .order("created_at", { ascending: false })
@@ -316,6 +412,25 @@ export function DashboardShell() {
           }))
         );
       }
+
+      if (reportError) {
+        setContentReports([]);
+      } else {
+        setContentReports(
+          (reportData ?? []).map((report) => ({
+            id: report.id,
+            invitationId: report.invitation_id,
+            targetType: report.target_type,
+            targetId: report.target_id,
+            reason: report.reason,
+            detail: report.detail ?? "",
+            reporterContact: report.reporter_contact ?? "",
+            status: report.status,
+            createdAt: report.created_at,
+            resolvedAt: report.resolved_at
+          }))
+        );
+      }
     }
 
     void loadGuestbookEntries();
@@ -340,6 +455,49 @@ export function DashboardShell() {
       current.map((entry) => (entry.id === entryId ? { ...entry, approved } : entry))
     );
     setMessage(approved ? "방명록을 승인했습니다." : "방명록을 비공개 상태로 변경했습니다.");
+  }
+
+  async function updateReportStatus(report: DashboardContentReport, status: Extract<ReportStatus, "resolved" | "rejected">) {
+    if (!supabase) {
+      setMessage("데모 모드에서는 신고 처리 화면만 확인할 수 있습니다. 로그인 후 실제 신고를 처리할 수 있습니다.");
+      return;
+    }
+
+    setUpdatingReportId(report.id);
+
+    try {
+      const response = await fetch(`/api/dashboard/reports/${report.id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ status })
+      });
+      const result = await response.json().catch(() => ({
+        success: false,
+        message: "신고 처리 응답을 읽지 못했습니다."
+      })) as { success?: boolean; message?: string; report?: { status: ReportStatus; resolvedAt: string | null } };
+
+      if (!response.ok || !result.success || !result.report) {
+        setMessage(result.message || "신고 상태를 변경하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+        return;
+      }
+
+      setContentReports((current) =>
+        current.map((entry) =>
+          entry.id === report.id
+            ? {
+                ...entry,
+                status: result.report?.status ?? status,
+                resolvedAt: result.report?.resolvedAt ?? null
+              }
+            : entry
+        )
+      );
+      setMessage(status === "resolved" ? "신고를 처리 완료로 변경했습니다." : "신고를 기각했습니다.");
+    } finally {
+      setUpdatingReportId("");
+    }
   }
 
   async function copyPublicLink(item: DashboardItem) {
@@ -499,7 +657,8 @@ export function DashboardShell() {
       publishedInvitations: items.filter((item) => item.status === "published").length,
       totalViews: items.reduce((sum, item) => sum + (item.viewCount ?? 0), 0),
       totalRsvps: items.reduce((sum, item) => sum + (item.rsvpCount ?? 0), 0),
-      totalGuestbook: items.reduce((sum, item) => sum + (item.guestbookCount ?? 0), 0)
+      totalGuestbook: items.reduce((sum, item) => sum + (item.guestbookCount ?? 0), 0),
+      totalReports: items.reduce((sum, item) => sum + (item.reportCount ?? 0), 0)
     }),
     [items]
   );
@@ -548,6 +707,11 @@ export function DashboardShell() {
             <p className="ops-value">{dashboardSummary.totalGuestbook}</p>
             <p className="ops-note">승인 전 항목 포함</p>
           </article>
+          <article className="ops-card">
+            <h3>누적 신고</h3>
+            <p className="ops-value">{dashboardSummary.totalReports}</p>
+            <p className="ops-note">검토 대기와 완료 항목 포함</p>
+          </article>
         </div>
         <div className="ops-grid">
           {items.map((item) => (
@@ -561,7 +725,7 @@ export function DashboardShell() {
               <p className="ops-value">{getStatusLabel(item.status)}</p>
               <p className="ops-line">카테고리 <strong>{item.category}</strong></p>
               <p className="ops-line">템플릿 <strong>{item.templateId}</strong></p>
-              <p className="ops-line">조회 <strong>{item.viewCount ?? 0}</strong> · RSVP <strong>{item.rsvpCount ?? 0}</strong> · 방명록 <strong>{item.guestbookCount ?? 0}</strong></p>
+              <p className="ops-line">조회 <strong>{item.viewCount ?? 0}</strong> · RSVP <strong>{item.rsvpCount ?? 0}</strong> · 방명록 <strong>{item.guestbookCount ?? 0}</strong> · 신고 <strong>{item.reportCount ?? 0}</strong></p>
               <p className="ops-note">
                 생성일 {new Date(item.createdAt).toLocaleDateString("ko-KR")}
                 <br />
@@ -721,6 +885,48 @@ export function DashboardShell() {
                 ))
               ) : (
                 <li className="meta">대기 중인 방명록이 없습니다.</li>
+              )}
+            </ul>
+          </article>
+          <article className="ops-card" style={{ gridColumn: "1 / -1" }}>
+            <h3>신고 관리</h3>
+            <p className="ops-note">
+              {selectedInvitation
+                ? `${selectedInvitation.title}의 공개 신고를 검토합니다.`
+                : "신고를 검토할 초대장을 선택해 주세요."}
+            </p>
+            <ul className="list-box">
+              {contentReports.length ? (
+                contentReports.map((report) => (
+                  <li key={report.id}>
+                    <div className="meta">
+                      {new Date(report.createdAt).toLocaleString("ko-KR")} · {getReportTargetLabel(report.targetType)} · {getReportReasonLabel(report.reason)}
+                    </div>
+                    <div className="value">{report.detail || "상세 내용 없음"}</div>
+                    {report.reporterContact ? <div className="value">회신 정보: {report.reporterContact}</div> : null}
+                    <div className="header-actions" style={{ marginTop: "12px" }}>
+                      <button
+                        className="btn-primary"
+                        disabled={updatingReportId === report.id}
+                        onClick={() => void updateReportStatus(report, "resolved")}
+                        type="button"
+                      >
+                        처리 완료
+                      </button>
+                      <button
+                        className="btn-outline"
+                        disabled={updatingReportId === report.id}
+                        onClick={() => void updateReportStatus(report, "rejected")}
+                        type="button"
+                      >
+                        기각
+                      </button>
+                      <span className="auth-status">{getReportStatusLabel(report.status)}</span>
+                    </div>
+                  </li>
+                ))
+              ) : (
+                <li className="meta">접수된 신고가 없습니다.</li>
               )}
             </ul>
           </article>

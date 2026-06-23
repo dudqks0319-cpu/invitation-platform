@@ -37,6 +37,9 @@ describe("DashboardShell", () => {
     expect(container.textContent).toContain("직장용 복사");
     expect(container.textContent).toContain("/invitations/kim-lee-demo-friends");
     expect(container.textContent).toContain("/invitations/kim-lee-demo-coworkers");
+    expect(container.textContent).toContain("신고 관리");
+    expect(container.textContent).toContain("개인정보 노출");
+    expect(container.textContent).toContain("검토 대기");
 
     await act(async () => {
       root.unmount();
