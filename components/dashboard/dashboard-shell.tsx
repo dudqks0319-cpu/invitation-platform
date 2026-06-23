@@ -500,6 +500,22 @@ export function DashboardShell() {
     }
   }
 
+  function downloadDashboardExport(exportType: "rsvps" | "guestbook") {
+    if (!selectedInvitation) {
+      setMessage("내보낼 초대장을 먼저 선택해 주세요.");
+      return;
+    }
+
+    if (!supabase || selectedInvitation.id === "local-draft") {
+      setMessage("데모 모드에서는 내보내기 위치만 확인할 수 있습니다. 로그인 후 실제 데이터를 CSV로 받을 수 있습니다.");
+      return;
+    }
+
+    if (typeof window !== "undefined") {
+      window.location.href = `/api/dashboard/invitations/${selectedInvitation.id}/export?type=${exportType}`;
+    }
+  }
+
   async function copyPublicLink(item: DashboardItem) {
     if (typeof window === "undefined") {
       return;
@@ -733,7 +749,7 @@ export function DashboardShell() {
                 <br />
                 {item.publishedAt ? `발행일 ${new Date(item.publishedAt).toLocaleDateString("ko-KR")}` : "아직 발행 전입니다."}
               </p>
-              <div className="header-actions" style={{ marginTop: "16px" }}>
+              <div className="dashboard-actions" style={{ marginTop: "16px" }}>
                 <Link className="btn-outline" href={`/builder?invitationId=${item.id}`}>
                   편집하기
                 </Link>
@@ -774,7 +790,7 @@ export function DashboardShell() {
             </p>
             {selectedInvitation ? (
               <>
-                <div className="header-actions" style={{ marginTop: 12 }}>
+                <div className="dashboard-actions" style={{ marginTop: 12 }}>
                   {invitationVariantPresets.map((preset) => {
                     const existingVariant = selectedVariants.find(
                       (variant) => variant.audienceKey === preset.audienceKey && variant.status !== "archived"
@@ -804,7 +820,7 @@ export function DashboardShell() {
                         <div className="value">
                           조회 {variant.viewCount} · RSVP {variant.rsvpCount} · 방명록 {variant.guestbookCount}
                         </div>
-                        <div className="header-actions" style={{ marginTop: "12px" }}>
+                        <div className="dashboard-actions" style={{ marginTop: "12px" }}>
                           <button className="btn-primary" onClick={() => void copyVariantLink(variant)} type="button">
                             링크 복사
                           </button>
@@ -838,6 +854,11 @@ export function DashboardShell() {
             <p className="ops-line">참석 <strong>{rsvpSummary.attending}</strong></p>
             <p className="ops-line">불참 <strong>{rsvpSummary.declined}</strong></p>
             <p className="ops-line">예상 총 인원 <strong>{rsvpSummary.totalGuests}</strong></p>
+            <div className="dashboard-actions" style={{ marginTop: "12px" }}>
+              <button className="btn-outline" onClick={() => downloadDashboardExport("rsvps")} type="button">
+                RSVP CSV 내보내기
+              </button>
+            </div>
             <ul className="list-box">
               {rsvpEntries.length ? (
                 rsvpEntries.slice(0, 10).map((entry) => (
@@ -864,6 +885,11 @@ export function DashboardShell() {
                 ? `${selectedInvitation.title}의 방명록을 검토 중입니다.`
                 : "모더레이션할 초대장을 선택해 주세요."}
             </p>
+            <div className="dashboard-actions" style={{ marginTop: "12px" }}>
+              <button className="btn-outline" onClick={() => downloadDashboardExport("guestbook")} type="button">
+                방명록 CSV 내보내기
+              </button>
+            </div>
             <ul className="list-box">
               {guestbookEntries.length ? (
                 guestbookEntries.map((entry) => (
@@ -872,7 +898,7 @@ export function DashboardShell() {
                       {new Date(entry.createdAt).toLocaleString("ko-KR")} · {entry.nickname}
                     </div>
                     <div className="value">{entry.message}</div>
-                    <div className="header-actions" style={{ marginTop: "12px" }}>
+                    <div className="dashboard-actions" style={{ marginTop: "12px" }}>
                       <button className="btn-primary" onClick={() => updateModeration(entry.id, true)} type="button">
                         승인
                       </button>
@@ -904,7 +930,7 @@ export function DashboardShell() {
                     </div>
                     <div className="value">{report.detail || "상세 내용 없음"}</div>
                     {report.reporterContact ? <div className="value">회신 정보: {report.reporterContact}</div> : null}
-                    <div className="header-actions" style={{ marginTop: "12px" }}>
+                    <div className="dashboard-actions" style={{ marginTop: "12px" }}>
                       <button
                         className="btn-primary"
                         disabled={updatingReportId === report.id}

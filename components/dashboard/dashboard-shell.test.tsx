@@ -40,6 +40,19 @@ describe("DashboardShell", () => {
     expect(container.textContent).toContain("신고 관리");
     expect(container.textContent).toContain("개인정보 노출");
     expect(container.textContent).toContain("검토 대기");
+    expect(container.textContent).toContain("RSVP CSV 내보내기");
+    expect(container.textContent).toContain("방명록 CSV 내보내기");
+
+    const exportButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent === "RSVP CSV 내보내기"
+    );
+    expect(exportButton).toBeTruthy();
+
+    await act(async () => {
+      exportButton?.click();
+    });
+
+    expect(container.textContent).toContain("로그인 후 실제 데이터를 CSV로 받을 수 있습니다.");
 
     await act(async () => {
       root.unmount();
