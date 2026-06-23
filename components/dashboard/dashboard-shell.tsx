@@ -12,6 +12,12 @@ import {
   type InvitationRecord,
   type RsvpEntry
 } from "@/lib/invitation-payload";
+import {
+  buildInvitationVariantInsertPayload,
+  buildInvitationVariantSlug,
+  invitationVariantPresets,
+  type InvitationVariantPreset
+} from "@/lib/invitation-variant-management";
 
 type DashboardItem = InvitationRecord & {
   viewCount?: number;
@@ -19,6 +25,62 @@ type DashboardItem = InvitationRecord & {
   guestbookCount?: number;
   repurchaseRequired?: boolean;
 };
+
+type DashboardVariant = {
+  id: string;
+  invitationId: string;
+  audienceKey: string;
+  audienceLabel: string;
+  slug: string;
+  status: "active" | "hidden" | "archived";
+  viewCount: number;
+  rsvpCount: number;
+  guestbookCount: number;
+  createdAt: string;
+};
+
+const demoDashboardVariants: DashboardVariant[] = [
+  {
+    id: "demo-variant-friends",
+    invitationId: "demo-invitation",
+    audienceKey: "friends",
+    audienceLabel: "친구용",
+    slug: buildInvitationVariantSlug("kim-lee-demo", "friends"),
+    status: "active",
+    viewCount: 8,
+    rsvpCount: 2,
+    guestbookCount: 1,
+    createdAt: new Date("2026-03-03T09:00:00.000Z").toISOString()
+  },
+  {
+    id: "demo-variant-coworkers",
+    invitationId: "demo-invitation",
+    audienceKey: "coworkers",
+    audienceLabel: "직장용",
+    slug: buildInvitationVariantSlug("kim-lee-demo", "coworkers"),
+    status: "active",
+    viewCount: 5,
+    rsvpCount: 1,
+    guestbookCount: 0,
+    createdAt: new Date("2026-03-03T10:00:00.000Z").toISOString()
+  }
+];
+const DASHBOARD_REQUEST_TIMEOUT_MS = 3000;
+
+async function withDashboardTimeout<T>(promise: Promise<T>, timeoutMs = DASHBOARD_REQUEST_TIMEOUT_MS): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("dashboard_request_timeout")), timeoutMs);
+  });
+
+  try {
+    return await Promise.race([promise, timeoutPromise]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
+}
 
 function getStatusLabel(status: DashboardItem["status"]) {
   switch (status) {
@@ -46,6 +108,8 @@ export function DashboardShell() {
   const [selectedInvitationId, setSelectedInvitationId] = useState<string>("");
   const [guestbookEntries, setGuestbookEntries] = useState<GuestbookEntry[]>([]);
   const [rsvpEntries, setRsvpEntries] = useState<RsvpEntry[]>([]);
+  const [variants, setVariants] = useState<DashboardVariant[]>([]);
+  const [creatingVariantKey, setCreatingVariantKey] = useState("");
 
   useEffect(() => {
     async function loadDashboard() {
@@ -73,17 +137,30 @@ export function DashboardShell() {
             : demoDashboardInvitations;
 
         setItems(localItems);
+        setVariants(demoDashboardVariants);
         setSelectedInvitationId(localItems[0]?.id ?? "");
         setMessage("현재는 데모 모드입니다. 로그인 후 실제 초대장을 저장할 수 있습니다.");
         return;
       }
 
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
+      let userId = "";
 
-      if (!user) {
+      try {
+        const {
+          data: { user }
+        } = await withDashboardTimeout(supabase.auth.getUser());
+        userId = user?.id ?? "";
+      } catch {
         setItems([]);
+        setVariants([]);
+        setSelectedInvitationId("");
+        setMessage("로그인 상태를 확인하지 못했습니다. 로그인 후 다시 시도해 주세요.");
+        return;
+      }
+
+      if (!userId) {
+        setItems([]);
+        setVariants([]);
         setSelectedInvitationId("");
         setMessage("로그인이 필요합니다.");
         return;
@@ -92,7 +169,7 @@ export function DashboardShell() {
       const { data, error } = await supabase
         .from("invitations")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("user_id", userId)
         .order("created_at", { ascending: false });
 
       if (error) {
@@ -115,16 +192,23 @@ export function DashboardShell() {
 
       if (!rows.length) {
         setItems([]);
+        setVariants([]);
         setSelectedInvitationId("");
         setMessage("아직 저장된 초대장이 없습니다.");
         return;
       }
 
       const invitationIds = rows.map((row) => row.id);
-      const [{ data: rsvpCountRows }, { data: guestbookCountRows }, { data: viewCountRows }] = await Promise.all([
-        supabase.from("rsvps").select("invitation_id").in("invitation_id", invitationIds),
-        supabase.from("guestbook_entries").select("invitation_id").in("invitation_id", invitationIds),
-        supabase.from("view_logs").select("invitation_id").in("invitation_id", invitationIds)
+      const [
+        { data: rsvpCountRows },
+        { data: guestbookCountRows },
+        { data: viewCountRows },
+        { data: variantRows }
+      ] = await Promise.all([
+        supabase.from("rsvps").select("invitation_id, variant_id").in("invitation_id", invitationIds),
+        supabase.from("guestbook_entries").select("invitation_id, variant_id").in("invitation_id", invitationIds),
+        supabase.from("view_logs").select("invitation_id, variant_id").in("invitation_id", invitationIds),
+        supabase.from("invitation_variants").select("*").in("invitation_id", invitationIds).order("created_at", { ascending: true })
       ]);
 
       const countByInvitation = (entries: Array<{ invitation_id: string }> | null | undefined) =>
@@ -132,10 +216,20 @@ export function DashboardShell() {
           acc[entry.invitation_id] = (acc[entry.invitation_id] ?? 0) + 1;
           return acc;
         }, {});
+      const countByVariant = (entries: Array<{ variant_id: string | null }> | null | undefined) =>
+        (entries ?? []).reduce<Record<string, number>>((acc, entry) => {
+          if (entry.variant_id) {
+            acc[entry.variant_id] = (acc[entry.variant_id] ?? 0) + 1;
+          }
+          return acc;
+        }, {});
 
       const rsvpCountMap = countByInvitation(rsvpCountRows);
       const guestbookCountMap = countByInvitation(guestbookCountRows);
       const viewCountMap = countByInvitation(viewCountRows);
+      const rsvpVariantCountMap = countByVariant(rsvpCountRows);
+      const guestbookVariantCountMap = countByVariant(guestbookCountRows);
+      const viewVariantCountMap = countByVariant(viewCountRows);
 
       const enrichedRows = rows.map((row) => ({
         ...row,
@@ -145,6 +239,20 @@ export function DashboardShell() {
       }));
 
       setItems(enrichedRows);
+      setVariants(
+        (variantRows ?? []).map((variant) => ({
+          id: variant.id,
+          invitationId: variant.invitation_id,
+          audienceKey: variant.audience_key,
+          audienceLabel: variant.audience_label,
+          slug: variant.slug,
+          status: variant.status,
+          viewCount: viewVariantCountMap[variant.id] ?? 0,
+          rsvpCount: rsvpVariantCountMap[variant.id] ?? 0,
+          guestbookCount: guestbookVariantCountMap[variant.id] ?? 0,
+          createdAt: variant.created_at
+        }))
+      );
       setSelectedInvitationId((current) => current || enrichedRows[0]?.id || "");
       setMessage("저장된 초대장을 불러왔습니다.");
     }
@@ -244,6 +352,99 @@ export function DashboardShell() {
     setMessage("공개 링크를 복사했습니다.");
   }
 
+  async function copyVariantLink(variant: DashboardVariant) {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const publicUrl = `${window.location.origin}/invitations/${variant.slug}`;
+    await navigator.clipboard.writeText(publicUrl);
+    setMessage(`${variant.audienceLabel} 링크를 복사했습니다.`);
+  }
+
+  async function createAudienceVariant(item: DashboardItem, preset: InvitationVariantPreset) {
+    if (item.status !== "published") {
+      setMessage("대상별 링크는 발행된 초대장에서만 만들 수 있습니다.");
+      return;
+    }
+
+    const existingVariant = variants.find(
+      (variant) =>
+        variant.invitationId === item.id &&
+        variant.audienceKey === preset.audienceKey &&
+        variant.status !== "archived"
+    );
+
+    if (existingVariant) {
+      await copyVariantLink(existingVariant);
+      return;
+    }
+
+    if (!supabase) {
+      setMessage("데모 모드에서는 예시 링크만 확인할 수 있습니다. 로그인 후 실제 대상별 링크를 만들 수 있습니다.");
+      return;
+    }
+
+    const requestKey = `${item.id}:${preset.audienceKey}`;
+    setCreatingVariantKey(requestKey);
+
+    const insertPayload = buildInvitationVariantInsertPayload({
+      invitationId: item.id,
+      baseSlug: item.slug,
+      preset
+    });
+    const { data, error } = await supabase
+      .from("invitation_variants")
+      .insert(insertPayload)
+      .select("*")
+      .single();
+
+    setCreatingVariantKey("");
+
+    if (error || !data) {
+      setMessage("대상별 링크를 만들지 못했습니다. 이미 같은 링크가 있거나 잠시 후 다시 시도해 주세요.");
+      return;
+    }
+
+    const nextVariant: DashboardVariant = {
+      id: data.id,
+      invitationId: data.invitation_id,
+      audienceKey: data.audience_key,
+      audienceLabel: data.audience_label,
+      slug: data.slug,
+      status: data.status,
+      viewCount: 0,
+      rsvpCount: 0,
+      guestbookCount: 0,
+      createdAt: data.created_at
+    };
+
+    setVariants((current) => [...current, nextVariant]);
+    setMessage(`${data.audience_label} 링크를 만들었습니다.`);
+  }
+
+  async function updateVariantStatus(variant: DashboardVariant, status: DashboardVariant["status"]) {
+    if (!supabase) {
+      setMessage("데모 모드에서는 대상별 링크 상태를 변경할 수 없습니다.");
+      return;
+    }
+
+    const { error } = await supabase
+      .from("invitation_variants")
+      .update({ status })
+      .eq("id", variant.id);
+
+    if (error) {
+      setMessage("대상별 링크 상태를 변경하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      return;
+    }
+
+    setVariants((current) =>
+      current.map((entry) => (entry.id === variant.id ? { ...entry, status } : entry))
+    );
+    setMessage(status === "active" ? `${variant.audienceLabel} 링크를 다시 활성화했습니다.` : `${variant.audienceLabel} 링크를 숨겼습니다.`);
+  }
+
   async function deleteInvitation(item: DashboardItem) {
     const isLocalDraft = item.id === "local-draft";
     const isDeletable = isLocalDraft || canDeleteInvitation(item.status);
@@ -291,6 +492,7 @@ export function DashboardShell() {
   }
 
   const selectedInvitation = items.find((item) => item.id === selectedInvitationId);
+  const selectedVariants = variants.filter((variant) => variant.invitationId === selectedInvitationId);
   const dashboardSummary = useMemo(
     () => ({
       totalInvitations: items.length,
@@ -399,6 +601,68 @@ export function DashboardShell() {
         </div>
 
         <div className="ops-grid" style={{ marginTop: "24px" }}>
+          <article className="ops-card" style={{ gridColumn: "1 / -1" }}>
+            <h3>대상별 링크</h3>
+            <p className="ops-note">
+              {selectedInvitation
+                ? `${selectedInvitation.title}을 친구용, 가족용, 직장용 링크로 나누어 공유하고 응답을 분리합니다.`
+                : "대상별 링크를 만들 초대장을 선택해 주세요."}
+            </p>
+            {selectedInvitation ? (
+              <>
+                <div className="header-actions" style={{ marginTop: 12 }}>
+                  {invitationVariantPresets.map((preset) => {
+                    const existingVariant = selectedVariants.find(
+                      (variant) => variant.audienceKey === preset.audienceKey && variant.status !== "archived"
+                    );
+                    const requestKey = `${selectedInvitation.id}:${preset.audienceKey}`;
+                    return (
+                      <button
+                        className={existingVariant ? "btn-outline" : "btn-primary"}
+                        disabled={creatingVariantKey === requestKey}
+                        key={preset.audienceKey}
+                        onClick={() => void createAudienceVariant(selectedInvitation, preset)}
+                        type="button"
+                      >
+                        {existingVariant ? `${preset.audienceLabel} 복사` : `${preset.audienceLabel} 만들기`}
+                      </button>
+                    );
+                  })}
+                </div>
+                <ul className="list-box" style={{ marginTop: 16 }}>
+                  {selectedVariants.length ? (
+                    selectedVariants.map((variant) => (
+                      <li key={variant.id}>
+                        <div className="meta">
+                          {variant.audienceLabel} · {variant.status === "active" ? "공개중" : "숨김"}
+                        </div>
+                        <div className="value">/invitations/{variant.slug}</div>
+                        <div className="value">
+                          조회 {variant.viewCount} · RSVP {variant.rsvpCount} · 방명록 {variant.guestbookCount}
+                        </div>
+                        <div className="header-actions" style={{ marginTop: "12px" }}>
+                          <button className="btn-primary" onClick={() => void copyVariantLink(variant)} type="button">
+                            링크 복사
+                          </button>
+                          {variant.status === "active" ? (
+                            <button className="btn-outline" onClick={() => void updateVariantStatus(variant, "hidden")} type="button">
+                              숨기기
+                            </button>
+                          ) : (
+                            <button className="btn-outline" onClick={() => void updateVariantStatus(variant, "active")} type="button">
+                              다시 공개
+                            </button>
+                          )}
+                        </div>
+                      </li>
+                    ))
+                  ) : (
+                    <li className="meta">아직 대상별 링크가 없습니다. 위 버튼으로 링크를 만들 수 있습니다.</li>
+                  )}
+                </ul>
+              </>
+            ) : null}
+          </article>
           <article className="ops-card">
             <h3>RSVP 운영</h3>
             <p className="ops-note">
