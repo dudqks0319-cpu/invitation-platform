@@ -18,7 +18,7 @@ import {
   invitationVariantPresets,
   type InvitationVariantPreset
 } from "@/lib/invitation-variant-management";
-import { buildPublicQrImagePath } from "@/lib/public-share-assets";
+import { buildPublicCalendarPath, buildPublicQrImagePath } from "@/lib/public-share-assets";
 
 type DashboardItem = InvitationRecord & {
   viewCount?: number;
@@ -765,6 +765,9 @@ export function DashboardShell() {
                     <a className="btn-outline" download={`${item.slug}-qr.png`} href={buildPublicQrImagePath(item.slug)}>
                       QR 저장
                     </a>
+                    <a className="btn-outline" download={`${item.slug}.ics`} href={buildPublicCalendarPath(item.slug)}>
+                      iCal 저장
+                    </a>
                   </>
                 ) : (
                   <Link className="btn-primary" href={`/checkout?invitationId=${item.id}`}>
@@ -830,6 +833,9 @@ export function DashboardShell() {
                           </button>
                           <a className="btn-outline" download={`${variant.slug}-qr.png`} href={buildPublicQrImagePath(variant.slug)}>
                             QR 저장
+                          </a>
+                          <a className="btn-outline" download={`${variant.slug}.ics`} href={buildPublicCalendarPath(variant.slug)}>
+                            iCal 저장
                           </a>
                           {variant.status === "active" ? (
                             <button className="btn-outline" onClick={() => void updateVariantStatus(variant, "hidden")} type="button">
