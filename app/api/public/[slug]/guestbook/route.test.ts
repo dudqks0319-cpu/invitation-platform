@@ -264,6 +264,27 @@ describe("POST /api/public/[slug]/guestbook", () => {
     });
   });
 
+  it("rejects guestbook writes with blocked language before storing", async () => {
+    const adminDouble = createAdminDouble();
+    createSupabaseAdminClientMock.mockReturnValue(adminDouble.client);
+
+    const response = await POST(createRequest({
+      nickname: "친구1",
+      message: "시 발",
+      website: ""
+    }), {
+      params: Promise.resolve({ slug: "demo" })
+    });
+    const result = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(adminDouble.insertMock).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      success: false,
+      message: "운영 정책상 등록할 수 없는 표현이 포함되어 있습니다."
+    });
+  });
+
   it("rejects guestbook writes when the invitation section policy disables guestbook", async () => {
     const adminDouble = createAdminDouble(null, {
       sections: {

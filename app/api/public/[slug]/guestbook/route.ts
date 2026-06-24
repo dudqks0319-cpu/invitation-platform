@@ -3,6 +3,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isInvitationSectionAllowed } from "@/lib/invitation-payload";
 import { resolvePublishedInvitationBySlug } from "@/lib/invitation-variants";
 import { checkPublicAbuseBlock } from "@/lib/public-abuse";
+import { checkPublicGuestbookContent } from "@/lib/public-content-policy";
 import { consumeRateLimit, getClientIdentifier, hashClientIdentifier } from "@/lib/rate-limit";
 import { ensureJsonRequest, publicGuestbookSchema, readJsonBody } from "@/lib/supabase/public-write";
 
@@ -76,6 +77,18 @@ export async function POST(
 
   if (parsed.data.website) {
     return NextResponse.json({ success: true, message: "방명록이 접수되었습니다." });
+  }
+
+  const contentPolicy = checkPublicGuestbookContent({
+    nickname: parsed.data.nickname,
+    message: parsed.data.message
+  });
+
+  if (!contentPolicy.ok) {
+    return NextResponse.json(
+      { success: false, message: contentPolicy.message },
+      { status: 400 }
+    );
   }
 
   const lookup = await resolvePublishedInvitationBySlug(admin, slug);
