@@ -8,7 +8,7 @@ import {
   updateWeddingNames,
   type PendingPhotoUpload
 } from "@/lib/invitation-shared";
-import { getPublishReadiness, saveDraftToSupabase } from "@/lib/invitations";
+import { InvitationConflictError, getPublishReadiness, saveDraftToSupabase } from "@/lib/invitations";
 import { getPublicInvitationUrl } from "@/lib/share";
 
 function withMeta(draft: MobileInvitationDraft) {
@@ -236,6 +236,7 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
       const nextDraft: MobileInvitationDraft = {
         ...draft,
         serverId: result.serverId,
+        baseRevision: result.baseRevision,
         payload: result.payload,
         pendingPhotos: result.pendingPhotos,
         syncStatus: "synced",
@@ -250,7 +251,7 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
       const failedDraft: MobileInvitationDraft = {
         ...draft,
         pendingPhotos: markPendingPhotosRetried(draft.pendingPhotos),
-        syncStatus: "failed",
+        syncStatus: caught instanceof InvitationConflictError ? "conflict" : "failed",
         isDirty: true,
         localUpdatedAt: new Date().toISOString()
       };

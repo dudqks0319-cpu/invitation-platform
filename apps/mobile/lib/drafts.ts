@@ -20,6 +20,19 @@ function isDraftMap(value: unknown): value is DraftMap {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
 
+function normalizeDraft(draft: MobileInvitationDraft): MobileInvitationDraft {
+  const revision = typeof draft.payload.revision === "number" ? draft.payload.revision : 0;
+  return {
+    ...draft,
+    baseRevision: typeof draft.baseRevision === "number" ? draft.baseRevision : revision,
+    payload: {
+      ...draft.payload,
+      revision
+    },
+    syncStatus: draft.syncStatus ?? "pending"
+  };
+}
+
 async function readDraftMap(): Promise<DraftMap> {
   const raw = await AsyncStorage.getItem(DRAFT_STORAGE_KEY);
   if (!raw) {
@@ -104,12 +117,14 @@ function needsPreviewSampleReset(draft: MobileInvitationDraft) {
 
 export async function listDrafts() {
   const drafts = await readDraftMap();
-  return Object.values(drafts).sort((a, b) => b.localUpdatedAt.localeCompare(a.localUpdatedAt));
+  return Object.values(drafts)
+    .map(normalizeDraft)
+    .sort((a, b) => b.localUpdatedAt.localeCompare(a.localUpdatedAt));
 }
 
 export async function loadDraft(localId: string) {
   const drafts = await readDraftMap();
-  return drafts[localId] ?? null;
+  return drafts[localId] ? normalizeDraft(drafts[localId]) : null;
 }
 
 export async function saveDraft(draft: MobileInvitationDraft) {
@@ -122,7 +137,7 @@ export async function ensureDraft(ownerId: string, localId?: string) {
   const drafts = await readDraftMap();
 
   if (localId && drafts[localId]) {
-    return drafts[localId];
+    return normalizeDraft(drafts[localId]);
   }
 
   const latest = Object.values(drafts)
@@ -137,7 +152,7 @@ export async function ensureDraft(ownerId: string, localId?: string) {
       return sample;
     }
 
-    return latest;
+    return normalizeDraft(latest);
   }
 
   const created = ownerId === PREVIEW_OWNER_ID ? createSampleDraft(ownerId) : createLocalDraft(ownerId);

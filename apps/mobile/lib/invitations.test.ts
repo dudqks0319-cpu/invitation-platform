@@ -78,9 +78,35 @@ describe("mobile publish pricing gate", () => {
     });
 
     await expect(saveDraftToSupabase(draft, "owner-1", "published")).resolves.toMatchObject({
+      baseRevision: 1,
+      payload: expect.objectContaining({ revision: 1 }),
       serverId: "server-1"
     });
     expect(fromMock).toHaveBeenCalledWith("invitations");
+  });
+
+  it("rejects stale local edits when the remote revision changed", async () => {
+    const { InvitationConflictError, saveDraftToSupabase } = await import("./invitations");
+    const draft = createEmptyInvitationDraft("owner-1");
+    draft.serverId = "server-1";
+    draft.baseRevision = 1;
+    draft.payload.revision = 1;
+
+    fromMock.mockReturnValue({
+      select() {
+        return {
+          eq() {
+            return this;
+          },
+          maybeSingle: vi.fn().mockResolvedValue({
+            data: { payload: { revision: 2 } },
+            error: null
+          })
+        };
+      }
+    });
+
+    await expect(saveDraftToSupabase(draft, "owner-1")).rejects.toBeInstanceOf(InvitationConflictError);
   });
 
   it("builds owner-scoped storage paths for pending photo uploads", async () => {

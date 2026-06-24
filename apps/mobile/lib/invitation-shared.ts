@@ -26,6 +26,7 @@ export type PendingPhotoUpload = {
 
 export type InvitationPayload = {
   schemaVersion: number;
+  revision: number;
   eventType: string;
   templateId: string;
   title: string;
@@ -74,9 +75,10 @@ export type InvitationPayload = {
 export type InvitationDraft = {
   localId: string;
   serverId?: string;
+  baseRevision: number;
   payload: InvitationPayload;
   pendingPhotos: PendingPhotoUpload[];
-  syncStatus: "pending" | "synced" | "failed";
+  syncStatus: "pending" | "synced" | "failed" | "offline" | "conflict";
   localUpdatedAt: string;
   isDirty: boolean;
 };
@@ -182,8 +184,10 @@ function createLocalId() {
 export function createEmptyInvitationDraft(ownerId: string): InvitationDraft {
   return {
     localId: createLocalId(),
+    baseRevision: 0,
     payload: {
       schemaVersion: INVITATION_SCHEMA_VERSION,
+      revision: 0,
       eventType: DEFAULT_EVENT_TYPE,
       templateId: "wedding-classic",
       title: "결혼식 초대장",

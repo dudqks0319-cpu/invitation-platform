@@ -17,6 +17,10 @@ type RemoteInvitationRow = {
   payload: Record<string, unknown>;
 };
 
+type RemoteRevisionRow = {
+  payload: Record<string, unknown> | null;
+};
+
 const STORAGE_BUCKET = "invitation-assets";
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 7;
 const UPLOAD_CONTENT_TYPES = {
@@ -29,6 +33,13 @@ export type PublishReadiness = {
   canPublish: boolean;
   missingFields: string[];
 };
+
+export class InvitationConflictError extends Error {
+  constructor(message = "서버에 더 최신 초대장 수정본이 있습니다.") {
+    super(message);
+    this.name = "InvitationConflictError";
+  }
+}
 
 export function requiresPaymentBeforePublish(payload: InvitationPayload) {
   return !getMobileInvitationPricing(payload).isFree;
@@ -46,6 +57,35 @@ function slugify(input: string) {
 
 function ensureSlug(payload: InvitationPayload) {
   return payload.share.slug || `${slugify(payload.title || "invitehub")}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function readRevision(payload: Record<string, unknown> | null | undefined) {
+  const revision = payload?.revision;
+  return typeof revision === "number" && Number.isFinite(revision) ? revision : 0;
+}
+
+async function assertNoRemoteRevisionConflict(draft: MobileInvitationDraft, userId: string) {
+  if (!draft.serverId) {
+    return;
+  }
+
+  const { data, error } = await supabase!
+    .from("invitations")
+    .select("payload")
+    .eq("id", draft.serverId)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error || !data) {
+    throw new Error(error?.message || "서버 초대장 상태를 확인하지 못했습니다.");
+  }
+
+  const remoteRevision = readRevision((data as RemoteRevisionRow).payload);
+  const baseRevision = typeof draft.baseRevision === "number" ? draft.baseRevision : readRevision(draft.sourcePayload);
+
+  if (remoteRevision !== baseRevision) {
+    throw new InvitationConflictError();
+  }
 }
 
 function getPhotoUploadExtension(localUri: string) {
@@ -90,6 +130,7 @@ export function getPublishReadiness(payload: InvitationPayload): PublishReadines
 export function toLegacyInvitationPayload(payload: InvitationPayload) {
   return {
     schemaVersion: payload.schemaVersion,
+    revision: payload.revision,
     templateId: payload.templateId,
     category: payload.eventType,
     title: payload.title,
@@ -224,6 +265,8 @@ export async function saveDraftToSupabase(
     ? draft.sourcePayload.galleryImagePaths.filter((item): item is string => typeof item === "string")
     : [];
 
+  await assertNoRemoteRevisionConflict(draft, userId);
+
   if (draft.pendingPhotos.length > 0) {
     for (const photo of draft.pendingPhotos) {
       const uploaded = await uploadPendingPhoto(photo, userId, draft.localId);
@@ -269,8 +312,11 @@ export async function saveDraftToSupabase(
   }
 
   const slug = ensureSlug(payloadWithUploads);
+  const baseRevision = typeof draft.baseRevision === "number" ? draft.baseRevision : readRevision(draft.sourcePayload);
+  const nextRevision = baseRevision + 1;
   const normalizedPayload: InvitationPayload = {
     ...payloadWithUploads,
+    revision: nextRevision,
     share: {
       ...payloadWithUploads.share,
       slug
@@ -317,6 +363,7 @@ export async function saveDraftToSupabase(
   }
 
   return {
+    baseRevision: nextRevision,
     payload: normalizedPayload,
     pendingPhotos: [],
     publicUrl: getPublicInvitationUrl(slug),
@@ -329,6 +376,7 @@ function toSharedInvitationPayload(row: RemoteInvitationRow, ownerId: string): I
 
   return {
     schemaVersion: 2,
+    revision: readRevision(payload),
     eventType: "wedding",
     templateId: String(payload.templateId ?? row.template_id ?? "wedding-classic"),
     title: String(payload.title ?? row.title ?? "결혼식 초대장"),
@@ -437,6 +485,7 @@ async function toSharedInvitationDraft(row: RemoteInvitationRow, ownerId: string
   return {
     localId: row.id,
     serverId: row.id,
+    baseRevision: nextPayload.revision,
     payload: nextPayload,
     sourcePayload: row.payload,
     syncStatus: "synced",
