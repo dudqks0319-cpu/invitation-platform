@@ -42,6 +42,52 @@ export default function InvitationDetailScreen() {
   const shareSlug = draft?.payload.share.slug ?? "";
   const mapLinks = draft ? getInvitationMapLinks(draft.payload) : null;
 
+  async function loadServerVersion() {
+    if (!draft?.serverId || !configured || status !== "authenticated" || !user?.id) {
+      setError("서버 버전을 불러오려면 로그인과 원격 저장본이 필요합니다.");
+      return;
+    }
+
+    setError("");
+    setMessage("");
+    const remote = await loadRemoteInvitation(draft.serverId, user.id);
+    if (!remote) {
+      setError("서버 버전을 찾지 못했습니다.");
+      return;
+    }
+
+    await saveDraft(remote);
+    setDraft(remote);
+    setMessage("서버 버전으로 다시 불러왔습니다.");
+  }
+
+  async function keepLocalVersionAfterConflict() {
+    if (!draft?.serverId || !configured || status !== "authenticated" || !user?.id) {
+      setError("내 버전을 유지하려면 로그인과 원격 저장본이 필요합니다.");
+      return;
+    }
+
+    setError("");
+    setMessage("");
+    const remote = await loadRemoteInvitation(draft.serverId, user.id);
+    if (!remote) {
+      setError("서버 revision을 확인하지 못했습니다.");
+      return;
+    }
+
+    const nextDraft: MobileInvitationDraft = {
+      ...draft,
+      baseRevision: remote.payload.revision,
+      syncStatus: "pending",
+      isDirty: true,
+      localUpdatedAt: new Date().toISOString()
+    };
+
+    await saveDraft(nextDraft);
+    setDraft(nextDraft);
+    setMessage("내 버전을 유지했습니다. 다시 서버 저장을 시도할 수 있습니다.");
+  }
+
   async function deleteCurrentInvitation() {
     if (!draft || deleting) {
       return;
@@ -141,6 +187,25 @@ export default function InvitationDetailScreen() {
       {draft ? (
         <Card eyebrow="공유 전 검수" title="하객에게 보이는 초대장">
           <InvitationPreviewCard compact payload={draft.payload} />
+        </Card>
+      ) : null}
+      {draft?.syncStatus === "conflict" ? (
+        <Card eyebrow="충돌 감지" title="서버에 더 최신 수정본이 있습니다">
+          <Text style={{ color: "#6a5645", lineHeight: 22 }}>
+            다른 기기나 웹에서 저장된 내용과 이 기기의 로컬 수정본이 다릅니다. 서버 버전을 불러오거나, 내 버전을 기준으로 다시 저장할 수 있습니다.
+          </Text>
+          <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
+            <View style={{ flex: 1 }}>
+              <Button accessibilityLabel="서버 버전 불러오기" onPress={() => void loadServerVersion()} variant="outline">
+                서버 버전
+              </Button>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Button accessibilityLabel="내 버전 유지" onPress={() => void keepLocalVersionAfterConflict()}>
+                내 버전 유지
+              </Button>
+            </View>
+          </View>
         </Card>
       ) : null}
       <Card eyebrow={draft?.syncStatus || "draft"} title={title}>
@@ -347,6 +412,7 @@ export default function InvitationDetailScreen() {
                         const nextDraft: MobileInvitationDraft = {
                           ...draft,
                           serverId: result.serverId,
+                          baseRevision: result.baseRevision,
                           payload: result.payload,
                           pendingPhotos: result.pendingPhotos,
                           syncStatus: "synced",

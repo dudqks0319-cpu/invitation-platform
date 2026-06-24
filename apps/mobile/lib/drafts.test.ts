@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { listDrafts, markPendingPhotosRetried } from "./drafts";
+import { listDrafts, markPendingPhotosRetried, mergeRemoteAndLocalDrafts } from "./drafts";
+import { createEmptyInvitationDraft } from "./invitation-shared";
 
 vi.mock("@react-native-async-storage/async-storage", () => ({
   default: {
@@ -43,5 +44,22 @@ describe("mobile draft storage recovery", () => {
       { localUri: "file:///main.jpg", slot: "main", retryCount: 1 },
       { localUri: "file:///gallery.webp", slot: "gallery", order: 2, retryCount: 4 }
     ]);
+  });
+
+  it("keeps conflicted local drafts visible instead of hiding them behind remote rows", () => {
+    const remote = createEmptyInvitationDraft("owner-1");
+    remote.localId = "server-1";
+    remote.serverId = "server-1";
+    remote.syncStatus = "synced";
+    remote.localUpdatedAt = "2026-06-24T10:00:00.000Z";
+
+    const conflictedLocal = createEmptyInvitationDraft("owner-1");
+    conflictedLocal.localId = "local-1";
+    conflictedLocal.serverId = "server-1";
+    conflictedLocal.syncStatus = "conflict";
+    conflictedLocal.isDirty = true;
+    conflictedLocal.localUpdatedAt = "2026-06-24T10:01:00.000Z";
+
+    expect(mergeRemoteAndLocalDrafts([remote], [conflictedLocal])).toEqual([conflictedLocal]);
   });
 });

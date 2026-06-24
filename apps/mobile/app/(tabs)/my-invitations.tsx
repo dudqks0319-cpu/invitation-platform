@@ -10,7 +10,7 @@ import { Pill } from "@/components/ui/Pill";
 import { Screen } from "@/components/ui/Screen";
 import { theme } from "@/components/ui/theme";
 import type { MobileInvitationDraft } from "@/lib/drafts";
-import { deleteDraft, listDrafts } from "@/lib/drafts";
+import { deleteDraft, listDrafts, mergeRemoteAndLocalDrafts } from "@/lib/drafts";
 import { listRemoteInvitations } from "@/lib/invitations";
 import { openInvitationPublicPage, openWebBuilder, shareInvitationLink } from "@/lib/share";
 import { useAuth } from "@/hooks/useAuth";
@@ -34,13 +34,7 @@ export default function MyInvitationsScreen() {
 
       if (configured && status === "authenticated" && user?.id) {
         const remoteItems = await listRemoteInvitations(user.id);
-        const localOnly = localItems.filter(
-          (localItem) => !remoteItems.some((remoteItem) => remoteItem.serverId === localItem.serverId && localItem.serverId)
-        );
-
-        setDrafts(
-          [...remoteItems, ...localOnly].sort((a, b) => b.localUpdatedAt.localeCompare(a.localUpdatedAt))
-        );
+        setDrafts(mergeRemoteAndLocalDrafts(remoteItems, localItems));
         return;
       }
 
@@ -58,6 +52,18 @@ export default function MyInvitationsScreen() {
   }, [load]);
 
   function getStatusSummary(draft: MobileInvitationDraft) {
+    if (draft.syncStatus === "conflict") {
+      return "서버와 로컬 수정본 충돌";
+    }
+
+    if (draft.syncStatus === "failed") {
+      return "동기화 실패 · 재시도 필요";
+    }
+
+    if (draft.syncStatus === "offline") {
+      return "오프라인 저장 대기";
+    }
+
     if (draft.serverId && draft.isDirty) {
       return "서버 저장본 있음 · 로컬 수정 대기";
     }
@@ -159,6 +165,7 @@ export default function MyInvitationsScreen() {
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 10 }}>
             <Pill active={Boolean(draft.serverId)} label={draft.serverId ? "원격 저장됨" : "로컬 전용"} />
             <Pill active={draft.isDirty} label={draft.isDirty ? "미저장 변경" : "동기화 안정"} />
+            <Pill active={draft.syncStatus === "conflict"} label={draft.syncStatus === "conflict" ? "충돌 확인 필요" : "충돌 없음"} />
             <Pill active={draft.pendingPhotos.length > 0} label={`업로드 대기 ${draft.pendingPhotos.length}`} />
             <Pill active={Boolean(draft.payload.isPublished)} label={draft.payload.isPublished ? "공개 중" : "비공개"} />
           </View>

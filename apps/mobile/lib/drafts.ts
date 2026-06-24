@@ -214,3 +214,34 @@ export function markPendingPhotosRetried(pendingPhotos: PendingPhotoUpload[]) {
     retryCount: photo.retryCount + 1
   }));
 }
+
+export function draftNeedsLocalAttention(draft: MobileInvitationDraft) {
+  return (
+    draft.syncStatus === "conflict" ||
+    draft.syncStatus === "failed" ||
+    draft.syncStatus === "offline" ||
+    draft.isDirty ||
+    draft.pendingPhotos.length > 0
+  );
+}
+
+export function mergeRemoteAndLocalDrafts(
+  remoteItems: MobileInvitationDraft[],
+  localItems: MobileInvitationDraft[]
+) {
+  const localAttentionItems = localItems.filter(draftNeedsLocalAttention);
+  const localAttentionServerIds = new Set(
+    localAttentionItems
+      .map((draft) => draft.serverId)
+      .filter((serverId): serverId is string => Boolean(serverId))
+  );
+  const remoteVisibleItems = remoteItems.filter(
+    (remoteItem) => !remoteItem.serverId || !localAttentionServerIds.has(remoteItem.serverId)
+  );
+  const localOnlyItems = localItems.filter(
+    (localItem) => !localItem.serverId && !localAttentionItems.some((attentionItem) => attentionItem.localId === localItem.localId)
+  );
+
+  return [...localAttentionItems, ...remoteVisibleItems, ...localOnlyItems]
+    .sort((a, b) => b.localUpdatedAt.localeCompare(a.localUpdatedAt));
+}
