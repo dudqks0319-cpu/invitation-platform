@@ -1,4 +1,5 @@
 import {
+  buildPublicCalendarPath,
   buildPublicInvitationSharePath,
   buildPublicInvitationShareUrl,
   buildPublicQrImagePath
@@ -8,6 +9,7 @@ describe("public share asset helpers", () => {
   it("builds encoded paths for invitation links and QR images", () => {
     expect(buildPublicInvitationSharePath("kim lee/demo")).toBe("/invitations/kim%20lee%2Fdemo");
     expect(buildPublicQrImagePath("kim lee/demo")).toBe("/api/qr/kim%20lee%2Fdemo");
+    expect(buildPublicCalendarPath("kim lee/demo")).toBe("/api/calendar/kim%20lee%2Fdemo");
   });
 
   it("builds absolute public invitation URLs for QR content", () => {

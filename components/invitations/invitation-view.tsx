@@ -5,6 +5,7 @@
 import { useState } from "react";
 import { TemplateMarkup } from "@/components/landing/template-markup";
 import { InvitationMapEmbed } from "@/components/invitations/invitation-map-embed";
+import { buildGoogleCalendarUrl } from "@/lib/calendar-invite";
 import {
   LOCAL_GUESTBOOK_KEY,
   LOCAL_RSVP_KEY,
@@ -25,7 +26,7 @@ import {
   getInvitationPersonLines,
   getPublicShareUrl
 } from "@/lib/invitation-presentation";
-import { buildPublicQrImagePath } from "@/lib/public-share-assets";
+import { buildPublicCalendarPath, buildPublicQrImagePath } from "@/lib/public-share-assets";
 import { createTemplatePresetFromSnapshot, templates } from "@/lib/templates";
 
 type KakaoShareApi = {
@@ -146,6 +147,7 @@ export function InvitationView({
   const showGallery = isInvitationSectionAllowed(payload, "gallery", "view");
   const showVideo = isInvitationSectionAllowed(payload, "video", "view");
   const showMusic = isInvitationSectionAllowed(payload, "music", "view");
+  const showCalendar = isInvitationSectionAllowed(payload, "calendar", "view");
   const showRsvp = isInvitationSectionAllowed(payload, "rsvp", "view");
   const showGuestbook = isInvitationSectionAllowed(payload, "guestbook", "view");
   const personLines = getInvitationPersonLines(payload);
@@ -163,6 +165,12 @@ export function InvitationView({
   );
   const shareDisabled = mode === "preview";
   const qrImagePath = slug ? buildPublicQrImagePath(slug) : "";
+  const calendarPath = slug ? buildPublicCalendarPath(slug) : "";
+  const googleCalendarUrl = buildGoogleCalendarUrl({
+    payload,
+    shareUrl: resolvedShareUrl,
+    title: payload.title
+  });
 
   async function copyToClipboard(value: string) {
     if (!value) return;
@@ -394,6 +402,25 @@ export function InvitationView({
               naverMapLink={mapLink}
               query={rawMapQuery}
             />
+          </article>
+        ) : null}
+
+        {showCalendar ? (
+          <article className="invitation-card">
+            <h2>캘린더 추가</h2>
+            <p>초대장 일정을 하객의 캘린더에 바로 저장할 수 있습니다.</p>
+            {shareDisabled || !calendarPath || !googleCalendarUrl ? (
+              <p className="form-message error">캘린더 추가 링크는 초대장을 발행한 뒤 공개 링크에서 사용할 수 있습니다.</p>
+            ) : (
+              <div className="invitation-inline-actions">
+                <a className="btn-primary invitation-small-btn" href={googleCalendarUrl} rel="noreferrer noopener" target="_blank">
+                  Google Calendar
+                </a>
+                <a className="btn-outline invitation-small-btn" download={`${slug}.ics`} href={calendarPath}>
+                  iCal 저장
+                </a>
+              </div>
+            )}
           </article>
         ) : null}
 

@@ -7,6 +7,10 @@ export function buildPublicQrImagePath(slug: string) {
   return `/api/qr/${encodeURIComponent(slug)}`;
 }
 
+export function buildPublicCalendarPath(slug: string) {
+  return `/api/calendar/${encodeURIComponent(slug)}`;
+}
+
 export function buildPublicInvitationSharePath(slug: string) {
   return `/invitations/${encodeURIComponent(slug)}`;
 }

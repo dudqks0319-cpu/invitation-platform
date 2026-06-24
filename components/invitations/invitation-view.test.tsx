@@ -41,6 +41,10 @@ describe("InvitationView", () => {
     expect(document.body.textContent).toContain("QR 코드");
     expect(document.body.innerHTML).toContain("/api/qr/demo");
     expect(document.body.innerHTML).toContain("download=\"demo-qr.png\"");
+    expect(document.body.textContent).toContain("캘린더 추가");
+    expect(document.body.innerHTML).toContain("https://calendar.google.com/calendar/render?");
+    expect(document.body.innerHTML).toContain("/api/calendar/demo");
+    expect(document.body.innerHTML).toContain("download=\"demo.ics\"");
     expect(document.body.textContent).toContain("네이버 지도 API 키가 설정되면 이 영역에 지도가 표시됩니다.");
     expect(document.body.textContent).toContain("신고하기");
     expect(document.body.textContent).toContain("부적절한 내용, 개인정보 노출, 저작권 문제가 있으면 운영자에게 알려 주세요.");
@@ -71,6 +75,7 @@ describe("InvitationView", () => {
         contact: false,
         accounts: false,
         venue: false,
+        calendar: false,
         rsvp: false,
         guestbook: false
       }
@@ -90,6 +95,7 @@ describe("InvitationView", () => {
     expect(document.body.textContent).not.toContain("마음 전하실 곳");
     expect(document.body.textContent).not.toContain("국민은행");
     expect(document.body.textContent).not.toContain("위치");
+    expect(document.body.textContent).not.toContain("캘린더 추가");
     expect(document.body.textContent).not.toContain("RSVP");
     expect(document.body.textContent).not.toContain("방명록");
   });
