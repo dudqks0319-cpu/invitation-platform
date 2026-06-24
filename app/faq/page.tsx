@@ -1,4 +1,8 @@
 import { SiteHeader } from "@/components/shared/site-header";
+import {
+  dataRetentionPolicyItems,
+  freeInvitationUsagePolicy
+} from "@/lib/data-retention-policy";
 
 export const metadata = {
   title: "FAQ - InviteHub"
@@ -46,6 +50,13 @@ export default function FaqPage() {
             <div>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 12 }}>계정 삭제는 어디서 하나요?</h2>
               <p>앱의 마이페이지에서 계정 삭제를 요청할 수 있습니다. 삭제 시 초대장과 관련 데이터가 함께 제거됩니다.</p>
+            </div>
+            <div>
+              <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 12 }}>초대장과 사진은 얼마나 보관되나요?</h2>
+              <p>
+                무료 공개 링크는 {freeInvitationUsagePolicy.value}되며, 작성자가 초대장이나 계정을 삭제하면 연결된 초대장 본문,
+                사진, RSVP, 방명록 데이터도 함께 삭제됩니다. 접속·보안 로그는 {dataRetentionPolicyItems.find((item) => item.label === "접속·보안 로그")?.retention}합니다.
+              </p>
             </div>
           </div>
         </section>

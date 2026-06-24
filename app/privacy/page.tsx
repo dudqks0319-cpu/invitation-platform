@@ -1,4 +1,9 @@
 import { SiteHeader } from "@/components/shared/site-header";
+import {
+  dataRetentionPolicyItems,
+  freeInvitationUsagePolicy,
+  retentionPolicyNotice
+} from "@/lib/data-retention-policy";
 
 export const metadata = {
   title: "개인정보처리방침 - InviteHub"
@@ -55,11 +60,28 @@ export default function PrivacyPage() {
             <h2 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "28px 0 12px" }}>
               3. 개인정보 보유 및 파기
             </h2>
-            <p style={{ marginBottom: 24 }}>
-              회원 탈퇴 시 서비스 계정과 연결된 개인정보는 파기합니다. 다만 법령상 보관 의무가
-              있는 분쟁 대응, 보안 관련 기록은 필요한 범위에서 정해진 기간 동안 보관될 수
-              있습니다.
+            <p style={{ marginBottom: 16 }}>
+              {freeInvitationUsagePolicy.label}은 {freeInvitationUsagePolicy.value}합니다.
+              {" "}
+              {freeInvitationUsagePolicy.note}
             </p>
+            <div style={{ display: "grid", gap: 12, marginBottom: 16 }}>
+              {dataRetentionPolicyItems.map((item) => (
+                <div
+                  key={item.label}
+                  style={{
+                    border: "1px solid #eadfd8",
+                    borderRadius: 12,
+                    padding: "14px 16px"
+                  }}
+                >
+                  <strong>{item.label}</strong>
+                  <p style={{ margin: "6px 0 2px" }}>보관: {item.retention}</p>
+                  <p style={{ margin: 0 }}>삭제: {item.deletion}</p>
+                </div>
+              ))}
+            </div>
+            <p style={{ marginBottom: 24 }}>{retentionPolicyNotice}</p>
 
             <h2 style={{ fontSize: "1.1rem", fontWeight: 700, margin: "28px 0 12px" }}>
               4. 개인정보의 제3자 제공

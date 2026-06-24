@@ -6,6 +6,10 @@ import { createBrowserClient } from "@/lib/supabase/browser";
 import { demoDashboardInvitations, demoRsvps } from "@/lib/demo-data";
 import { canDeleteInvitation, getDeletePolicyNote } from "@/components/dashboard/dashboard-delete-policy";
 import {
+  dataRetentionPolicyItems,
+  freeInvitationUsagePolicy
+} from "@/lib/data-retention-policy";
+import {
   createInvitationSlug,
   LOCAL_DRAFT_KEY,
   normalizeDraft,
@@ -761,6 +765,18 @@ export function DashboardShell() {
             <h3>보관 및 운영 안내</h3>
             <p className="ops-note">발행한 초대장은 대시보드에서 계속 수정할 수 있고, 영상·배경음악·감사 메시지도 이후에 추가할 수 있습니다.</p>
             <p className="ops-note">무료 발행 후에도 공개 링크와 대상별 링크, RSVP, 방명록, 신고 내역을 한 화면에서 관리합니다.</p>
+            <p className="ops-note">{freeInvitationUsagePolicy.label}: {freeInvitationUsagePolicy.value}. {freeInvitationUsagePolicy.note}</p>
+          </article>
+          <article className="ops-card" style={{ gridColumn: "1 / -1" }}>
+            <h3>데이터 보관 기준</h3>
+            <ul className="list-box">
+              {dataRetentionPolicyItems.slice(0, 4).map((item) => (
+                <li key={item.label}>
+                  <div className="meta">{item.label}</div>
+                  <div className="value">{item.retention}</div>
+                </li>
+              ))}
+            </ul>
           </article>
           <article className="ops-card">
             <h3>전체 초대장</h3>
@@ -805,6 +821,8 @@ export function DashboardShell() {
                 생성일 {new Date(item.createdAt).toLocaleDateString("ko-KR")}
                 <br />
                 공개 링크 {item.slug}
+                <br />
+                사용 기간 {freeInvitationUsagePolicy.value}
                 <br />
                 {item.publishedAt ? `발행일 ${new Date(item.publishedAt).toLocaleDateString("ko-KR")}` : "아직 발행 전입니다."}
               </p>
