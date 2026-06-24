@@ -140,6 +140,7 @@ export function InvitationView({
   const [reportMessage, setReportMessage] = useState("");
   const [reportError, setReportError] = useState("");
   const [shareMessage, setShareMessage] = useState("");
+  const [accountCopyMessage, setAccountCopyMessage] = useState("");
   const [pending, setPending] = useState(false);
   const baseTemplate = templates.find((template) => template.id === payload.templateId) ?? templates[0];
   const selectedTemplate = payload.templateSnapshot?.backgroundImageUrl
@@ -183,6 +184,12 @@ export function InvitationView({
   async function copyToClipboard(value: string) {
     if (!value) return;
     await navigator.clipboard.writeText(value);
+  }
+
+  async function copyAccountEntry(entry: { label: string; copyValue: string }) {
+    if (!entry.copyValue) return;
+    await copyToClipboard(entry.copyValue);
+    setAccountCopyMessage(`${entry.label}를 복사했습니다.`);
   }
 
   async function submitPublicForm(endpoint: string, payloadBody: object) {
@@ -353,8 +360,9 @@ export function InvitationView({
             {accountEntries.map((entry) => (
               <button
                 className="btn-outline invitation-small-btn"
+                disabled={!entry.copyValue}
                 key={entry.copyLabel}
-                onClick={() => copyToClipboard(entry.copyValue)}
+                onClick={() => copyAccountEntry(entry)}
                 type="button"
               >
                 {entry.copyLabel}
@@ -362,6 +370,7 @@ export function InvitationView({
             ))}
           </div>
         ) : null}
+        {accountCopyMessage ? <p className="form-message success">{accountCopyMessage}</p> : null}
         <a className={`btn-primary invitation-wide-btn ${kakaoPayLink ? "" : "is-disabled"}`} href={kakaoPayLink || "#"} rel="noreferrer noopener" target="_blank">
           카카오페이 송금 링크 열기
         </a>

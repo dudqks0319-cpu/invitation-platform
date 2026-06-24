@@ -1,4 +1,7 @@
+import { act } from "react";
+import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
+import { vi } from "vitest";
 import { InvitationView, resolveInvitationPlatformConfig } from "@/components/invitations/invitation-view";
 import { defaultInvitationDraft, normalizeDraft } from "@/lib/invitation-payload";
 
@@ -69,6 +72,55 @@ describe("InvitationView", () => {
     );
 
     expect(document.body.textContent).not.toContain("신고하기");
+  });
+
+  it("confirms account copy without putting the account number in the message", async () => {
+    const payload = normalizeDraft({
+      groomBank: "국민은행",
+      groomBankHolder: "홍길동",
+      groomBankAccount: "123-456-7890"
+    });
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText }
+    });
+    document.body.innerHTML = "";
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <InvitationView
+          mode="public"
+          payload={payload}
+          shareUrl="/invitations/demo"
+          slug="demo"
+        />
+      );
+    });
+
+    const copyButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent === "신랑측 계좌 복사"
+    );
+    expect(copyButton).toBeTruthy();
+
+    await act(async () => {
+      copyButton?.click();
+    });
+
+    const copyMessage = Array.from(container.querySelectorAll(".form-message.success")).find(
+      (message) => message.textContent?.includes("신랑측 계좌를 복사했습니다.")
+    );
+
+    expect(writeText).toHaveBeenCalledWith("123-456-7890");
+    expect(copyMessage?.textContent).toBe("신랑측 계좌를 복사했습니다.");
+    expect(copyMessage?.textContent).not.toContain("123-456-7890");
+
+    await act(async () => {
+      root.unmount();
+    });
   });
 
   it("hides public sections that are disabled by section policy", () => {
