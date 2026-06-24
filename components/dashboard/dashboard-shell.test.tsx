@@ -43,11 +43,17 @@ describe("DashboardShell", () => {
     expect(container.textContent).toContain("RSVP CSV 내보내기");
     expect(container.textContent).toContain("방명록 CSV 내보내기");
     expect(container.textContent).toContain("QR 저장");
+    expect(container.textContent).toContain("인스타 이미지");
+    expect(container.textContent).toContain("A4 포스터");
     expect(container.textContent).toContain("iCal 저장");
     expect(container.textContent).toContain("복제");
     expect(container.textContent).toContain("무료 발행 준비");
     expect(container.innerHTML).toContain("/api/qr/kim-lee-demo");
     expect(container.innerHTML).toContain("/api/qr/kim-lee-demo-friends");
+    expect(container.innerHTML).toContain("/api/share/instagram/kim-lee-demo");
+    expect(container.innerHTML).toContain("/api/share/a4/kim-lee-demo");
+    expect(container.innerHTML).toContain("/api/share/instagram/kim-lee-demo-friends");
+    expect(container.innerHTML).toContain("/api/share/a4/kim-lee-demo-friends");
     expect(container.innerHTML).toContain("/api/calendar/kim-lee-demo");
     expect(container.innerHTML).toContain("/api/calendar/kim-lee-demo-friends");
     expect(container.innerHTML).not.toContain("/checkout");

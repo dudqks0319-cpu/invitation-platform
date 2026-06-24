@@ -20,7 +20,11 @@ import {
   invitationVariantPresets,
   type InvitationVariantPreset
 } from "@/lib/invitation-variant-management";
-import { buildPublicCalendarPath, buildPublicQrImagePath } from "@/lib/public-share-assets";
+import {
+  buildPublicCalendarPath,
+  buildPublicQrImagePath,
+  buildPublicShareImagePath
+} from "@/lib/public-share-assets";
 
 type DashboardItem = InvitationRecord & {
   viewCount?: number;
@@ -819,6 +823,12 @@ export function DashboardShell() {
                     <a className="btn-outline" download={`${item.slug}-qr.png`} href={buildPublicQrImagePath(item.slug)}>
                       QR 저장
                     </a>
+                    <a className="btn-outline" download={`${item.slug}-instagram.png`} href={buildPublicShareImagePath(item.slug, "instagram")}>
+                      인스타 이미지
+                    </a>
+                    <a className="btn-outline" download={`${item.slug}-a4.png`} href={buildPublicShareImagePath(item.slug, "a4")}>
+                      A4 포스터
+                    </a>
                     <a className="btn-outline" download={`${item.slug}.ics`} href={buildPublicCalendarPath(item.slug)}>
                       iCal 저장
                     </a>
@@ -890,6 +900,12 @@ export function DashboardShell() {
                           </button>
                           <a className="btn-outline" download={`${variant.slug}-qr.png`} href={buildPublicQrImagePath(variant.slug)}>
                             QR 저장
+                          </a>
+                          <a className="btn-outline" download={`${variant.slug}-instagram.png`} href={buildPublicShareImagePath(variant.slug, "instagram")}>
+                            인스타 이미지
+                          </a>
+                          <a className="btn-outline" download={`${variant.slug}-a4.png`} href={buildPublicShareImagePath(variant.slug, "a4")}>
+                            A4 포스터
                           </a>
                           <a className="btn-outline" download={`${variant.slug}.ics`} href={buildPublicCalendarPath(variant.slug)}>
                             iCal 저장

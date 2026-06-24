@@ -28,7 +28,11 @@ import {
   getInvitationPersonLines,
   getPublicShareUrl
 } from "@/lib/invitation-presentation";
-import { buildPublicCalendarPath, buildPublicQrImagePath } from "@/lib/public-share-assets";
+import {
+  buildPublicCalendarPath,
+  buildPublicQrImagePath,
+  buildPublicShareImagePath
+} from "@/lib/public-share-assets";
 import { createTemplatePresetFromSnapshot, templates } from "@/lib/templates";
 
 type KakaoShareApi = {
@@ -168,6 +172,8 @@ export function InvitationView({
   const shareDisabled = mode === "preview";
   const qrImagePath = slug ? buildPublicQrImagePath(slug) : "";
   const calendarPath = slug ? buildPublicCalendarPath(slug) : "";
+  const instagramImagePath = slug ? buildPublicShareImagePath(slug, "instagram") : "";
+  const a4PosterPath = slug ? buildPublicShareImagePath(slug, "a4") : "";
   const googleCalendarUrl = buildGoogleCalendarUrl({
     payload,
     shareUrl: resolvedShareUrl,
@@ -648,6 +654,12 @@ export function InvitationView({
                 <p>인쇄물, 안내문, 단체 채팅방 공지에 바로 사용할 수 있습니다.</p>
                 <a className="btn-outline invitation-small-btn" download={`${slug}-qr.png`} href={qrImagePath}>
                   QR 저장
+                </a>
+                <a className="btn-outline invitation-small-btn" download={`${slug}-instagram.png`} href={instagramImagePath}>
+                  인스타 이미지
+                </a>
+                <a className="btn-outline invitation-small-btn" download={`${slug}-a4.png`} href={a4PosterPath}>
+                  A4 포스터
                 </a>
               </div>
             </div>

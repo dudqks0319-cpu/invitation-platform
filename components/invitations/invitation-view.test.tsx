@@ -41,6 +41,12 @@ describe("InvitationView", () => {
     expect(document.body.textContent).toContain("QR 코드");
     expect(document.body.innerHTML).toContain("/api/qr/demo");
     expect(document.body.innerHTML).toContain("download=\"demo-qr.png\"");
+    expect(document.body.textContent).toContain("인스타 이미지");
+    expect(document.body.textContent).toContain("A4 포스터");
+    expect(document.body.innerHTML).toContain("/api/share/instagram/demo");
+    expect(document.body.innerHTML).toContain("/api/share/a4/demo");
+    expect(document.body.innerHTML).toContain("download=\"demo-instagram.png\"");
+    expect(document.body.innerHTML).toContain("download=\"demo-a4.png\"");
     expect(document.body.textContent).toContain("캘린더 추가");
     expect(document.body.innerHTML).toContain("https://calendar.google.com/calendar/render?");
     expect(document.body.innerHTML).toContain("/api/calendar/demo");
