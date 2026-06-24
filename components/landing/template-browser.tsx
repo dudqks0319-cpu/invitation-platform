@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   filterTemplateCatalog,
   getTemplateCategoryOptions,
@@ -17,8 +17,48 @@ import {
   type TemplateSortKey,
   type TemplateStyleFilter
 } from "@/lib/template-catalog";
-import { type TemplatePreset } from "@/lib/templates";
+import { templates, type TemplatePreset } from "@/lib/templates";
 import { TemplateMarkup } from "@/components/landing/template-markup";
+
+const FAVORITE_TEMPLATE_STORAGE_KEY = "invitehub_favorite_template_ids";
+const RECENT_TEMPLATE_STORAGE_KEY = "invitehub_recent_template_ids";
+const MAX_RECENT_TEMPLATES = 6;
+const MAX_FAVORITE_TEMPLATES = 30;
+const templateIdLookup = new Set(templates.map((template) => template.id));
+
+function normalizeStoredTemplateIds(value: unknown) {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const ids: string[] = [];
+  for (const item of value) {
+    if (typeof item === "string" && templateIdLookup.has(item) && !ids.includes(item)) {
+      ids.push(item);
+    }
+  }
+  return ids;
+}
+
+function readStoredTemplateIds(key: string) {
+  if (typeof window === "undefined") {
+    return [];
+  }
+
+  try {
+    return normalizeStoredTemplateIds(JSON.parse(window.localStorage.getItem(key) ?? "[]"));
+  } catch {
+    return [];
+  }
+}
+
+function writeStoredTemplateIds(key: string, ids: string[]) {
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(key, JSON.stringify(ids));
+  }
+}
+
+type QuickTemplateView = "all" | "favorites" | "recent";
 
 export function TemplateBrowser() {
   const router = useRouter();
@@ -30,10 +70,14 @@ export function TemplateBrowser() {
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<TemplateSortKey>("recommended");
   const [previewTarget, setPreviewTarget] = useState<TemplatePreset | null>(null);
+  const [favoriteTemplateIds, setFavoriteTemplateIds] = useState<string[]>([]);
+  const [recentTemplateIds, setRecentTemplateIds] = useState<string[]>([]);
+  const [quickView, setQuickView] = useState<QuickTemplateView>("all");
 
   const categoryOptions = useMemo(() => getTemplateCategoryOptions(activeProductGroup), [activeProductGroup]);
+  const templateById = useMemo(() => new Map(templates.map((template) => [template.id, template])), []);
 
-  const filteredTemplates = useMemo(
+  const catalogTemplates = useMemo(
     () =>
       filterTemplateCatalog({
         productGroup: activeProductGroup,
@@ -46,10 +90,68 @@ export function TemplateBrowser() {
       }),
     [activeProductGroup, activeCategory, activeStyle, activePhotoSlot, activeFeature, query, sort]
   );
+  const favoriteTemplates = useMemo(
+    () => favoriteTemplateIds.map((id) => templateById.get(id)).filter((template): template is TemplatePreset => Boolean(template)),
+    [favoriteTemplateIds, templateById]
+  );
+  const recentTemplates = useMemo(
+    () => recentTemplateIds.map((id) => templateById.get(id)).filter((template): template is TemplatePreset => Boolean(template)),
+    [recentTemplateIds, templateById]
+  );
+  const filteredTemplates = useMemo(() => {
+    if (quickView === "all") {
+      return catalogTemplates;
+    }
+
+    const catalogTemplateIds = new Set(catalogTemplates.map((template) => template.id));
+    const sourceTemplates = quickView === "favorites" ? favoriteTemplates : recentTemplates;
+    return sourceTemplates.filter((template) => catalogTemplateIds.has(template.id));
+  }, [catalogTemplates, favoriteTemplates, quickView, recentTemplates]);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setFavoriteTemplateIds(readStoredTemplateIds(FAVORITE_TEMPLATE_STORAGE_KEY).slice(0, MAX_FAVORITE_TEMPLATES));
+      setRecentTemplateIds(readStoredTemplateIds(RECENT_TEMPLATE_STORAGE_KEY).slice(0, MAX_RECENT_TEMPLATES));
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   function updateProductGroup(productGroup: TemplateProductGroup) {
     setActiveProductGroup(productGroup);
     setActiveCategory("all");
+  }
+
+  function recordRecentTemplate(templateId: string) {
+    setRecentTemplateIds((current) => {
+      const nextIds = [templateId, ...current.filter((id) => id !== templateId)].slice(0, MAX_RECENT_TEMPLATES);
+      writeStoredTemplateIds(RECENT_TEMPLATE_STORAGE_KEY, nextIds);
+      return nextIds;
+    });
+  }
+
+  function toggleFavoriteTemplate(templateId: string) {
+    setFavoriteTemplateIds((current) => {
+      const nextIds = current.includes(templateId)
+        ? current.filter((id) => id !== templateId)
+        : [templateId, ...current].slice(0, MAX_FAVORITE_TEMPLATES);
+      writeStoredTemplateIds(FAVORITE_TEMPLATE_STORAGE_KEY, nextIds);
+      return nextIds;
+    });
+  }
+
+  function openBuilder(templateId: string) {
+    recordRecentTemplate(templateId);
+    router.push(`/builder?template=${templateId}`);
+  }
+
+  function openPreview(template: TemplatePreset) {
+    recordRecentTemplate(template.id);
+    setPreviewTarget(template);
+  }
+
+  function formatTemplateNames(items: TemplatePreset[]) {
+    return items.slice(0, 3).map((template) => template.name).join(", ") || "없음";
   }
 
   return (
@@ -169,6 +271,35 @@ export function TemplateBrowser() {
               </div>
             </div>
           </div>
+          <div className="template-memory-panel" aria-label="템플릿 저장 목록">
+            <div className="catalog-chip-row template-memory-actions">
+              <button
+                className={`catalog-chip ${quickView === "all" ? "active" : ""}`}
+                onClick={() => setQuickView("all")}
+                type="button"
+              >
+                전체 보기
+              </button>
+              <button
+                className={`catalog-chip ${quickView === "favorites" ? "active" : ""}`}
+                onClick={() => setQuickView("favorites")}
+                type="button"
+              >
+                찜한 템플릿 {favoriteTemplates.length}
+              </button>
+              <button
+                className={`catalog-chip ${quickView === "recent" ? "active" : ""}`}
+                onClick={() => setQuickView("recent")}
+                type="button"
+              >
+                최근 본 템플릿 {recentTemplates.length}
+              </button>
+            </div>
+            <div className="template-memory-summary">
+              <span>찜 {formatTemplateNames(favoriteTemplates)}</span>
+              <span>최근 {formatTemplateNames(recentTemplates)}</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -183,11 +314,11 @@ export function TemplateBrowser() {
                 aria-label={`${template.name} 템플릿 선택`}
                 className="template-card"
                 key={template.id}
-                onClick={() => router.push(`/builder?template=${template.id}`)}
+                onClick={() => openBuilder(template.id)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" || event.key === " ") {
                     event.preventDefault();
-                    router.push(`/builder?template=${template.id}`);
+                    openBuilder(template.id);
                   }
                 }}
                 role="button"
@@ -201,7 +332,7 @@ export function TemplateBrowser() {
                         className="overlay-btn"
                         onClick={(event) => {
                           event.stopPropagation();
-                          setPreviewTarget(template);
+                          openPreview(template);
                         }}
                         type="button"
                       >
@@ -210,7 +341,10 @@ export function TemplateBrowser() {
                       <Link
                         className="overlay-btn primary"
                         href={`/builder?template=${template.id}`}
-                        onClick={(event) => event.stopPropagation()}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          recordRecentTemplate(template.id);
+                        }}
                       >
                         사용하기
                       </Link>
@@ -218,7 +352,22 @@ export function TemplateBrowser() {
                   </div>
                 </div>
                 <div className="template-info">
-                  <span className="template-badge">{template.badge}</span>
+                  <div className="template-info-topline">
+                    <span className="template-badge">{template.badge}</span>
+                    <button
+                      aria-label={`${template.name} 찜 ${favoriteTemplateIds.includes(template.id) ? "해제" : "추가"}`}
+                      aria-pressed={favoriteTemplateIds.includes(template.id)}
+                      className={`template-favorite-btn ${favoriteTemplateIds.includes(template.id) ? "active" : ""}`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        toggleFavoriteTemplate(template.id);
+                      }}
+                      title={favoriteTemplateIds.includes(template.id) ? "찜 해제" : "찜 추가"}
+                      type="button"
+                    >
+                      {favoriteTemplateIds.includes(template.id) ? "★" : "☆"}
+                    </button>
+                  </div>
                   <div className="template-name">{template.name}</div>
                   <div className="template-desc">{template.desc}</div>
                   <div className="template-tags">
@@ -262,7 +411,7 @@ export function TemplateBrowser() {
                 <button className="btn-outline" onClick={() => setPreviewTarget(null)} type="button">
                   닫기
                 </button>
-                <Link className="btn-primary" href={`/builder?template=${previewTarget.id}`}>
+                <Link className="btn-primary" href={`/builder?template=${previewTarget.id}`} onClick={() => recordRecentTemplate(previewTarget.id)}>
                   이 템플릿으로 만들기
                 </Link>
               </div>
