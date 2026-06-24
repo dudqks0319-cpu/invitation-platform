@@ -48,7 +48,7 @@ describe("SiteHeader", () => {
     expect(document.body.textContent).toContain("템플릿");
     expect(document.body.textContent).toContain("초대장 만들기");
     expect(document.body.textContent).toContain("대시보드");
-    expect(document.body.textContent).toContain("요금");
+    expect(document.body.textContent).not.toContain("요금");
     expect(document.body.textContent).toContain("로그인");
     expect(document.body.textContent).toContain("시작하기");
   });

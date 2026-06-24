@@ -6,8 +6,10 @@ import { createBrowserClient } from "@/lib/supabase/browser";
 import { demoDashboardInvitations, demoRsvps } from "@/lib/demo-data";
 import { canDeleteInvitation, getDeletePolicyNote } from "@/components/dashboard/dashboard-delete-policy";
 import {
+  createInvitationSlug,
   LOCAL_DRAFT_KEY,
   normalizeDraft,
+  toInvitationInsert,
   type GuestbookEntry,
   type InvitationRecord,
   type RsvpEntry
@@ -122,9 +124,9 @@ function getStatusLabel(status: DashboardItem["status"]) {
     case "paid":
       return "발행 준비됨";
     case "refund_pending":
-      return "환불 대기";
+      return "공개 중지 대기";
     case "refunded":
-      return "환불 완료";
+      return "공개 중지 완료";
     case "payment_failed":
       return "발행 실패";
     default:
@@ -182,6 +184,7 @@ export function DashboardShell() {
   const [variants, setVariants] = useState<DashboardVariant[]>([]);
   const [creatingVariantKey, setCreatingVariantKey] = useState("");
   const [updatingReportId, setUpdatingReportId] = useState("");
+  const [currentUserId, setCurrentUserId] = useState("");
 
   useEffect(() => {
     async function loadDashboard() {
@@ -214,6 +217,7 @@ export function DashboardShell() {
 
         setItems(localItemsWithReports);
         setVariants(demoDashboardVariants);
+        setCurrentUserId("");
         setSelectedInvitationId(localItemsWithReports[0]?.id ?? "");
         setMessage("현재는 데모 모드입니다. 로그인 후 실제 초대장을 저장할 수 있습니다.");
         return;
@@ -229,6 +233,7 @@ export function DashboardShell() {
       } catch {
         setItems([]);
         setVariants([]);
+        setCurrentUserId("");
         setSelectedInvitationId("");
         setMessage("로그인 상태를 확인하지 못했습니다. 로그인 후 다시 시도해 주세요.");
         return;
@@ -238,10 +243,13 @@ export function DashboardShell() {
         setItems([]);
         setVariants([]);
         setContentReports([]);
+        setCurrentUserId("");
         setSelectedInvitationId("");
         setMessage("로그인이 필요합니다.");
         return;
       }
+
+      setCurrentUserId(userId);
 
       const { data, error } = await supabase
         .from("invitations")
@@ -271,6 +279,7 @@ export function DashboardShell() {
         setItems([]);
         setVariants([]);
         setContentReports([]);
+        setCurrentUserId(userId);
         setSelectedInvitationId("");
         setMessage("아직 저장된 초대장이 없습니다.");
         return;
@@ -598,6 +607,51 @@ export function DashboardShell() {
     setMessage(`${data.audience_label} 링크를 만들었습니다.`);
   }
 
+  async function duplicateInvitation(item: DashboardItem) {
+    if (!supabase || !currentUserId || item.id === "local-draft") {
+      setMessage("데모 모드에서는 복제 버튼 위치만 확인할 수 있습니다. 로그인 후 실제 초대장을 새 초안으로 복제할 수 있습니다.");
+      return;
+    }
+
+    const duplicatedPayload = normalizeDraft({
+      ...item.payload,
+      title: `${item.title} 복사본`
+    });
+    const slug = createInvitationSlug(duplicatedPayload);
+    const insertPayload = toInvitationInsert(currentUserId, slug, duplicatedPayload, "draft");
+    const { data, error } = await supabase
+      .from("invitations")
+      .insert(insertPayload)
+      .select("*")
+      .single();
+
+    if (error || !data) {
+      setMessage("초대장을 복제하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+      return;
+    }
+
+    const duplicatedItem: DashboardItem = {
+      id: data.id,
+      slug: data.slug,
+      title: data.title,
+      category: data.category,
+      templateId: data.template_id,
+      status: data.status,
+      repurchaseRequired: data.repurchase_required,
+      payload: normalizeDraft(data.payload),
+      createdAt: data.created_at,
+      publishedAt: data.published_at,
+      viewCount: 0,
+      rsvpCount: 0,
+      guestbookCount: 0,
+      reportCount: 0
+    };
+
+    setItems((current) => [duplicatedItem, ...current]);
+    setSelectedInvitationId(duplicatedItem.id);
+    setMessage(`"${item.title}" 복사본을 초안으로 만들었습니다.`);
+  }
+
   async function updateVariantStatus(variant: DashboardVariant, status: DashboardVariant["status"]) {
     if (!supabase) {
       setMessage("데모 모드에서는 대상별 링크 상태를 변경할 수 없습니다.");
@@ -702,7 +756,7 @@ export function DashboardShell() {
           <article className="ops-card" style={{ gridColumn: "1 / -1" }}>
             <h3>보관 및 운영 안내</h3>
             <p className="ops-note">발행한 초대장은 대시보드에서 계속 수정할 수 있고, 영상·배경음악·감사 메시지도 이후에 추가할 수 있습니다.</p>
-            <p className="ops-note">환불이 완료되면 공개 링크는 비활성화되므로, 다시 공개하려면 재발행이 필요합니다.</p>
+            <p className="ops-note">무료 발행 후에도 공개 링크와 대상별 링크, RSVP, 방명록, 신고 내역을 한 화면에서 관리합니다.</p>
           </article>
           <article className="ops-card">
             <h3>전체 초대장</h3>
@@ -770,10 +824,13 @@ export function DashboardShell() {
                     </a>
                   </>
                 ) : (
-                  <Link className="btn-primary" href={`/checkout?invitationId=${item.id}`}>
-                    발행하기
+                  <Link className="btn-primary" href={`/builder?invitationId=${item.id}`}>
+                    무료 발행 준비
                   </Link>
                 )}
+                <button className="btn-outline" onClick={() => void duplicateInvitation(item)} type="button">
+                  복제
+                </button>
                 <button className="btn-outline" onClick={() => setSelectedInvitationId(item.id)} type="button">
                   모더레이션
                 </button>

@@ -9,8 +9,7 @@ import { createBrowserClient } from "@/lib/supabase/browser";
 const navLinks = [
   { href: "/#templates", label: "템플릿" },
   { href: "/builder", label: "초대장 만들기" },
-  { href: "/dashboard", label: "대시보드" },
-  { href: "/#pricing", label: "요금" }
+  { href: "/dashboard", label: "대시보드" }
 ];
 
 type SiteHeaderProps = {
