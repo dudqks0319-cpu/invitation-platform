@@ -25,6 +25,7 @@ import {
   getInvitationPersonLines,
   getPublicShareUrl
 } from "@/lib/invitation-presentation";
+import { buildPublicQrImagePath } from "@/lib/public-share-assets";
 import { createTemplatePresetFromSnapshot, templates } from "@/lib/templates";
 
 type KakaoShareApi = {
@@ -161,6 +162,7 @@ export function InvitationView({
     typeof window === "undefined" ? process.env.NEXT_PUBLIC_SITE_URL : window.location.origin
   );
   const shareDisabled = mode === "preview";
+  const qrImagePath = slug ? buildPublicQrImagePath(slug) : "";
 
   async function copyToClipboard(value: string) {
     if (!value) return;
@@ -561,6 +563,18 @@ export function InvitationView({
               링크 복사
             </button>
           </div>
+          {!shareDisabled && qrImagePath ? (
+            <div className="invitation-qr-package">
+              <img alt="초대장 QR 코드" src={qrImagePath} />
+              <div>
+                <strong>QR 코드</strong>
+                <p>인쇄물, 안내문, 단체 채팅방 공지에 바로 사용할 수 있습니다.</p>
+                <a className="btn-outline invitation-small-btn" download={`${slug}-qr.png`} href={qrImagePath}>
+                  QR 저장
+                </a>
+              </div>
+            </div>
+          ) : null}
           {shareMessage ? <p className="form-message success">{shareMessage}</p> : null}
         </article>
 

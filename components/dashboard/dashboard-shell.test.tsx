@@ -42,6 +42,9 @@ describe("DashboardShell", () => {
     expect(container.textContent).toContain("검토 대기");
     expect(container.textContent).toContain("RSVP CSV 내보내기");
     expect(container.textContent).toContain("방명록 CSV 내보내기");
+    expect(container.textContent).toContain("QR 저장");
+    expect(container.innerHTML).toContain("/api/qr/kim-lee-demo");
+    expect(container.innerHTML).toContain("/api/qr/kim-lee-demo-friends");
 
     const exportButton = Array.from(container.querySelectorAll("button")).find(
       (button) => button.textContent === "RSVP CSV 내보내기"

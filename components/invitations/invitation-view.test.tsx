@@ -17,6 +17,7 @@ describe("InvitationView", () => {
     );
     expect(document.body.innerHTML).toContain("카카오톡 공유</button>");
     expect(document.body.innerHTML).toContain("링크 복사</button>");
+    expect(document.body.textContent).not.toContain("QR 코드");
     expect(document.body.innerHTML).toContain("카카오 지도");
     expect(document.body.innerHTML).toContain("네이버 지도");
     expect(document.body.innerHTML).toContain("disabled=\"\"");
@@ -37,6 +38,9 @@ describe("InvitationView", () => {
     );
     expect(document.body.innerHTML).toContain("카카오톡 공유</button>");
     expect(document.body.textContent).toContain("카카오톡 공유창으로 공개 초대장 링크를 바로 보낼 수 있습니다.");
+    expect(document.body.textContent).toContain("QR 코드");
+    expect(document.body.innerHTML).toContain("/api/qr/demo");
+    expect(document.body.innerHTML).toContain("download=\"demo-qr.png\"");
     expect(document.body.textContent).toContain("네이버 지도 API 키가 설정되면 이 영역에 지도가 표시됩니다.");
     expect(document.body.textContent).toContain("신고하기");
     expect(document.body.textContent).toContain("부적절한 내용, 개인정보 노출, 저작권 문제가 있으면 운영자에게 알려 주세요.");

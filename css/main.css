@@ -1487,6 +1487,34 @@ ul { list-style: none; }
   padding: 0 10px;
   font-size: 0.86rem;
 }
+.invitation-qr-package {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #efe4da;
+  border-radius: 14px;
+  background: #fffaf6;
+}
+.invitation-qr-package img {
+  display: block;
+  width: 104px;
+  height: 104px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #f0e3d9;
+}
+.invitation-qr-package strong {
+  display: block;
+  color: #4f3a26;
+  font-size: 0.94rem;
+}
+.invitation-qr-package p {
+  margin: 4px 0 10px;
+  font-size: 0.84rem;
+}
 .invitation-map-panel {
   margin-top: 12px;
 }
@@ -2329,6 +2357,9 @@ ul { list-style: none; }
     font-size: 0.95rem;
   }
   .invitation-inline-actions {
+    grid-template-columns: 1fr;
+  }
+  .invitation-qr-package {
     grid-template-columns: 1fr;
   }
   .form-grid { grid-template-columns: 1fr; }
