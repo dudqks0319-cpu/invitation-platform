@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/Card";
 import { Screen } from "@/components/ui/Screen";
 import { theme } from "@/components/ui/theme";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
+import { MAX_GALLERY_PHOTOS } from "@/lib/invitation-shared";
 
 type PhotoSlot = "main" | "background" | "gallery";
 
@@ -137,6 +138,10 @@ export default function BuilderStep3PhotosScreen() {
     setPendingSlot(slot);
 
     try {
+      if (slot === "gallery" && galleryPhotos.length >= MAX_GALLERY_PHOTOS) {
+        throw new Error(`갤러리 사진은 최대 ${MAX_GALLERY_PHOTOS}장까지 추가할 수 있습니다.`);
+      }
+
       const localUri = await pickPreparedImage();
       if (!localUri) return;
 
@@ -191,7 +196,7 @@ export default function BuilderStep3PhotosScreen() {
           pending={pendingSlot === "background"}
         />
       </Card>
-      <Card eyebrow="갤러리" title={`현재 ${galleryPhotos.length}장`}>
+      <Card eyebrow="갤러리" title={`현재 ${galleryPhotos.length}/${MAX_GALLERY_PHOTOS}장`}>
         <Text style={{ color: theme.colors.muted, lineHeight: 22, marginBottom: 12 }}>
           한 장씩 추가해 초대장 갤러리에 연결합니다.
         </Text>
@@ -228,7 +233,7 @@ export default function BuilderStep3PhotosScreen() {
           ))}
         </View>
         <PhotoActionButton
-          label="갤러리 사진 추가"
+          label={galleryPhotos.length >= MAX_GALLERY_PHOTOS ? "갤러리 최대 장수 도달" : "갤러리 사진 추가"}
           onPress={() => void handlePick("gallery")}
           pending={pendingSlot === "gallery"}
         />

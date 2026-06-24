@@ -82,4 +82,18 @@ describe("mobile publish pricing gate", () => {
     });
     expect(fromMock).toHaveBeenCalledWith("invitations");
   });
+
+  it("builds owner-scoped storage paths for pending photo uploads", async () => {
+    const { buildPhotoUploadAsset } = await import("./invitations");
+
+    expect(buildPhotoUploadAsset({
+      localUri: "file:///photo.webp?cache=1",
+      slot: "gallery",
+      order: 3,
+      retryCount: 0
+    }, "owner-1", "draft-1", 1778244000000)).toEqual({
+      contentType: "image/webp",
+      path: "owner-1/draft-1/gallery-3-1778244000000.webp"
+    });
+  });
 });

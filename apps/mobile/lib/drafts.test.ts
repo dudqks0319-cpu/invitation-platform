@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { listDrafts } from "./drafts";
+import { listDrafts, markPendingPhotosRetried } from "./drafts";
 
 vi.mock("@react-native-async-storage/async-storage", () => ({
   default: {
@@ -33,5 +33,15 @@ describe("mobile draft storage recovery", () => {
       "{broken-json"
     );
     expect(storage.removeItem).toHaveBeenCalledWith("invitehub:mobile:drafts");
+  });
+
+  it("increments retry counts for queued photo uploads", () => {
+    expect(markPendingPhotosRetried([
+      { localUri: "file:///main.jpg", slot: "main", retryCount: 0 },
+      { localUri: "file:///gallery.webp", slot: "gallery", order: 2, retryCount: 3 }
+    ])).toEqual([
+      { localUri: "file:///main.jpg", slot: "main", retryCount: 1 },
+      { localUri: "file:///gallery.webp", slot: "gallery", order: 2, retryCount: 4 }
+    ]);
   });
 });

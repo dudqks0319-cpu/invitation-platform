@@ -19,6 +19,11 @@ type RemoteInvitationRow = {
 
 const STORAGE_BUCKET = "invitation-assets";
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 7;
+const UPLOAD_CONTENT_TYPES = {
+  jpg: "image/jpeg",
+  png: "image/png",
+  webp: "image/webp"
+} as const;
 
 export type PublishReadiness = {
   canPublish: boolean;
@@ -41,6 +46,29 @@ function slugify(input: string) {
 
 function ensureSlug(payload: InvitationPayload) {
   return payload.share.slug || `${slugify(payload.title || "invitehub")}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function getPhotoUploadExtension(localUri: string) {
+  const normalized = localUri.split("?")[0]?.toLowerCase() ?? "";
+
+  if (normalized.endsWith(".png")) return "png";
+  if (normalized.endsWith(".webp")) return "webp";
+  return "jpg";
+}
+
+export function buildPhotoUploadAsset(
+  photo: PendingPhotoUpload,
+  userId: string,
+  localId: string,
+  timestamp = Date.now()
+) {
+  const extension = getPhotoUploadExtension(photo.localUri);
+  const order = photo.slot === "gallery" ? photo.order ?? "single" : "single";
+
+  return {
+    contentType: UPLOAD_CONTENT_TYPES[extension],
+    path: `${userId}/${localId}/${photo.slot}-${order}-${timestamp}.${extension}`
+  };
 }
 
 export function getPublishReadiness(payload: InvitationPayload): PublishReadiness {
@@ -151,13 +179,12 @@ async function uploadPendingPhoto(
     throw new Error(`선택한 ${photo.slot} 사진을 읽지 못했습니다.`);
   }
   const arrayBuffer = await response.arrayBuffer();
-  const extension = photo.localUri.toLowerCase().includes(".png") ? "png" : "jpg";
-  const path = `${userId}/${localId}/${photo.slot}-${photo.order ?? "single"}-${Date.now()}.${extension}`;
+  const uploadAsset = buildPhotoUploadAsset(photo, userId, localId);
 
   const { data, error } = await supabase.storage
     .from(STORAGE_BUCKET)
-    .upload(path, arrayBuffer, {
-      contentType: extension === "png" ? "image/png" : "image/jpeg",
+    .upload(uploadAsset.path, arrayBuffer, {
+      contentType: uploadAsset.contentType,
       upsert: false
     });
 

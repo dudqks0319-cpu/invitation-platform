@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MobileInvitationDraft } from "@/lib/drafts";
-import { ensureDraft, saveDraft, upsertPendingPhoto } from "@/lib/drafts";
+import { ensureDraft, markPendingPhotosRetried, saveDraft, upsertPendingPhoto } from "@/lib/drafts";
 import {
+  MAX_GALLERY_PHOTOS,
   updateInvitationBasics,
   updateWeddingFamily,
   updateWeddingNames,
@@ -163,6 +164,10 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
 
   const addGalleryPhoto = useCallback((localUri: string) => {
     persist((current) => {
+      if (current.payload.photos.gallery.length >= MAX_GALLERY_PHOTOS) {
+        return current;
+      }
+
       const nextOrder = current.payload.photos.gallery.length;
       const pendingPhoto: PendingPhotoUpload = {
         localUri,
@@ -226,20 +231,34 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
       throw new Error("저장할 초안이 없습니다.");
     }
 
-    const result = await saveDraftToSupabase(draft, userId, status);
-    const nextDraft: MobileInvitationDraft = {
-      ...draft,
-      serverId: result.serverId,
-      payload: result.payload,
-      pendingPhotos: result.pendingPhotos,
-      syncStatus: "synced",
-      isDirty: false,
-      localUpdatedAt: new Date().toISOString()
-    };
+    try {
+      const result = await saveDraftToSupabase(draft, userId, status);
+      const nextDraft: MobileInvitationDraft = {
+        ...draft,
+        serverId: result.serverId,
+        payload: result.payload,
+        pendingPhotos: result.pendingPhotos,
+        syncStatus: "synced",
+        isDirty: false,
+        localUpdatedAt: new Date().toISOString()
+      };
 
-    await saveDraft(nextDraft);
-    setDraft(nextDraft);
-    return nextDraft;
+      await saveDraft(nextDraft);
+      setDraft(nextDraft);
+      return nextDraft;
+    } catch (caught) {
+      const failedDraft: MobileInvitationDraft = {
+        ...draft,
+        pendingPhotos: markPendingPhotosRetried(draft.pendingPhotos),
+        syncStatus: "failed",
+        isDirty: true,
+        localUpdatedAt: new Date().toISOString()
+      };
+
+      await saveDraft(failedDraft);
+      setDraft(failedDraft);
+      throw caught;
+    }
   }, [draft]);
 
   const applyRemotePublish = useCallback((serverId: string, slug: string) => {

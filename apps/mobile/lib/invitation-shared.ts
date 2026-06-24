@@ -15,6 +15,8 @@ export type InvitationGalleryItem = {
 
 export type InvitationPhotoSlot = "main" | "background" | "gallery";
 
+export const MAX_GALLERY_PHOTOS = 10;
+
 export type PendingPhotoUpload = {
   localUri: string;
   slot: InvitationPhotoSlot;

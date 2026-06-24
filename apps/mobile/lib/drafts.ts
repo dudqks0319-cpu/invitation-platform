@@ -192,3 +192,10 @@ export function upsertPendingPhoto(
 
   return [...remaining, nextPhoto];
 }
+
+export function markPendingPhotosRetried(pendingPhotos: PendingPhotoUpload[]) {
+  return pendingPhotos.map((photo) => ({
+    ...photo,
+    retryCount: photo.retryCount + 1
+  }));
+}
