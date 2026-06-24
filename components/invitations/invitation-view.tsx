@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { TemplateMarkup } from "@/components/landing/template-markup";
 import { InvitationMapEmbed } from "@/components/invitations/invitation-map-embed";
 import { buildGoogleCalendarUrl } from "@/lib/calendar-invite";
@@ -12,9 +12,11 @@ import {
   formatEventDateTime,
   formatTimestampLabel,
   formatVenue,
+  invitationSectionKeys,
   isInvitationSectionAllowed,
   type GuestbookEntry,
   type InvitationDraftPayload,
+  type InvitationSectionKey,
   type RsvpEntry
 } from "@/lib/invitation-payload";
 import {
@@ -317,6 +319,220 @@ export function InvitationView({
   const kakaoMapLink =
     normalizeUrl(payload.kakaoMapLink) ||
     `https://map.kakao.com/link/search/${mapQuery}`;
+  const invitationSectionNodes: Partial<Record<InvitationSectionKey, ReactNode>> = {
+    people: showPeople ? (
+      <article className="invitation-card" key="people">
+        <h2>{categoryMeta.personSectionTitle}</h2>
+        <p style={{ whiteSpace: "pre-line" }}>
+          {personLines.length ? personLines.join("\n") : "행사 정보를 입력해 주세요."}
+        </p>
+      </article>
+    ) : null,
+    contact: showContact ? (
+      <article className="invitation-card" key="contact">
+        <h2>{categoryMeta.contactTitle}</h2>
+        <p style={{ whiteSpace: "pre-line" }}>
+          {contactLines.length ? contactLines.join("\n") : "연락처를 입력해 주세요."}
+        </p>
+      </article>
+    ) : null,
+    accounts: showAccounts ? (
+      <article className="invitation-card" key="accounts">
+        <h2>{categoryMeta.accountTitle}</h2>
+        <p style={{ whiteSpace: "pre-line" }}>
+          {accountEntries.length ? accountEntries.map((entry) => entry.value).join("\n") : "계좌 정보를 입력해 주세요."}
+        </p>
+        {accountEntries.length ? (
+          <div className="invitation-inline-actions">
+            {accountEntries.map((entry) => (
+              <button
+                className="btn-outline invitation-small-btn"
+                key={entry.copyLabel}
+                onClick={() => copyToClipboard(entry.copyValue)}
+                type="button"
+              >
+                {entry.copyLabel}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        <a className={`btn-primary invitation-wide-btn ${kakaoPayLink ? "" : "is-disabled"}`} href={kakaoPayLink || "#"} rel="noreferrer noopener" target="_blank">
+          카카오페이 송금 링크 열기
+        </a>
+      </article>
+    ) : null,
+    venue: showVenue ? (
+      <article className="invitation-card" key="venue">
+        <h2>위치</h2>
+        <p>{payload.mapAddress || payload.venueAddress || "위치 정보를 입력해 주세요."}</p>
+        <p className="invitation-transport">{payload.transportNote}</p>
+        <InvitationMapEmbed
+          kakaoMapLink={kakaoMapLink}
+          naverMapLink={mapLink}
+          query={rawMapQuery}
+        />
+      </article>
+    ) : null,
+    calendar: showCalendar ? (
+      <article className="invitation-card" key="calendar">
+        <h2>캘린더 추가</h2>
+        <p>초대장 일정을 하객의 캘린더에 바로 저장할 수 있습니다.</p>
+        {shareDisabled || !calendarPath || !googleCalendarUrl ? (
+          <p className="form-message error">캘린더 추가 링크는 초대장을 발행한 뒤 공개 링크에서 사용할 수 있습니다.</p>
+        ) : (
+          <div className="invitation-inline-actions">
+            <a className="btn-primary invitation-small-btn" href={googleCalendarUrl} rel="noreferrer noopener" target="_blank">
+              Google Calendar
+            </a>
+            <a className="btn-outline invitation-small-btn" download={`${slug}.ics`} href={calendarPath}>
+              iCal 저장
+            </a>
+          </div>
+        )}
+      </article>
+    ) : null,
+    gallery: showGallery && payload.galleryImages.length ? (
+      <article className="invitation-card" key="gallery">
+        <h2>갤러리</h2>
+        <div
+          style={{
+            display: "grid",
+            gap: 12,
+            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))"
+          }}
+        >
+          {payload.galleryImages.map((imageUrl, index) => (
+            <div
+              key={`${imageUrl}-${index}`}
+              style={{
+                borderRadius: 18,
+                overflow: "hidden",
+                minHeight: 140,
+                background: "#f5efe8"
+              }}
+            >
+              <img
+                alt={`초대장 갤러리 이미지 ${index + 1}`}
+                src={imageUrl}
+                style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
+          ))}
+        </div>
+      </article>
+    ) : null,
+    video: showVideo && videoUrl ? (
+      <article className="invitation-card" key="video">
+        <h2>식전 영상</h2>
+        <p>예식 전 함께 보실 수 있는 영상을 준비했습니다.</p>
+        <a className="btn-primary invitation-wide-btn" href={videoUrl} rel="noreferrer noopener" target="_blank">
+          영상 보기
+        </a>
+      </article>
+    ) : null,
+    music: showMusic && backgroundMusicUrl ? (
+      <article className="invitation-card" key="music">
+        <h2>배경음악</h2>
+        <p>초대장과 함께 준비한 음악을 재생해 보세요.</p>
+        <audio controls preload="none" src={backgroundMusicUrl} style={{ width: "100%", marginTop: 12 }} />
+      </article>
+    ) : null,
+    rsvp: showRsvp ? (
+      <article className="invitation-card" key="rsvp">
+        <h2>RSVP</h2>
+        <form
+          action={async (formData) => {
+            await handleRsvpSubmit(formData);
+          }}
+          className="invitation-guestbook-form"
+        >
+          <input autoComplete="off" name="website" style={{ display: "none" }} tabIndex={-1} type="text" />
+          <label>
+            이름
+            <input name="guestName" required type="text" />
+          </label>
+          <label>
+            연락처
+            <input name="guestPhone" type="text" />
+          </label>
+          <label>
+            참석 여부
+            <select className="modal-input" defaultValue="yes" name="attending">
+              <option value="yes">참석</option>
+              <option value="no">불참</option>
+            </select>
+          </label>
+          <label>
+            동행 인원
+            <input defaultValue={1} max={20} min={0} name="guests" type="number" />
+          </label>
+          <label>
+            메모
+            <textarea name="memo" rows={3} />
+          </label>
+          <button className="btn-primary invitation-wide-btn" disabled={pending} type="submit">
+            RSVP 보내기
+          </button>
+        </form>
+        {rsvpMessage ? <p className="form-message success">{rsvpMessage}</p> : null}
+        {rsvpError ? <p className="form-message error">{rsvpError}</p> : null}
+        {rsvpEntries.length ? <p>최근 응답 {rsvpEntries.length}건이 이 세션에 기록되었습니다.</p> : null}
+      </article>
+    ) : null,
+    guestbook: showGuestbook ? (
+      <article className="invitation-card" key="guestbook">
+        <h2>방명록</h2>
+        <form
+          action={async (formData) => {
+            await handleGuestbookSubmit(formData);
+          }}
+          className="invitation-guestbook-form"
+        >
+          <input autoComplete="off" name="website" style={{ display: "none" }} tabIndex={-1} type="text" />
+          <label>
+            이름
+            <input name="nickname" required type="text" />
+          </label>
+          <label>
+            메시지
+            <textarea name="guestbookMessage" required rows={3} />
+          </label>
+          <button className="btn-primary invitation-wide-btn" disabled={pending} type="submit">
+            방명록 남기기
+          </button>
+        </form>
+        {mode === "public" ? (
+          <p className="form-message">방명록은 관리자 승인 후 공개됩니다. 작성 직후 목록에 보이지 않아도 정상입니다.</p>
+        ) : null}
+        {guestbookMessage ? <p className="form-message success">{guestbookMessage}</p> : null}
+        {guestbookError ? <p className="form-message error">{guestbookError}</p> : null}
+        <ul className="list-box invitation-guestbook-list">
+          {guestbookEntries.length ? (
+            guestbookEntries.map((entry) => (
+              <li key={entry.id}>
+                <div className="meta">
+                  {formatTimestampLabel(entry.createdAt)} · {entry.nickname}
+                </div>
+                <div className="value">{entry.message}</div>
+              </li>
+            ))
+          ) : (
+            <li className="meta">첫 번째 축하 메시지를 남겨 주세요.</li>
+          )}
+        </ul>
+      </article>
+    ) : null
+  };
+  const orderedInvitationSections = [
+    ...payload.sectionOrder.filter((section, index, sections) => (
+      section in invitationSectionNodes && sections.indexOf(section) === index
+    )),
+    ...invitationSectionKeys.filter((section) => (
+      section in invitationSectionNodes && !payload.sectionOrder.includes(section)
+    ))
+  ]
+    .map((section) => invitationSectionNodes[section])
+    .filter((section): section is ReactNode => Boolean(section));
 
   return (
     <main className="invitation-main">
@@ -348,173 +564,7 @@ export function InvitationView({
       </section>
 
       <section className="invitation-content">
-        {showPeople ? (
-          <article className="invitation-card">
-            <h2>{categoryMeta.personSectionTitle}</h2>
-            <p style={{ whiteSpace: "pre-line" }}>
-              {personLines.length ? personLines.join("\n") : "행사 정보를 입력해 주세요."}
-            </p>
-          </article>
-        ) : null}
-
-        {showContact ? (
-          <article className="invitation-card">
-            <h2>{categoryMeta.contactTitle}</h2>
-            <p style={{ whiteSpace: "pre-line" }}>
-              {contactLines.length ? contactLines.join("\n") : "연락처를 입력해 주세요."}
-            </p>
-          </article>
-        ) : null}
-
-        {showAccounts ? (
-          <article className="invitation-card">
-            <h2>{categoryMeta.accountTitle}</h2>
-            <p style={{ whiteSpace: "pre-line" }}>
-              {accountEntries.length ? accountEntries.map((entry) => entry.value).join("\n") : "계좌 정보를 입력해 주세요."}
-            </p>
-            {accountEntries.length ? (
-              <div className="invitation-inline-actions">
-                {accountEntries.map((entry) => (
-                  <button
-                    className="btn-outline invitation-small-btn"
-                    key={entry.copyLabel}
-                    onClick={() => copyToClipboard(entry.copyValue)}
-                    type="button"
-                  >
-                    {entry.copyLabel}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-            <a className={`btn-primary invitation-wide-btn ${kakaoPayLink ? "" : "is-disabled"}`} href={kakaoPayLink || "#"} rel="noreferrer noopener" target="_blank">
-              카카오페이 송금 링크 열기
-            </a>
-          </article>
-        ) : null}
-
-        {showVenue ? (
-          <article className="invitation-card">
-            <h2>위치</h2>
-            <p>{payload.mapAddress || payload.venueAddress || "위치 정보를 입력해 주세요."}</p>
-            <p className="invitation-transport">{payload.transportNote}</p>
-            <InvitationMapEmbed
-              kakaoMapLink={kakaoMapLink}
-              naverMapLink={mapLink}
-              query={rawMapQuery}
-            />
-          </article>
-        ) : null}
-
-        {showCalendar ? (
-          <article className="invitation-card">
-            <h2>캘린더 추가</h2>
-            <p>초대장 일정을 하객의 캘린더에 바로 저장할 수 있습니다.</p>
-            {shareDisabled || !calendarPath || !googleCalendarUrl ? (
-              <p className="form-message error">캘린더 추가 링크는 초대장을 발행한 뒤 공개 링크에서 사용할 수 있습니다.</p>
-            ) : (
-              <div className="invitation-inline-actions">
-                <a className="btn-primary invitation-small-btn" href={googleCalendarUrl} rel="noreferrer noopener" target="_blank">
-                  Google Calendar
-                </a>
-                <a className="btn-outline invitation-small-btn" download={`${slug}.ics`} href={calendarPath}>
-                  iCal 저장
-                </a>
-              </div>
-            )}
-          </article>
-        ) : null}
-
-        {showGallery && payload.galleryImages.length ? (
-          <article className="invitation-card">
-            <h2>갤러리</h2>
-            <div
-              style={{
-                display: "grid",
-                gap: 12,
-                gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))"
-              }}
-            >
-              {payload.galleryImages.map((imageUrl, index) => (
-                <div
-                  key={`${imageUrl}-${index}`}
-                  style={{
-                    borderRadius: 18,
-                    overflow: "hidden",
-                    minHeight: 140,
-                    background: "#f5efe8"
-                  }}
-                >
-                  <img
-                    alt={`초대장 갤러리 이미지 ${index + 1}`}
-                    src={imageUrl}
-                    style={{ display: "block", width: "100%", height: "100%", objectFit: "cover" }}
-                  />
-                </div>
-              ))}
-            </div>
-          </article>
-        ) : null}
-
-        {showVideo && videoUrl ? (
-          <article className="invitation-card">
-            <h2>식전 영상</h2>
-            <p>예식 전 함께 보실 수 있는 영상을 준비했습니다.</p>
-            <a className="btn-primary invitation-wide-btn" href={videoUrl} rel="noreferrer noopener" target="_blank">
-              영상 보기
-            </a>
-          </article>
-        ) : null}
-
-        {showMusic && backgroundMusicUrl ? (
-          <article className="invitation-card">
-            <h2>배경음악</h2>
-            <p>초대장과 함께 준비한 음악을 재생해 보세요.</p>
-            <audio controls preload="none" src={backgroundMusicUrl} style={{ width: "100%", marginTop: 12 }} />
-          </article>
-        ) : null}
-
-        {showRsvp ? (
-          <article className="invitation-card">
-            <h2>RSVP</h2>
-            <form
-              action={async (formData) => {
-                await handleRsvpSubmit(formData);
-              }}
-              className="invitation-guestbook-form"
-            >
-              <input autoComplete="off" name="website" style={{ display: "none" }} tabIndex={-1} type="text" />
-              <label>
-                이름
-                <input name="guestName" required type="text" />
-              </label>
-              <label>
-                연락처
-                <input name="guestPhone" type="text" />
-              </label>
-              <label>
-                참석 여부
-                <select className="modal-input" defaultValue="yes" name="attending">
-                  <option value="yes">참석</option>
-                  <option value="no">불참</option>
-                </select>
-              </label>
-              <label>
-                동행 인원
-                <input defaultValue={1} max={20} min={0} name="guests" type="number" />
-              </label>
-              <label>
-                메모
-                <textarea name="memo" rows={3} />
-              </label>
-              <button className="btn-primary invitation-wide-btn" disabled={pending} type="submit">
-                RSVP 보내기
-              </button>
-            </form>
-            {rsvpMessage ? <p className="form-message success">{rsvpMessage}</p> : null}
-            {rsvpError ? <p className="form-message error">{rsvpError}</p> : null}
-            {rsvpEntries.length ? <p>최근 응답 {rsvpEntries.length}건이 이 세션에 기록되었습니다.</p> : null}
-          </article>
-        ) : null}
+        {orderedInvitationSections}
 
         <article className="invitation-card">
           <h2>카카오톡으로 보내기</h2>
@@ -604,50 +654,6 @@ export function InvitationView({
           ) : null}
           {shareMessage ? <p className="form-message success">{shareMessage}</p> : null}
         </article>
-
-        {showGuestbook ? (
-          <article className="invitation-card">
-            <h2>방명록</h2>
-            <form
-              action={async (formData) => {
-                await handleGuestbookSubmit(formData);
-              }}
-              className="invitation-guestbook-form"
-            >
-              <input autoComplete="off" name="website" style={{ display: "none" }} tabIndex={-1} type="text" />
-              <label>
-                이름
-                <input name="nickname" required type="text" />
-              </label>
-              <label>
-                메시지
-                <textarea name="guestbookMessage" required rows={3} />
-              </label>
-              <button className="btn-primary invitation-wide-btn" disabled={pending} type="submit">
-                방명록 남기기
-              </button>
-            </form>
-            {mode === "public" ? (
-              <p className="form-message">방명록은 관리자 승인 후 공개됩니다. 작성 직후 목록에 보이지 않아도 정상입니다.</p>
-            ) : null}
-            {guestbookMessage ? <p className="form-message success">{guestbookMessage}</p> : null}
-            {guestbookError ? <p className="form-message error">{guestbookError}</p> : null}
-            <ul className="list-box invitation-guestbook-list">
-              {guestbookEntries.length ? (
-                guestbookEntries.map((entry) => (
-                  <li key={entry.id}>
-                    <div className="meta">
-                      {formatTimestampLabel(entry.createdAt)} · {entry.nickname}
-                    </div>
-                    <div className="value">{entry.message}</div>
-                  </li>
-                ))
-              ) : (
-                <li className="meta">첫 번째 축하 메시지를 남겨 주세요.</li>
-              )}
-            </ul>
-          </article>
-        ) : null}
 
         {payload.thankYouMessage ? (
           <article className="invitation-card">

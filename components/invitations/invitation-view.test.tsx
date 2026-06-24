@@ -100,6 +100,34 @@ describe("InvitationView", () => {
     expect(document.body.textContent).not.toContain("방명록");
   });
 
+  it("renders public sections in the saved section order", () => {
+    const payload = normalizeDraft({
+      sectionOrder: ["guestbook", "rsvp", "venue", "people", "contact", "accounts", "calendar"]
+    });
+
+    document.body.innerHTML = renderToStaticMarkup(
+      <InvitationView
+        mode="public"
+        payload={payload}
+        shareUrl="/invitations/demo"
+        slug="demo"
+      />
+    );
+
+    const headings = Array.from(document.body.querySelectorAll(".invitation-content > article > h2"))
+      .map((heading) => heading.textContent);
+
+    expect(headings.slice(0, 7)).toEqual([
+      "방명록",
+      "RSVP",
+      "위치",
+      "혼주 정보",
+      "연락처",
+      "마음 전하실 곳",
+      "캘린더 추가"
+    ]);
+  });
+
   it("renders the published template snapshot background when present", () => {
     const payload = normalizeDraft({
       templateId: "wedding-classic",
