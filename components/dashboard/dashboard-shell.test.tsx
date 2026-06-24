@@ -44,6 +44,10 @@ describe("DashboardShell", () => {
     expect(container.textContent).toContain("데이터 보관 기준");
     expect(container.textContent).toContain("업로드 사진과 갤러리 이미지");
     expect(container.textContent).toContain("사용 기간 별도 만료일 없이 제공");
+    expect(container.textContent).toContain("수정 이력");
+    expect(container.textContent).toContain("최근 수정");
+    expect(container.textContent).toContain("무료 공개 링크 발행");
+    expect(container.textContent).toContain("초안 생성");
     expect(container.textContent).toContain("RSVP CSV 내보내기");
     expect(container.textContent).toContain("방명록 CSV 내보내기");
     expect(container.textContent).toContain("QR 저장");

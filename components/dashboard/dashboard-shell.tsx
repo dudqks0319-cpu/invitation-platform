@@ -11,6 +11,7 @@ import {
 } from "@/lib/data-retention-policy";
 import {
   createInvitationSlug,
+  formatTimestampLabel,
   LOCAL_DRAFT_KEY,
   normalizeDraft,
   toInvitationInsert,
@@ -64,6 +65,12 @@ type DashboardContentReport = {
   status: ReportStatus;
   createdAt: string;
   resolvedAt: string | null;
+};
+
+type DashboardActivityEntry = {
+  label: string;
+  timestamp: string;
+  detail: string;
 };
 
 const demoDashboardVariants: DashboardVariant[] = [
@@ -181,6 +188,35 @@ function getReportStatusLabel(status: ReportStatus) {
   }
 }
 
+function buildInvitationActivity(item: DashboardItem) {
+  const entries: DashboardActivityEntry[] = [];
+  const updatedAt = item.updatedAt ?? item.publishedAt ?? item.createdAt;
+
+  if (updatedAt !== item.createdAt) {
+    entries.push({
+      label: "최근 수정",
+      timestamp: updatedAt,
+      detail: "초대장 내용과 공개 설정 변경사항이 저장되었습니다."
+    });
+  }
+
+  if (item.publishedAt) {
+    entries.push({
+      label: "무료 공개 링크 발행",
+      timestamp: item.publishedAt,
+      detail: `/invitations/${item.slug} 공개 링크가 활성화되었습니다.`
+    });
+  }
+
+  entries.push({
+    label: "초안 생성",
+    timestamp: item.createdAt,
+    detail: "초대장 초안과 기본 정보가 생성되었습니다."
+  });
+
+  return entries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+}
+
 export function DashboardShell() {
   const supabase = useMemo(() => createBrowserClient(), []);
   const [items, setItems] = useState<DashboardItem[]>([]);
@@ -199,6 +235,7 @@ export function DashboardShell() {
       if (!supabase) {
         const localDraft = typeof window !== "undefined" ? window.localStorage.getItem(LOCAL_DRAFT_KEY) : null;
         const parsedDraft = localDraft ? JSON.parse(localDraft) : null;
+        const localTimestamp = new Date().toISOString();
 
         const localItems =
           parsedDraft?.payload
@@ -212,7 +249,8 @@ export function DashboardShell() {
                   status: parsedDraft.meta?.status ?? "draft",
                   repurchaseRequired: false,
                   payload: normalizeDraft(parsedDraft.payload),
-                  createdAt: new Date().toISOString(),
+                  createdAt: parsedDraft.meta?.createdAt ?? localTimestamp,
+                  updatedAt: parsedDraft.meta?.updatedAt ?? parsedDraft.meta?.createdAt ?? localTimestamp,
                   publishedAt: null
                 },
                 ...demoDashboardInvitations
@@ -280,6 +318,7 @@ export function DashboardShell() {
         repurchaseRequired: row.repurchase_required,
         payload: normalizeDraft(row.payload),
         createdAt: row.created_at,
+        updatedAt: row.updated_at,
         publishedAt: row.published_at
       }));
 
@@ -648,6 +687,7 @@ export function DashboardShell() {
       repurchaseRequired: data.repurchase_required,
       payload: normalizeDraft(data.payload),
       createdAt: data.created_at,
+      updatedAt: data.updated_at,
       publishedAt: data.published_at,
       viewCount: 0,
       rsvpCount: 0,
@@ -824,6 +864,8 @@ export function DashboardShell() {
                 <br />
                 사용 기간 {freeInvitationUsagePolicy.value}
                 <br />
+                최근 수정 {formatTimestampLabel(item.updatedAt ?? item.createdAt)}
+                <br />
                 {item.publishedAt ? `발행일 ${new Date(item.publishedAt).toLocaleDateString("ko-KR")}` : "아직 발행 전입니다."}
               </p>
               <div className="dashboard-actions" style={{ marginTop: "16px" }}>
@@ -873,6 +915,20 @@ export function DashboardShell() {
         </div>
 
         <div className="ops-grid" style={{ marginTop: "24px" }}>
+          {selectedInvitation ? (
+            <article className="ops-card" style={{ gridColumn: "1 / -1" }}>
+              <h3>수정 이력</h3>
+              <ul className="list-box">
+                {buildInvitationActivity(selectedInvitation).map((entry) => (
+                  <li key={`${entry.label}:${entry.timestamp}`}>
+                    <div className="meta">{entry.label}</div>
+                    <div className="value">{formatTimestampLabel(entry.timestamp)}</div>
+                    <div className="value">{entry.detail}</div>
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ) : null}
           <article className="ops-card" style={{ gridColumn: "1 / -1" }}>
             <h3>대상별 링크</h3>
             <p className="ops-note">

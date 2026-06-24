@@ -20,6 +20,7 @@ export const demoInvitation: InvitationRecord = {
     message: "저희 두 사람이 같은 방향을 바라보며 걷기 시작합니다. 함께 축복해 주세요."
   },
   createdAt: new Date("2026-03-01T09:00:00.000Z").toISOString(),
+  updatedAt: new Date("2026-03-03T09:30:00.000Z").toISOString(),
   publishedAt: new Date("2026-03-02T09:00:00.000Z").toISOString()
 };
 
@@ -33,6 +34,7 @@ export const demoDashboardInvitations: InvitationRecord[] = [
     templateId: "dol-cute",
     category: "dol",
     status: "draft",
+    updatedAt: new Date("2026-03-01T10:30:00.000Z").toISOString(),
     publishedAt: null,
     payload: {
       ...defaultInvitationDraft,

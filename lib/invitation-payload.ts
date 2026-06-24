@@ -440,6 +440,7 @@ export type InvitationRecord = {
   status: InvitationStatus;
   payload: InvitationDraftPayload;
   createdAt: string;
+  updatedAt?: string;
   publishedAt: string | null;
 };
 
