@@ -17,7 +17,7 @@ describe("public invitation page helpers", () => {
       title: "김 & 이 결혼식 초대장",
       description: "두 사람의 시작을 함께 축복해 주세요.",
       shareUrl: "https://invitehub.test/invitations/kim-lee-demo",
-      imageUrl: "https://invitehub.test/images/genspark/cncrue0H.jpg"
+      imageUrl: "https://invitehub.test/api/og/kim-lee-demo"
     }) as Metadata;
 
     expect(metadata.title).toBe("김 & 이 결혼식 초대장");
@@ -32,7 +32,7 @@ describe("public invitation page helpers", () => {
           ? firstImage.toString()
           : firstImage?.url;
     expect(normalizedImage).toBe(
-      "https://invitehub.test/images/genspark/cncrue0H.jpg"
+      "https://invitehub.test/api/og/kim-lee-demo"
     );
   });
 

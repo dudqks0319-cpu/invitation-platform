@@ -7,6 +7,7 @@ import { findDemoInvitationBySlug } from "@/lib/demo-data";
 import { buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
 import { buildPublicInvitationPayload } from "@/lib/invitation-payload";
 import { getPublicShareUrl } from "@/lib/invitation-presentation";
+import { buildPublicOgImagePath } from "@/lib/public-og";
 import { resolvePublishedInvitationBySlug } from "@/lib/invitation-variants";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -59,7 +60,6 @@ type GuestbookEntryRow = {
 };
 
 const VIEW_LOG_COOLDOWN_MS = 30 * 60 * 1000;
-const DEFAULT_OG_IMAGE = "/images/genspark/cncrue0H.jpg";
 
 export function resolveRequestOrigin(headerList: HeaderSource) {
   const forwardedHost = headerList.get("x-forwarded-host");
@@ -207,10 +207,7 @@ export async function generateMetadata({
     const payload = buildPublicInvitationPayload(
       buildPublishedInvitationAssetPayload(lookup.publicSlug, lookup.payload)
     );
-    const imageUrl = getPublicShareUrl(
-      payload.mainImageUrl || payload.backgroundImageUrl || payload.templateSnapshot?.backgroundImageUrl || DEFAULT_OG_IMAGE,
-      origin
-    );
+    const imageUrl = getPublicShareUrl(buildPublicOgImagePath(lookup.publicSlug), origin);
 
     return buildPublicInvitationMetadata({
       title: lookup.invitation.title || payload.title,
@@ -226,7 +223,7 @@ export async function generateMetadata({
       title: demoInvitation.title,
       description: demoInvitation.payload.message || `${demoInvitation.title} 안내`,
       shareUrl,
-      imageUrl: getPublicShareUrl(DEFAULT_OG_IMAGE, origin)
+      imageUrl: getPublicShareUrl(buildPublicOgImagePath(demoInvitation.slug), origin)
     });
   }
 
@@ -234,7 +231,7 @@ export async function generateMetadata({
     title: "InviteHub",
     description: "모바일 초대장을 손쉽게 만들고 공유하세요.",
     shareUrl,
-    imageUrl: getPublicShareUrl(DEFAULT_OG_IMAGE, origin)
+    imageUrl: getPublicShareUrl(buildPublicOgImagePath(decodedSlug), origin)
   });
 }
 
