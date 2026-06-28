@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from "react";
 
 type Align = "left" | "center" | "right";
 type Gradient = "none" | "top" | "bottom" | "full";
@@ -214,7 +214,7 @@ export function ImageTextStudio() {
     fontSize: `${overlay.size}px`,
     textAlign: overlay.align,
     textShadow: overlay.shadow ? "0 2px 12px rgba(0,0,0,.55)" : "none"
-  } satisfies React.CSSProperties;
+  } satisfies CSSProperties;
 
   return (
     <div className="image-text-studio">
