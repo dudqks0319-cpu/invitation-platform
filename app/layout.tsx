@@ -18,8 +18,8 @@ const displayFont = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "InviteHub",
-  description: "소중한 순간을 위한 감성 초대장 플랫폼"
+  title: "오삼오삼",
+  description: "이미지에 글자를 얹어 만드는 무료 모바일 초대장"
 };
 
 export default function RootLayout({

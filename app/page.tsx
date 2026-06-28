@@ -2,132 +2,70 @@ import Link from "next/link";
 import { TemplateBrowser } from "@/components/landing/template-browser";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { SiteHeader } from "@/components/shared/site-header";
-import { isPaidPublishingEnabled } from "@/lib/release-flags";
 
-const freeFeatures = [
+const features = [
   {
-    title: "기본 청첩장은 무료",
-    description:
-      "현재 공개된 템플릿은 무료로 만들고 미리보기할 수 있어 부담 없이 초대장을 시작할 수 있습니다."
+    title: "이미지는 사용자가 준비",
+    description: "사진, 일러스트, Canva 결과물 등 원하는 이미지를 올리고 그 위에 초대장 글자를 얹습니다."
   },
   {
-    title: "참석 여부와 방명록까지",
-    description:
-      "링크를 보낸 뒤에는 참석 여부와 축하 메시지까지 한 번에 받을 수 있습니다."
+    title: "글자 위치 자동 배치",
+    description: "이미지의 밝기를 보고 읽기 좋은 글자색과 기본 위치를 자동으로 잡습니다."
   },
   {
-    title: "링크 하나로 공유",
-    description:
-      "카카오톡, 문자, SNS 어디든. 링크 하나로 초대장, 지도, 계좌 안내, 방명록까지 함께 전달됩니다."
+    title: "직접 위치 조정",
+    description: "자동 배치가 마음에 들지 않으면 미리보기에서 글자를 끌어서 위치를 바꿀 수 있습니다."
   }
 ];
 
-const paidFeature = {
-  title: "사진까지 담고 싶다면 3,300원",
-  description:
-    "사진 포함 발행권 한 번이면 프로필 사진, 배경 사진, 갤러리 사진까지 모두 담아 완성할 수 있습니다."
-};
-
-const disabledPhotoFeature = {
-  title: "사진 기능은 준비 중",
-  description:
-    "첫 제출 버전은 사진 없는 무료 초대장 발행에 집중하고, 사진 포함 발행은 스토어 상품 준비 후 다시 엽니다."
-};
-
-const freeProcessSteps = [
+const processSteps = [
   {
     step: "01",
-    title: "디자인 선택",
-    description: "현재 공개된 무료 디자인 중 마음에 드는 템플릿을 고르면 바로 시작됩니다."
+    title: "이미지 업로드",
+    description: "사용자가 가진 사진이나 디자인 이미지를 올립니다."
   },
   {
     step: "02",
-    title: "내용 입력",
-    description: "이름, 장소, 문구를 채우고 초대장 미리보기를 확인합니다."
+    title: "문구 자동완성",
+    description: "결혼식, 돌잔치, 생일, 모임에 맞는 기본 문구를 바로 채웁니다."
   },
   {
     step: "03",
-    title: "바로 발행 · 공유",
-    description: "사진 없는 기본 구성은 무료로 발행하고 링크로 보낼 수 있습니다."
-  }
-];
-
-const pricing = [
-  {
-    badge: "무료",
-    title: "기본 청첩장",
-    price: "무료",
-    items: [
-      "현재 공개 템플릿 전부 무료",
-      "링크 공유 · 참석 여부 · 방명록 포함",
-      "사진 없이 바로 발행 가능"
-    ]
-  },
-  {
-    badge: "유료",
-    title: "사진 포함 발행권",
-    price: "₩3,300",
-    popular: true,
-    items: [
-      "프로필 사진 포함",
-      "배경 사진 포함",
-      "갤러리 사진 전체 포함",
-      "한 번 구매로 초대장 1건 발행"
-    ]
+    title: "위치 조정",
+    description: "자동 배치된 글자를 드래그하거나 슬라이더로 자연스럽게 맞춥니다."
   }
 ];
 
 export default function HomePage() {
-  const paidPublishingEnabled = isPaidPublishingEnabled();
-  const features = paidPublishingEnabled ? [freeFeatures[0], paidFeature, ...freeFeatures.slice(1)] : [freeFeatures[0], disabledPhotoFeature, ...freeFeatures.slice(1)];
-  const processSteps = paidPublishingEnabled
-    ? freeProcessSteps.map((step) =>
-        step.step === "02"
-          ? {
-              ...step,
-              description: "이름, 장소, 문구를 채우고 사진이 필요하면 사진 포함 발행권으로 한 번에 준비합니다."
-            }
-          : step.step === "03"
-            ? {
-                ...step,
-                description: "기본 구성은 무료로 발행하고, 사진이 포함되면 3,300원 발행권으로 마무리해 링크로 보낼 수 있습니다."
-              }
-            : step
-      )
-    : freeProcessSteps;
-  const visiblePricing = paidPublishingEnabled ? pricing : pricing.slice(0, 1);
-
   return (
     <main className="app-shell">
       <SiteHeader />
 
       <section className="hero">
         <div className="hero-content">
-          <p className="hero-badge">기본 청첩장은 무료</p>
+          <p className="hero-badge">이미지 기반 초대장</p>
           <h1 className="hero-title">
-            무료로 만들고,
+            이미지 한 장에,
             <br />
-            바로 공유하세요
+            초대장 글자만 자연스럽게
           </h1>
           <p className="hero-subtitle">
-            기본 청첩장은 무료로 만들고 미리보기할 수 있어요.
+            오삼오삼은 이미지 생성 플랫폼이 아닙니다.
             <br />
-            {paidPublishingEnabled
-              ? "사진이 포함된 초대장을 발행할 때만 3,300원 발행권이 필요합니다."
-              : "첫 제출 버전은 사진 없는 무료 발행에 집중합니다."}
+            사용자가 준비한 이미지 위에 문구를 자동 배치하고 직접 조정할 수 있게 돕습니다.
           </p>
           <div className="hero-proof-list">
-            <span>기본 청첩장 무료</span>
-            <span>{paidPublishingEnabled ? "사진 포함 발행권 3,300원" : "사진 기능 준비 중"}</span>
-            <span>링크 공유 · 참석 여부 · 방명록</span>
+            <span>이미지 업로드</span>
+            <span>문구 자동완성</span>
+            <span>글자 위치 수정</span>
           </div>
           <div className="hero-btns">
-            <Link className="btn-hero-primary" href="/builder">
-              무료로 시작하기
+            <Link className="btn-hero-primary" href="/image-text">
+              이미지로 만들기
             </Link>
-            <a className="btn-hero-outline" href="#templates">
-              디자인 둘러보기
-            </a>
+            <Link className="btn-hero-outline" href="/builder">
+              기존 초대장 빌더
+            </Link>
           </div>
         </div>
         <div className="hero-preview">
@@ -137,7 +75,7 @@ export default function HomePage() {
                 className="wedding-preview"
                 style={{
                   backgroundImage:
-                    "linear-gradient(180deg, rgba(251,245,238,0.72), rgba(244,235,226,0.9)), url(/images/genspark/cncrue0H.jpg)"
+                    "linear-gradient(180deg, rgba(251,245,238,0.42), rgba(20,20,20,0.52)), url(/images/genspark/cncrue0H.jpg)"
                 }}
               >
                 <p className="preview-sub">Wedding Invitation</p>
@@ -153,20 +91,16 @@ export default function HomePage() {
         </div>
       </section>
 
-      <TemplateBrowser />
-
       <section className="features-section" id="features">
         <div className="section-inner">
-          <p className="section-kicker">가볍게 시작하세요</p>
+          <p className="section-kicker">핵심 기능</p>
           <h2 className="section-title">
-            기본은 무료,
+            플랫폼을 무겁게 만들지 않고,
             <br />
-            필요한 정보만 채우면 공유
+            글자 합성에 집중합니다
           </h2>
           <p className="section-sub">
-            {paidPublishingEnabled
-              ? "기본 청첩장은 무료로 만들고, 사진이 포함된 초대장을 발행할 때만 3,300원 발행권을 사용합니다."
-              : "사진 포함 발행은 스토어 상품 준비 후 다시 열고, 현재 제출 버전은 무료 발행 흐름을 안정적으로 제공합니다."}
+            많은 디자인 템플릿을 직접 만들기보다 사용자가 준비한 이미지를 바로 초대장처럼 보이게 만드는 흐름입니다.
           </p>
           <div className="features-grid">
             {features.map((feature, index) => (
@@ -183,7 +117,7 @@ export default function HomePage() {
       <section className="process-section">
         <div className="section-inner">
           <p className="section-kicker">이렇게 진행돼요</p>
-          <h2 className="section-title">디자인 고르고, 내용 넣고, 바로 발행</h2>
+          <h2 className="section-title">이미지 올리고, 문구 넣고, 위치만 맞추기</h2>
           <div className="process-grid">
             {processSteps.map((step) => (
               <article className="process-card" key={step.step}>
@@ -196,41 +130,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="pricing-section" id="pricing">
-        <div className="section-inner">
-          <p className="section-kicker">요금 안내</p>
-          <h2 className="section-title">
-            {paidPublishingEnabled ? "무료로 시작하고, 사진이 들어가면 3,300원" : "첫 제출 버전은 무료 발행부터"}
-          </h2>
-          <p className="section-sub">
-            {paidPublishingEnabled
-              ? "사진이 포함된 초대장을 발행할 때만 3,300원 발행권이 필요하며, 프로필·배경·갤러리 사진이 모두 포함됩니다."
-              : "템플릿 선택, 초안 작성, 미리보기, 사진 없는 공개 링크 발행을 무료로 제공합니다."}
-          </p>
-          <div className="pricing-grid">
-            {visiblePricing.map((plan) => (
-              <article className={`price-card ${plan.popular ? "popular" : ""}`} key={plan.title}>
-                <div className={`price-badge ${plan.popular ? "popular-badge" : "free"}`}>
-                  {plan.badge}
-                </div>
-                <h3>{plan.title}</h3>
-                <div className="price">{plan.price}</div>
-                <ul>
-                  {plan.items.map((item) => (
-                    <li key={item}>
-                      <span>•</span>
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-                <Link className="btn-price" href="/builder">
-                  시작하기
-                </Link>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
+      <TemplateBrowser />
 
       <SiteFooter />
     </main>

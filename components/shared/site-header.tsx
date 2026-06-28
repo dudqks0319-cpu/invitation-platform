@@ -7,10 +7,10 @@ import { authDestination, normalizeNextPath } from "@/lib/auth";
 import { createBrowserClient } from "@/lib/supabase/browser";
 
 const navLinks = [
+  { href: "/image-text", label: "이미지 초대장" },
+  { href: "/builder", label: "기존 초대장" },
   { href: "/#templates", label: "템플릿" },
-  { href: "/builder", label: "초대장 만들기" },
-  { href: "/dashboard", label: "대시보드" },
-  { href: "/#pricing", label: "요금" }
+  { href: "/dashboard", label: "대시보드" }
 ];
 
 type SiteHeaderProps = {
@@ -68,9 +68,9 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
   return (
     <header className={mode === "focus" ? "site-header site-header-focus" : "site-header"}>
       <div className="header-inner">
-        <Link aria-label="InviteHub 홈으로 이동" className="logo" href="/">
+        <Link aria-label="오삼오삼 홈으로 이동" className="logo" href="/">
           <span className="logo-icon">💌</span>
-          <span className="logo-text">InviteHub</span>
+          <span className="logo-text">오삼오삼</span>
         </Link>
         {mode === "focus" ? null : (
           <>
@@ -105,8 +105,8 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
                   로그인
                 </Link>
               )}
-              <Link className="btn-primary" href="/builder" onClick={() => setIsMenuOpen(false)}>
-                시작하기
+              <Link className="btn-primary" href="/image-text" onClick={() => setIsMenuOpen(false)}>
+                무료로 만들기
               </Link>
             </div>
           </>
@@ -131,8 +131,8 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
               로그인
             </Link>
           )}
-          <Link href="/builder" onClick={() => setIsMenuOpen(false)}>
-            시작하기
+          <Link href="/image-text" onClick={() => setIsMenuOpen(false)}>
+            무료로 만들기
           </Link>
         </div>
       )}
