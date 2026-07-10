@@ -15,22 +15,22 @@ export default async function BuilderPage({
         <section className="builder-hero-strip">
           <div className="section-inner os-builder-intro">
             <div>
-              <p className="os-eyebrow">초대장 만들기</p>
-              <h1>필요한 내용만 차근차근 입력하세요</h1>
-              <p>오른쪽 미리보기를 확인하며 작성하고, 마지막 단계에서 공개 링크를 만들 수 있어요.</p>
+              <p className="os-eyebrow">우리의 초대장</p>
+              <h1>한 번에 다 쓰지 않아도 괜찮아요</h1>
+              <p>먼저 날짜와 장소부터 적어보세요. 오른쪽에서 실제 모습을 보며 천천히 완성할 수 있어요.</p>
             </div>
             <ol className="os-builder-roadmap" aria-label="초대장 제작 순서">
               <li>
                 <strong>1</strong>
-                내용 입력
+                기본 내용
               </li>
               <li>
                 <strong>2</strong>
-                사진 추가
+                사진과 이야기
               </li>
               <li>
                 <strong>3</strong>
-                미리보기 · 공유
+                확인하고 보내기
               </li>
             </ol>
           </div>
