@@ -61,7 +61,7 @@ export function buildPublicInvitationMetadata({
       title,
       description,
       url: shareUrl,
-      siteName: "InviteHub",
+      siteName: "오삼오삼",
       locale: "ko_KR",
       type: "website",
       images: [
@@ -173,8 +173,8 @@ export async function generateMetadata({
   }
 
   return buildPublicInvitationMetadata({
-    title: "InviteHub",
-    description: "모바일 초대장을 손쉽게 만들고 공유하세요.",
+    title: "오삼오삼",
+    description: "모바일 초대장을 손쉽게 만들고 링크로 공유하세요.",
     shareUrl,
     imageUrl: getPublicShareUrl(DEFAULT_OG_IMAGE, origin)
   });
