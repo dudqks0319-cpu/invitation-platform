@@ -59,6 +59,10 @@ const featuredTemplates = featuredTemplateIds
   .map((id) => templates.find((template) => template.id === id))
   .filter((template): template is NonNullable<typeof template> => Boolean(template));
 
+function getTemplateStartUrl(templateId: string) {
+  return `/builder/start?template=${encodeURIComponent(templateId)}`;
+}
+
 export default function HomePage() {
   return (
     <main className="app-shell os-home">
@@ -82,7 +86,7 @@ export default function HomePage() {
               디자인을 고른 뒤 필요한 내용만 채워 바로 공유하세요.
             </p>
             <div className="os-hero-actions">
-              <Link className="os-primary-cta" href={`/builder?template=${featuredTemplates[0]?.id ?? "dol-cute"}`}>
+              <Link className="os-primary-cta" href={getTemplateStartUrl(featuredTemplates[0]?.id ?? "dol-cute")}>
                 애니 감성으로 만들기
                 <ArrowRight aria-hidden="true" size={19} />
               </Link>
@@ -113,7 +117,7 @@ export default function HomePage() {
                 <Link
                   aria-label={`${template.name} 템플릿으로 만들기`}
                   className={`os-anime-template-card os-anime-template-card-${index + 1}`}
-                  href={`/builder?template=${template.id}`}
+                  href={getTemplateStartUrl(template.id)}
                   key={template.id}
                 >
                   <TemplateMarkup template={template} variant="browser" />
@@ -147,7 +151,7 @@ export default function HomePage() {
                 <Link
                   aria-label={`${template.name} 템플릿 미리보기와 제작 시작`}
                   className="os-featured-template-preview"
-                  href={`/builder?template=${template.id}`}
+                  href={getTemplateStartUrl(template.id)}
                 >
                   <TemplateMarkup template={template} variant="browser" />
                   <span className="os-featured-template-badge">애니 감성</span>
@@ -158,7 +162,7 @@ export default function HomePage() {
                     <h3>{template.name}</h3>
                     <p>{template.desc}</p>
                   </div>
-                  <Link className="os-featured-template-action" href={`/builder?template=${template.id}`}>
+                  <Link className="os-featured-template-action" href={getTemplateStartUrl(template.id)}>
                     이 디자인으로 만들기
                     <ArrowRight aria-hidden="true" size={16} />
                   </Link>
