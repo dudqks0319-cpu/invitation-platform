@@ -1,0 +1,60 @@
+/* 편집 화면에서 고객에게 불필요한 기술 용어를 감추고 자연스러운 안내를 제공합니다. */
+
+.os-builder-page .builder-step-kicker {
+  font-size: 0;
+}
+
+.os-builder-page .builder-step-kicker::after {
+  content: "초대장 완성까지";
+  font-size: 0.72rem;
+}
+
+.os-builder-page .builder-step-copy > .builder-help {
+  font-size: 0;
+}
+
+.os-builder-page .builder-step-copy > .builder-help::after {
+  content: "지금 필요한 내용부터 적어보세요. 언제든 앞 단계로 돌아가 고칠 수 있어요.";
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.os-builder-page .builder-form-section label:has(> select) {
+  font-size: 0;
+}
+
+.os-builder-page .builder-form-section label:has(> select)::before {
+  content: "선택한 디자인";
+  font-size: 0.8rem;
+  font-weight: 730;
+}
+
+.os-builder-page .builder-form-section label:has(> input[readonly]) {
+  font-size: 0;
+}
+
+.os-builder-page .builder-form-section label:has(> input[readonly])::before {
+  content: "행사 종류";
+  font-size: 0.8rem;
+  font-weight: 730;
+}
+
+.os-builder-page .builder-form-section label:has(> select) select,
+.os-builder-page .builder-form-section label:has(> input[readonly]) input {
+  font-size: 0.92rem;
+}
+
+/* Storage, payload 같은 내부 구현 설명은 고객 화면에 노출하지 않습니다. */
+.os-builder-page .builder-form-section > .builder-help:last-child {
+  display: none;
+}
+
+.os-builder-page .builder-preview-note {
+  font-size: 0;
+}
+
+.os-builder-page .builder-preview-note::after {
+  content: "받는 사람이 보게 될 화면을 마지막 확인 단계에서 천천히 살펴보세요.";
+  font-size: 0.72rem;
+  line-height: 1.55;
+}

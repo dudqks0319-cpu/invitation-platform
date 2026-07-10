@@ -1,5 +1,9 @@
 @import "tailwindcss";
 @import "../css/main.css";
+@import "../css/osamosam-v2.css";
+@import "../css/osamosam-template-safety.css";
+@import "../css/osamosam-professional.css";
+@import "../css/osamosam-builder-language.css";
 
 :root {
   color-scheme: light;
