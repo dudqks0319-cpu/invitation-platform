@@ -57,6 +57,7 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
   }, [supabase]);
 
   const currentPath = normalizeNextPath(pathname, authDestination.dashboard);
+  const isPublicInvitation = pathname.startsWith("/invitations/") || pathname.startsWith("/i/");
 
   async function handleSignOut() {
     if (!supabase) {
@@ -83,12 +84,14 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
     return (
       <header className="site-header site-header-focus">
         <div className="header-inner">
-          <Link className="focus-back" href="/#templates">
+          <Link className="focus-back" href={isPublicInvitation ? "/" : "/#templates"}>
             <ChevronLeft aria-hidden="true" size={18} />
-            템플릿
+            {isPublicInvitation ? "홈" : "템플릿"}
           </Link>
           {logo}
-          <p className="focus-header-hint">작성 내용은 이 기기에 임시 저장돼요</p>
+          <p className="focus-header-hint">
+            {isPublicInvitation ? "모바일 초대장" : "작성 내용은 이 기기에 임시 저장돼요"}
+          </p>
         </div>
       </header>
     );
