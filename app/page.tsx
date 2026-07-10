@@ -10,8 +10,10 @@ import {
   Sparkles
 } from "lucide-react";
 import { TemplateBrowser } from "@/components/landing/template-browser";
+import { TemplateMarkup } from "@/components/landing/template-markup";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { SiteHeader } from "@/components/shared/site-header";
+import { templates } from "@/lib/templates";
 
 const processSteps = [
   {
@@ -52,6 +54,11 @@ const productBenefits = [
   }
 ];
 
+const featuredTemplateIds = ["dol-cute", "birthday-fun", "bridal-pink", "house-warm"];
+const featuredTemplates = featuredTemplateIds
+  .map((id) => templates.find((template) => template.id === id))
+  .filter((template): template is NonNullable<typeof template> => Boolean(template));
+
 export default function HomePage() {
   return (
     <main className="app-shell os-home">
@@ -75,12 +82,12 @@ export default function HomePage() {
               디자인을 고른 뒤 필요한 내용만 채워 바로 공유하세요.
             </p>
             <div className="os-hero-actions">
-              <Link className="os-primary-cta" href="/builder">
-                무료로 만들기
+              <Link className="os-primary-cta" href={`/builder?template=${featuredTemplates[0]?.id ?? "dol-cute"}`}>
+                애니 감성으로 만들기
                 <ArrowRight aria-hidden="true" size={19} />
               </Link>
-              <a className="os-secondary-cta" href="#templates">
-                템플릿 둘러보기
+              <a className="os-secondary-cta" href="#featured-templates">
+                메인 디자인 보기
               </a>
             </div>
             <div className="os-proof-list" aria-label="서비스 특징">
@@ -96,41 +103,68 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="os-hero-visual" aria-label="오삼오삼 초대장 예시">
-            <div className="os-floating-step os-floating-step-one">
-              <strong>1</strong>
-              디자인 선택
+          <div className="os-hero-visual os-anime-showcase" aria-label="오삼오삼 애니 감성 초대장 예시">
+            <div className="os-anime-showcase-label">
+              <Sparkles aria-hidden="true" size={16} />
+              먼저 보는 애니 감성 디자인
             </div>
-            <div className="os-phone-frame">
-              <div className="os-phone-camera" />
-              <div className="os-phone-screen">
-                <div
-                  className="os-invitation-cover"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(180deg, rgba(255,255,255,0.08), rgba(33,25,20,0.58)), url(/images/genspark/cncrue0H.jpg)"
-                  }}
+            <div className="os-anime-card-stack">
+              {featuredTemplates.slice(0, 3).map((template, index) => (
+                <Link
+                  aria-label={`${template.name} 템플릿으로 만들기`}
+                  className={`os-anime-template-card os-anime-template-card-${index + 1}`}
+                  href={`/builder?template=${template.id}`}
+                  key={template.id}
                 >
-                  <div className="os-cover-topline">WEDDING INVITATION</div>
-                  <div className="os-cover-copy">
-                    <p>소중한 분들을 초대합니다</p>
-                    <h2>민준 · 수아</h2>
-                    <div className="os-cover-meta">
-                      <span>2026. 05. 10</span>
-                      <span>서울 더파인홀</span>
-                    </div>
+                  <TemplateMarkup template={template} variant="browser" />
+                  <span className="os-anime-template-caption">
+                    <small>{template.badge}</small>
+                    <strong>{template.name}</strong>
+                  </span>
+                </Link>
+              ))}
+            </div>
+            <p className="os-anime-showcase-help">카드를 누르면 선택한 디자인으로 바로 시작해요.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="os-featured-templates" id="featured-templates" aria-labelledby="featured-template-title">
+        <div className="os-shell">
+          <div className="os-featured-heading-row">
+            <div className="os-section-heading os-section-heading-left">
+              <p className="os-eyebrow">오삼오삼 메인 디자인</p>
+              <h2 id="featured-template-title">따뜻한 애니 감성 템플릿부터</h2>
+              <p>처음 들어오자마자 인기 일러스트 디자인을 보고 바로 만들 수 있어요.</p>
+            </div>
+            <a className="os-featured-all-link" href="#templates">
+              전체 템플릿 보기 <ArrowRight aria-hidden="true" size={17} />
+            </a>
+          </div>
+          <div className="os-featured-template-grid">
+            {featuredTemplates.map((template) => (
+              <article className="os-featured-template-card" key={template.id}>
+                <Link
+                  aria-label={`${template.name} 템플릿 미리보기와 제작 시작`}
+                  className="os-featured-template-preview"
+                  href={`/builder?template=${template.id}`}
+                >
+                  <TemplateMarkup template={template} variant="browser" />
+                  <span className="os-featured-template-badge">애니 감성</span>
+                </Link>
+                <div className="os-featured-template-copy">
+                  <div>
+                    <span>{template.badge}</span>
+                    <h3>{template.name}</h3>
+                    <p>{template.desc}</p>
                   </div>
+                  <Link className="os-featured-template-action" href={`/builder?template=${template.id}`}>
+                    이 디자인으로 만들기
+                    <ArrowRight aria-hidden="true" size={16} />
+                  </Link>
                 </div>
-              </div>
-            </div>
-            <div className="os-floating-step os-floating-step-two">
-              <strong>2</strong>
-              사진과 문구 수정
-            </div>
-            <div className="os-floating-step os-floating-step-three">
-              <strong>3</strong>
-              링크로 공유 완료
-            </div>
+              </article>
+            ))}
           </div>
         </div>
       </section>
