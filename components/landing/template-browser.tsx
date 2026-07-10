@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { ArrowRight, Eye, X } from "lucide-react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { templateCategories, templates, type TemplatePreset } from "@/lib/templates";
 import { TemplateMarkup } from "@/components/landing/template-markup";
 
 export function TemplateBrowser() {
-  const router = useRouter();
+  const dialogTitleId = useId();
   const [activeCategory, setActiveCategory] = useState<string>(templateCategories[0].key);
   const [previewTarget, setPreviewTarget] = useState<TemplatePreset | null>(null);
 
@@ -15,123 +15,140 @@ export function TemplateBrowser() {
     () => templates.filter((template) => template.category === activeCategory),
     [activeCategory]
   );
+  const activeCategoryMeta = templateCategories.find((category) => category.key === activeCategory) ?? templateCategories[0];
+
+  useEffect(() => {
+    if (!previewTarget) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setPreviewTarget(null);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [previewTarget]);
 
   return (
-    <>
-      <section className="categories" id="categories">
-        <div className="section-inner">
-          <p className="section-kicker">행사별 디자인</p>
-          <h2 className="section-title">어떤 날을 준비하시나요?</h2>
-          <p className="section-sub">행사 분위기에 맞는 템플릿을 골라보세요.</p>
-          <div className="cat-tabs">
-            {templateCategories.map((category) => (
-              <button
-                className={`cat-tab ${category.key === activeCategory ? "active" : ""}`}
-                key={category.key}
-                onClick={() => setActiveCategory(category.key)}
-                type="button"
-              >
-                <span>{category.emoji}</span> {category.label}
-              </button>
-            ))}
-          </div>
+    <section className="os-template-browser" id="templates">
+      <div className="section-inner">
+        <div className="os-section-heading">
+          <p className="os-eyebrow">행사에 맞는 디자인</p>
+          <h2>마음에 드는 템플릿부터 골라보세요</h2>
+          <p>미리 본 뒤 바로 내 사진과 문구로 바꿀 수 있어요.</p>
         </div>
-      </section>
 
-      <section className="templates-section" id="templates">
-        <div className="section-inner">
-          <p className="section-kicker">인기 디자인</p>
-          <h2 className="section-title">마음에 드는 템플릿을 골라보세요</h2>
-          <p className="section-sub">모든 템플릿은 무료로 미리 볼 수 있고, 바로 빌더로 이어집니다.</p>
-          <div className="templates-grid">
-            {filteredTemplates.map((template) => (
-              <div
-                aria-label={`${template.name} 템플릿 선택`}
-                className="template-card"
-                key={template.id}
-                onClick={() => router.push(`/builder?template=${template.id}`)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    router.push(`/builder?template=${template.id}`);
-                  }
-                }}
-                role="button"
-                tabIndex={0}
+        <div aria-label="행사 종류" className="cat-tabs os-category-tabs" role="tablist">
+          {templateCategories.map((category) => (
+            <button
+              aria-selected={category.key === activeCategory}
+              className={`cat-tab ${category.key === activeCategory ? "active" : ""}`}
+              key={category.key}
+              onClick={() => setActiveCategory(category.key)}
+              role="tab"
+              type="button"
+            >
+              <span aria-hidden="true">{category.emoji}</span>
+              {category.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="os-template-result-head">
+          <strong>{activeCategoryMeta.label}</strong>
+          <span>{filteredTemplates.length}개의 디자인</span>
+        </div>
+
+        <div className="templates-grid os-templates-grid">
+          {filteredTemplates.map((template) => (
+            <article className="template-card os-template-card" key={template.id}>
+              <button
+                aria-label={`${template.name} 템플릿 크게 보기`}
+                className="os-template-preview-button"
+                onClick={() => setPreviewTarget(template)}
+                type="button"
               >
                 <div className="template-thumb">
                   <TemplateMarkup template={template} variant="browser" />
-                  <div className="template-overlay">
-                    <div className="overlay-btns">
-                      <button
-                        className="overlay-btn"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setPreviewTarget(template);
-                        }}
-                        type="button"
-                      >
-                        미리보기
-                      </button>
-                      <Link
-                        className="overlay-btn primary"
-                        href={`/builder?template=${template.id}`}
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        사용하기
-                      </Link>
-                    </div>
-                  </div>
+                  <span className="os-template-preview-chip">
+                    <Eye aria-hidden="true" size={16} />
+                    크게 보기
+                  </span>
                 </div>
-                <div className="template-info">
+              </button>
+              <div className="template-info os-template-info">
+                <div className="os-template-meta-row">
                   <span className="template-badge">{template.badge}</span>
-                  <div className="template-name">{template.name}</div>
-                  <div className="template-desc">{template.desc}</div>
-                  <div className="template-tags">
-                    {template.tags.map((tag) => (
-                      <span className="tag" key={tag}>
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
+                  <span>{activeCategoryMeta.label}</span>
+                </div>
+                <h3 className="template-name">{template.name}</h3>
+                <p className="template-desc">{template.desc}</p>
+                <div className="template-tags">
+                  {template.tags.map((tag) => (
+                    <span className="tag" key={tag}>
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+                <div className="os-template-actions">
+                  <button className="os-template-secondary" onClick={() => setPreviewTarget(template)} type="button">
+                    미리보기
+                  </button>
+                  <Link className="os-template-primary" href={`/builder?template=${template.id}`}>
+                    이 디자인으로 만들기
+                    <ArrowRight aria-hidden="true" size={17} />
+                  </Link>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <div className={`modal-overlay ${previewTarget ? "open" : ""}`} onClick={() => setPreviewTarget(null)}>
-        <div className="preview-modal-box" onClick={(event) => event.stopPropagation()}>
-          <button className="modal-close" onClick={() => setPreviewTarget(null)} type="button">
-            ×
-          </button>
-          {previewTarget ? (
-            <>
-              <div style={{ padding: "24px 24px 0" }}>
-                <span className="template-badge">{previewTarget.badge}</span>
-                <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.3rem", margin: "8px 0 4px" }}>
-                  {previewTarget.name}
-                </h2>
-                <p style={{ color: "var(--text-mid)", fontSize: "0.85rem", marginBottom: "16px" }}>
-                  {previewTarget.desc}
-                </p>
-              </div>
-              <div style={{ padding: "0 24px" }}>
-                <TemplateMarkup template={previewTarget} />
-              </div>
-              <div className="preview-actions">
-                <button className="btn-outline" onClick={() => setPreviewTarget(null)} type="button">
-                  닫기
-                </button>
-                <Link className="btn-primary" href={`/builder?template=${previewTarget.id}`}>
-                  이 템플릿으로 만들기
-                </Link>
-              </div>
-            </>
-          ) : null}
+            </article>
+          ))}
         </div>
       </div>
-    </>
+
+      {previewTarget ? (
+        <div className="modal-overlay os-modal-overlay open" onMouseDown={() => setPreviewTarget(null)}>
+          <section
+            aria-labelledby={dialogTitleId}
+            aria-modal="true"
+            className="preview-modal-box os-preview-modal"
+            onMouseDown={(event) => event.stopPropagation()}
+            role="dialog"
+          >
+            <div className="os-preview-modal-head">
+              <div>
+                <span className="template-badge">{previewTarget.badge}</span>
+                <h2 id={dialogTitleId}>{previewTarget.name}</h2>
+                <p>{previewTarget.desc}</p>
+              </div>
+              <button aria-label="미리보기 닫기" className="os-modal-close" onClick={() => setPreviewTarget(null)} type="button">
+                <X aria-hidden="true" size={21} />
+              </button>
+            </div>
+            <div className="os-preview-canvas">
+              <TemplateMarkup template={previewTarget} />
+            </div>
+            <div className="preview-actions os-preview-actions">
+              <button className="os-template-secondary" onClick={() => setPreviewTarget(null)} type="button">
+                다른 디자인 보기
+              </button>
+              <Link className="os-template-primary" href={`/builder?template=${previewTarget.id}`}>
+                이 디자인으로 만들기
+                <ArrowRight aria-hidden="true" size={17} />
+              </Link>
+            </div>
+          </section>
+        </div>
+      ) : null}
+    </section>
   );
 }
