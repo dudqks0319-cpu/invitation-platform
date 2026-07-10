@@ -191,12 +191,18 @@ export function toInvitationInsert(
   };
 }
 
+function parseEventDateTime(value: string) {
+  const hasExplicitTimeZone = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(value);
+  const normalizedValue = hasExplicitTimeZone ? value : `${value}+09:00`;
+  return new Date(normalizedValue);
+}
+
 export function formatEventDateTime(value: string) {
   if (!value) {
     return "날짜와 시간을 입력해 주세요.";
   }
 
-  const date = new Date(value);
+  const date = parseEventDateTime(value);
 
   if (Number.isNaN(date.getTime())) {
     return "날짜 형식을 다시 확인해 주세요.";
