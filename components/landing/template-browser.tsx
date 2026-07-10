@@ -6,6 +6,10 @@ import { useEffect, useId, useMemo, useState } from "react";
 import { templateCategories, templates, type TemplatePreset } from "@/lib/templates";
 import { TemplateMarkup } from "@/components/landing/template-markup";
 
+function getTemplateStartUrl(templateId: string) {
+  return `/builder/start?template=${encodeURIComponent(templateId)}`;
+}
+
 export function TemplateBrowser() {
   const dialogTitleId = useId();
   const [activeCategory, setActiveCategory] = useState<string>(templateCategories[0].key);
@@ -104,7 +108,7 @@ export function TemplateBrowser() {
                   <button className="os-template-secondary" onClick={() => setPreviewTarget(template)} type="button">
                     미리보기
                   </button>
-                  <Link className="os-template-primary" href={`/builder?template=${template.id}`}>
+                  <Link className="os-template-primary" href={getTemplateStartUrl(template.id)}>
                     이 디자인으로 만들기
                     <ArrowRight aria-hidden="true" size={17} />
                   </Link>
@@ -141,7 +145,7 @@ export function TemplateBrowser() {
               <button className="os-template-secondary" onClick={() => setPreviewTarget(null)} type="button">
                 다른 디자인 보기
               </button>
-              <Link className="os-template-primary" href={`/builder?template=${previewTarget.id}`}>
+              <Link className="os-template-primary" href={getTemplateStartUrl(previewTarget.id)}>
                 이 디자인으로 만들기
                 <ArrowRight aria-hidden="true" size={17} />
               </Link>
