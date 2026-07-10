@@ -8,9 +8,9 @@ import { authDestination, normalizeNextPath } from "@/lib/auth";
 import { createBrowserClient } from "@/lib/supabase/browser";
 
 const navLinks = [
-  { href: "/#templates", label: "템플릿" },
+  { href: "/#templates", label: "디자인" },
   { href: "/#how-it-works", label: "만드는 방법" },
-  { href: "/#features", label: "기능" },
+  { href: "/#features", label: "오삼오삼 안내" },
   { href: "/dashboard", label: "내 초대장" }
 ];
 
@@ -86,11 +86,11 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
         <div className="header-inner">
           <Link className="focus-back" href={isPublicInvitation ? "/" : "/#templates"}>
             <ChevronLeft aria-hidden="true" size={18} />
-            {isPublicInvitation ? "홈" : "템플릿"}
+            {isPublicInvitation ? "홈" : "디자인"}
           </Link>
           {logo}
           <p className="focus-header-hint">
-            {isPublicInvitation ? "모바일 초대장" : "작성 내용은 이 기기에 임시 저장돼요"}
+            {isPublicInvitation ? "마음을 전하는 초대장" : "작성 내용은 이 기기에 임시 저장돼요"}
           </p>
         </div>
       </header>
@@ -137,7 +137,7 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
             </Link>
           )}
           <Link className="btn-primary header-start" href="/builder">
-            무료로 만들기
+            무료로 시작하기
           </Link>
         </div>
       </div>
@@ -158,7 +158,7 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
           <Link href={`/sign-in?next=${encodeURIComponent(currentPath)}`}>로그인</Link>
         )}
         <Link className="mobile-menu-primary" href="/builder">
-          무료로 만들기
+          무료로 시작하기
         </Link>
       </div>
     </header>
