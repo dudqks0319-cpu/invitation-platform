@@ -47,9 +47,9 @@ export function TemplateBrowser() {
     <section className="os-template-browser" id="templates">
       <div className="section-inner">
         <div className="os-section-heading">
-          <p className="os-eyebrow">행사에 맞는 디자인</p>
-          <h2>마음에 드는 템플릿부터 골라보세요</h2>
-          <p>미리 본 뒤 바로 내 사진과 문구로 바꿀 수 있어요.</p>
+          <p className="os-eyebrow">모든 디자인</p>
+          <h2>행사와 마음에 맞는 초대장을 찾아보세요.</h2>
+          <p>결혼식부터 첫돌, 생일, 집들이까지. 크게 살펴본 뒤 마음에 드는 디자인으로 시작하세요.</p>
         </div>
 
         <div aria-label="행사 종류" className="cat-tabs os-category-tabs" role="tablist">
@@ -77,7 +77,7 @@ export function TemplateBrowser() {
           {filteredTemplates.map((template) => (
             <article className="template-card os-template-card" key={template.id}>
               <button
-                aria-label={`${template.name} 템플릿 크게 보기`}
+                aria-label={`${template.name} 디자인 크게 보기`}
                 className="os-template-preview-button"
                 onClick={() => setPreviewTarget(template)}
                 type="button"
@@ -109,7 +109,7 @@ export function TemplateBrowser() {
                     미리보기
                   </button>
                   <Link className="os-template-primary" href={getTemplateStartUrl(template.id)}>
-                    이 디자인으로 만들기
+                    이 디자인으로 시작하기
                     <ArrowRight aria-hidden="true" size={17} />
                   </Link>
                 </div>
@@ -146,7 +146,7 @@ export function TemplateBrowser() {
                 다른 디자인 보기
               </button>
               <Link className="os-template-primary" href={getTemplateStartUrl(previewTarget.id)}>
-                이 디자인으로 만들기
+                이 디자인으로 시작하기
                 <ArrowRight aria-hidden="true" size={17} />
               </Link>
             </div>
