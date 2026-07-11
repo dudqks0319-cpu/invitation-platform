@@ -2,7 +2,8 @@ import { defaultInvitationDraft } from "@/lib/invitation-payload";
 import {
   applyCategoryTemplateDefaults,
   buildAbsoluteShareUrl,
-  getCategoryPresentation
+  getCategoryPresentation,
+  getInvitationHeroTitle
 } from "@/lib/invitation-presentation";
 
 describe("invitation presentation helpers", () => {
@@ -31,5 +32,27 @@ describe("invitation presentation helpers", () => {
     expect(next.templateId).toBe("dol-cute");
     expect(next.title).toBe("첫돌 초대장");
     expect(next.message).toContain("첫 번째 생일");
+  });
+
+  it("uses milestone birthday defaults when switching to a chilsun template", () => {
+    const next = applyCategoryTemplateDefaults(defaultInvitationDraft, "chilsun", "chilsun-barunson-anime-01");
+
+    expect(next.category).toBe("chilsun");
+    expect(next.templateId).toBe("chilsun-barunson-anime-01");
+    expect(next.title).toBe("칠순잔치 초대장");
+    expect(next.groomName).toBe("정순자");
+    expect(next.venueName).toBe("라비에벨 연회홀");
+  });
+
+  it("uses the child name as the main hero title for dol invitations", () => {
+    expect(
+      getInvitationHeroTitle({
+        ...defaultInvitationDraft,
+        category: "dol",
+        title: "첫돌 초대장",
+        groomName: "이하윤",
+        brideName: "엄마 아빠"
+      })
+    ).toBe("이하윤");
   });
 });

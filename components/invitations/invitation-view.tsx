@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { TemplateMarkup } from "@/components/landing/template-markup";
 import { InvitationMapEmbed } from "@/components/invitations/invitation-map-embed";
 import {
@@ -15,6 +15,10 @@ import {
   type InvitationDraftPayload,
   type RsvpEntry
 } from "@/lib/invitation-payload";
+import {
+  getInvitationTextPlacementFrame,
+  getInvitationTextPlacementTransform
+} from "@/lib/invitation-text-placement";
 import {
   getInvitationAccountEntries,
   getInvitationCategoryMeta,
@@ -74,6 +78,11 @@ function normalizeUrl(value: string) {
   return /^https?:\/\//i.test(value) ? value : "";
 }
 
+function getTemplateImageUrl(markup: string) {
+  const imageSourceMatch = markup.match(/\bsrc=(["'])(.*?)\1/i);
+  return imageSourceMatch?.[2] ?? "";
+}
+
 let kakaoScriptPromise: Promise<KakaoShareApi | null> | null = null;
 
 async function ensureKakaoSdk(jsKey: string) {
@@ -82,6 +91,9 @@ async function ensureKakaoSdk(jsKey: string) {
   }
 
   if (window.Kakao) {
+    if (!window.Kakao.isInitialized()) {
+      window.Kakao.init(jsKey);
+    }
     return window.Kakao;
   }
 
@@ -137,6 +149,24 @@ export function InvitationView({
   const accountEntries = getInvitationAccountEntries(payload);
   const heroTitle = getInvitationHeroTitle(payload);
   const heroSubtitle = getInvitationHeroSubtitle(payload);
+  const templateImageUrl = getTemplateImageUrl(selectedTemplate.html);
+  const heroImageUrl = payload.mainImageUrl || payload.backgroundImageUrl || templateImageUrl;
+  const isStandaloneArtworkTemplate = selectedTemplate.html.includes("tmpl-standalone-art") && Boolean(templateImageUrl);
+  const useImageFirstLayout =
+    Boolean(heroImageUrl) &&
+    (isStandaloneArtworkTemplate || payload.templateId === "image-text-overlay");
+  const isImageTextOverlayPublicLayout =
+    useImageFirstLayout && payload.templateId === "image-text-overlay";
+  const shouldOverlayTemplateCopy = isStandaloneArtworkTemplate && Boolean(heroImageUrl);
+  const shouldSplitTemplateCopy = shouldOverlayTemplateCopy && payload.templateTextPlacement === "bottom";
+  const textPlacementFrame = getInvitationTextPlacementFrame(payload.templateTextPlacement);
+  const templateCopyStyle: CSSProperties = {
+    left: `${textPlacementFrame.x}%`,
+    textAlign: textPlacementFrame.align,
+    top: `${textPlacementFrame.y}%`,
+    transform: getInvitationTextPlacementTransform(textPlacementFrame.align),
+    width: `${textPlacementFrame.width}%`
+  };
   const { kakaoJsKey } = resolveInvitationPlatformConfig({
     draftKakaoJsKey: payload.kakaoJsKey,
     platformKakaoJsKey
@@ -261,6 +291,10 @@ export function InvitationView({
   const videoUrl = normalizeUrl(payload.videoUrl);
   const backgroundMusicUrl = normalizeUrl(payload.backgroundMusicUrl);
   const rawMapQuery = payload.mapAddress || payload.venueAddress || payload.venueName;
+  const primaryLocationLabel = payload.roadAddress || payload.mapAddress || payload.venueAddress || "위치 정보를 입력해 주세요.";
+  const secondaryLocationLabel =
+    payload.jibunAddress && payload.jibunAddress !== primaryLocationLabel ? payload.jibunAddress : "";
+  const postcodeLabel = payload.zonecode ? `우편번호 ${payload.zonecode}` : "";
   const mapQuery = encodeURIComponent(rawMapQuery);
   const mapLink =
     normalizeUrl(payload.naverMapLink) ||
@@ -270,35 +304,141 @@ export function InvitationView({
     `https://map.kakao.com/link/search/${mapQuery}`;
 
   return (
-    <main className="invitation-main">
-      <section
-        className="invitation-hero"
-        style={payload.backgroundImageUrl ? { backgroundImage: `url(${payload.backgroundImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
-      >
-        {!payload.backgroundImageUrl ? (
-          <div className="invitation-template-backdrop">
-            <TemplateMarkup template={selectedTemplate} />
-          </div>
-        ) : null}
-        <div className="invitation-hero-overlay" />
-        <div className="invitation-hero-inner">
-          {payload.mainImageUrl ? (
-            <div className="invitation-main-image-wrap">
-              <img alt="초대장 메인 이미지" src={payload.mainImageUrl} style={{ display: "block" }} />
+    <main className={useImageFirstLayout ? "invitation-main invitation-main-image-first" : "invitation-main"}>
+      {useImageFirstLayout ? (
+        <>
+          <section
+            className={
+              shouldOverlayTemplateCopy
+                ? "invitation-public-image-hero has-template-copy"
+                : "invitation-public-image-hero"
+            }
+            aria-label="초대장 이미지"
+          >
+            <img
+              alt={`${payload.title || "오삼오삼"} 초대장 이미지`}
+              className="invitation-public-image"
+              src={heroImageUrl}
+            />
+            {shouldSplitTemplateCopy ? (
+              <div className="invitation-public-image-split-copy" data-placement={payload.templateTextPlacement}>
+                <div className="invitation-public-image-split-top">
+                  <p className="invitation-public-image-kicker">{categoryMeta.badgeText}</p>
+                  <h1 className="invitation-public-image-names">{heroTitle}</h1>
+                </div>
+                <div className="invitation-public-image-split-bottom">
+                  <p className="invitation-public-image-date">{formatEventDateTime(payload.eventDateTime)}</p>
+                  <p className="invitation-public-image-venue">{formatVenue(payload)}</p>
+                </div>
+              </div>
+            ) : shouldOverlayTemplateCopy ? (
+              <div
+                className="invitation-public-image-copy"
+                data-placement={payload.templateTextPlacement}
+                style={templateCopyStyle}
+              >
+                <p className="invitation-public-image-kicker">{categoryMeta.badgeText}</p>
+                {payload.title ? <p className="invitation-public-image-title">{payload.title}</p> : null}
+                <h1 className="invitation-public-image-names">{heroTitle}</h1>
+                <p className="invitation-public-image-date">{formatEventDateTime(payload.eventDateTime)}</p>
+                <p className="invitation-public-image-venue">{formatVenue(payload)}</p>
+              </div>
+            ) : null}
+          </section>
+          <section className="invitation-public-summary" aria-label="행사 핵심 정보">
+            <div className="invitation-public-title-block">
+              <p className="invitation-category">{categoryMeta.badgeText}</p>
+              {payload.title ? <p className="invitation-title-label">{payload.title}</p> : null}
+              <h1 className="invitation-names">{heroTitle}</h1>
+              {heroSubtitle ? <p className="invitation-subtitle">{heroSubtitle}</p> : null}
+              <p className="invitation-message">{payload.message}</p>
+            </div>
+            <div className="invitation-public-facts">
+              <div>
+                <span>날짜</span>
+                <strong>{formatEventDateTime(payload.eventDateTime)}</strong>
+              </div>
+              <div>
+                <span>장소</span>
+                <strong>{formatVenue(payload)}</strong>
+              </div>
+            </div>
+            <div className="invitation-public-map">
+              <div className="invitation-location-addresses invitation-public-map-address">
+                <p>{primaryLocationLabel}</p>
+                {secondaryLocationLabel ? <p>지번 {secondaryLocationLabel}</p> : null}
+                {postcodeLabel ? <p>{postcodeLabel}</p> : null}
+              </div>
+              <InvitationMapEmbed
+                kakaoMapLink={kakaoMapLink}
+                naverMapLink={mapLink}
+                query={rawMapQuery}
+              />
+            </div>
+            <div className="invitation-inline-actions invitation-summary-actions">
+              <button
+                className="btn-primary invitation-small-btn"
+                disabled={shareDisabled}
+                onClick={async () => {
+                  await copyToClipboard(resolvedShareUrl);
+                  setShareMessage("공유 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요.");
+                }}
+                type="button"
+              >
+                링크 복사
+              </button>
+            </div>
+          </section>
+        </>
+      ) : (
+        <section
+          className="invitation-hero"
+          style={payload.backgroundImageUrl ? { backgroundImage: `url(${payload.backgroundImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+        >
+          {!payload.backgroundImageUrl ? (
+            <div className="invitation-template-backdrop">
+              <TemplateMarkup template={selectedTemplate} />
             </div>
           ) : null}
-          <div className="invitation-hero-copy">
-            <p className="invitation-category">{categoryMeta.badgeText}</p>
-            <h1 className="invitation-names">{heroTitle}</h1>
-            {heroSubtitle ? <p className="invitation-subtitle">{heroSubtitle}</p> : null}
-            <p className="invitation-date">{formatEventDateTime(payload.eventDateTime)}</p>
-            <p className="invitation-venue">{formatVenue(payload)}</p>
-            <p className="invitation-message">{payload.message}</p>
+          <div className="invitation-hero-overlay" />
+          <div className="invitation-hero-inner">
+            {payload.mainImageUrl ? (
+              <div className="invitation-main-image-wrap">
+                <img alt="초대장 메인 이미지" src={payload.mainImageUrl} style={{ display: "block" }} />
+              </div>
+            ) : null}
+            <div className="invitation-hero-copy">
+              <p className="invitation-category">{categoryMeta.badgeText}</p>
+              {payload.title ? <p className="invitation-title-label">{payload.title}</p> : null}
+              <h1 className="invitation-names">{heroTitle}</h1>
+              {heroSubtitle ? <p className="invitation-subtitle">{heroSubtitle}</p> : null}
+              <p className="invitation-date">{formatEventDateTime(payload.eventDateTime)}</p>
+              <p className="invitation-venue">{formatVenue(payload)}</p>
+              <p className="invitation-message">{payload.message}</p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
+      {isImageTextOverlayPublicLayout ? null : (
       <section className="invitation-content">
+        {!useImageFirstLayout ? (
+          <article className="invitation-card">
+            <h2>위치</h2>
+            <div className="invitation-location-addresses">
+              <p>{primaryLocationLabel}</p>
+              {secondaryLocationLabel ? <p>지번 {secondaryLocationLabel}</p> : null}
+              {postcodeLabel ? <p>{postcodeLabel}</p> : null}
+            </div>
+            <p className="invitation-transport">{payload.transportNote}</p>
+            <InvitationMapEmbed
+              kakaoMapLink={kakaoMapLink}
+              naverMapLink={mapLink}
+              query={rawMapQuery}
+            />
+          </article>
+        ) : null}
+
         <article className="invitation-card">
           <h2>{categoryMeta.personSectionTitle}</h2>
           <p style={{ whiteSpace: "pre-line" }}>
@@ -332,20 +472,11 @@ export function InvitationView({
               ))}
             </div>
           ) : null}
-          <a className={`btn-primary invitation-wide-btn ${kakaoPayLink ? "" : "is-disabled"}`} href={kakaoPayLink || "#"} rel="noreferrer noopener" target="_blank">
-            카카오페이 송금 링크 열기
-          </a>
-        </article>
-
-        <article className="invitation-card">
-          <h2>위치</h2>
-          <p>{payload.mapAddress || payload.venueAddress || "위치 정보를 입력해 주세요."}</p>
-          <p className="invitation-transport">{payload.transportNote}</p>
-          <InvitationMapEmbed
-            kakaoMapLink={kakaoMapLink}
-            naverMapLink={mapLink}
-            query={rawMapQuery}
-          />
+          {kakaoPayLink ? (
+            <a className="btn-primary invitation-wide-btn" href={kakaoPayLink} rel="noreferrer noopener" target="_blank">
+              카카오페이 송금 링크 열기
+            </a>
+          ) : null}
         </article>
 
         {payload.galleryImages.length ? (
@@ -398,7 +529,7 @@ export function InvitationView({
         ) : null}
 
         <article className="invitation-card">
-          <h2>RSVP</h2>
+          <h2>참석 여부 알려주세요</h2>
           <form
             action={async (formData) => {
               await handleRsvpSubmit(formData);
@@ -408,11 +539,11 @@ export function InvitationView({
             <input autoComplete="off" name="website" style={{ display: "none" }} tabIndex={-1} type="text" />
             <label>
               이름
-              <input name="guestName" required type="text" />
+              <input maxLength={40} name="guestName" required type="text" />
             </label>
             <label>
               연락처
-              <input name="guestPhone" type="text" />
+              <input inputMode="tel" maxLength={30} name="guestPhone" type="text" />
             </label>
             <label>
               참석 여부
@@ -423,14 +554,14 @@ export function InvitationView({
             </label>
             <label>
               동행 인원
-              <input defaultValue={1} max={20} min={0} name="guests" type="number" />
+              <input defaultValue={1} inputMode="numeric" max={20} min={0} name="guests" type="number" />
             </label>
             <label>
               메모
-              <textarea name="memo" rows={3} />
+              <textarea maxLength={300} name="memo" rows={3} />
             </label>
             <button className="btn-primary invitation-wide-btn" disabled={pending} type="submit">
-              RSVP 보내기
+              참석 응답 보내기
             </button>
           </form>
           {rsvpMessage ? <p className="form-message success">{rsvpMessage}</p> : null}
@@ -473,12 +604,20 @@ export function InvitationView({
                 }
 
                 if (navigator.share) {
-                  await navigator.share({ title: payload.title, text: payload.message, url: resolvedShareUrl });
-                  return;
+                  try {
+                    await navigator.share({ title: payload.title, text: payload.message, url: resolvedShareUrl });
+                    setShareMessage("공유창을 열었습니다.");
+                    return;
+                  } catch {
+                  }
                 }
 
-                await copyToClipboard(resolvedShareUrl);
-                setShareMessage("공유 링크를 복사했습니다. 카카오톡 대화창에 붙여넣어 보내 주세요.");
+                try {
+                  await copyToClipboard(resolvedShareUrl);
+                  setShareMessage("공유 링크를 복사했습니다. 카카오톡 대화창에 붙여넣어 보내 주세요.");
+                } catch {
+                  setShareMessage("공유를 완료하지 못했습니다. 브라우저 주소창의 링크를 직접 복사해 주세요.");
+                }
               }}
               type="button"
             >
@@ -489,12 +628,20 @@ export function InvitationView({
               disabled={shareDisabled}
               onClick={async () => {
                 if (navigator.share) {
-                  await navigator.share({ title: payload.title, text: payload.message, url: resolvedShareUrl });
-                  return;
+                  try {
+                    await navigator.share({ title: payload.title, text: payload.message, url: resolvedShareUrl });
+                    setShareMessage("공유창을 열었습니다.");
+                    return;
+                  } catch {
+                  }
                 }
 
-                await copyToClipboard(resolvedShareUrl);
-                setShareMessage("공유 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요.");
+                try {
+                  await copyToClipboard(resolvedShareUrl);
+                  setShareMessage("공유 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요.");
+                } catch {
+                  setShareMessage("공유를 완료하지 못했습니다. 브라우저 주소창의 링크를 직접 복사해 주세요.");
+                }
               }}
               type="button"
             >
@@ -504,8 +651,12 @@ export function InvitationView({
               className="btn-outline invitation-small-btn"
               disabled={shareDisabled}
               onClick={async () => {
-                await copyToClipboard(resolvedShareUrl);
-                setShareMessage("공유 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요.");
+                try {
+                  await copyToClipboard(resolvedShareUrl);
+                  setShareMessage("공유 링크를 복사했습니다. 하객에게 바로 붙여넣어 보내 주세요.");
+                } catch {
+                  setShareMessage("공유를 완료하지 못했습니다. 브라우저 주소창의 링크를 직접 복사해 주세요.");
+                }
               }}
               type="button"
             >
@@ -526,11 +677,11 @@ export function InvitationView({
             <input autoComplete="off" name="website" style={{ display: "none" }} tabIndex={-1} type="text" />
             <label>
               이름
-              <input name="nickname" required type="text" />
+              <input maxLength={30} name="nickname" required type="text" />
             </label>
             <label>
               메시지
-              <textarea name="guestbookMessage" required rows={3} />
+              <textarea maxLength={300} name="guestbookMessage" required rows={3} />
             </label>
             <button className="btn-primary invitation-wide-btn" disabled={pending} type="submit">
               방명록 남기기
@@ -564,6 +715,7 @@ export function InvitationView({
           </article>
         ) : null}
       </section>
+      )}
     </main>
   );
 }

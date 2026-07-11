@@ -1,7 +1,7 @@
 import { SiteHeader } from "@/components/shared/site-header";
 
 export const metadata = {
-  title: "이용약관 - InviteHub"
+  title: "이용약관 - 오삼오삼"
 };
 
 export default function TermsPage() {
@@ -25,7 +25,7 @@ export default function TermsPage() {
               제1조 (목적)
             </h2>
             <p style={{ marginBottom: 24 }}>
-              본 약관은 InviteHub가 제공하는 모바일 초대장 플랫폼의 이용 조건과 절차,
+              본 약관은 오삼오삼이 제공하는 모바일 초대장 플랫폼의 이용 조건과 절차,
               서비스와 이용자의 권리 및 의무를 규정합니다.
             </p>
 

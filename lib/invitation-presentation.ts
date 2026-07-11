@@ -63,6 +63,42 @@ const categoryPresentations: Record<string, CategoryPresentation> = {
     secondaryAccountLabel: "추가 계좌",
     pairNames: false
   },
+  hwangap: {
+    categoryBadge: "60TH BIRTHDAY INVITATION",
+    detailSectionTitle: "주인공 · 가족 정보",
+    contactsSectionTitle: "가족 연락처",
+    primaryNameLabel: "주인공 이름",
+    secondaryNameLabel: "가족 대표",
+    primaryContactLabel: "대표 연락처",
+    secondaryContactLabel: "가족 연락처",
+    primaryAccountLabel: "대표 계좌",
+    secondaryAccountLabel: "가족 계좌",
+    pairNames: false
+  },
+  chilsun: {
+    categoryBadge: "70TH BIRTHDAY INVITATION",
+    detailSectionTitle: "주인공 · 가족 정보",
+    contactsSectionTitle: "가족 연락처",
+    primaryNameLabel: "주인공 이름",
+    secondaryNameLabel: "가족 대표",
+    primaryContactLabel: "대표 연락처",
+    secondaryContactLabel: "가족 연락처",
+    primaryAccountLabel: "대표 계좌",
+    secondaryAccountLabel: "가족 계좌",
+    pairNames: false
+  },
+  palsun: {
+    categoryBadge: "80TH BIRTHDAY INVITATION",
+    detailSectionTitle: "주인공 · 가족 정보",
+    contactsSectionTitle: "가족 연락처",
+    primaryNameLabel: "주인공 이름",
+    secondaryNameLabel: "가족 대표",
+    primaryContactLabel: "대표 연락처",
+    secondaryContactLabel: "가족 연락처",
+    primaryAccountLabel: "대표 계좌",
+    secondaryAccountLabel: "가족 계좌",
+    pairNames: false
+  },
   bridal: {
     categoryBadge: "BRIDAL SHOWER",
     detailSectionTitle: "호스트 정보",
@@ -100,11 +136,11 @@ const categoryDraftSeeds: Record<string, Partial<InvitationDraftPayload>> = {
   wedding: {
     title: "결혼식 초대장",
     message: "저희 두 사람이 하나가 되는 자리에 함께해 주세요.",
-    groomName: "홍길동",
-    brideName: "김부인",
-    venueName: "서울 더파인 웨딩홀",
-    venueAddress: "서울 강남구 테헤란로 123",
-    mapAddress: "서울 강남구 테헤란로 123"
+    groomName: "김민준",
+    brideName: "이서연",
+    venueName: "라비에벨 가든홀",
+    venueAddress: "서울 강남구 테헤란로 128",
+    mapAddress: "서울 강남구 테헤란로 128"
   },
   dol: {
     title: "첫돌 초대장",
@@ -127,11 +163,29 @@ const categoryDraftSeeds: Record<string, Partial<InvitationDraftPayload>> = {
   hwangap: {
     title: "환갑잔치 초대장",
     message: "소중한 분의 특별한 날을 함께 축하해 주세요.",
-    groomName: "주인공",
+    groomName: "박영수",
     brideName: "가족 대표",
     venueName: "서울 전통연회장",
     venueAddress: "서울 종로구 율곡로 12",
     mapAddress: "서울 종로구 율곡로 12"
+  },
+  chilsun: {
+    title: "칠순잔치 초대장",
+    message: "소중한 분의 칠순을 함께 축하해 주세요.",
+    groomName: "정순자",
+    brideName: "가족 대표",
+    venueName: "라비에벨 연회홀",
+    venueAddress: "서울 강남구 테헤란로 128",
+    mapAddress: "서울 강남구 테헤란로 128"
+  },
+  palsun: {
+    title: "팔순잔치 초대장",
+    message: "감사한 마음을 담아 팔순 잔치에 초대합니다.",
+    groomName: "김덕수",
+    brideName: "가족 대표",
+    venueName: "오삼오삼 가든홀",
+    venueAddress: "서울 중구 세종대로 110",
+    mapAddress: "서울 중구 세종대로 110"
   },
   bridal: {
     title: "브라이덜샤워 초대장",
@@ -257,7 +311,7 @@ export function getInvitationHeroTitle(payload: InvitationDraftPayload) {
     return [payload.groomName || "신랑", payload.brideName || "신부"].join(" ♡ ");
   }
 
-  return payload.title || payload.groomName || payload.brideName || "초대합니다";
+  return payload.groomName || payload.title || payload.brideName || "초대합니다";
 }
 
 export function getInvitationHeroSubtitle(payload: InvitationDraftPayload) {

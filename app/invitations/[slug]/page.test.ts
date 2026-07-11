@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import GlobalError from "@/app/error";
 import {
   buildPublicInvitationMetadata,
+  createVisitorKey,
   loadApprovedGuestbookEntries,
   logInvitationView,
   resolveRequestOrigin
@@ -23,6 +24,7 @@ describe("public invitation page helpers", () => {
     expect(metadata.title).toBe("김 & 이 결혼식 초대장");
     expect(metadata.description).toBe("두 사람의 시작을 함께 축복해 주세요.");
     expect(metadata.openGraph?.url).toBe("https://invitehub.test/invitations/kim-lee-demo");
+    expect(metadata.openGraph?.siteName).toBe("오삼오삼");
     const images = Array.isArray(metadata.openGraph?.images) ? metadata.openGraph.images : [];
     const firstImage = images[0];
     const normalizedImage =
@@ -49,7 +51,22 @@ describe("public invitation page helpers", () => {
     expect(resolveRequestOrigin(headersLike)).toBe("https://invitehub.co.kr");
   });
 
-  it("avoids duplicate view logs for the same invitation and user agent within the cooldown window", async () => {
+  it("builds a stable hashed visitor key without storing raw IP addresses", () => {
+    const headersLike = {
+      get(name: string) {
+        return {
+          "cf-connecting-ip": "203.0.113.10"
+        }[name] ?? null;
+      }
+    };
+
+    const key = createVisitorKey("invitation-1", "test-agent", headersLike);
+
+    expect(key).toMatch(/^[a-f0-9]{64}$/);
+    expect(key).not.toContain("203.0.113.10");
+  });
+
+  it("avoids duplicate view logs for the same invitation and visitor within the cooldown window", async () => {
     const insert = vi.fn(async () => ({ error: null }));
     const recentQuery = {
       eq() {
@@ -81,7 +98,7 @@ describe("public invitation page helpers", () => {
       }
     };
 
-    await logInvitationView(admin, "invitation-1", "test-agent");
+    await logInvitationView(admin, "invitation-1", "test-agent", "visitor-key");
 
     expect(insert).not.toHaveBeenCalled();
   });

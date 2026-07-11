@@ -4,7 +4,7 @@ import { isPaidPublishingEnabled } from "@/lib/release-flags";
 import { getSupportEmail } from "@/lib/support-contact";
 
 export const metadata = {
-  title: "지원 - InviteHub"
+  title: "지원 - 오삼오삼"
 };
 
 export default function SupportPage() {
@@ -28,7 +28,7 @@ export default function SupportPage() {
 
           <div style={{ color: "#444", fontSize: "0.92rem", lineHeight: 1.8, display: "grid", gap: 24 }}>
             <p>
-              InviteHub 사용 중 문제가 있으면 아래 문서를 먼저 확인해 주세요. 공개 링크, 로그인, 초대장 작성 흐름은 이 페이지에서 계속 안내합니다.
+              오삼오삼 사용 중 문제가 있으면 아래 문서를 먼저 확인해 주세요. 공개 링크, 로그인, 초대장 작성 흐름은 이 페이지에서 계속 안내합니다.
             </p>
             <div>
               <h2 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: 12 }}>자주 찾는 문서</h2>

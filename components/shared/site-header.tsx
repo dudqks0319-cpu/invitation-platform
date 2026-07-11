@@ -7,10 +7,10 @@ import { authDestination, normalizeNextPath } from "@/lib/auth";
 import { createBrowserClient } from "@/lib/supabase/browser";
 
 const navLinks = [
+  { href: "/builder", label: "템플릿 초대장" },
+  { href: "/image-text", label: "이미지 초대장" },
   { href: "/#templates", label: "템플릿" },
-  { href: "/builder", label: "초대장 만들기" },
-  { href: "/dashboard", label: "대시보드" },
-  { href: "/#pricing", label: "요금" }
+  { href: "/dashboard", label: "대시보드" }
 ];
 
 type SiteHeaderProps = {
@@ -65,12 +65,27 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
     router.refresh();
   }
 
+  function handleBack() {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+      return;
+    }
+
+    router.push("/");
+  }
+
   return (
     <header className={mode === "focus" ? "site-header site-header-focus" : "site-header"}>
       <div className="header-inner">
-        <Link aria-label="InviteHub 홈으로 이동" className="logo" href="/">
-          <span className="logo-icon">💌</span>
-          <span className="logo-text">InviteHub</span>
+        {mode === "focus" ? (
+          <button aria-label="이전 화면으로 돌아가기" className="focus-back-button" onClick={handleBack} type="button">
+            <span aria-hidden="true">‹</span>
+            뒤로
+          </button>
+        ) : null}
+        <Link aria-label="오삼오삼 홈으로 이동" className="logo" href="/">
+          <span className="logo-icon" aria-hidden="true">53</span>
+          <span className="logo-text">오삼오삼</span>
         </Link>
         {mode === "focus" ? null : (
           <>
@@ -106,7 +121,7 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
                 </Link>
               )}
               <Link className="btn-primary" href="/builder" onClick={() => setIsMenuOpen(false)}>
-                시작하기
+                초대장 만들기
               </Link>
             </div>
           </>
@@ -132,7 +147,7 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
             </Link>
           )}
           <Link href="/builder" onClick={() => setIsMenuOpen(false)}>
-            시작하기
+            초대장 만들기
           </Link>
         </div>
       )}

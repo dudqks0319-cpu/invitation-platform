@@ -8,13 +8,820 @@ export type TemplatePreset = {
   html: string;
 };
 
+const CENTERED_TEXT_TEMPLATE_IDS = new Set([
+  "wedding-classic",
+  "wedding-modern",
+  "wedding-floral",
+  "wedding-minimal",
+  "wedding-nature",
+  "wedding-rose-gold",
+  "wedding-photo-minimal",
+  "wedding-blush-petal",
+  "wedding-traditional-knot",
+  "wedding-envelope-photo",
+  "wedding-gold-botanical",
+  "wedding-illustration-curtain",
+  "wedding-botanical-vertical",
+  "wedding-photo-overlay",
+  "wedding-photo-hero"
+]);
+
+export function getTemplateDefaultTextPlacement(template: TemplatePreset) {
+  if (CENTERED_TEXT_TEMPLATE_IDS.has(template.id)) {
+    return "center" as const;
+  }
+
+  return template.html.includes("tmpl-standalone-art") ? ("bottom" as const) : ("top" as const);
+}
+
 function imageOnly(className: string, src: string) {
   return `<div class="${className} tmpl-standalone-art">
     <img class="tmpl-card-image" src="${src}" alt="" loading="lazy" decoding="async" />
   </div>`;
 }
 
+const anime2026Templates: TemplatePreset[] = [
+  {
+    id: "wedding-anime-2026",
+    category: "wedding",
+    name: "애니 플로럴 아치",
+    badge: "결혼식",
+    desc: "프리미엄 종이 질감과 플로럴 아치를 애니 감성으로 풀어낸 청첩장",
+    tags: ["#애니", "#플로럴", "#여백"],
+    html: imageOnly("tmpl-character-card wedding-anime-2026", "/images/custom/anime-2026/wedding-anime-2026.jpg")
+  },
+  {
+    id: "dol-anime-2026",
+    category: "dol",
+    name: "문라이트 돌잔치",
+    badge: "돌잔치",
+    desc: "달과 별, 파스텔 풍선이 가장자리를 감싸는 애니 돌잔치 카드",
+    tags: ["#애니", "#달", "#파스텔"],
+    html: imageOnly("tmpl-character-card dol-anime-2026", "/images/custom/anime-2026/dol-anime-2026.jpg")
+  },
+  {
+    id: "hwangap-anime-2026",
+    category: "hwangap",
+    name: "화조 격조",
+    badge: "환갑잔치",
+    desc: "모란과 금빛 전통 보더로 품격 있게 정리한 애니 환갑 초대장",
+    tags: ["#애니", "#전통", "#모란"],
+    html: imageOnly("tmpl-character-card hwangap-anime-2026", "/images/custom/anime-2026/hwangap-anime-2026.jpg")
+  },
+  {
+    id: "bridal-anime-2026",
+    category: "bridal",
+    name: "블러쉬 리본",
+    badge: "브라이덜샤워",
+    desc: "리본과 화이트 플라워가 부드럽게 둘러주는 애니 브라이덜샤워 카드",
+    tags: ["#애니", "#리본", "#블러쉬"],
+    html: imageOnly("tmpl-character-card bridal-anime-2026", "/images/custom/anime-2026/bridal-anime-2026.jpg")
+  },
+  {
+    id: "birthday-anime-2026",
+    category: "birthday",
+    name: "파스텔 파티",
+    badge: "생일파티",
+    desc: "풍선과 케이크, 파스텔 장식으로 밝게 완성한 애니 생일파티 카드",
+    tags: ["#애니", "#파티", "#케이크"],
+    html: imageOnly("tmpl-character-card birthday-anime-2026", "/images/custom/anime-2026/birthday-anime-2026.jpg")
+  },
+  {
+    id: "housewarming-anime-2026",
+    category: "housewarming",
+    name: "햇살 집들이",
+    badge: "집들이",
+    desc: "창가 햇살과 식물 포인트가 따뜻하게 남는 애니 집들이 초대장",
+    tags: ["#애니", "#햇살", "#집들이"],
+    html: imageOnly("tmpl-character-card housewarming-anime-2026", "/images/custom/anime-2026/housewarming-anime-2026.jpg")
+  },
+  {
+    id: "baby-anime-2026",
+    category: "baby",
+    name: "클라우드 베이비",
+    badge: "베이비샤워",
+    desc: "구름과 리본, 작은 별빛을 여백 위에 얹은 애니 베이비샤워 카드",
+    tags: ["#애니", "#구름", "#리본"],
+    html: imageOnly("tmpl-character-card baby-anime-2026", "/images/custom/anime-2026/baby-anime-2026.jpg")
+  },
+  {
+    id: "graduation-anime-2026",
+    category: "graduation",
+    name: "골드 졸업식",
+    badge: "졸업파티",
+    desc: "네이비 리본과 금빛 보더로 단정하게 만든 애니 졸업파티 초대장",
+    tags: ["#애니", "#졸업", "#골드"],
+    html: imageOnly("tmpl-character-card graduation-anime-2026", "/images/custom/anime-2026/graduation-anime-2026.jpg")
+  },
+  {
+    id: "business-anime-2026",
+    category: "business",
+    name: "라이트 컨퍼런스",
+    badge: "비즈니스",
+    desc: "건축적인 빛과 네이비 라인으로 정리한 애니 비즈니스 행사 카드",
+    tags: ["#애니", "#컨퍼런스", "#프리미엄"],
+    html: imageOnly("tmpl-character-card business-anime-2026", "/images/custom/anime-2026/business-anime-2026.jpg")
+  }
+];
+
+const barunsonCategoryAnimeTemplates: TemplatePreset[] = [
+  {
+    id: "wedding-barunson-anime-01",
+    category: "wedding",
+    name: "플로럴 세레모니 01",
+    badge: "결혼식",
+    desc: "애니메이션 일러스트와 넓은 여백을 살린 세로형 모바일 청첩장",
+    tags: ["#애니", "#청첩장", "#세로형"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-01", "/images/custom/barunson-category-anime-2026/wedding-01.jpg")
+  },
+  {
+    id: "wedding-barunson-anime-02",
+    category: "wedding",
+    name: "플로럴 세레모니 02",
+    badge: "결혼식",
+    desc: "밝은 플라워 무드와 카드형 여백이 어울리는 모바일 웨딩 초대장",
+    tags: ["#플라워", "#웨딩", "#여백"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-02", "/images/custom/barunson-category-anime-2026/wedding-02.jpg")
+  },
+  {
+    id: "wedding-barunson-anime-03",
+    category: "wedding",
+    name: "플로럴 세레모니 03",
+    badge: "결혼식",
+    desc: "신랑 신부 정보와 일정을 또렷하게 얹기 좋은 애니 청첩장",
+    tags: ["#정보형", "#웨딩", "#애니"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-03", "/images/custom/barunson-category-anime-2026/wedding-03.jpg")
+  },
+  {
+    id: "wedding-barunson-anime-04",
+    category: "wedding",
+    name: "플로럴 세레모니 04",
+    badge: "결혼식",
+    desc: "실내 웨딩 사진 무드와 넓은 상하단 여백을 살린 모바일 청첩장",
+    tags: ["#애니", "#웨딩사진", "#여백"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-04", "/images/custom/barunson-category-anime-2026/wedding-04.png")
+  },
+  {
+    id: "wedding-barunson-anime-05",
+    category: "wedding",
+    name: "플로럴 세레모니 05",
+    badge: "결혼식",
+    desc: "야외 가든 웨딩의 햇살과 꽃 장식을 부드럽게 담은 모바일 청첩장",
+    tags: ["#가든", "#웨딩", "#애니"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-05", "/images/custom/barunson-category-anime-2026/wedding-05.png")
+  },
+  {
+    id: "wedding-barunson-anime-06",
+    category: "wedding",
+    name: "플로럴 세레모니 06",
+    badge: "결혼식",
+    desc: "채플 웨딩의 차분한 빛과 정돈된 여백이 어울리는 모바일 청첩장",
+    tags: ["#채플", "#웨딩", "#세로형"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-06", "/images/custom/barunson-category-anime-2026/wedding-06.png")
+  },
+  {
+    id: "wedding-barunson-anime-07",
+    category: "wedding",
+    name: "플로럴 세레모니 07",
+    badge: "결혼식",
+    desc: "저녁 가든 웨딩의 따뜻한 조명과 여백을 살린 감성 청첩장",
+    tags: ["#저녁", "#가든", "#웨딩"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-07", "/images/custom/barunson-category-anime-2026/wedding-07.png")
+  },
+  {
+    id: "wedding-barunson-anime-08",
+    category: "wedding",
+    name: "플로럴 세레모니 08",
+    badge: "결혼식",
+    desc: "한옥 정원의 은은한 전통 무드를 현대적으로 정리한 애니 청첩장",
+    tags: ["#한옥", "#전통", "#웨딩"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-08", "/images/custom/barunson-category-anime-2026/wedding-08.png")
+  },
+  {
+    id: "wedding-barunson-anime-09",
+    category: "wedding",
+    name: "웨딩 포토 콘셉트 01",
+    badge: "결혼식",
+    desc: "바닷가 테라스 웨딩 분위기와 넓은 문구 여백이 있는 청첩장",
+    tags: ["#바다", "#웨딩사진", "#여백"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-09", "/images/custom/barunson-category-anime-2026/wedding-09.png")
+  },
+  {
+    id: "wedding-barunson-anime-10",
+    category: "wedding",
+    name: "웨딩 포토 콘셉트 02",
+    badge: "결혼식",
+    desc: "서울 루프탑 웨딩의 도회적인 빛과 상단 여백을 살린 청첩장",
+    tags: ["#루프탑", "#서울", "#웨딩"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-10", "/images/custom/barunson-category-anime-2026/wedding-10.png")
+  },
+  {
+    id: "wedding-barunson-anime-11",
+    category: "wedding",
+    name: "웨딩 포토 콘셉트 03",
+    badge: "결혼식",
+    desc: "스튜디오 프리웨딩 사진처럼 깨끗하고 단정한 모바일 청첩장",
+    tags: ["#스튜디오", "#프리웨딩", "#웨딩"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-11", "/images/custom/barunson-category-anime-2026/wedding-11.png")
+  },
+  {
+    id: "wedding-barunson-anime-12",
+    category: "wedding",
+    name: "웨딩 포토 콘셉트 04",
+    badge: "결혼식",
+    desc: "숲길 프리웨딩의 초록빛 배경과 밝은 문구 영역을 분리한 청첩장",
+    tags: ["#숲길", "#프리웨딩", "#여백"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-12", "/images/custom/barunson-category-anime-2026/wedding-12.png")
+  },
+  {
+    id: "wedding-barunson-anime-13",
+    category: "wedding",
+    name: "웨딩 포토 콘셉트 05",
+    badge: "결혼식",
+    desc: "호텔 볼룸의 샹들리에와 고급스러운 톤을 담은 애니 청첩장",
+    tags: ["#호텔", "#볼룸", "#고급"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-13", "/images/custom/barunson-category-anime-2026/wedding-13.png")
+  },
+  {
+    id: "wedding-barunson-anime-14",
+    category: "wedding",
+    name: "웨딩 포토 콘셉트 06",
+    badge: "결혼식",
+    desc: "벚꽃 정원의 밝은 봄 무드와 여백을 살린 모바일 청첩장",
+    tags: ["#벚꽃", "#봄", "#웨딩"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-14", "/images/custom/barunson-category-anime-2026/wedding-14.png")
+  },
+  {
+    id: "wedding-barunson-anime-15",
+    category: "wedding",
+    name: "웨딩 포토 콘셉트 07",
+    badge: "결혼식",
+    desc: "세피아톤 스튜디오 감성과 미니멀한 여백이 어울리는 청첩장",
+    tags: ["#세피아", "#스튜디오", "#미니멀"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-15", "/images/custom/barunson-category-anime-2026/wedding-15.png")
+  },
+  {
+    id: "wedding-barunson-anime-16",
+    category: "wedding",
+    name: "웨딩 포토 콘셉트 08",
+    badge: "결혼식",
+    desc: "야간 시티 웨딩의 조명과 어두운 대비가 살아 있는 청첩장",
+    tags: ["#야간", "#시티", "#웨딩"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-16", "/images/custom/barunson-category-anime-2026/wedding-16.png")
+  },
+  {
+    id: "wedding-barunson-anime-17",
+    category: "wedding",
+    name: "웨딩 포토 콘셉트 09",
+    badge: "결혼식",
+    desc: "제주 야외 프리웨딩처럼 바람과 자연광이 느껴지는 모바일 청첩장",
+    tags: ["#제주", "#야외", "#프리웨딩"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-17", "/images/custom/barunson-category-anime-2026/wedding-17.png")
+  },
+  {
+    id: "wedding-barunson-anime-18",
+    category: "wedding",
+    name: "웨딩 포토 콘셉트 10",
+    badge: "결혼식",
+    desc: "전통 정원과 한옥 무드를 은은하게 담은 고급 모바일 청첩장",
+    tags: ["#전통", "#한옥", "#웨딩"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-18", "/images/custom/barunson-category-anime-2026/wedding-18.png")
+  },
+  {
+    id: "dol-barunson-anime-01",
+    category: "dol",
+    name: "첫돌 파티 01",
+    badge: "돌잔치",
+    desc: "포근한 색감과 축하 장식으로 첫돌 분위기를 살린 모바일 초대장",
+    tags: ["#첫돌", "#축하", "#파스텔"],
+    html: imageOnly("tmpl-character-card dol-barunson-anime-01", "/images/custom/barunson-category-anime-2026/dol-01.jpg")
+  },
+  {
+    id: "dol-barunson-anime-02",
+    category: "dol",
+    name: "첫돌 파티 02",
+    badge: "돌잔치",
+    desc: "아이 중심의 귀여운 장면과 여백이 균형 잡힌 돌잔치 카드",
+    tags: ["#돌잔치", "#아기", "#카드형"],
+    html: imageOnly("tmpl-character-card dol-barunson-anime-02", "/images/custom/barunson-category-anime-2026/dol-02.jpg")
+  },
+  {
+    id: "dol-barunson-anime-03",
+    category: "dol",
+    name: "첫돌 파티 03",
+    badge: "돌잔치",
+    desc: "가족 초대 문구를 올리기 좋은 애니 일러스트 돌잔치 템플릿",
+    tags: ["#가족", "#초대", "#애니"],
+    html: imageOnly("tmpl-character-card dol-barunson-anime-03", "/images/custom/barunson-category-anime-2026/dol-03.jpg")
+  },
+  {
+    id: "dol-barunson-anime-04",
+    category: "dol",
+    name: "첫돌 포토 콘셉트 01",
+    badge: "돌잔치",
+    desc: "블러쉬 돌상과 풍성한 꽃 장식이 부드러운 첫돌 초대장",
+    tags: ["#첫돌", "#블러쉬", "#돌상"],
+    html: imageOnly("tmpl-character-card dol-barunson-anime-04", "/images/custom/barunson-category-anime-2026/dol-04.png")
+  },
+  {
+    id: "dol-barunson-anime-05",
+    category: "dol",
+    name: "첫돌 포토 콘셉트 02",
+    badge: "돌잔치",
+    desc: "달과 별, 하늘빛 풍선이 감싸는 포근한 돌잔치 카드",
+    tags: ["#달", "#블루", "#돌잔치"],
+    html: imageOnly("tmpl-character-card dol-barunson-anime-05", "/images/custom/barunson-category-anime-2026/dol-05.png")
+  },
+  {
+    id: "dol-barunson-anime-06",
+    category: "dol",
+    name: "첫돌 포토 콘셉트 03",
+    badge: "돌잔치",
+    desc: "한옥 돌상과 은은한 전통 소품을 담은 고급 첫돌 초대장",
+    tags: ["#한옥", "#전통", "#첫돌"],
+    html: imageOnly("tmpl-character-card dol-barunson-anime-06", "/images/custom/barunson-category-anime-2026/dol-06.png")
+  },
+  {
+    id: "dol-barunson-anime-07",
+    category: "dol",
+    name: "첫돌 포토 콘셉트 04",
+    badge: "돌잔치",
+    desc: "곰돌이와 풍선 장식이 사랑스러운 파티형 돌잔치 초대장",
+    tags: ["#곰돌이", "#풍선", "#파티"],
+    html: imageOnly("tmpl-character-card dol-barunson-anime-07", "/images/custom/barunson-category-anime-2026/dol-07.png")
+  },
+  {
+    id: "dol-barunson-anime-08",
+    category: "dol",
+    name: "첫돌 포토 콘셉트 05",
+    badge: "돌잔치",
+    desc: "베이지 아치와 풍선이 차분하게 어울리는 뉴트럴 첫돌 카드",
+    tags: ["#뉴트럴", "#아치", "#베이지"],
+    html: imageOnly("tmpl-character-card dol-barunson-anime-08", "/images/custom/barunson-category-anime-2026/dol-08.png")
+  },
+  {
+    id: "dol-barunson-anime-09",
+    category: "dol",
+    name: "첫돌 포토 콘셉트 06",
+    badge: "돌잔치",
+    desc: "봄 정원 피크닉 감성과 맑은 여백을 살린 첫돌 초대장",
+    tags: ["#가든", "#피크닉", "#봄"],
+    html: imageOnly("tmpl-character-card dol-barunson-anime-09", "/images/custom/barunson-category-anime-2026/dol-09.png")
+  },
+  {
+    id: "dol-barunson-anime-10",
+    category: "dol",
+    name: "첫돌 포토 콘셉트 07",
+    badge: "돌잔치",
+    desc: "골드 크라운과 플라워 장식으로 품격을 더한 첫돌 카드",
+    tags: ["#크라운", "#골드", "#고급"],
+    html: imageOnly("tmpl-character-card dol-barunson-anime-10", "/images/custom/barunson-category-anime-2026/dol-10.png")
+  },
+  {
+    id: "dol-barunson-anime-11",
+    category: "dol",
+    name: "첫돌 포토 콘셉트 08",
+    badge: "돌잔치",
+    desc: "파스텔 레인보우와 구름 장식이 밝은 첫돌 초대장",
+    tags: ["#레인보우", "#파스텔", "#구름"],
+    html: imageOnly("tmpl-character-card dol-barunson-anime-11", "/images/custom/barunson-category-anime-2026/dol-11.png")
+  },
+  {
+    id: "dol-barunson-anime-12",
+    category: "dol",
+    name: "첫돌 포토 콘셉트 09",
+    badge: "돌잔치",
+    desc: "블랙 리본 포인트와 아이보리 톤이 고급스러운 첫돌 초대장",
+    tags: ["#블랙리본", "#아이보리", "#프리미엄"],
+    html: imageOnly("tmpl-character-card dol-barunson-anime-12", "/images/custom/barunson-category-anime-2026/dol-12.png")
+  },
+  {
+    id: "dol-barunson-anime-13",
+    category: "dol",
+    name: "첫돌 포토 콘셉트 10",
+    badge: "돌잔치",
+    desc: "전통 레드 포인트와 돌상이 돋보이는 한국적인 첫돌 초대장",
+    tags: ["#전통", "#레드", "#돌상"],
+    html: imageOnly("tmpl-character-card dol-barunson-anime-13", "/images/custom/barunson-category-anime-2026/dol-13.png")
+  },
+  {
+    id: "housewarming-barunson-anime-01",
+    category: "housewarming",
+    name: "햇살 집들이 01",
+    badge: "집들이",
+    desc: "새 집의 따뜻한 분위기와 초대 문구를 함께 담는 집들이 카드",
+    tags: ["#집들이", "#햇살", "#홈"],
+    html: imageOnly("tmpl-character-card housewarming-barunson-anime-01", "/images/custom/barunson-category-anime-2026/housewarming-01.jpg")
+  },
+  {
+    id: "housewarming-barunson-anime-02",
+    category: "housewarming",
+    name: "햇살 집들이 02",
+    badge: "집들이",
+    desc: "인테리어 무드와 넓은 문구 영역이 있는 세로형 집들이 초대장",
+    tags: ["#인테리어", "#집들이", "#여백"],
+    html: imageOnly("tmpl-character-card housewarming-barunson-anime-02", "/images/custom/barunson-category-anime-2026/housewarming-02.jpg")
+  },
+  {
+    id: "housewarming-barunson-anime-03",
+    category: "housewarming",
+    name: "햇살 집들이 03",
+    badge: "집들이",
+    desc: "편안한 홈파티 감성을 애니 일러스트로 정리한 집들이 템플릿",
+    tags: ["#홈파티", "#편안함", "#애니"],
+    html: imageOnly("tmpl-character-card housewarming-barunson-anime-03", "/images/custom/barunson-category-anime-2026/housewarming-03.jpg")
+  },
+  {
+    id: "housewarming-barunson-anime-04",
+    category: "housewarming",
+    name: "햇살 거실",
+    badge: "집들이",
+    desc: "밝은 거실과 플라워 장식이 어우러진 집들이 애니 초대장",
+    tags: ["#집들이", "#거실", "#햇살"],
+    html: imageOnly("tmpl-character-card housewarming-barunson-anime-04", "/images/custom/barunson-category-anime-2026/housewarming-04.png")
+  },
+  {
+    id: "housewarming-barunson-anime-05",
+    category: "housewarming",
+    name: "웰컴 현관",
+    badge: "집들이",
+    desc: "첫 방문의 설렘을 담은 현관 무드의 모바일 집들이 카드",
+    tags: ["#현관", "#웰컴", "#새집"],
+    html: imageOnly("tmpl-character-card housewarming-barunson-anime-05", "/images/custom/barunson-category-anime-2026/housewarming-05.png")
+  },
+  {
+    id: "housewarming-barunson-anime-06",
+    category: "housewarming",
+    name: "우드 리빙",
+    badge: "집들이",
+    desc: "우드 톤 인테리어와 넓은 문구 여백이 있는 집들이 템플릿",
+    tags: ["#우드", "#리빙", "#인테리어"],
+    html: imageOnly("tmpl-character-card housewarming-barunson-anime-06", "/images/custom/barunson-category-anime-2026/housewarming-06.png")
+  },
+  {
+    id: "housewarming-barunson-anime-07",
+    category: "housewarming",
+    name: "발코니 가든",
+    badge: "집들이",
+    desc: "작은 정원 같은 발코니 감성을 담은 산뜻한 집들이 초대장",
+    tags: ["#발코니", "#가든", "#홈파티"],
+    html: imageOnly("tmpl-character-card housewarming-barunson-anime-07", "/images/custom/barunson-category-anime-2026/housewarming-07.png")
+  },
+  {
+    id: "housewarming-barunson-anime-08",
+    category: "housewarming",
+    name: "키친 블룸",
+    badge: "집들이",
+    desc: "따뜻한 주방과 식탁 분위기로 초대 메시지를 전하는 카드",
+    tags: ["#키친", "#식탁", "#초대"],
+    html: imageOnly("tmpl-character-card housewarming-barunson-anime-08", "/images/custom/barunson-category-anime-2026/housewarming-08.png")
+  },
+  {
+    id: "hwangap-barunson-anime-01",
+    category: "hwangap",
+    name: "전통 축하 01",
+    badge: "환갑잔치",
+    desc: "전통 장식과 차분한 여백으로 격식을 살린 환갑잔치 초대장",
+    tags: ["#환갑", "#전통", "#격식"],
+    html: imageOnly("tmpl-character-card hwangap-barunson-anime-01", "/images/custom/barunson-category-anime-2026/hwangap-01.jpg")
+  },
+  {
+    id: "hwangap-barunson-anime-02",
+    category: "hwangap",
+    name: "전통 축하 02",
+    badge: "환갑잔치",
+    desc: "가족 모임 안내와 축하 문구를 품격 있게 담는 애니 환갑 카드",
+    tags: ["#가족", "#축하", "#품격"],
+    html: imageOnly("tmpl-character-card hwangap-barunson-anime-02", "/images/custom/barunson-category-anime-2026/hwangap-02.jpg")
+  },
+  {
+    id: "hwangap-barunson-anime-03",
+    category: "hwangap",
+    name: "전통 축하 03",
+    badge: "환갑잔치",
+    desc: "따뜻한 축하 무드와 전통 색감을 결합한 환갑잔치 템플릿",
+    tags: ["#전통색", "#환갑", "#초대장"],
+    html: imageOnly("tmpl-character-card hwangap-barunson-anime-03", "/images/custom/barunson-category-anime-2026/hwangap-03.jpg")
+  },
+  {
+    id: "hwangap-barunson-anime-04",
+    category: "hwangap",
+    name: "환갑 애니 블룸 01",
+    badge: "환갑잔치",
+    desc: "코랄 플라워와 케이크가 밝게 어우러진 현대적인 환갑 초대장",
+    tags: ["#환갑", "#애니", "#코랄"],
+    html: imageOnly("tmpl-character-card hwangap-barunson-anime-04", "/images/custom/barunson-category-anime-2026/hwangap-04.png")
+  },
+  {
+    id: "hwangap-barunson-anime-05",
+    category: "hwangap",
+    name: "환갑 애니 블룸 02",
+    badge: "환갑잔치",
+    desc: "밝은 파티룸과 디저트 장식으로 세련되게 구성한 환갑 카드",
+    tags: ["#환갑", "#파티룸", "#디저트"],
+    html: imageOnly("tmpl-character-card hwangap-barunson-anime-05", "/images/custom/barunson-category-anime-2026/hwangap-05.png")
+  },
+  {
+    id: "hwangap-barunson-anime-06",
+    category: "hwangap",
+    name: "환갑 애니 블룸 03",
+    badge: "환갑잔치",
+    desc: "로즈골드 무드와 넓은 여백이 있는 프리미엄 환갑 초대장",
+    tags: ["#환갑", "#로즈골드", "#프리미엄"],
+    html: imageOnly("tmpl-character-card hwangap-barunson-anime-06", "/images/custom/barunson-category-anime-2026/hwangap-06.png")
+  },
+  {
+    id: "chilsun-barunson-anime-01",
+    category: "chilsun",
+    name: "칠순 라벤더 01",
+    badge: "칠순잔치",
+    desc: "라벤더 플라워와 풍선이 부드럽게 감싸는 칠순 초대장",
+    tags: ["#칠순", "#라벤더", "#애니"],
+    html: imageOnly("tmpl-character-card chilsun-barunson-anime-01", "/images/custom/barunson-category-anime-2026/chilsun-01.png")
+  },
+  {
+    id: "chilsun-barunson-anime-02",
+    category: "chilsun",
+    name: "칠순 가든 02",
+    badge: "칠순잔치",
+    desc: "가든 테라스의 산뜻한 분위기로 완성한 칠순잔치 카드",
+    tags: ["#칠순", "#가든", "#테라스"],
+    html: imageOnly("tmpl-character-card chilsun-barunson-anime-02", "/images/custom/barunson-category-anime-2026/chilsun-02.png")
+  },
+  {
+    id: "chilsun-barunson-anime-03",
+    category: "chilsun",
+    name: "칠순 라이트 03",
+    badge: "칠순잔치",
+    desc: "보랏빛 꽃과 따뜻한 조명으로 차분하게 꾸민 칠순 초대장",
+    tags: ["#칠순", "#플라워", "#라이트"],
+    html: imageOnly("tmpl-character-card chilsun-barunson-anime-03", "/images/custom/barunson-category-anime-2026/chilsun-03.png")
+  },
+  {
+    id: "palsun-barunson-anime-01",
+    category: "palsun",
+    name: "팔순 로즈골드 01",
+    badge: "팔순잔치",
+    desc: "버건디와 골드 포인트로 품격을 살린 팔순 초대장",
+    tags: ["#팔순", "#버건디", "#골드"],
+    html: imageOnly("tmpl-character-card palsun-barunson-anime-01", "/images/custom/barunson-category-anime-2026/palsun-01.png")
+  },
+  {
+    id: "palsun-barunson-anime-02",
+    category: "palsun",
+    name: "팔순 살롱 02",
+    badge: "팔순잔치",
+    desc: "호텔 살롱 같은 따뜻한 공간감의 현대적인 팔순 카드",
+    tags: ["#팔순", "#살롱", "#초대"],
+    html: imageOnly("tmpl-character-card palsun-barunson-anime-02", "/images/custom/barunson-category-anime-2026/palsun-02.png")
+  },
+  {
+    id: "palsun-barunson-anime-03",
+    category: "palsun",
+    name: "팔순 나이트 03",
+    badge: "팔순잔치",
+    desc: "깊은 로즈 컬러와 조명 장식이 돋보이는 고급 팔순 초대장",
+    tags: ["#팔순", "#로즈", "#고급"],
+    html: imageOnly("tmpl-character-card palsun-barunson-anime-03", "/images/custom/barunson-category-anime-2026/palsun-03.png")
+  },
+  {
+    id: "bridal-barunson-anime-01",
+    category: "bridal",
+    name: "브라이덜 블룸 01",
+    badge: "브라이덜샤워",
+    desc: "친구들과 나누기 좋은 화사한 플라워 무드의 브라이덜샤워 카드",
+    tags: ["#브라이덜", "#플라워", "#파티"],
+    html: imageOnly("tmpl-character-card bridal-barunson-anime-01", "/images/custom/barunson-category-anime-2026/bridal-01.jpg")
+  },
+  {
+    id: "bridal-barunson-anime-02",
+    category: "bridal",
+    name: "브라이덜 블룸 02",
+    badge: "브라이덜샤워",
+    desc: "부드러운 리본과 여백이 돋보이는 애니 브라이덜샤워 초대장",
+    tags: ["#리본", "#샤워", "#애니"],
+    html: imageOnly("tmpl-character-card bridal-barunson-anime-02", "/images/custom/barunson-category-anime-2026/bridal-02.jpg")
+  },
+  {
+    id: "bridal-barunson-anime-03",
+    category: "bridal",
+    name: "브라이덜 블룸 03",
+    badge: "브라이덜샤워",
+    desc: "파티 일정과 장소를 깔끔하게 얹는 세로형 브라이덜 템플릿",
+    tags: ["#파티", "#일정", "#세로형"],
+    html: imageOnly("tmpl-character-card bridal-barunson-anime-03", "/images/custom/barunson-category-anime-2026/bridal-03.jpg")
+  },
+  {
+    id: "birthday-barunson-anime-01",
+    category: "birthday",
+    name: "생일 파티 01",
+    badge: "생일파티",
+    desc: "풍선과 케이크 무드가 밝게 살아 있는 모바일 생일 초대장",
+    tags: ["#생일", "#케이크", "#풍선"],
+    html: imageOnly("tmpl-character-card birthday-barunson-anime-01", "/images/custom/barunson-category-anime-2026/birthday-01.jpg")
+  },
+  {
+    id: "birthday-barunson-anime-02",
+    category: "birthday",
+    name: "생일 파티 02",
+    badge: "생일파티",
+    desc: "파티 안내 문구와 날짜를 올리기 좋은 애니 생일 카드",
+    tags: ["#파티", "#초대", "#애니"],
+    html: imageOnly("tmpl-character-card birthday-barunson-anime-02", "/images/custom/barunson-category-anime-2026/birthday-02.jpg")
+  },
+  {
+    id: "birthday-barunson-anime-03",
+    category: "birthday",
+    name: "생일 파티 03",
+    badge: "생일파티",
+    desc: "밝은 축하 장면과 모바일 카드 여백을 갖춘 생일파티 템플릿",
+    tags: ["#축하", "#모바일", "#카드"],
+    html: imageOnly("tmpl-character-card birthday-barunson-anime-03", "/images/custom/barunson-category-anime-2026/birthday-03.jpg")
+  },
+  {
+    id: "baby-barunson-anime-01",
+    category: "baby",
+    name: "베이비 클라우드 01",
+    badge: "베이비샤워",
+    desc: "구름과 파스텔 장식이 포근한 베이비샤워 초대장",
+    tags: ["#베이비", "#구름", "#파스텔"],
+    html: imageOnly("tmpl-character-card baby-barunson-anime-01", "/images/custom/barunson-category-anime-2026/baby-01.jpg")
+  },
+  {
+    id: "baby-barunson-anime-02",
+    category: "baby",
+    name: "베이비 클라우드 02",
+    badge: "베이비샤워",
+    desc: "부드러운 축하 문구를 담기 좋은 애니 베이비샤워 카드",
+    tags: ["#샤워", "#축하", "#애니"],
+    html: imageOnly("tmpl-character-card baby-barunson-anime-02", "/images/custom/barunson-category-anime-2026/baby-02.jpg")
+  },
+  {
+    id: "baby-barunson-anime-03",
+    category: "baby",
+    name: "베이비 클라우드 03",
+    badge: "베이비샤워",
+    desc: "아기 소식과 파티 정보를 단정하게 배치하는 세로형 템플릿",
+    tags: ["#아기", "#파티", "#세로형"],
+    html: imageOnly("tmpl-character-card baby-barunson-anime-03", "/images/custom/barunson-category-anime-2026/baby-03.jpg")
+  },
+  {
+    id: "graduation-barunson-anime-01",
+    category: "graduation",
+    name: "졸업 세리머니 01",
+    badge: "졸업파티",
+    desc: "졸업식과 축하 모임을 격식 있게 알리는 애니 초대장",
+    tags: ["#졸업", "#세리머니", "#격식"],
+    html: imageOnly("tmpl-character-card graduation-barunson-anime-01", "/images/custom/barunson-category-anime-2026/graduation-01.jpg")
+  },
+  {
+    id: "graduation-barunson-anime-02",
+    category: "graduation",
+    name: "졸업 세리머니 02",
+    badge: "졸업파티",
+    desc: "네이비와 골드 무드로 단정하게 구성한 졸업파티 카드",
+    tags: ["#네이비", "#골드", "#졸업"],
+    html: imageOnly("tmpl-character-card graduation-barunson-anime-02", "/images/custom/barunson-category-anime-2026/graduation-02.jpg")
+  },
+  {
+    id: "graduation-barunson-anime-03",
+    category: "graduation",
+    name: "졸업 세리머니 03",
+    badge: "졸업파티",
+    desc: "축하 메시지와 행사 정보를 함께 담기 좋은 졸업 템플릿",
+    tags: ["#축하", "#행사", "#졸업"],
+    html: imageOnly("tmpl-character-card graduation-barunson-anime-03", "/images/custom/barunson-category-anime-2026/graduation-03.jpg")
+  },
+  {
+    id: "business-barunson-anime-01",
+    category: "business",
+    name: "컨퍼런스 라이트 01",
+    badge: "비즈니스",
+    desc: "행사 일정과 장소 정보를 전문적으로 정리하는 비즈니스 초대장",
+    tags: ["#비즈니스", "#컨퍼런스", "#전문"],
+    html: imageOnly("tmpl-character-card business-barunson-anime-01", "/images/custom/barunson-category-anime-2026/business-01.jpg")
+  },
+  {
+    id: "business-barunson-anime-02",
+    category: "business",
+    name: "컨퍼런스 라이트 02",
+    badge: "비즈니스",
+    desc: "세미나, 오픈식, 네트워킹 행사에 맞춘 애니 비즈니스 카드",
+    tags: ["#세미나", "#네트워킹", "#행사"],
+    html: imageOnly("tmpl-character-card business-barunson-anime-02", "/images/custom/barunson-category-anime-2026/business-02.jpg")
+  },
+  {
+    id: "business-barunson-anime-03",
+    category: "business",
+    name: "컨퍼런스 라이트 03",
+    badge: "비즈니스",
+    desc: "브랜드 행사 안내를 깔끔하게 담을 수 있는 세로형 초대장",
+    tags: ["#브랜드", "#행사안내", "#세로형"],
+    html: imageOnly("tmpl-character-card business-barunson-anime-03", "/images/custom/barunson-category-anime-2026/business-03.jpg")
+  }
+];
+
+const featuredWeddingTemplateIds = new Set<string>([
+  "wedding-barunson-anime-04",
+  "wedding-barunson-anime-05",
+  "wedding-barunson-anime-06",
+  "wedding-barunson-anime-07",
+  "wedding-barunson-anime-08",
+  "wedding-barunson-anime-09",
+  "wedding-barunson-anime-10",
+  "wedding-barunson-anime-11",
+  "wedding-barunson-anime-12",
+  "wedding-barunson-anime-13",
+  "wedding-barunson-anime-14",
+  "wedding-barunson-anime-15",
+  "wedding-barunson-anime-16",
+  "wedding-barunson-anime-17",
+  "wedding-barunson-anime-18"
+]);
+
+const featuredDolTemplateIds = [
+  "dol-barunson-anime-13",
+  "dol-barunson-anime-04",
+  "dol-barunson-anime-05",
+  "dol-barunson-anime-06",
+  "dol-barunson-anime-07",
+  "dol-barunson-anime-08",
+  "dol-barunson-anime-09",
+  "dol-barunson-anime-10",
+  "dol-barunson-anime-11",
+  "dol-barunson-anime-12"
+] as const;
+
+const featuredHousewarmingTemplateIds = [
+  "housewarming-barunson-anime-04",
+  "housewarming-barunson-anime-05",
+  "housewarming-barunson-anime-06",
+  "housewarming-barunson-anime-07",
+  "housewarming-barunson-anime-08"
+] as const;
+
+const featuredHwangapTemplateIds = [
+  "hwangap-barunson-anime-04",
+  "hwangap-barunson-anime-05",
+  "hwangap-barunson-anime-06"
+] as const;
+
+const featuredChilsunTemplateIds = [
+  "chilsun-barunson-anime-01",
+  "chilsun-barunson-anime-02",
+  "chilsun-barunson-anime-03"
+] as const;
+
+const featuredPalsunTemplateIds = [
+  "palsun-barunson-anime-01",
+  "palsun-barunson-anime-02",
+  "palsun-barunson-anime-03"
+] as const;
+
+const featuredCategoryTemplateIds = new Set<string>([
+  ...featuredDolTemplateIds,
+  ...featuredHousewarmingTemplateIds,
+  ...featuredHwangapTemplateIds,
+  ...featuredChilsunTemplateIds,
+  ...featuredPalsunTemplateIds
+]);
+
+const featuredWeddingTemplates = barunsonCategoryAnimeTemplates.filter((template) =>
+  featuredWeddingTemplateIds.has(template.id)
+);
+
+function getBarunsonTemplatesByIds(ids: readonly string[]) {
+  return ids.flatMap((id) => {
+    const template = barunsonCategoryAnimeTemplates.find((item) => item.id === id);
+    return template ? [template] : [];
+  });
+}
+
+const featuredDolTemplates = getBarunsonTemplatesByIds(featuredDolTemplateIds);
+const featuredHousewarmingTemplates = getBarunsonTemplatesByIds(featuredHousewarmingTemplateIds);
+const featuredHwangapTemplates = getBarunsonTemplatesByIds(featuredHwangapTemplateIds);
+const featuredChilsunTemplates = getBarunsonTemplatesByIds(featuredChilsunTemplateIds);
+const featuredPalsunTemplates = getBarunsonTemplatesByIds(featuredPalsunTemplateIds);
+
+const remainingBarunsonCategoryAnimeTemplates = barunsonCategoryAnimeTemplates.filter((template) => {
+  if (featuredWeddingTemplateIds.has(template.id)) {
+    return false;
+  }
+
+  if (featuredCategoryTemplateIds.has(template.id)) {
+    return false;
+  }
+
+  return true;
+});
+
 export const templates: TemplatePreset[] = [
+  ...featuredWeddingTemplates,
+  ...featuredDolTemplates,
+  ...featuredHousewarmingTemplates,
+  ...featuredHwangapTemplates,
+  ...featuredChilsunTemplates,
+  ...featuredPalsunTemplates,
   {
     id: "wedding-classic",
     category: "wedding",
@@ -23,6 +830,33 @@ export const templates: TemplatePreset[] = [
     desc: "로즈 가득한 보더 프레임 위에 정갈하게 올리는 클래식 웨딩 카드",
     tags: ["#로즈", "#프레임", "#클래식"],
     html: imageOnly("tmpl-character-card wedding-classic", "/images/custom/wedding/wedding-01.jpeg")
+  },
+  {
+    id: "wedding-modern",
+    category: "wedding",
+    name: "유칼립투스 아치",
+    badge: "결혼식",
+    desc: "은은한 보태니컬 아치가 둘러주는 산뜻하고 차분한 웨딩 카드",
+    tags: ["#보태니컬", "#그린", "#아치"],
+    html: imageOnly("tmpl-character-card wedding-modern", "/images/custom/wedding/wedding-02.jpeg")
+  },
+  {
+    id: "wedding-floral",
+    category: "wedding",
+    name: "미니멀 블룸",
+    badge: "결혼식",
+    desc: "여백이 넓은 미니멀 카드에 작은 꽃다발을 더한 단정한 초대장",
+    tags: ["#미니멀", "#화이트", "#블룸"],
+    html: imageOnly("tmpl-character-card wedding-floral", "/images/custom/wedding/wedding-03.jpeg")
+  },
+  {
+    id: "wedding-minimal",
+    category: "wedding",
+    name: "코너 블룸",
+    badge: "결혼식",
+    desc: "좌상단과 우하단 코너 플라워가 공간을 남겨주는 부드러운 웨딩 카드",
+    tags: ["#코너", "#플라워", "#소프트"],
+    html: imageOnly("tmpl-character-card wedding-minimal", "/images/custom/wedding/wedding-04.jpeg")
   },
   {
     id: "wedding-nature",
@@ -133,6 +967,96 @@ export const templates: TemplatePreset[] = [
     html: imageOnly("tmpl-character-card wedding-green-arch", "/images/custom/wedding/wedding-16.png")
   },
   {
+    id: "wedding-anime-textspace-01",
+    category: "wedding",
+    name: "애니 가든 01",
+    badge: "결혼식",
+    desc: "애니메이션 감성 배경에 초대 문구를 얹기 좋은 세로형 웨딩 카드",
+    tags: ["#애니", "#세로형", "#텍스트공간"],
+    html: imageOnly("tmpl-character-card wedding-anime-textspace-01", "/images/custom/wedding/wedding-17.png")
+  },
+  {
+    id: "wedding-anime-textspace-02",
+    category: "wedding",
+    name: "애니 가든 02",
+    badge: "결혼식",
+    desc: "부드러운 애니메이션 무드와 넓은 여백을 살린 모바일 청첩장",
+    tags: ["#애니", "#모바일", "#여백"],
+    html: imageOnly("tmpl-character-card wedding-anime-textspace-02", "/images/custom/wedding/wedding-18.png")
+  },
+  {
+    id: "wedding-anime-textspace-03",
+    category: "wedding",
+    name: "애니 가든 03",
+    badge: "결혼식",
+    desc: "신랑 신부 정보와 날짜를 또렷하게 올리기 좋은 애니 웨딩 카드",
+    tags: ["#애니", "#웨딩", "#정보형"],
+    html: imageOnly("tmpl-character-card wedding-anime-textspace-03", "/images/custom/wedding/wedding-19.png")
+  },
+  {
+    id: "wedding-anime-textspace-04",
+    category: "wedding",
+    name: "애니 가든 04",
+    badge: "결혼식",
+    desc: "긴 모바일 초대장 화면에 맞춘 감성 애니메이션 배경 카드",
+    tags: ["#애니", "#청첩장", "#롱폼"],
+    html: imageOnly("tmpl-character-card wedding-anime-textspace-04", "/images/custom/wedding/wedding-20.png")
+  },
+  {
+    id: "wedding-anime-textspace-05",
+    category: "wedding",
+    name: "애니 가든 05",
+    badge: "결혼식",
+    desc: "밝은 색감과 텍스트 공간을 갖춘 모바일 웨딩 초대장",
+    tags: ["#애니", "#밝은톤", "#텍스트"],
+    html: imageOnly("tmpl-character-card wedding-anime-textspace-05", "/images/custom/wedding/wedding-21.png")
+  },
+  {
+    id: "wedding-anime-textspace-06",
+    category: "wedding",
+    name: "애니 가든 06",
+    badge: "결혼식",
+    desc: "초대 문구와 장소 정보를 자연스럽게 얹는 애니 스타일 카드",
+    tags: ["#애니", "#장소", "#초대문구"],
+    html: imageOnly("tmpl-character-card wedding-anime-textspace-06", "/images/custom/wedding/wedding-22.png")
+  },
+  {
+    id: "wedding-anime-textspace-07",
+    category: "wedding",
+    name: "애니 가든 07",
+    badge: "결혼식",
+    desc: "모바일 화면에서 길게 감상하기 좋은 애니 감성 웨딩 카드",
+    tags: ["#애니", "#모바일", "#감성"],
+    html: imageOnly("tmpl-character-card wedding-anime-textspace-07", "/images/custom/wedding/wedding-23.png")
+  },
+  {
+    id: "wedding-anime-textspace-08",
+    category: "wedding",
+    name: "애니 가든 08",
+    badge: "결혼식",
+    desc: "사진 없이도 분위기를 살릴 수 있는 애니메이션 청첩장 배경",
+    tags: ["#애니", "#사진없음", "#배경"],
+    html: imageOnly("tmpl-character-card wedding-anime-textspace-08", "/images/custom/wedding/wedding-24.png")
+  },
+  {
+    id: "wedding-anime-textspace-09",
+    category: "wedding",
+    name: "애니 가든 09",
+    badge: "결혼식",
+    desc: "문구와 일정 정보를 중심에 배치하기 좋은 부드러운 웨딩 카드",
+    tags: ["#애니", "#일정", "#부드러운"],
+    html: imageOnly("tmpl-character-card wedding-anime-textspace-09", "/images/custom/wedding/wedding-25.png")
+  },
+  {
+    id: "wedding-anime-textspace-10",
+    category: "wedding",
+    name: "애니 가든 10",
+    badge: "결혼식",
+    desc: "초대장 본문을 올려 완성하기 좋은 세로형 애니 웨딩 템플릿",
+    tags: ["#애니", "#본문", "#세로형"],
+    html: imageOnly("tmpl-character-card wedding-anime-textspace-10", "/images/custom/wedding/wedding-26.png")
+  },
+  {
     id: "dol-cute",
     category: "dol",
     name: "테디 벌룬",
@@ -140,6 +1064,42 @@ export const templates: TemplatePreset[] = [
     desc: "곰돌이와 풍선이 반겨주는 따뜻한 노란빛 돌잔치 카드",
     tags: ["#곰돌이", "#풍선", "#옐로우"],
     html: imageOnly("tmpl-character-card dol-cute", "/images/custom/dol/dol-card-01.jpeg")
+  },
+  {
+    id: "dol-pastel",
+    category: "dol",
+    name: "리본 크라운",
+    badge: "돌잔치",
+    desc: "핑크와 라벤더 리본, 왕관 장식이 돋보이는 사랑스러운 돌잔치 카드",
+    tags: ["#리본", "#크라운", "#핑크"],
+    html: imageOnly("tmpl-character-card dol-pastel", "/images/custom/dol/dol-card-02.jpeg")
+  },
+  {
+    id: "dol-blue",
+    category: "dol",
+    name: "우주 로켓",
+    badge: "돌잔치",
+    desc: "달과 로켓, 별 장식이 가득한 블루 우주 테마 돌잔치 카드",
+    tags: ["#우주", "#블루", "#별"],
+    html: imageOnly("tmpl-character-card dol-blue", "/images/custom/dol/dol-card-03.jpeg")
+  },
+  {
+    id: "dol-nature",
+    category: "dol",
+    name: "골드 크라운",
+    badge: "돌잔치",
+    desc: "실크 골드와 왕관 포인트로 고급스럽게 완성한 프리미엄 돌잔치 카드",
+    tags: ["#골드", "#크라운", "#프리미엄"],
+    html: imageOnly("tmpl-character-card dol-nature", "/images/custom/dol/dol-card-04.jpeg")
+  },
+  {
+    id: "dol-gold",
+    category: "dol",
+    name: "케이크 파티",
+    badge: "돌잔치",
+    desc: "케이크와 데코 장식이 중심이 되는 밝고 경쾌한 돌잔치 카드",
+    tags: ["#케이크", "#파티", "#러블리"],
+    html: imageOnly("tmpl-character-card dol-gold", "/images/custom/dol/dol-cake-01.jpeg")
   },
   {
     id: "hwangap-classic",
@@ -151,6 +1111,42 @@ export const templates: TemplatePreset[] = [
     html: imageOnly("tmpl-character-card hwangap-classic", "/images/custom/hwangap/hwangap-01.jpeg")
   },
   {
+    id: "hwangap-modern",
+    category: "hwangap",
+    name: "전통 문양",
+    badge: "환갑잔치",
+    desc: "전통 문양과 여백으로 격식을 살린 정갈한 환갑 카드",
+    tags: ["#문양", "#전통", "#격식"],
+    html: imageOnly("tmpl-character-card hwangap-modern", "/images/custom/hwangap/hwangap-02.jpeg")
+  },
+  {
+    id: "hwangap-red",
+    category: "hwangap",
+    name: "레드 포인트",
+    badge: "환갑잔치",
+    desc: "강렬한 레드 포인트와 전통 보더로 장수의 의미를 살린 카드",
+    tags: ["#레드", "#장수", "#보더"],
+    html: imageOnly("tmpl-character-card hwangap-red", "/images/custom/hwangap/hwangap-03.jpeg")
+  },
+  {
+    id: "hwangap-floral",
+    category: "hwangap",
+    name: "플로럴 격조",
+    badge: "환갑잔치",
+    desc: "플로럴 장식과 금빛 보더가 어우러진 화사한 환갑 카드",
+    tags: ["#플로럴", "#화사", "#품격"],
+    html: imageOnly("tmpl-character-card hwangap-floral", "/images/custom/hwangap/hwangap-04.jpeg")
+  },
+  {
+    id: "hwangap-hanja",
+    category: "hwangap",
+    name: "서예 정통",
+    badge: "환갑잔치",
+    desc: "서예 감성과 깊은 컬러 톤으로 정통미를 강조한 환갑 카드",
+    tags: ["#서예", "#정통", "#한자"],
+    html: imageOnly("tmpl-character-card hwangap-hanja", "/images/custom/hwangap/hwangap-05.jpeg")
+  },
+  {
     id: "bridal-pink",
     category: "bridal",
     name: "핑크 드림",
@@ -158,6 +1154,33 @@ export const templates: TemplatePreset[] = [
     desc: "핑크 포인트와 리본 장식이 사랑스러운 브라이덜샤워 카드",
     tags: ["#핑크", "#리본", "#샤워"],
     html: imageOnly("tmpl-character-card bridal-pink", "/images/custom/bridal/bridal-01.jpeg")
+  },
+  {
+    id: "bridal-boho",
+    category: "bridal",
+    name: "보헤미안",
+    badge: "브라이덜샤워",
+    desc: "차분한 톤과 드라이 플라워 느낌이 어우러진 브라이덜샤워 카드",
+    tags: ["#보헤미안", "#어스톤", "#감성"],
+    html: imageOnly("tmpl-character-card bridal-boho", "/images/custom/bridal/bridal-02.jpeg")
+  },
+  {
+    id: "bridal-modern",
+    category: "bridal",
+    name: "블랙 럭셔리",
+    badge: "브라이덜샤워",
+    desc: "화이트 여백 위에 포인트 장식이 살아 있는 깔끔한 럭셔리 카드",
+    tags: ["#럭셔리", "#화이트", "#하이엔드"],
+    html: imageOnly("tmpl-character-card bridal-modern", "/images/custom/bridal/bridal-03.jpeg")
+  },
+  {
+    id: "bridal-mint",
+    category: "bridal",
+    name: "민트 프레쉬",
+    badge: "브라이덜샤워",
+    desc: "부드러운 컬러감과 여백이 시원한 민트 무드 브라이덜샤워 카드",
+    tags: ["#민트", "#청량", "#상큼"],
+    html: imageOnly("tmpl-character-card bridal-mint", "/images/custom/bridal/bridal-04.jpeg")
   },
   {
     id: "birthday-fun",
@@ -169,13 +1192,40 @@ export const templates: TemplatePreset[] = [
     html: imageOnly("tmpl-character-card birthday-fun", "/images/custom/birthday/birthday-01.jpeg")
   },
   {
+    id: "birthday-elegant",
+    category: "birthday",
+    name: "밤하늘 생일",
+    badge: "생일파티",
+    desc: "달과 별빛이 들어간 차분한 밤하늘 생일파티 카드",
+    tags: ["#밤하늘", "#별", "#블루"],
+    html: imageOnly("tmpl-character-card birthday-elegant", "/images/custom/birthday/birthday-02.jpeg")
+  },
+  {
+    id: "birthday-kids",
+    category: "birthday",
+    name: "케이크 파티",
+    badge: "생일파티",
+    desc: "케이크와 파스텔 풍선으로 완성한 귀여운 생일파티 카드",
+    tags: ["#케이크", "#풍선", "#러블리"],
+    html: imageOnly("tmpl-character-card birthday-kids", "/images/custom/birthday/birthday-03.jpeg")
+  },
+  {
     id: "house-warm",
     category: "housewarming",
     name: "그린 집들이",
     badge: "집들이",
     desc: "새 보금자리를 알리는 따뜻한 그린 집들이 초대장",
     tags: ["#집들이", "#그린", "#따뜻한"],
-    html: imageOnly("tmpl-character-card house-warm", "/images/genspark/6XcxVcVH.jpg")
+    html: imageOnly("tmpl-character-card house-warm", "/images/custom/other/house-warm.jpeg")
+  },
+  {
+    id: "house-modern",
+    category: "housewarming",
+    name: "모던 화이트",
+    badge: "집들이",
+    desc: "모던하고 깔끔한 화이트 인테리어 감성의 집들이 초대장",
+    tags: ["#모던", "#화이트", "#인테리어"],
+    html: imageOnly("tmpl-character-card house-modern", "/images/custom/other/house-modern.jpeg")
   },
   {
     id: "baby-shower",
@@ -184,7 +1234,16 @@ export const templates: TemplatePreset[] = [
     badge: "베이비샤워",
     desc: "하늘빛 파란색의 포근한 베이비샤워 초대장",
     tags: ["#베이비", "#블루", "#포근"],
-    html: imageOnly("tmpl-character-card baby-shower", "/images/genspark/zIB8bEWC.jpg")
+    html: imageOnly("tmpl-character-card baby-shower", "/images/custom/other/baby-shower.jpeg")
+  },
+  {
+    id: "baby-pink",
+    category: "baby",
+    name: "핑크 베이비",
+    badge: "베이비샤워",
+    desc: "핑크빛 공주 테마의 사랑스러운 베이비샤워 초대장",
+    tags: ["#베이비", "#핑크", "#공주"],
+    html: imageOnly("tmpl-character-card baby-pink", "/images/custom/other/baby-pink.jpeg")
   },
   {
     id: "graduation",
@@ -193,7 +1252,16 @@ export const templates: TemplatePreset[] = [
     badge: "졸업파티",
     desc: "네이비 블루의 격조 있는 졸업 파티 초대장",
     tags: ["#졸업", "#네이비", "#격식"],
-    html: imageOnly("tmpl-character-card graduation", "/images/genspark/Xdz6nHcL.jpg")
+    html: imageOnly("tmpl-character-card graduation", "/images/custom/other/graduation.jpeg")
+  },
+  {
+    id: "graduation-warm",
+    category: "graduation",
+    name: "골든 졸업",
+    badge: "졸업파티",
+    desc: "황금빛의 따뜻하고 화사한 졸업 파티 초대장",
+    tags: ["#졸업", "#골드", "#화사"],
+    html: imageOnly("tmpl-character-card graduation-warm", "/images/custom/other/graduation-warm.jpeg")
   },
   {
     id: "business",
@@ -202,20 +1270,33 @@ export const templates: TemplatePreset[] = [
     badge: "비즈니스",
     desc: "신뢰와 전문성을 담은 비즈니스 행사 초대장",
     tags: ["#비즈니스", "#전문", "#행사"],
-    html: imageOnly("tmpl-character-card business", "/images/genspark/xpx0zLPW.jpg")
-  }
+    html: imageOnly("tmpl-character-card business", "/images/custom/other/business.jpeg")
+  },
+  {
+    id: "business-dark",
+    category: "business",
+    name: "다크 프리미엄",
+    badge: "비즈니스",
+    desc: "블랙 배경의 프리미엄 비즈니스 행사 초대장",
+    tags: ["#다크", "#프리미엄", "#비즈니스"],
+    html: imageOnly("tmpl-character-card business-dark", "/images/custom/other/business-dark.jpeg")
+  },
+  ...anime2026Templates,
+  ...remainingBarunsonCategoryAnimeTemplates
 ];
 
 export const templateCategories = [
-  { key: "wedding", label: "결혼식", emoji: "💍" },
-  { key: "dol", label: "돌잔치", emoji: "🎂" },
-  { key: "hwangap", label: "환갑잔치", emoji: "🎊" },
-  { key: "bridal", label: "브라이덜샤워", emoji: "👰" },
-  { key: "birthday", label: "생일파티", emoji: "🎉" },
-  { key: "housewarming", label: "집들이", emoji: "🏠" },
-  { key: "baby", label: "베이비샤워", emoji: "👶" },
-  { key: "graduation", label: "졸업파티", emoji: "🎓" },
-  { key: "business", label: "비즈니스", emoji: "📋" }
+  { key: "wedding", label: "결혼식", emoji: "결" },
+  { key: "dol", label: "돌잔치", emoji: "돌" },
+  { key: "hwangap", label: "환갑잔치", emoji: "환" },
+  { key: "chilsun", label: "칠순잔치", emoji: "칠" },
+  { key: "palsun", label: "팔순잔치", emoji: "팔" },
+  { key: "bridal", label: "브라이덜샤워", emoji: "샤" },
+  { key: "birthday", label: "생일파티", emoji: "생" },
+  { key: "housewarming", label: "집들이", emoji: "집" },
+  { key: "baby", label: "베이비샤워", emoji: "베" },
+  { key: "graduation", label: "졸업파티", emoji: "졸" },
+  { key: "business", label: "비즈니스", emoji: "비" }
 ] as const;
 
 export function getTemplatesByCategory(category: string) {

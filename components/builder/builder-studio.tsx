@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useRouter } from "next/navigation";
 import { authDestination, normalizeNextPath } from "@/lib/auth";
 import { createBrowserClient } from "@/lib/supabase/browser";
@@ -14,7 +14,17 @@ import {
   type InvitationStatus,
   type InvitationDraftPayload
 } from "@/lib/invitation-payload";
-import { templates } from "@/lib/templates";
+import {
+  getTemplateDefaultTextPlacement,
+  templateCategories,
+  templates,
+  type TemplatePreset
+} from "@/lib/templates";
+import {
+  INVITATION_TEXT_PLACEMENTS,
+  getInvitationTextPlacementFrame,
+  getInvitationTextPlacementTransform
+} from "@/lib/invitation-text-placement";
 import { TemplateMarkup } from "@/components/landing/template-markup";
 import { BUILDER_STEPS, clampBuilderStep, getBuilderStep } from "@/components/builder/builder-steps";
 import {
@@ -36,6 +46,97 @@ type StoredDraft = {
 };
 
 const MAX_DEMO_IMAGE_BYTES = 5 * 1024 * 1024;
+const DAUM_POSTCODE_SCRIPT_ID = "daum-postcode-sdk";
+const DAUM_POSTCODE_SCRIPT_SRC = "https://t1.daumcdn.net/mapjsapi/bundle/postcode/prod/postcode.v2.js";
+const DAUM_POSTCODE_LOAD_TIMEOUT_MS = 10000;
+
+type DaumPostcodeData = {
+  address?: string;
+  roadAddress?: string;
+  jibunAddress?: string;
+  autoRoadAddress?: string;
+  autoJibunAddress?: string;
+  zonecode?: string;
+  userSelectedType?: "R" | "J";
+};
+
+type DaumPostcodeSdk = {
+  Postcode: new (options: { oncomplete(data: DaumPostcodeData): void }) => {
+    embed(element: HTMLElement, options?: { autoClose?: boolean; q?: string }): void;
+    open(options?: { popupName?: string }): void;
+  };
+};
+
+let daumPostcodeScriptPromise: Promise<DaumPostcodeSdk | null> | null = null;
+
+function readDaumPostcode() {
+  return (window as unknown as { daum?: DaumPostcodeSdk }).daum ?? null;
+}
+
+function loadDaumPostcode() {
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return Promise.resolve(null);
+  }
+
+  const existingSdk = readDaumPostcode();
+  if (existingSdk?.Postcode) {
+    return Promise.resolve(existingSdk);
+  }
+
+  if (!daumPostcodeScriptPromise) {
+    daumPostcodeScriptPromise = new Promise((resolve, reject) => {
+      const staleScript = document.getElementById(DAUM_POSTCODE_SCRIPT_ID) as HTMLScriptElement | null;
+      const script = staleScript?.dataset.osamPostcodeStatus === "loading" ? staleScript : document.createElement("script");
+
+      if (staleScript && staleScript !== script) {
+        staleScript.remove();
+      }
+
+      let timeoutId: number | null = null;
+
+      const settle = (nextSdk: DaumPostcodeSdk | null) => {
+        if (timeoutId) {
+          window.clearTimeout(timeoutId);
+        }
+
+        script.dataset.osamPostcodeStatus = nextSdk?.Postcode ? "loaded" : "error";
+
+        if (nextSdk?.Postcode) {
+          resolve(nextSdk);
+          return;
+        }
+
+        daumPostcodeScriptPromise = null;
+        reject(new Error("주소 검색 서비스를 불러오지 못했습니다."));
+      };
+
+      script.id = DAUM_POSTCODE_SCRIPT_ID;
+      script.src = DAUM_POSTCODE_SCRIPT_SRC;
+      script.async = true;
+      script.dataset.osamPostcodeStatus = "loading";
+      script.onload = () => settle(readDaumPostcode());
+      script.onerror = () => settle(null);
+
+      timeoutId = window.setTimeout(() => settle(null), DAUM_POSTCODE_LOAD_TIMEOUT_MS);
+
+      if (!script.isConnected) {
+        document.head.appendChild(script);
+      }
+    });
+  }
+
+  return daumPostcodeScriptPromise;
+}
+
+function buildNaverMapLink(query: string) {
+  const trimmed = query.trim();
+  return trimmed ? `https://map.naver.com/p/search/${encodeURIComponent(trimmed)}` : "";
+}
+
+function buildKakaoMapLink(query: string) {
+  const trimmed = query.trim();
+  return trimmed ? `https://map.kakao.com/link/search/${encodeURIComponent(trimmed)}` : "";
+}
 
 function readStoredDraft() {
   if (typeof window === "undefined") {
@@ -56,6 +157,21 @@ function readStoredDraft() {
   } catch {
     return null;
   }
+}
+
+function buildInitialPayload(initialTemplateId?: string) {
+  const matched = initialTemplateId
+    ? templates.find((template) => template.id === initialTemplateId)
+    : null;
+
+  return matched
+    ? normalizeDraft({
+        ...defaultInvitationDraft,
+        templateId: matched.id,
+        category: matched.category,
+        templateTextPlacement: getTemplateDefaultTextPlacement(matched)
+      })
+    : normalizeDraft(defaultInvitationDraft);
 }
 
 function fileToDataUrl(file: File) {
@@ -85,26 +201,20 @@ export function BuilderStudio({
   const router = useRouter();
   const supabase = useMemo(() => createBrowserClient(), []);
   const createdUrlsRef = useRef<string[]>([]);
+  const eventDateInputRef = useRef<HTMLInputElement | null>(null);
   const checkoutIntentHandledRef = useRef(false);
   const loadedInvitationIdRef = useRef<string | null>(null);
-  const [payload, setPayload] = useState<InvitationDraftPayload>(() => {
-    const stored = readStoredDraft();
-    const base = stored?.payload ?? defaultInvitationDraft;
-    const matched = initialTemplateId
-      ? templates.find((template) => template.id === initialTemplateId)
-      : null;
-
-    return matched
-      ? normalizeDraft({
-          ...base,
-          templateId: matched.id,
-          category: matched.category
-        })
-      : normalizeDraft(base);
-  });
-  const [meta, setMeta] = useState<DraftMeta>(() => readStoredDraft()?.meta ?? {});
+  const addressSearchOpenedAtRef = useRef(0);
+  const addressSearchLayerRef = useRef<HTMLDivElement | null>(null);
+  const autoPlacedTemplateRef = useRef<string | null>(null);
+  const [payload, setPayload] = useState<InvitationDraftPayload>(() => buildInitialPayload(initialTemplateId));
+  const [meta, setMeta] = useState<DraftMeta>({});
+  const [draftReady, setDraftReady] = useState(false);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"error" | "success" | "">("");
+  const [addressSearchMessage, setAddressSearchMessage] = useState("");
+  const [addressSearchPending, setAddressSearchPending] = useState(false);
+  const [addressSearchVisible, setAddressSearchVisible] = useState(false);
   const [pending, setPending] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(0);
@@ -115,12 +225,104 @@ export function BuilderStudio({
   const [pendingBackgroundImageFile, setPendingBackgroundImageFile] = useState<File | null>(null);
   const [pendingGalleryFiles, setPendingGalleryFiles] = useState<File[]>([]);
   const [pendingGalleryPreviewUrls, setPendingGalleryPreviewUrls] = useState<string[]>([]);
+  const [showTemplateGallery, setShowTemplateGallery] = useState(!initialTemplateId);
+  const [eventDateConfirmed, setEventDateConfirmed] = useState(false);
 
   const selectedTemplate = useMemo(
     () => templates.find((template) => template.id === payload.templateId) ?? templates[0],
     [payload.templateId]
   );
+  const isStandaloneArtworkTemplate = selectedTemplate.html.includes("tmpl-standalone-art");
+  const textPlacementFrame = getInvitationTextPlacementFrame(payload.templateTextPlacement);
+  const templateCopyStyle: CSSProperties = {
+    left: `${textPlacementFrame.x}%`,
+    textAlign: textPlacementFrame.align,
+    top: `${textPlacementFrame.y}%`,
+    transform: getInvitationTextPlacementTransform(textPlacementFrame.align),
+    width: `${textPlacementFrame.width}%`
+  };
+  const [activeTemplateCategory, setActiveTemplateCategory] = useState(selectedTemplate.category);
+  const categoryCounts = useMemo(
+    () =>
+      templateCategories.map((category) => ({
+        ...category,
+        count: templates.filter((template) => template.category === category.key).length
+      })),
+    []
+  );
+  const filteredTemplates = useMemo(
+    () => templates.filter((template) => template.category === activeTemplateCategory),
+    [activeTemplateCategory]
+  );
+  const visibleTemplates = showTemplateGallery ? filteredTemplates : [selectedTemplate];
   const paidSnapshotRef = useRef<InvitationDraftPayload | null>(meta.status === "published" ? payload : null);
+
+  useEffect(() => {
+    if (!isStandaloneArtworkTemplate || payload.templateTextPlacement !== "top") {
+      return;
+    }
+
+    if (autoPlacedTemplateRef.current === selectedTemplate.id) {
+      return;
+    }
+
+    autoPlacedTemplateRef.current = selectedTemplate.id;
+    const defaultPlacement = getTemplateDefaultTextPlacement(selectedTemplate);
+
+    setPayload((current) =>
+      current.templateId === selectedTemplate.id && current.templateTextPlacement === "top"
+        ? normalizeDraft({
+            ...current,
+            templateTextPlacement: defaultPlacement
+          })
+        : current
+    );
+  }, [isStandaloneArtworkTemplate, payload.templateTextPlacement, selectedTemplate]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    queueMicrotask(() => {
+      if (cancelled) {
+        return;
+      }
+
+      if (initialInvitationId) {
+        setDraftReady(true);
+        return;
+      }
+
+      const stored = readStoredDraft();
+      if (!stored) {
+        setDraftReady(true);
+        return;
+      }
+
+      const matched = initialTemplateId
+        ? templates.find((template) => template.id === initialTemplateId)
+        : null;
+      const nextPayload = matched
+        ? normalizeDraft({
+            ...stored.payload,
+            templateId: matched.id,
+            category: matched.category,
+            templateTextPlacement: getTemplateDefaultTextPlacement(matched)
+          })
+        : stored.payload;
+
+      setPayload(nextPayload);
+      setMeta(stored.meta);
+      setMainImagePreviewUrl(nextPayload.mainImageUrl);
+      setBackgroundImagePreviewUrl(nextPayload.backgroundImageUrl);
+      setActiveTemplateCategory((templates.find((template) => template.id === nextPayload.templateId) ?? templates[0]).category);
+      paidSnapshotRef.current = stored.meta.status === "published" ? nextPayload : null;
+      setDraftReady(true);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialInvitationId, initialTemplateId]);
 
   useEffect(() => {
     if (!supabase) {
@@ -131,6 +333,10 @@ export function BuilderStudio({
       setUserId(data.user?.id ?? null);
     });
   }, [supabase]);
+
+  useEffect(() => {
+    void loadDaumPostcode().catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     if (!supabase || !userId || !initialInvitationId || loadedInvitationIdRef.current === initialInvitationId) {
@@ -162,13 +368,14 @@ export function BuilderStudio({
       });
       setMainImagePreviewUrl(nextPayload.mainImageUrl);
       setBackgroundImagePreviewUrl(nextPayload.backgroundImageUrl);
+      setActiveTemplateCategory((templates.find((template) => template.id === nextPayload.templateId) ?? templates[0]).category);
       setPendingGalleryPreviewUrls([]);
       paidSnapshotRef.current = data.paid_payload_snapshot ? normalizeDraft(data.paid_payload_snapshot) : null;
     })();
   }, [initialInvitationId, supabase, userId]);
 
   useEffect(() => {
-    if (typeof window === "undefined") {
+    if (!draftReady || typeof window === "undefined") {
       return;
     }
 
@@ -185,7 +392,7 @@ export function BuilderStudio({
         meta
       } satisfies StoredDraft)
     );
-  }, [payload, meta]);
+  }, [payload, meta, draftReady]);
 
   useEffect(() => {
     const createdUrls = createdUrlsRef.current;
@@ -214,6 +421,130 @@ export function BuilderStudio({
 
   function updateField<Key extends keyof InvitationDraftPayload>(key: Key, value: InvitationDraftPayload[Key]) {
     setPayload((current) => normalizeDraft({ ...current, [key]: value }));
+  }
+
+  function updateVenueAddress(value: string) {
+    setPayload((current) =>
+      normalizeDraft({
+        ...current,
+        venueAddress: value,
+        roadAddress: value,
+        jibunAddress: "",
+        zonecode: "",
+        mapAddress: value,
+        naverMapLink: buildNaverMapLink(value),
+        kakaoMapLink: buildKakaoMapLink(value)
+      })
+    );
+  }
+
+  const applyAddressSelection = useCallback((data: DaumPostcodeData) => {
+    const roadAddress = data.roadAddress || data.autoRoadAddress || "";
+    const jibunAddress = data.jibunAddress || data.autoJibunAddress || "";
+    const selectedAddress =
+      data.userSelectedType === "J"
+        ? jibunAddress || data.address || roadAddress
+        : roadAddress || data.address || jibunAddress;
+    const mapAddress = roadAddress || selectedAddress || jibunAddress;
+
+    setPayload((current) =>
+      normalizeDraft({
+        ...current,
+        venueAddress: mapAddress,
+        mapAddress,
+        roadAddress,
+        jibunAddress,
+        zonecode: data.zonecode || "",
+        naverMapLink: buildNaverMapLink(mapAddress),
+        kakaoMapLink: buildKakaoMapLink(mapAddress)
+      })
+    );
+    setAddressSearchVisible(false);
+    setAddressSearchMessage("도로명주소, 지번주소, 지도 링크를 자동으로 채웠습니다.");
+  }, []);
+
+  useEffect(() => {
+    if (!addressSearchVisible) {
+      return;
+    }
+
+    let cancelled = false;
+    const container = addressSearchLayerRef.current;
+
+    if (!container) {
+      return;
+    }
+
+    container.textContent = "주소 검색을 불러오는 중입니다.";
+    setAddressSearchPending(true);
+
+    void (async () => {
+      try {
+        const daum = await loadDaumPostcode();
+
+        if (cancelled) {
+          return;
+        }
+
+        if (!daum?.Postcode) {
+          throw new Error("주소 검색 서비스를 불러오지 못했습니다.");
+        }
+
+        container.textContent = "";
+        new daum.Postcode({
+          oncomplete(data) {
+            applyAddressSelection(data);
+          }
+        }).embed(container, { autoClose: false, q: payload.venueAddress || payload.mapAddress || "" });
+        setAddressSearchPending(false);
+        setAddressSearchMessage("주소를 검색한 뒤 결과를 선택하세요.");
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+
+        setAddressSearchPending(false);
+        setAddressSearchVisible(false);
+        setAddressSearchMessage(error instanceof Error ? error.message : "주소 검색을 열지 못했습니다.");
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      container.textContent = "";
+    };
+  }, [addressSearchVisible, applyAddressSelection, payload.mapAddress, payload.venueAddress]);
+
+  async function openAddressSearch() {
+    if (addressSearchPending) {
+      return;
+    }
+
+    setAddressSearchMessage("");
+    setAddressSearchVisible(true);
+  }
+
+  function requestAddressSearch() {
+    const now = Date.now();
+
+    if (addressSearchPending || now - addressSearchOpenedAtRef.current < 800) {
+      return;
+    }
+
+    addressSearchOpenedAtRef.current = now;
+    void openAddressSearch();
+  }
+
+  function selectTemplate(template: TemplatePreset) {
+    setActiveTemplateCategory(template.category);
+    setPayload((current) =>
+      normalizeDraft({
+        ...current,
+        templateId: template.id,
+        category: template.category,
+        templateTextPlacement: getTemplateDefaultTextPlacement(template)
+      })
+    );
   }
 
   function createPreviewUrl(file: File) {
@@ -704,6 +1035,21 @@ export function BuilderStudio({
   const inputClassName = "modal-input";
   const currentStepMeta = getBuilderStep(currentStep);
   const lastStepIndex = BUILDER_STEPS.length - 1;
+  const builderPreviewNames = (payload.groomName || "신랑") + " ♡ " + (payload.brideName || "신부");
+  const builderPreviewDate = payload.eventDateTime
+    ? new Date(payload.eventDateTime).toLocaleString("ko-KR", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      })
+    : "날짜와 시간을 선택하세요";
+  const builderPreviewVenue =
+    payload.venueName || payload.venueAddress
+      ? [payload.venueName, payload.venueAddress].filter(Boolean).join(" · ")
+      : "예식장과 주소를 입력해 주세요";
+  const useSplitArtworkCopy = isStandaloneArtworkTemplate && payload.templateTextPlacement === "bottom";
 
   function moveStep(delta: number) {
     setCurrentStep((step) => clampBuilderStep(step + delta));
@@ -722,7 +1068,7 @@ export function BuilderStudio({
           <div className="builder-step-copy">
             <p className="builder-step-kicker">빌더 진행</p>
             <h3>{`STEP ${currentStepMeta.index + 1}. ${currentStepMeta.title}`}</h3>
-            <p className="builder-help">모바일 앱과 같은 5단계 흐름으로 나눠서 작성할 수 있습니다.</p>
+            <p className="builder-help">모바일 앱과 같은 4단계 흐름으로 나눠서 작성할 수 있습니다.</p>
           </div>
           <div className="builder-step-progress" aria-hidden="true">
             <div className="builder-step-progress-bar">
@@ -764,31 +1110,112 @@ export function BuilderStudio({
 
         <div className="builder-form-section" hidden={currentStep !== 0}>
           <h3>1. 기본 정보</h3>
-          <label>
-            선택 템플릿
-            <select
-              className={inputClassName}
-              value={payload.templateId}
-              onChange={(event) => {
-                const template = templates.find((item) => item.id === event.target.value);
-                if (!template) return;
-                setPayload((current) =>
-                  normalizeDraft({
-                    ...current,
-                    templateId: template.id,
-                    category: template.category
-                  })
+          <div className="builder-template-picker" aria-label="초대장 템플릿 선택">
+            <div className="builder-template-picker-head">
+              <div>
+                <strong>{showTemplateGallery ? "다른 디자인 고르기" : "선택한 디자인"}</strong>
+                <p>
+                  {showTemplateGallery
+                    ? "행사별 디자인을 둘러보고 바꿀 수 있습니다."
+                    : `${selectedTemplate.name} 디자인으로 바로 시작합니다.`}
+                </p>
+              </div>
+              <button
+                className="builder-template-gallery-toggle"
+                onClick={() => setShowTemplateGallery((current) => !current)}
+                type="button"
+              >
+                {showTemplateGallery ? "선택한 디자인만 보기" : "다른 디자인 보기"}
+              </button>
+            </div>
+            {showTemplateGallery ? (
+              <div className="builder-template-category-row" role="tablist" aria-label="템플릿 카테고리">
+                {categoryCounts.map((category) => (
+                  <button
+                    aria-selected={category.key === activeTemplateCategory}
+                    className={`builder-template-category ${category.key === activeTemplateCategory ? "is-active" : ""}`}
+                    key={category.key}
+                    onClick={() => setActiveTemplateCategory(category.key)}
+                    role="tab"
+                    type="button"
+                  >
+                    <span>{category.label}</span>
+                    <small>{category.count}</small>
+                  </button>
+                ))}
+              </div>
+            ) : null}
+            <div className={showTemplateGallery ? "builder-template-card-grid" : "builder-template-card-grid is-collapsed"}>
+              {visibleTemplates.map((template) => {
+                const isSelected = template.id === payload.templateId;
+
+                return (
+                  <button
+                    aria-pressed={isSelected}
+                    className={`builder-template-card ${isSelected ? "is-selected" : ""}`}
+                    key={template.id}
+                    onClick={() => selectTemplate(template)}
+                    type="button"
+                  >
+                    <span className="builder-template-card-thumb">
+                      <TemplateMarkup template={template} variant="browser" />
+                    </span>
+                    <span className="builder-template-card-copy">
+                      <span className="template-badge">{template.badge}</span>
+                      <strong>{template.name}</strong>
+                      <span>{template.desc}</span>
+                    </span>
+                  </button>
                 );
-              }}
-            >
-          {templates.map((template) => (
-                <option key={template.id} value={template.id}>
-                  {template.badge} · {template.name}
-                </option>
+              })}
+            </div>
+          </div>
+          {showTemplateGallery ? (
+            <>
+              <label>
+                디자인 빠른 선택
+                <select
+                  className={inputClassName}
+                  value={payload.templateId}
+                  onChange={(event) => {
+                    const template = templates.find((item) => item.id === event.target.value);
+                    if (!template) return;
+                    selectTemplate(template);
+                  }}
+                >
+                  {templates.map((template) => (
+                    <option key={template.id} value={template.id}>
+                      {template.badge} · {template.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <p className="builder-help">카드를 누르거나 목록에서 디자인을 바꿀 수 있습니다.</p>
+            </>
+          ) : null}
+          <div className="builder-template-placement">
+            <div className="builder-template-placement-head">
+              <strong>글씨 넣을 공간</strong>
+              <p>선택한 템플릿 이미지의 빈 여백에 초대 문구를 얹습니다.</p>
+            </div>
+            <div className="builder-template-placement-grid" role="group" aria-label="템플릿 글씨 위치">
+              {INVITATION_TEXT_PLACEMENTS.map((placement) => (
+                <button
+                  aria-pressed={payload.templateTextPlacement === placement.value}
+                  className={
+                    payload.templateTextPlacement === placement.value
+                      ? "builder-template-placement-button is-active"
+                      : "builder-template-placement-button"
+                  }
+                  key={placement.value}
+                  onClick={() => updateField("templateTextPlacement", placement.value)}
+                  type="button"
+                >
+                  {placement.label}
+                </button>
               ))}
-            </select>
-          </label>
-          <p className="builder-help">발행 후 템플릿을 바꾸면 재결제가 필요합니다. 텍스트와 연락처 수정은 무료로 유지됩니다.</p>
+            </div>
+          </div>
           <label>
             행사 카테고리
             <input className={inputClassName} readOnly value={payload.category} />
@@ -797,18 +1224,99 @@ export function BuilderStudio({
             행사 제목
             <input className={inputClassName} value={payload.title} onChange={(event) => updateField("title", event.target.value)} />
           </label>
-          <label>
-            행사 일시
-            <input className={inputClassName} type="datetime-local" value={payload.eventDateTime} onChange={(event) => updateField("eventDateTime", event.target.value)} />
-          </label>
+          <div className="builder-date-field">
+            <label htmlFor="builder-event-date">행사 일시</label>
+            <div className="builder-date-row">
+              <input
+                className={inputClassName}
+                id="builder-event-date"
+                ref={eventDateInputRef}
+                type="datetime-local"
+                value={payload.eventDateTime}
+                onChange={(event) => {
+                  updateField("eventDateTime", event.target.value);
+                  setEventDateConfirmed(false);
+                }}
+                onInput={(event) => {
+                  updateField("eventDateTime", event.currentTarget.value);
+                  setEventDateConfirmed(false);
+                }}
+              />
+              <button
+                className="builder-date-confirm"
+                disabled={!payload.eventDateTime}
+                onClick={() => {
+                  eventDateInputRef.current?.blur();
+                  setEventDateConfirmed(true);
+                }}
+                type="button"
+              >
+                확인
+              </button>
+            </div>
+            <p aria-live="polite" className={eventDateConfirmed ? "builder-date-status is-confirmed" : "builder-date-status"}>
+              {eventDateConfirmed ? "선택한 일정을 확인했습니다." : "날짜와 시간을 고른 뒤 확인을 눌러주세요."}
+            </p>
+          </div>
           <label>
             행사장 이름
             <input className={inputClassName} value={payload.venueName} onChange={(event) => updateField("venueName", event.target.value)} />
           </label>
-          <label>
-            행사장 주소
-            <input className={inputClassName} value={payload.venueAddress} onChange={(event) => updateField("venueAddress", event.target.value)} />
-          </label>
+          <div className="builder-address-field">
+            <label className="builder-address-label" htmlFor="builder-venue-address">
+              행사장 주소 / 지도 주소
+            </label>
+            <div className="inline-input-row builder-address-search-row">
+              <input
+                id="builder-venue-address"
+                className={inputClassName}
+                placeholder={addressSearchPending ? "주소 검색을 불러오는 중입니다" : "주소를 직접 입력하거나 주소 검색을 누르세요"}
+                value={payload.venueAddress}
+                onChange={(event) => updateVenueAddress(event.target.value)}
+              />
+              <button className="inline-input-btn builder-address-search-button" disabled={addressSearchPending} type="button" onClick={requestAddressSearch}>
+                {addressSearchPending ? "불러오는 중" : "주소 검색"}
+              </button>
+            </div>
+          </div>
+          <p className="builder-help">주소 검색 버튼을 누르면 Daum 우편번호 서비스가 열리고, 직접 입력해도 지도 검색 링크가 함께 채워집니다.</p>
+          {addressSearchMessage ? <p className="builder-help">{addressSearchMessage}</p> : null}
+          {addressSearchVisible ? (
+            <div className="builder-address-search-panel">
+              <div className="builder-address-search-panel-header">
+                <strong>도로명주소 검색</strong>
+                <button type="button" onClick={() => setAddressSearchVisible(false)}>
+                  닫기
+                </button>
+              </div>
+              <div ref={addressSearchLayerRef} className="builder-address-search-layer" />
+            </div>
+          ) : null}
+          <div className="form-two-col">
+            <label>
+              지번주소
+              <input className={inputClassName} value={payload.jibunAddress} onChange={(event) => updateField("jibunAddress", event.target.value)} />
+            </label>
+            <label>
+              우편번호
+              <input className={inputClassName} value={payload.zonecode} onChange={(event) => updateField("zonecode", event.target.value)} />
+            </label>
+          </div>
+          <details className="builder-map-fields">
+            <summary>지도 링크와 교통 안내 직접 수정</summary>
+            <label>
+              네이버 지도 링크
+              <input className={inputClassName} value={payload.naverMapLink} onChange={(event) => updateField("naverMapLink", event.target.value)} />
+            </label>
+            <label>
+              카카오 지도 링크
+              <input className={inputClassName} value={payload.kakaoMapLink} onChange={(event) => updateField("kakaoMapLink", event.target.value)} />
+            </label>
+            <label>
+              교통 안내 메모
+              <textarea className={inputClassName} rows={3} value={payload.transportNote} onChange={(event) => updateField("transportNote", event.target.value)} />
+            </label>
+          </details>
           <label>
             초대 메시지
             <textarea className={inputClassName} rows={4} value={payload.message} onChange={(event) => updateField("message", event.target.value)} />
@@ -855,7 +1363,7 @@ export function BuilderStudio({
 
         <div className="builder-form-section" hidden={currentStep !== 2}>
           <h3>3. 사진 설정</h3>
-          <p className="builder-help">메인 사진과 배경 이미지는 발행 후 교체 시 재결제가 필요합니다. 업로드 전 최종 이미지를 먼저 골라 두는 편이 안전합니다.</p>
+          <p className="builder-help">메인 사진과 배경 이미지는 공개 화면의 첫인상을 결정합니다. 발행 전 최종 이미지를 먼저 골라 두세요.</p>
             <label>
               메인 사진 업로드
               <div className="builder-upload-control">
@@ -984,26 +1492,6 @@ export function BuilderStudio({
           </label>
         </div>
 
-        <div className="builder-form-section" hidden={currentStep !== 4}>
-          <h3>5. 오시는 길</h3>
-          <label>
-            지도 주소
-            <input className={inputClassName} value={payload.mapAddress} onChange={(event) => updateField("mapAddress", event.target.value)} />
-          </label>
-          <label>
-            네이버 지도 링크
-            <input className={inputClassName} value={payload.naverMapLink} onChange={(event) => updateField("naverMapLink", event.target.value)} />
-          </label>
-          <label>
-            카카오 지도 링크
-            <input className={inputClassName} value={payload.kakaoMapLink} onChange={(event) => updateField("kakaoMapLink", event.target.value)} />
-          </label>
-          <label>
-            교통 안내 메모
-            <textarea className={inputClassName} rows={3} value={payload.transportNote} onChange={(event) => updateField("transportNote", event.target.value)} />
-          </label>
-        </div>
-
         <div className="builder-step-actions">
           <button
             className="btn-outline"
@@ -1061,11 +1549,11 @@ export function BuilderStudio({
               }}
               type="button"
             >
-              {meta.status === "published" ? "공개 상태 다시 저장" : "무료 발행 페이지로 이동"}
+              {meta.status === "published" ? "공개 상태 다시 저장" : !supabase || !userId ? "로그인 후 무료 공개 링크 만들기" : "무료 공개 링크 만들기"}
             </button>
           </>
         ) : (
-          <p className="builder-help">마지막 단계에서 실제 화면 보기와 무료 발행을 진행할 수 있습니다.</p>
+          <p className="builder-help">마지막 단계에서 실제 화면을 확인한 뒤 무료 공개 링크를 만들 수 있습니다.</p>
         )}
         {meta.status && meta.status !== "draft" && meta.status !== "published" ? (
           <p className="form-message error">
@@ -1077,7 +1565,7 @@ export function BuilderStudio({
 
       <div className="builder-preview-wrap">
         <div className="phone-mock builder-phone builder-phone-large">
-          <div className="phone-screen builder-screen">
+          <div className={isStandaloneArtworkTemplate ? "phone-screen builder-screen is-standalone-artwork" : "phone-screen builder-screen"}>
             <div className="builder-template-preview">
               <TemplateMarkup template={selectedTemplate} />
             </div>
@@ -1086,36 +1574,52 @@ export function BuilderStudio({
             ) : (
               <div className="builder-background-layer" />
             )}
-            <div className="builder-preview-content">
-              <div className="builder-preview-main-photo-wrap">
-                {mainImagePreviewUrl ? <img alt="메인 사진 미리보기" className="builder-preview-main-photo has-image" src={mainImagePreviewUrl} /> : <div className="builder-preview-main-photo" />}
-              </div>
-              <div className="builder-preview-copy-card">
-                <p className="builder-preview-label">{selectedTemplate.badge.toUpperCase()} INVITATION</p>
-                <h2 className="builder-preview-names">
-                  {(payload.groomName || "신랑") + " ♡ " + (payload.brideName || "신부")}
-                </h2>
-                <p className="builder-preview-date">
-                  {payload.eventDateTime
-                    ? new Date(payload.eventDateTime).toLocaleString("ko-KR", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "numeric",
-                        minute: "2-digit"
-                      })
-                    : "날짜와 시간을 선택하세요"}
-                </p>
-                <p className="builder-preview-venue">
-                  {payload.venueName || payload.venueAddress
-                    ? [payload.venueName, payload.venueAddress].filter(Boolean).join(" · ")
-                    : "예식장과 주소를 입력해 주세요"}
-                </p>
-                <p className="builder-preview-message">{payload.message || "소중한 자리에 함께해 주세요"}</p>
-                <p className="builder-preview-note">
-                  실제 화면 보기에서 전체 초대장 레이아웃을 확인할 수 있습니다.
-                </p>
-              </div>
+            <div
+              className={
+                isStandaloneArtworkTemplate
+                  ? "builder-preview-content builder-preview-content-template-copy"
+                  : "builder-preview-content"
+              }
+            >
+              {useSplitArtworkCopy ? (
+                <div className="builder-template-split-copy" data-placement={payload.templateTextPlacement}>
+                  <div className="builder-template-split-top">
+                    <p className="builder-preview-label">{selectedTemplate.badge.toUpperCase()} INVITATION</p>
+                    <h2 className="builder-preview-names">{builderPreviewNames}</h2>
+                  </div>
+                  <div className="builder-template-split-bottom">
+                    <p className="builder-preview-date">{builderPreviewDate}</p>
+                    <p className="builder-preview-venue">{builderPreviewVenue}</p>
+                  </div>
+                </div>
+              ) : isStandaloneArtworkTemplate ? (
+                <div
+                  className="builder-template-text-overlay"
+                  data-placement={payload.templateTextPlacement}
+                  style={templateCopyStyle}
+                >
+                  <p className="builder-preview-label">{selectedTemplate.badge.toUpperCase()} INVITATION</p>
+                  <h2 className="builder-preview-names">{builderPreviewNames}</h2>
+                  <p className="builder-preview-date">{builderPreviewDate}</p>
+                  <p className="builder-preview-venue">{builderPreviewVenue}</p>
+                </div>
+              ) : (
+                <>
+                  <div className="builder-preview-main-photo-wrap">
+                    {mainImagePreviewUrl ? <img alt="메인 사진 미리보기" className="builder-preview-main-photo has-image" src={mainImagePreviewUrl} /> : <div className="builder-preview-main-photo" />}
+                  </div>
+                  <div className="builder-preview-copy-card">
+                    <p className="builder-preview-label">{selectedTemplate.badge.toUpperCase()} INVITATION</p>
+                    <h2 className="builder-preview-names">{builderPreviewNames}</h2>
+                    <p className="builder-preview-date">{builderPreviewDate}</p>
+                    <p className="builder-preview-venue">{builderPreviewVenue}</p>
+                    <p className="builder-preview-message">{payload.message || "소중한 자리에 함께해 주세요"}</p>
+                    <p className="builder-preview-note">
+                      실제 화면 보기에서 전체 초대장 레이아웃을 확인할 수 있습니다.
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>

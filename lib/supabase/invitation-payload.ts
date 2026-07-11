@@ -3,6 +3,7 @@ import { z } from "zod";
 const payloadSchema = z.object({
   schemaVersion: z.coerce.number().int().default(2),
   templateId: z.string().default("wedding-classic"),
+  templateTextPlacement: z.enum(["top", "center", "bottom", "left", "right"]).catch("top").default("top"),
   category: z.string().default("wedding"),
   title: z.string().default("결혼식 초대장"),
   eventDateTime: z.string().default(""),
@@ -34,6 +35,9 @@ const payloadSchema = z.object({
   shareUrl: z.string().default(""),
   kakaoJsKey: z.string().default(""),
   mapAddress: z.string().default(""),
+  roadAddress: z.string().default(""),
+  jibunAddress: z.string().default(""),
+  zonecode: z.string().default(""),
   naverMapLink: z.string().default(""),
   kakaoMapLink: z.string().default(""),
   transportNote: z.string().default(""),

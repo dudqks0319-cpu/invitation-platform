@@ -1,18 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { templateCategories, templates, type TemplatePreset } from "@/lib/templates";
 import { TemplateMarkup } from "@/components/landing/template-markup";
 
+function templatePriority(template: TemplatePreset) {
+  if (template.id.includes("barunson")) return 0;
+  if (template.id.includes("textspace")) return 1;
+  if (template.id.includes("anime")) return 2;
+  return 3;
+}
+
 export function TemplateBrowser() {
-  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState<string>(templateCategories[0].key);
-  const [previewTarget, setPreviewTarget] = useState<TemplatePreset | null>(null);
+
+  const categoryCounts = useMemo(
+    () =>
+      templateCategories.reduce<Record<string, number>>((counts, category) => {
+        counts[category.key] = templates.filter((template) => template.category === category.key).length;
+        return counts;
+      }, {}),
+    []
+  );
 
   const filteredTemplates = useMemo(
-    () => templates.filter((template) => template.category === activeCategory),
+    () =>
+      templates
+        .filter((template) => template.category === activeCategory)
+        .slice()
+        .sort((first: TemplatePreset, second: TemplatePreset) => templatePriority(first) - templatePriority(second)),
     [activeCategory]
   );
 
@@ -20,9 +37,9 @@ export function TemplateBrowser() {
     <>
       <section className="categories" id="categories">
         <div className="section-inner">
-          <p className="section-kicker">행사별 디자인</p>
-          <h2 className="section-title">어떤 날을 준비하시나요?</h2>
-          <p className="section-sub">행사 분위기에 맞는 템플릿을 골라보세요.</p>
+          <p className="section-kicker">TEMPLATE COLLECTION</p>
+          <h2 className="section-title">행사별 초대장 컬렉션</h2>
+          <p className="section-sub">청첩장 쇼핑하듯 분위기를 먼저 보고 고르세요.</p>
           <div className="cat-tabs">
             {templateCategories.map((category) => (
               <button
@@ -31,7 +48,9 @@ export function TemplateBrowser() {
                 onClick={() => setActiveCategory(category.key)}
                 type="button"
               >
-                <span>{category.emoji}</span> {category.label}
+                <span>{category.emoji}</span>
+                <strong>{category.label}</strong>
+                <small>{categoryCounts[category.key] ?? 0}</small>
               </button>
             ))}
           </div>
@@ -40,43 +59,36 @@ export function TemplateBrowser() {
 
       <section className="templates-section" id="templates">
         <div className="section-inner">
-          <p className="section-kicker">인기 디자인</p>
-          <h2 className="section-title">마음에 드는 템플릿을 골라보세요</h2>
-          <p className="section-sub">모든 템플릿은 무료로 미리 볼 수 있고, 바로 빌더로 이어집니다.</p>
+          <div className="templates-heading-row">
+            <div>
+              <p className="section-kicker left">CURATED DESIGN</p>
+              <h2 className="section-title left">마음에 드는 템플릿을 골라보세요</h2>
+              <p className="section-sub left">모든 템플릿은 무료로 미리 볼 수 있고, 바로 빌더로 이어집니다.</p>
+            </div>
+            <Link className="templates-heading-link" href="/builder">
+              바로 제작하기
+            </Link>
+          </div>
           <div className="templates-grid">
             {filteredTemplates.map((template) => (
-              <div
+              <article
                 aria-label={`${template.name} 템플릿 선택`}
                 className="template-card"
                 key={template.id}
-                onClick={() => router.push(`/builder?template=${template.id}`)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    router.push(`/builder?template=${template.id}`);
-                  }
-                }}
-                role="button"
-                tabIndex={0}
               >
                 <div className="template-thumb">
                   <TemplateMarkup template={template} variant="browser" />
                   <div className="template-overlay">
                     <div className="overlay-btns">
-                      <button
+                      <Link
                         className="overlay-btn"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setPreviewTarget(template);
-                        }}
-                        type="button"
+                        href={`/preview?template=${template.id}`}
                       >
                         미리보기
-                      </button>
+                      </Link>
                       <Link
                         className="overlay-btn primary"
                         href={`/builder?template=${template.id}`}
-                        onClick={(event) => event.stopPropagation()}
                       >
                         사용하기
                       </Link>
@@ -94,44 +106,20 @@ export function TemplateBrowser() {
                       </span>
                     ))}
                   </div>
+                  <div className="template-card-actions">
+                    <Link className="template-card-preview-cta" href={`/preview?template=${template.id}`}>
+                      미리보기
+                    </Link>
+                    <Link className="template-card-cta" href={`/builder?template=${template.id}`}>
+                      사용하기
+                    </Link>
+                  </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         </div>
       </section>
-
-      <div className={`modal-overlay ${previewTarget ? "open" : ""}`} onClick={() => setPreviewTarget(null)}>
-        <div className="preview-modal-box" onClick={(event) => event.stopPropagation()}>
-          <button className="modal-close" onClick={() => setPreviewTarget(null)} type="button">
-            ×
-          </button>
-          {previewTarget ? (
-            <>
-              <div style={{ padding: "24px 24px 0" }}>
-                <span className="template-badge">{previewTarget.badge}</span>
-                <h2 style={{ fontFamily: "var(--font-serif)", fontSize: "1.3rem", margin: "8px 0 4px" }}>
-                  {previewTarget.name}
-                </h2>
-                <p style={{ color: "var(--text-mid)", fontSize: "0.85rem", marginBottom: "16px" }}>
-                  {previewTarget.desc}
-                </p>
-              </div>
-              <div style={{ padding: "0 24px" }}>
-                <TemplateMarkup template={previewTarget} />
-              </div>
-              <div className="preview-actions">
-                <button className="btn-outline" onClick={() => setPreviewTarget(null)} type="button">
-                  닫기
-                </button>
-                <Link className="btn-primary" href={`/builder?template=${previewTarget.id}`}>
-                  이 템플릿으로 만들기
-                </Link>
-              </div>
-            </>
-          ) : null}
-        </div>
-      </div>
     </>
   );
 }
