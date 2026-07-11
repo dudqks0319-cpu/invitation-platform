@@ -1,8 +1,8 @@
+import { createHash } from "node:crypto";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { InvitationView } from "@/components/invitations/invitation-view";
-import { SiteHeader } from "@/components/shared/site-header";
 import { findDemoInvitationBySlug } from "@/lib/demo-data";
 import { buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
 import { getPublicShareUrl } from "@/lib/invitation-presentation";
@@ -29,6 +29,7 @@ type ViewLogsTable = {
   };
   insert(payload: {
     invitation_id: string;
+    visitor_key: string;
     user_agent: string;
   }): Promise<{ error: { message?: string } | null }>;
 };
@@ -58,6 +59,7 @@ type GuestbookEntriesTable = {
 
 const VIEW_LOG_COOLDOWN_MS = 30 * 60 * 1000;
 const DEFAULT_OG_IMAGE = "/images/genspark/cncrue0H.jpg";
+const MAX_LOGGED_USER_AGENT_LENGTH = 200;
 
 export function resolveRequestOrigin(headerList: HeaderSource) {
   const forwardedHost = headerList.get("x-forwarded-host");
@@ -84,7 +86,7 @@ export function buildPublicInvitationMetadata({
       title,
       description,
       url: shareUrl,
-      siteName: "InviteHub",
+      siteName: "오삼오삼",
       locale: "ko_KR",
       type: "website",
       images: [
@@ -105,14 +107,30 @@ export function buildPublicInvitationMetadata({
   };
 }
 
+function getHeaderIp(headerList: HeaderSource) {
+  return (
+    headerList.get("cf-connecting-ip") ||
+    headerList.get("x-vercel-forwarded-for")?.split(",")[0]?.trim() ||
+    headerList.get("x-real-ip") ||
+    "anonymous"
+  );
+}
+
+export function createVisitorKey(invitationId: string, userAgent: string, headerList: HeaderSource) {
+  return createHash("sha256")
+    .update(`${invitationId}:${getHeaderIp(headerList)}:${userAgent.slice(0, MAX_LOGGED_USER_AGENT_LENGTH)}`)
+    .digest("hex");
+}
+
 export async function logInvitationView(
   admin: {
     from(table: string): unknown;
   },
   invitationId: string,
-  userAgent: string
+  userAgent: string,
+  visitorKey: string
 ) {
-  if (!userAgent) {
+  if (!userAgent || !visitorKey) {
     return;
   }
 
@@ -121,7 +139,7 @@ export async function logInvitationView(
   const { data: recentLogs, error: recentError } = await viewLogsTable
     .select("id")
     .eq("invitation_id", invitationId)
-    .eq("user_agent", userAgent)
+    .eq("visitor_key", visitorKey)
     .gte("created_at", cutoff)
     .limit(1);
 
@@ -131,7 +149,8 @@ export async function logInvitationView(
 
   await viewLogsTable.insert({
     invitation_id: invitationId,
-    user_agent: userAgent
+    visitor_key: visitorKey,
+    user_agent: userAgent.slice(0, MAX_LOGGED_USER_AGENT_LENGTH)
   });
 }
 
@@ -194,7 +213,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const decodedSlug = decodeURIComponent(slug);
   const origin = resolveRequestOrigin(await headers());
-  const shareUrl = getPublicShareUrl(`/invitations/${decodedSlug}`, origin);
+  const shareUrl = getPublicShareUrl(`/i/${decodedSlug}`, origin);
   const { invitation } = await loadPublishedInvitation(decodedSlug);
 
   if (invitation) {
@@ -223,7 +242,7 @@ export async function generateMetadata({
   }
 
   return buildPublicInvitationMetadata({
-    title: "InviteHub",
+    title: "오삼오삼",
     description: "모바일 초대장을 손쉽게 만들고 공유하세요.",
     shareUrl,
     imageUrl: getPublicShareUrl(DEFAULT_OG_IMAGE, origin)
@@ -248,31 +267,27 @@ export default async function PublicInvitationPage({
       normalizeInvitationPayload(invitation.payload)
     );
     if (admin) {
-      await logInvitationView(admin, invitation.id, headerList.get("user-agent") || "");
+      const userAgent = headerList.get("user-agent") || "";
+      await logInvitationView(admin, invitation.id, userAgent, createVisitorKey(invitation.id, userAgent, headerList));
     }
 
     const guestbookEntries = await loadApprovedGuestbookEntries(admin, invitation.id);
 
     return (
-      <>
-        <SiteHeader mode="focus" />
-        <div className="app-page-offset">
-          <InvitationView
-            initialGuestbookEntries={(guestbookEntries ?? []).map((entry) => ({
-              id: entry.id,
-              nickname: entry.nickname,
-              message: entry.message,
-              approved: entry.approved,
-              createdAt: entry.created_at
-            }))}
-            mode="public"
-            payload={payload}
-            platformKakaoJsKey={platformKakaoJsKey}
-            shareUrl={getPublicShareUrl(`/invitations/${invitation.slug}`, origin)}
-            slug={invitation.slug}
-          />
-        </div>
-      </>
+      <InvitationView
+        initialGuestbookEntries={(guestbookEntries ?? []).map((entry) => ({
+          id: entry.id,
+          nickname: entry.nickname,
+          message: entry.message,
+          approved: entry.approved,
+          createdAt: entry.created_at
+        }))}
+        mode="public"
+        payload={payload}
+        platformKakaoJsKey={platformKakaoJsKey}
+        shareUrl={getPublicShareUrl(`/i/${invitation.slug}`, origin)}
+        slug={invitation.slug}
+      />
     );
   }
 
@@ -283,17 +298,12 @@ export default async function PublicInvitationPage({
   }
 
   return (
-    <>
-      <SiteHeader mode="focus" />
-      <div className="app-page-offset">
-        <InvitationView
-          mode="public"
-          payload={demoInvitation.payload}
-          platformKakaoJsKey={platformKakaoJsKey}
-          shareUrl={getPublicShareUrl(`/invitations/${demoInvitation.slug}`, origin)}
-          slug={demoInvitation.slug}
-        />
-      </div>
-    </>
+    <InvitationView
+      mode="public"
+      payload={demoInvitation.payload}
+      platformKakaoJsKey={platformKakaoJsKey}
+      shareUrl={getPublicShareUrl(`/i/${demoInvitation.slug}`, origin)}
+      slug={demoInvitation.slug}
+    />
   );
 }

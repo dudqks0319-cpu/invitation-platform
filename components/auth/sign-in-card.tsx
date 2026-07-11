@@ -124,7 +124,7 @@ export function SignInCard({
 
   return (
     <div className="modal-box" style={{ maxWidth: "480px", margin: "0 auto", display: "block" }}>
-      <div className="modal-logo">💌 InviteHub</div>
+      <div className="modal-logo">오삼오삼</div>
       <h2 className="modal-title">
         {mode === "signin" ? "이메일 로그인" : "새 계정 만들기"}
       </h2>

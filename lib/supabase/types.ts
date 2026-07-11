@@ -21,6 +21,9 @@ export type Database = {
           payload: Json;
           repurchase_required: boolean;
           paid_payload_snapshot: Json | null;
+          guest_owner_token_hash: string | null;
+          guest_owner_created_at: string | null;
+          guest_owner_last_verified_at: string | null;
           published_at: string | null;
           created_at: string;
           updated_at: string;
@@ -36,6 +39,9 @@ export type Database = {
           payload: Json;
           repurchase_required?: boolean;
           paid_payload_snapshot?: Json | null;
+          guest_owner_token_hash?: string | null;
+          guest_owner_created_at?: string | null;
+          guest_owner_last_verified_at?: string | null;
           published_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -107,6 +113,54 @@ export type Database = {
         Update: Partial<Database["public"]["Tables"]["payment_audit_logs"]["Insert"]>;
         Relationships: [];
       };
+      user_entitlements: {
+        Row: {
+          id: string;
+          user_id: string;
+          platform: "ios" | "android";
+          product_id: string;
+          transaction_id: string;
+          entitlement: string;
+          quantity: number;
+          consumed_quantity: number;
+          raw_event: Json | null;
+          purchased_at: string;
+          revoked_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          platform: "ios" | "android";
+          product_id: string;
+          transaction_id: string;
+          entitlement: string;
+          quantity?: number;
+          consumed_quantity?: number;
+          raw_event?: Json | null;
+          purchased_at?: string;
+          revoked_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["user_entitlements"]["Insert"]>;
+        Relationships: [];
+      };
+      publish_credits: {
+        Row: {
+          user_id: string;
+          credits: number;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          credits?: number;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["publish_credits"]["Insert"]>;
+        Relationships: [];
+      };
       rsvps: {
         Row: {
           id: string;
@@ -173,12 +227,14 @@ export type Database = {
         Row: {
           id: number;
           invitation_id: string;
+          visitor_key: string | null;
           user_agent: string | null;
           created_at: string;
         };
         Insert: {
           id?: number;
           invitation_id: string;
+          visitor_key?: string | null;
           user_agent?: string | null;
           created_at?: string;
         };
@@ -198,6 +254,39 @@ export type Database = {
           allowed: boolean;
           remaining: number;
           reset_at: string;
+        }[];
+      };
+      grant_publish_credit: {
+        Args: {
+          p_user_id: string;
+          p_platform: "ios" | "android";
+          p_product_id: string;
+          p_transaction_id: string;
+          p_entitlement: string;
+          p_quantity: number;
+          p_purchased_at: string;
+          p_raw_event: Json;
+        };
+        Returns: boolean;
+      };
+      revoke_publish_credit: {
+        Args: {
+          p_transaction_id: string;
+          p_revoked_at: string;
+          p_raw_event: Json;
+        };
+        Returns: number;
+      };
+      publish_invitation_with_credit: {
+        Args: {
+          p_user_id: string;
+          p_invitation_id: string;
+          p_published_payload: Json;
+          p_paid_payload_snapshot: Json;
+        };
+        Returns: {
+          success: boolean;
+          remaining_credits: number;
         }[];
       };
     };

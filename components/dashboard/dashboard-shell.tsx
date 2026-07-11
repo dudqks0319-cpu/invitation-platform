@@ -239,7 +239,7 @@ export function DashboardShell() {
       return;
     }
 
-    const publicUrl = `${window.location.origin}/invitations/${item.slug}`;
+    const publicUrl = `${window.location.origin}/i/${item.slug}`;
     await navigator.clipboard.writeText(publicUrl);
     setMessage("공개 링크를 복사했습니다.");
   }
@@ -373,7 +373,7 @@ export function DashboardShell() {
                 </Link>
                 {item.status === "published" ? (
                   <>
-                    <Link className="btn-primary" href={`/invitations/${item.slug}`}>
+                    <Link className="btn-primary" href={`/i/${item.slug}`}>
                       보기
                     </Link>
                     <button className="btn-outline" onClick={() => copyPublicLink(item)} type="button">

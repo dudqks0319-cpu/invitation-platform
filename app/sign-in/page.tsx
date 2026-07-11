@@ -28,7 +28,7 @@ export default async function SignInPage({
         <div className="hero-content" style={{ maxWidth: "540px", margin: "0 auto", paddingRight: 0 }}>
           <p className="hero-badge">계정으로 초대장을 관리하세요</p>
           <h1 className="hero-title">
-            InviteHub에 로그인하고
+            오삼오삼에 로그인하고
             <br />
             초대장을 이어서 완성하세요
           </h1>

@@ -1,7 +1,7 @@
 import { SiteHeader } from "@/components/shared/site-header";
 
 export const metadata = {
-  title: "개인정보처리방침 - InviteHub"
+  title: "개인정보처리방침 - 오삼오삼"
 };
 
 export default function PrivacyPage() {
@@ -22,7 +22,7 @@ export default function PrivacyPage() {
 
           <div style={{ color: "#444", fontSize: "0.92rem", lineHeight: 1.8 }}>
             <p style={{ marginBottom: 24 }}>
-              InviteHub(이하 &quot;서비스&quot;)는 이용자의 개인정보를 소중히 여기며,
+              오삼오삼(이하 &quot;서비스&quot;)는 이용자의 개인정보를 소중히 여기며,
               「개인정보 보호법」을 준수합니다. 본 방침은 서비스가 수집하는 개인정보 항목,
               이용 목적, 보유 기간과 이용자의 권리를 안내합니다.
             </p>

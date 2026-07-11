@@ -1,10 +1,13 @@
 import { z } from "zod";
 import type { Database } from "@/lib/supabase/types";
+import { normalizeInvitationTextPlacement } from "@/lib/invitation-text-placement";
 
 export const LOCAL_DRAFT_KEY = "invitehub_builder_draft_v3";
 export const LOCAL_GUESTBOOK_KEY = "invitehub_local_guestbook_preview";
 export const LOCAL_RSVP_KEY = "invitehub_local_rsvp_preview";
 export const INVITATION_PAYLOAD_SCHEMA_VERSION = 1;
+const DATA_IMAGE_URL_PATTERN = /^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/;
+const MAX_INLINE_IMAGE_REFERENCE_LENGTH = 2 * 1024 * 1024;
 
 export type InvitationStatus = Database["public"]["Tables"]["invitations"]["Row"]["status"];
 
@@ -16,7 +19,7 @@ const imageReferenceSchema = z
       value === "" ||
       value.startsWith("http://") ||
       value.startsWith("https://") ||
-      value.startsWith("data:"),
+      (value.length <= MAX_INLINE_IMAGE_REFERENCE_LENGTH && DATA_IMAGE_URL_PATTERN.test(value)),
     "이미지 참조 형식이 올바르지 않습니다."
   )
   .catch("");
@@ -25,6 +28,7 @@ const legacyInvitationPayloadSchema = z
   .object({
     schemaVersion: z.coerce.number().int().optional(),
     templateId: z.string().trim().optional(),
+    templateTextPlacement: z.string().trim().optional(),
     category: z.string().trim().optional(),
     title: z.string().trim().optional(),
     eventDateTime: z.string().trim().optional(),
@@ -56,6 +60,9 @@ const legacyInvitationPayloadSchema = z
     shareUrl: z.string().trim().optional(),
     kakaoJsKey: z.string().trim().optional(),
     mapAddress: z.string().trim().optional(),
+    roadAddress: z.string().trim().optional(),
+    jibunAddress: z.string().trim().optional(),
+    zonecode: z.string().trim().optional(),
     naverMapLink: z.string().trim().optional(),
     kakaoMapLink: z.string().trim().optional(),
     transportNote: z.string().trim().optional(),
@@ -73,23 +80,24 @@ const legacyInvitationPayloadSchema = z
 export const invitationDraftPayloadSchema = legacyInvitationPayloadSchema.transform((raw) => ({
   schemaVersion: INVITATION_PAYLOAD_SCHEMA_VERSION,
   templateId: raw.templateId || "wedding-classic",
+  templateTextPlacement: normalizeInvitationTextPlacement(raw.templateTextPlacement),
   category: raw.category || "wedding",
   title: raw.title || "결혼식 초대장",
   eventDateTime: raw.eventDateTime || "2026-04-12T14:00",
-  venueName: raw.venueName || "서울 더파인 웨딩홀",
-  venueAddress: raw.venueAddress || "서울 강남구 테헤란로 123",
+  venueName: raw.venueName || "라비에벨 가든홀",
+  venueAddress: raw.venueAddress ?? "서울 강남구 테헤란로 128",
   message: raw.message || "저희 두 사람이 하나가 되는 자리에 함께해 주세요.",
   videoUrl: raw.videoUrl || "",
   backgroundMusicUrl: raw.backgroundMusicUrl || "",
   thankYouMessage: raw.thankYouMessage || "",
-  groomName: raw.groomName || "홍길동",
-  brideName: raw.brideName || "김부인",
+  groomName: raw.groomName || "김민준",
+  brideName: raw.brideName || "이서연",
   groomPhone: raw.groomPhone || "",
   bridePhone: raw.bridePhone || "",
-  groomFatherName: raw.groomFatherName || "홍아버지",
-  groomMotherName: raw.groomMotherName || "이어머니",
-  brideFatherName: raw.brideFatherName || "김아버지",
-  brideMotherName: raw.brideMotherName || "박어머니",
+  groomFatherName: raw.groomFatherName || "김영호",
+  groomMotherName: raw.groomMotherName || "박미정",
+  brideFatherName: raw.brideFatherName || "이상훈",
+  brideMotherName: raw.brideMotherName || "정유진",
   groomFatherPhone: raw.groomFatherPhone || "",
   groomMotherPhone: raw.groomMotherPhone || "",
   brideFatherPhone: raw.brideFatherPhone || "",
@@ -103,10 +111,13 @@ export const invitationDraftPayloadSchema = legacyInvitationPayloadSchema.transf
   kakaoPayLink: raw.kakaoPayLink || "",
   shareUrl: raw.shareUrl || "",
   kakaoJsKey: raw.kakaoJsKey || "",
-  mapAddress: raw.mapAddress || raw.venueAddress || "서울 강남구 테헤란로 123",
-  naverMapLink: raw.naverMapLink || "",
-  kakaoMapLink: raw.kakaoMapLink || "",
-  transportNote: raw.transportNote || "",
+  mapAddress: raw.mapAddress ?? raw.venueAddress ?? "서울 강남구 테헤란로 128",
+  roadAddress: raw.roadAddress ?? "",
+  jibunAddress: raw.jibunAddress ?? "",
+  zonecode: raw.zonecode ?? "",
+  naverMapLink: raw.naverMapLink ?? "",
+  kakaoMapLink: raw.kakaoMapLink ?? "",
+  transportNote: raw.transportNote ?? "",
   mainImageUrl: raw.mainImageUrl || raw.mainImageData || "",
   mainImagePath: raw.mainImagePath || "",
   backgroundImageUrl: raw.backgroundImageUrl || raw.backgroundImageData || "",
@@ -161,16 +172,27 @@ export function normalizeDraft(payload: Partial<InvitationDraftPayload> | unknow
   return parseInvitationPayload(payload);
 }
 
-export function createInvitationSlug(payload: Pick<InvitationDraftPayload, "title" | "groomName" | "brideName">) {
-  const seed = `${payload.title}-${payload.groomName}-${payload.brideName}`
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9가-힣\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+const SHORT_SLUG_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
+const SHORT_SLUG_TOKEN_LENGTH = 10;
 
-  return `${seed || "invitehub"}-${Math.random().toString(36).slice(2, 8)}`;
+function createShortSlugToken() {
+  const bytes = new Uint8Array(SHORT_SLUG_TOKEN_LENGTH);
+
+  if (globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(bytes);
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256);
+    }
+  }
+
+  const token = Array.from(bytes, (byte) => SHORT_SLUG_ALPHABET[byte % SHORT_SLUG_ALPHABET.length]).join("");
+  return `iv-${token}`;
+}
+
+export function createInvitationSlug(payload: Pick<InvitationDraftPayload, "title" | "groomName" | "brideName">) {
+  void payload;
+  return createShortSlugToken();
 }
 
 export function toInvitationInsert(

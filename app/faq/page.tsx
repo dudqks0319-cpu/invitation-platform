@@ -2,7 +2,7 @@ import { SiteHeader } from "@/components/shared/site-header";
 import { isPaidPublishingEnabled } from "@/lib/release-flags";
 
 export const metadata = {
-  title: "FAQ - InviteHub"
+  title: "FAQ - 오삼오삼"
 };
 
 export default function FaqPage() {
