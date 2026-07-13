@@ -1,14 +1,24 @@
 import Link from "next/link";
+import {
+  ArrowRight,
+  Check,
+  ChevronDown,
+  ClipboardCheck,
+  LayoutGrid,
+  MapPinned,
+  ShieldCheck,
+  Sparkles
+} from "lucide-react";
 import { TemplateBrowser } from "@/components/landing/template-browser";
 import { SiteFooter } from "@/components/shared/site-footer";
 import { SiteHeader } from "@/components/shared/site-header";
-import { featuredGensparkImages, gensparkArchiveImages, gensparkAssetCount } from "@/lib/genspark-gallery";
+import { featuredGensparkImages, gensparkAssetCount } from "@/lib/genspark-gallery";
 
 const features = [
-  { icon: "✉️", title: "프리미엄 카드 무드", description: "종이 카드처럼 정돈된 레이아웃과 수채화 플로럴 자산을 기본 무드로 제공합니다." },
-  { icon: "📊", title: "실시간 RSVP 관리", description: "하객 응답과 동행 인원을 공개 링크에서 바로 수집하고 대시보드에서 확인합니다." },
-  { icon: "🗺️", title: "지도 · 교통 · 계좌", description: "오시는 길, 교통 안내, 마음 전하실 곳 정보를 한 화면에 정리합니다." },
-  { icon: "🔒", title: "초안과 발행 분리", description: "작성 중인 초안과 결제 후 공개 링크 상태를 분리해 실제 운영 흐름에 맞춥니다." }
+  { icon: Sparkles, title: "프리미엄 카드 무드", description: "종이 카드처럼 정돈된 레이아웃과 수채화 플로럴 자산을 기본 무드로 제공합니다." },
+  { icon: ClipboardCheck, title: "실시간 RSVP 관리", description: "하객 응답과 동행 인원을 공개 링크에서 바로 수집하고 대시보드에서 확인합니다." },
+  { icon: MapPinned, title: "지도 · 교통 · 계좌", description: "오시는 길, 교통 안내, 마음 전하실 곳 정보를 한 화면에 정리합니다." },
+  { icon: ShieldCheck, title: "초안과 발행 분리", description: "작성 중인 초안과 결제 후 공개 링크 상태를 분리해 실제 운영 흐름에 맞춥니다." }
 ];
 
 const pricing = [
@@ -42,66 +52,48 @@ export default function HomePage() {
   return (
     <main className="app-shell">
       <SiteHeader />
-      <section className="hero">
+      <section
+        className="hero"
+        style={{
+          backgroundImage: `linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0.74)), url(${featuredGensparkImages[0].src})`
+        }}
+      >
         <div className="hero-content">
-          <p className="hero-badge">PREMIUM MOBILE INVITATION</p>
+          <p className="hero-badge">
+            <Sparkles aria-hidden="true" size={15} strokeWidth={2} />
+            INVITEHUB MOBILE INVITATION
+          </p>
           <h1 className="hero-title">
-            종이 카드의 품격을
+            모바일 초대장,
             <br />
-            모바일 초대장으로 옮기세요
+            <span>InviteHub</span>
           </h1>
           <p className="hero-subtitle">
-            바른손카드처럼 첫인상이 고급스럽고,
-            실제 RSVP와 공개 링크 운영까지 되는 초대장 웹 앱을 목표로 다시 다듬었습니다.
+            종이 카드의 여백과 감성은 그대로.
+            만들기부터 RSVP, 공개 링크까지 한 번에 완성하세요.
           </p>
           <div className="hero-proof-list">
-            <span>68개 Genspark 아트워크 자산</span>
-            <span>행사별 템플릿 탐색</span>
-            <span>공개 링크 · RSVP · 방명록</span>
+            <span><Check aria-hidden="true" size={15} />{gensparkAssetCount}개 무드 자산</span>
+            <span><Check aria-hidden="true" size={15} />8가지 행사</span>
+            <span><Check aria-hidden="true" size={15} />RSVP 실시간 수집</span>
           </div>
           <div className="hero-btns">
             <Link className="btn-hero-primary" href="/builder">
-              지금 초대장 만들기
+              <span>초대장 만들기</span>
+              <ArrowRight aria-hidden="true" size={18} strokeWidth={2.2} />
             </Link>
             <a className="btn-hero-outline" href="#templates">
-              템플릿 둘러보기
+              <LayoutGrid aria-hidden="true" size={18} strokeWidth={2} />
+              <span>템플릿 보기</span>
             </a>
           </div>
-          <div className="hero-stats">
-            <div className="stat">
-              <strong>{gensparkAssetCount}</strong>
-              <span>무드 자산</span>
-            </div>
-            <div className="stat-divider" />
-            <div className="stat">
-              <strong>8+</strong>
-              <span>행사 카테고리</span>
-            </div>
-            <div className="stat-divider" />
-            <div className="stat">
-              <strong>LIVE</strong>
-              <span>발행 플로우</span>
-            </div>
-          </div>
         </div>
-        <div className="hero-preview">
-          <div className="phone-mock">
-            <div className="phone-screen">
-              <div className="wedding-preview" style={{ backgroundImage: `linear-gradient(180deg, rgba(251,245,238,0.72), rgba(244,235,226,0.9)), url(${featuredGensparkImages[0].src})` }}>
-                <p className="preview-sub">Premium Floral Card</p>
-                <p className="preview-title font-display">Minjun &amp; Sua</p>
-                <p className="preview-msg">소중한 날의 여백과 꽃을 모바일 초대장 톤으로 담았습니다.</p>
-                <div className="preview-chip-row">
-                  <span>{featuredGensparkImages[0].tone}</span>
-                  <span>RSVP Live</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <a aria-label="추천 무드 보기" className="hero-scroll-cue" href="#curation" title="추천 무드 보기">
+          <ChevronDown aria-hidden="true" size={20} />
+        </a>
       </section>
 
-      <section className="curation-section">
+      <section className="curation-section" id="curation">
         <div className="section-inner">
           <p className="section-kicker">CURATED ARTWORK</p>
           <h2 className="section-title">무드가 먼저 보이는 첫 화면</h2>
@@ -121,7 +113,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <TemplateBrowser archiveImages={gensparkArchiveImages} featuredImages={featuredGensparkImages} />
+      <TemplateBrowser />
 
       <section className="features-section" id="features">
         <div className="section-inner">
@@ -129,11 +121,13 @@ export default function HomePage() {
           <h2 className="section-title">보기 좋은 것에서 끝나지 않는 초대장</h2>
           <p className="section-sub">무드와 운영 플로우가 함께 살아 있는 실제 서비스형 구조로 정리했습니다.</p>
           <div className="features-grid">
-            {features.map((feature) => (
-              <article className="feature-card" key={feature.title}>
-                <div className="feature-icon">{feature.icon}</div>
-                <h3>{feature.title}</h3>
-                <p>{feature.description}</p>
+            {features.map(({ icon: FeatureIcon, title, description }) => (
+              <article className="feature-card" key={title}>
+                <div className="feature-icon">
+                  <FeatureIcon aria-hidden="true" size={22} strokeWidth={1.8} />
+                </div>
+                <h3>{title}</h3>
+                <p>{description}</p>
               </article>
             ))}
           </div>
@@ -156,26 +150,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="ops-section" id="ops">
-        <div className="section-inner">
-          <p className="section-kicker">OPS</p>
-          <h2 className="section-title">현재 빌드 방향</h2>
-          <p className="section-sub">디자인 감성은 유지하고, 저장/공개/응답 플로우는 실제 앱 기준으로 정렬했습니다.</p>
-          <div className="ops-grid">
-            <article className="ops-card">
-              <h3>데모 모드</h3>
-              <p className="ops-value">즉시 사용 가능</p>
-              <p className="ops-note">환경 변수가 없어도 빌더와 미리보기, 디자인 검토가 가능합니다.</p>
-            </article>
-            <article className="ops-card">
-              <h3>Supabase 모드</h3>
-              <p className="ops-value">실제 저장/발행</p>
-              <p className="ops-note">환경 변수를 넣으면 로그인, 초안 저장, 공개 링크, RSVP, 방명록이 실제 데이터로 동작합니다.</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
       <section className="pricing-section" id="pricing">
         <div className="section-inner">
           <p className="section-kicker">PRICING</p>
@@ -192,13 +166,14 @@ export default function HomePage() {
                 <ul>
                   {plan.items.map((item) => (
                     <li key={item}>
-                      <span>•</span>
+                      <Check aria-hidden="true" size={16} strokeWidth={2.2} />
                       {item}
                     </li>
                   ))}
                 </ul>
-                <Link className={`btn-price ${plan.title === "웹 MVP" ? "btn-primary" : ""}`} href="/builder">
-                  시작하기
+                <Link className={`btn-price ${plan.title === "실제 발행" ? "btn-primary" : ""}`} href="/builder">
+                  <span>시작하기</span>
+                  <ArrowRight aria-hidden="true" size={16} strokeWidth={2.2} />
                 </Link>
               </article>
             ))}

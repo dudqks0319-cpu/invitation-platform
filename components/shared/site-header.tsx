@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowRight, Mail, Menu, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { authDestination, normalizeNextPath } from "@/lib/auth";
@@ -22,6 +23,7 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
   const router = useRouter();
   const supabase = useMemo(() => createBrowserClient(), []);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!supabase) {
@@ -67,7 +69,9 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
     <header className={mode === "focus" ? "site-header site-header-focus" : "site-header"}>
       <div className="header-inner">
         <Link aria-label="InviteHub 홈으로 이동" className="logo" href="/">
-          <span className="logo-icon">💌</span>
+          <span aria-hidden="true" className="logo-icon">
+            <Mail size={18} strokeWidth={2} />
+          </span>
           <span className="logo-text">InviteHub</span>
         </Link>
         {mode === "focus" ? null : (
@@ -95,12 +99,51 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
                 </Link>
               )}
               <Link className="btn-primary" href="/builder">
-                시작하기
+                <span>시작하기</span>
+                <ArrowRight aria-hidden="true" size={16} strokeWidth={2.2} />
               </Link>
             </div>
+            <button
+              aria-controls="mobile-navigation"
+              aria-expanded={isMenuOpen}
+              aria-label={isMenuOpen ? "메뉴 닫기" : "메뉴 열기"}
+              className="mobile-nav-toggle"
+              onClick={() => setIsMenuOpen((open) => !open)}
+              type="button"
+            >
+              {isMenuOpen ? <X aria-hidden="true" size={21} /> : <Menu aria-hidden="true" size={21} />}
+            </button>
           </>
         )}
       </div>
+      {mode === "default" && isMenuOpen ? (
+        <nav aria-label="모바일 메뉴" className="mobile-menu open" id="mobile-navigation">
+          {navLinks.map((link) => (
+            <Link href={link.href} key={link.href} onClick={() => setIsMenuOpen(false)}>
+              {link.label}
+            </Link>
+          ))}
+          <div className="mobile-menu-actions">
+            {isAuthenticated ? (
+              <Link className="btn-outline" href="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                내 대시보드
+              </Link>
+            ) : (
+              <Link
+                className="btn-outline"
+                href={`/sign-in?next=${encodeURIComponent(currentPath)}`}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                로그인
+              </Link>
+            )}
+            <Link className="btn-primary" href="/builder" onClick={() => setIsMenuOpen(false)}>
+              <span>시작하기</span>
+              <ArrowRight aria-hidden="true" size={16} strokeWidth={2.2} />
+            </Link>
+          </div>
+        </nav>
+      ) : null}
     </header>
   );
 }

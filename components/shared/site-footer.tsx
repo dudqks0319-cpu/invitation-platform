@@ -1,10 +1,14 @@
 import Link from "next/link";
+import { Mail } from "lucide-react";
 
 export function SiteFooter() {
   return (
     <footer className="site-footer-bottom">
       <div className="footer-inner">
-        <div className="footer-logo">💌 InviteHub</div>
+        <div className="footer-logo">
+          <Mail aria-hidden="true" size={20} strokeWidth={2} />
+          <span>InviteHub</span>
+        </div>
         <p>소중한 순간을 더욱 특별하게 만들어드립니다</p>
         <div className="footer-links">
           <Link href="/builder">초대장 만들기</Link>

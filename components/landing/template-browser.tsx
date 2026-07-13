@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowRight, Eye, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { GensparkArtwork } from "@/lib/genspark-gallery";
 import { templateCategories, templates, type TemplatePreset } from "@/lib/templates";
@@ -63,6 +64,7 @@ export function TemplateBrowser({
           <div className="cat-tabs">
             {templateCategories.map((category) => (
               <button
+                aria-pressed={category.key === activeCategory}
                 className={`cat-tab ${category.key === activeCategory ? "active" : ""}`}
                 key={category.key}
                 onClick={() => setActiveCategory(category.key)}
@@ -82,23 +84,9 @@ export function TemplateBrowser({
           <p className="section-sub">감성 가득한 디자인으로 마음을 전하세요</p>
           <div className="templates-grid">
             {filteredTemplates.map((template) => (
-              <div className="template-card" key={template.id}>
+              <article className="template-card" key={template.id}>
                 <div className="template-thumb">
                   <TemplateMarkup template={template} />
-                  <div className="template-overlay">
-                    <div className="overlay-btns">
-                      <button
-                        className="overlay-btn"
-                        onClick={() => setPreviewTarget(template)}
-                        type="button"
-                      >
-                        미리보기
-                      </button>
-                      <Link className="overlay-btn primary" href={`/builder?template=${template.id}`}>
-                        사용하기
-                      </Link>
-                    </div>
-                  </div>
                 </div>
                 <div className="template-info">
                   <span className="template-badge">{template.badge}</span>
@@ -111,8 +99,22 @@ export function TemplateBrowser({
                       </span>
                     ))}
                   </div>
+                  <div className="template-card-actions">
+                    <button
+                      className="template-action"
+                      onClick={() => setPreviewTarget(template)}
+                      type="button"
+                    >
+                      <Eye aria-hidden="true" size={16} />
+                      <span>미리보기</span>
+                    </button>
+                    <Link className="template-action primary" href={`/builder?template=${template.id}`}>
+                      <span>사용하기</span>
+                      <ArrowRight aria-hidden="true" size={16} />
+                    </Link>
+                  </div>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
         </div>
@@ -141,8 +143,8 @@ export function TemplateBrowser({
 
       <div className={`modal-overlay ${previewTarget ? "open" : ""}`} onClick={() => setPreviewTarget(null)}>
         <div className="preview-modal-box" onClick={(event) => event.stopPropagation()}>
-          <button className="modal-close" onClick={() => setPreviewTarget(null)} type="button">
-            ×
+          <button aria-label="미리보기 닫기" className="modal-close" onClick={() => setPreviewTarget(null)} type="button">
+            <X aria-hidden="true" size={18} />
           </button>
           {previewTarget ? (
             <>
@@ -167,10 +169,12 @@ export function TemplateBrowser({
               </div>
               <div className="preview-actions">
                 <button className="btn-outline" onClick={() => setPreviewTarget(null)} type="button">
-                  닫기
+                  <X aria-hidden="true" size={16} />
+                  <span>닫기</span>
                 </button>
                 <Link className="btn-primary" href={`/builder?template=${previewTarget.id}`}>
-                  이 템플릿 사용하기
+                  <span>이 템플릿 사용하기</span>
+                  <ArrowRight aria-hidden="true" size={16} />
                 </Link>
               </div>
             </>
