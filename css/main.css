@@ -1074,6 +1074,9 @@ ul { list-style: none; }
   display: flex;
   justify-content: center;
 }
+.builder-preview-toggle {
+  display: none;
+}
 .builder-phone {
   width: 300px;
   height: 620px;
@@ -1288,7 +1291,7 @@ ul { list-style: none; }
 }
 .builder-step-pills {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 8px;
 }
 .builder-step-pill {
@@ -1309,6 +1312,60 @@ ul { list-style: none; }
   margin-bottom: 14px;
   font-size: 1rem;
   color: #58432f;
+}
+.builder-field-legend {
+  margin: -4px 0 16px;
+  color: #746454;
+  font-size: 0.86rem;
+  line-height: 1.6;
+}
+.builder-required,
+.builder-optional,
+.builder-readonly {
+  display: inline-flex;
+  min-height: 22px;
+  margin-left: 4px;
+  padding: 0 8px;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  vertical-align: middle;
+}
+.builder-required {
+  background: #f4e5e4;
+  color: #8a3f43;
+}
+.builder-optional,
+.builder-readonly {
+  background: #f2eee7;
+  color: #756553;
+}
+.builder-review-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+.builder-review-list div {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid rgba(143, 111, 82, 0.14);
+  border-radius: 12px;
+  background: #fffaf5;
+}
+.builder-review-list dt {
+  color: #8b725c;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+.builder-review-list dd {
+  min-width: 0;
+  margin: 0;
+  color: #443426;
+  font-weight: 700;
+  overflow-wrap: anywhere;
 }
 .builder-template-picker {
   display: grid;
@@ -2694,6 +2751,8 @@ textarea.image-invite-input {
   color: #3b2d22;
   font-size: clamp(1.28rem, 6vw, 2.12rem);
   line-height: 1.18;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 .invitation-public-image-date,
 .invitation-public-image-venue {
@@ -2707,6 +2766,8 @@ textarea.image-invite-input {
 }
 .invitation-public-image-venue {
   font-size: clamp(0.72rem, 3vw, 0.94rem);
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 .invitation-public-summary {
   margin-top: 14px;
@@ -2852,6 +2913,8 @@ textarea.image-invite-input {
   line-height: 1.25;
   color: #3f3124;
   text-shadow: none;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 .invitation-date {
   margin-top: 14px;
@@ -2865,6 +2928,8 @@ textarea.image-invite-input {
   line-height: 1.45;
   color: #5b4837;
   text-shadow: none;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
 }
 .invitation-message {
   margin-top: 16px;
@@ -2899,6 +2964,36 @@ textarea.image-invite-input {
   color: #3f3226;
   line-height: 1.62;
   white-space: pre-line;
+  overflow-wrap: anywhere;
+  word-break: keep-all;
+}
+.invitation-account-details summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: #4f3a26;
+  cursor: pointer;
+  font-family: 'Noto Serif KR', serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  list-style: none;
+}
+.invitation-account-details summary::-webkit-details-marker {
+  display: none;
+}
+.invitation-account-details summary::after {
+  content: "펼치기";
+  color: #8a735d;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+.invitation-account-details[open] summary::after {
+  content: "접기";
+}
+.invitation-account-details[open] summary {
+  margin-bottom: 8px;
 }
 .invitation-location-addresses p {
   overflow-wrap: anywhere;
@@ -3868,8 +3963,38 @@ textarea.image-invite-input {
   .builder-step-pills {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
+  .builder-preview-toggle {
+    display: flex;
+    min-height: 46px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(143, 111, 82, 0.22);
+    border-radius: 999px;
+    background: #fffaf5;
+    color: #614a37;
+    font-weight: 800;
+  }
+  .builder-preview-wrap {
+    display: none;
+    order: -1;
+  }
+  .builder-preview-wrap.is-mobile-open {
+    display: flex;
+  }
   .builder-step-actions {
-    flex-direction: column;
+    position: sticky;
+    z-index: 8;
+    bottom: 8px;
+    flex-direction: row;
+    padding: 8px;
+    border: 1px solid rgba(143, 111, 82, 0.16);
+    border-radius: 16px;
+    background: rgba(255, 253, 249, 0.96);
+    box-shadow: 0 10px 30px rgba(66, 43, 18, 0.14);
+    backdrop-filter: blur(12px);
+  }
+  .builder-step-actions > button {
+    min-height: 48px;
   }
   .builder-upload-progress-head {
     flex-direction: column;
@@ -3984,6 +4109,16 @@ textarea.image-invite-input {
   }
   .invitation-inline-actions {
     grid-template-columns: 1fr;
+  }
+  .invitation-section-share .invitation-inline-actions {
+    position: sticky;
+    z-index: 5;
+    bottom: 8px;
+    padding: 8px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 10px 30px rgba(66, 43, 18, 0.14);
+    backdrop-filter: blur(12px);
   }
   .form-grid { grid-template-columns: 1fr; }
   .auth-mode-actions { flex-direction: column; }

@@ -15,13 +15,13 @@ export default async function BuilderPage({
       <div className="builder-page-main">
         <section className="builder-hero-strip">
           <div className="section-inner">
-            <p className="builder-hero-kicker">TEMPLATE INVITATION</p>
-            <h1>
-              디자인을 고르고,
+            <p className="builder-hero-kicker">우리의 초대장</p>
+            <h1>한 번에 다 쓰지 않아도 괜찮아요</h1>
+            <p>
+              먼저 날짜와 장소부터 적어보세요.
               <br />
-              정보만 채우세요
-            </h1>
-            <p>바른손카드처럼 템플릿을 먼저 둘러보고 선택한 뒤, 이름과 날짜, 장소를 입력해 모바일 초대장을 완성합니다.</p>
+              사진과 문구는 천천히 골라도 괜찮아요.
+            </p>
             <div className="builder-hero-benefits" aria-label="템플릿 초대장 제작 특징">
               <span>행사별 템플릿</span>
               <span>모바일 미리보기</span>

@@ -74,7 +74,7 @@ export function DashboardShell() {
 
         setItems(localItems);
         setSelectedInvitationId(localItems[0]?.id ?? "");
-        setMessage("현재는 데모 모드입니다. 로그인 후 실제 초대장을 저장할 수 있습니다.");
+        setMessage("현재는 둘러보기 상태입니다. 로그인 후 초대장을 저장할 수 있습니다.");
         return;
       }
 

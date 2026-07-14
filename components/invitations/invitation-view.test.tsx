@@ -155,6 +155,63 @@ describe("InvitationView", () => {
     expect(publicMarkup).not.toContain("invitation-hero-copy");
   });
 
+  it("hides empty optional sections on a public invitation", () => {
+    document.body.innerHTML = renderToStaticMarkup(
+      <InvitationView
+        mode="public"
+        payload={defaultInvitationDraft}
+        shareUrl="/i/demo"
+        slug="demo"
+      />
+    );
+
+    for (const section of ["gallery", "video", "music", "contact", "accounts", "thanks"]) {
+      expect(document.querySelector(`[data-invitation-section="${section}"]`)).toBeNull();
+    }
+    expect(document.querySelector('[data-invitation-section="people"]')).not.toBeNull();
+    expect(document.querySelector('[data-invitation-section="location"]')).not.toBeNull();
+  });
+
+  it("orders guest sections for reading, keeps accounts collapsed, and places sharing last", () => {
+    document.body.innerHTML = renderToStaticMarkup(
+      <InvitationView
+        mode="public"
+        payload={{
+          ...defaultInvitationDraft,
+          groomPhone: "010-1111-2222",
+          groomBank: "오삼은행",
+          groomBankHolder: "김민준",
+          groomBankAccount: "123-456",
+          galleryImages: ["https://example.com/gallery.jpg"],
+          videoUrl: "https://example.com/video",
+          backgroundMusicUrl: "https://example.com/music.mp3",
+          thankYouMessage: "함께해 주셔서 감사합니다."
+        }}
+        shareUrl="/i/demo"
+        slug="demo"
+      />
+    );
+
+    const sections = Array.from(document.querySelectorAll<HTMLElement>("[data-invitation-section]"))
+      .map((section) => section.dataset.invitationSection);
+
+    expect(sections).toEqual([
+      "gallery",
+      "video",
+      "music",
+      "people",
+      "contact",
+      "location",
+      "rsvp",
+      "accounts",
+      "thanks",
+      "guestbook",
+      "share"
+    ]);
+    expect(document.querySelector("details[data-invitation-section='accounts']")).not.toHaveAttribute("open");
+    expect(sections.at(-1)).toBe("share");
+  });
+
   it("prefers a server-provided Kakao platform key over client env lookup", () => {
     const config = resolveInvitationPlatformConfig({
       draftKakaoJsKey: "",

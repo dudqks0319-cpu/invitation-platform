@@ -19,7 +19,7 @@ const createModes: Array<{
     value: "template"
   },
   {
-    description: "내 이미지 위에 문구를 얹는 보조 제작",
+    description: "내 이미지 위에 필요한 문구만 더해 완성",
     href: "/image-text",
     label: "이미지 초대장",
     value: "image"
@@ -40,7 +40,7 @@ export function CreateModeTabs({ activeMode }: CreateModeTabsProps) {
             key={mode.value}
             role="tab"
           >
-            <span className="create-mode-tab-eyebrow">{mode.value === "template" ? "추천" : "보조"}</span>
+            <span className="create-mode-tab-eyebrow">{mode.value === "template" ? "추천" : "직접"}</span>
             <strong>{mode.label}</strong>
             <span>{mode.description}</span>
           </Link>

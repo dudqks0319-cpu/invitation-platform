@@ -50,12 +50,14 @@ describe("SiteHeader", () => {
     expect(document.body.innerHTML).toContain("오삼오삼 홈으로 이동");
     expect(document.body.textContent).toContain("53오삼오삼");
     expect(document.body.textContent).not.toContain("뒤로");
-    expect(document.body.textContent).toContain("템플릿");
-    expect(document.body.textContent).toContain("이미지 초대장");
-    expect(document.body.textContent).toContain("템플릿 초대장");
-    expect(document.body.textContent).toContain("대시보드");
+    expect(document.body.textContent).toContain("디자인");
+    expect(document.body.textContent).toContain("만드는 방법");
+    expect(document.body.textContent).toContain("오삼오삼 안내");
+    expect(document.body.textContent).toContain("내 초대장");
     expect(document.body.textContent).toContain("로그인");
     expect(document.body.textContent).toContain("초대장 만들기");
+    expect(document.body.innerHTML).toContain('aria-controls="site-mobile-menu"');
+    expect(document.body.innerHTML).toContain('aria-label="주요 메뉴"');
   });
 
   it("hides navigation actions in focus mode", () => {
@@ -65,10 +67,10 @@ describe("SiteHeader", () => {
     expect(document.body.textContent).toContain("53오삼오삼");
     expect(document.body.textContent).toContain("뒤로");
     expect(document.body.innerHTML).toContain("이전 화면으로 돌아가기");
-    expect(document.body.textContent).not.toContain("템플릿");
-    expect(document.body.textContent).not.toContain("이미지 초대장");
-    expect(document.body.textContent).not.toContain("템플릿 초대장");
-    expect(document.body.textContent).not.toContain("대시보드");
+    expect(document.body.textContent).not.toContain("디자인");
+    expect(document.body.textContent).not.toContain("만드는 방법");
+    expect(document.body.textContent).not.toContain("오삼오삼 안내");
+    expect(document.body.textContent).not.toContain("내 초대장");
     expect(document.body.textContent).not.toContain("로그인");
     expect(document.body.textContent).not.toContain("초대장 만들기");
   });

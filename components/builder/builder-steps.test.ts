@@ -5,18 +5,22 @@ import {
 } from "@/components/builder/builder-steps";
 
 describe("builder steps", () => {
-  it("defines the four web builder steps in mobile-aligned order", () => {
+  it("defines the six release builder steps in the requested order", () => {
     expect(BUILDER_STEPS.map((step) => step.id)).toEqual([
       "basic",
       "people",
       "photos",
-      "accounts"
+      "accounts",
+      "location",
+      "review"
     ]);
     expect(BUILDER_STEPS.map((step) => step.title)).toEqual([
-      "기본 정보",
-      "신랑 · 신부 / 혼주 정보",
-      "사진 설정",
-      "계좌 · 카카오페이"
+      "기본 내용",
+      "주인공 정보",
+      "사진",
+      "마음 전하실 곳",
+      "오시는 길",
+      "마지막 확인"
     ]);
   });
 

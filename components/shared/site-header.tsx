@@ -7,10 +7,10 @@ import { authDestination, normalizeNextPath } from "@/lib/auth";
 import { createBrowserClient } from "@/lib/supabase/browser";
 
 const navLinks = [
-  { href: "/builder", label: "템플릿 초대장" },
-  { href: "/image-text", label: "이미지 초대장" },
-  { href: "/#templates", label: "템플릿" },
-  { href: "/dashboard", label: "대시보드" }
+  { href: "/#templates", label: "디자인" },
+  { href: "/#create-methods", label: "만드는 방법" },
+  { href: "/#features", label: "오삼오삼 안내" },
+  { href: "/dashboard", label: "내 초대장" }
 ];
 
 type SiteHeaderProps = {
@@ -90,6 +90,7 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
         {mode === "focus" ? null : (
           <>
             <button
+              aria-controls="site-mobile-menu"
               aria-expanded={isMenuOpen}
               aria-label={isMenuOpen ? "메뉴 닫기" : "메뉴 열기"}
               className="hamburger"
@@ -98,9 +99,14 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
             >
               {isMenuOpen ? "✕" : "☰"}
             </button>
-            <nav className="main-nav">
+            <nav aria-label="주요 메뉴" className="main-nav">
               {navLinks.map((link) => (
-                <Link href={link.href} key={link.href} onClick={() => setIsMenuOpen(false)}>
+                <Link
+                  aria-current={link.href === "/dashboard" && pathname.startsWith("/dashboard") ? "page" : undefined}
+                  href={link.href}
+                  key={link.href}
+                  onClick={() => setIsMenuOpen(false)}
+                >
                   {link.label}
                 </Link>
               ))}
@@ -109,7 +115,7 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
               {pathname === "/sign-in" ? null : isAuthenticated ? (
                 <>
                   <Link className="btn-outline" href="/dashboard">
-                    내 대시보드
+                    내 초대장
                   </Link>
                   <button className="btn-outline" onClick={handleSignOut} type="button">
                     로그아웃
@@ -120,7 +126,7 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
                   로그인
                 </Link>
               )}
-              <Link className="btn-primary" href="/builder" onClick={() => setIsMenuOpen(false)}>
+              <Link className="btn-primary" href="/#create-methods" onClick={() => setIsMenuOpen(false)}>
                 초대장 만들기
               </Link>
             </div>
@@ -128,7 +134,11 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
         )}
       </div>
       {mode === "focus" ? null : (
-        <div className={`mobile-menu ${isMenuOpen ? "open" : ""}`}>
+        <div
+          aria-hidden={!isMenuOpen}
+          className={`mobile-menu ${isMenuOpen ? "open" : ""}`}
+          id="site-mobile-menu"
+        >
           {navLinks.map((link) => (
             <Link href={link.href} key={link.href} onClick={() => setIsMenuOpen(false)}>
               {link.label}
@@ -136,7 +146,7 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
           ))}
           {pathname === "/sign-in" ? null : isAuthenticated ? (
             <>
-              <Link href="/dashboard">내 대시보드</Link>
+              <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>내 초대장</Link>
               <button onClick={handleSignOut} type="button">
                 로그아웃
               </button>
@@ -146,7 +156,7 @@ export function SiteHeader({ mode = "default" }: SiteHeaderProps) {
               로그인
             </Link>
           )}
-          <Link href="/builder" onClick={() => setIsMenuOpen(false)}>
+          <Link href="/#create-methods" onClick={() => setIsMenuOpen(false)}>
             초대장 만들기
           </Link>
         </div>

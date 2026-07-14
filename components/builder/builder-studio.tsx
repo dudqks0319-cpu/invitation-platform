@@ -227,6 +227,7 @@ export function BuilderStudio({
   const [pendingGalleryPreviewUrls, setPendingGalleryPreviewUrls] = useState<string[]>([]);
   const [showTemplateGallery, setShowTemplateGallery] = useState(!initialTemplateId);
   const [eventDateConfirmed, setEventDateConfirmed] = useState(false);
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
 
   const selectedTemplate = useMemo(
     () => templates.find((template) => template.id === payload.templateId) ?? templates[0],
@@ -697,7 +698,7 @@ export function BuilderStudio({
       });
 
       if ((pendingMainImageFile || pendingBackgroundImageFile || pendingGalleryFiles.length) && (!supabase || !userId)) {
-        setMessage("데모 모드에서는 이미지가 현재 세션 미리보기로만 반영됩니다.");
+        setMessage("로그인 전에는 선택한 이미지가 이 브라우저의 미리보기에만 반영됩니다.");
         setMessageType("success");
       }
 
@@ -934,7 +935,11 @@ export function BuilderStudio({
           setPendingGalleryPreviewUrls([]);
         }
         setPending(false);
-        setMessage(status === "published" ? "데모 모드에서 미리보기용 발행 상태로 저장했습니다." : "데모 모드로 초안을 저장했습니다.");
+        setMessage(
+          status === "published"
+            ? "받는 사람이 보게 될 모습을 이 브라우저에 저장했습니다."
+            : "작성 중인 내용을 이 브라우저에 저장했어요."
+        );
         setMessageType("success");
         return nextMeta;
       }
@@ -1016,7 +1021,7 @@ export function BuilderStudio({
 
       setPending(false);
       setUploadProgress(null);
-      setMessage(status === "published" ? "초대장을 발행했습니다." : "초안을 저장했습니다.");
+      setMessage(status === "published" ? "초대장을 공개했습니다." : "작성 중인 내용을 저장했어요.");
       setMessageType("success");
 
       return savedMeta;
@@ -1026,7 +1031,7 @@ export function BuilderStudio({
       }
       setUploadProgress(null);
       setPending(false);
-      setMessage(error instanceof Error ? error.message : "초안 저장에 실패했습니다.");
+      setMessage(error instanceof Error ? error.message : "작성 내용을 저장하지 못했습니다.");
       setMessageType("error");
       return null;
     }
@@ -1066,9 +1071,9 @@ export function BuilderStudio({
       >
         <div className="builder-step-header" role="group" aria-label="빌더 단계">
           <div className="builder-step-copy">
-            <p className="builder-step-kicker">빌더 진행</p>
+            <p className="builder-step-kicker">초대장 완성까지</p>
             <h3>{`STEP ${currentStepMeta.index + 1}. ${currentStepMeta.title}`}</h3>
-            <p className="builder-help">모바일 앱과 같은 4단계 흐름으로 나눠서 작성할 수 있습니다.</p>
+            <p className="builder-help">필요한 내용부터 여섯 단계로 나눠 천천히 작성해 보세요.</p>
           </div>
           <div className="builder-step-progress" aria-hidden="true">
             <div className="builder-step-progress-bar">
@@ -1092,6 +1097,15 @@ export function BuilderStudio({
             </div>
           </div>
         </div>
+        <button
+          aria-controls="builder-live-preview"
+          aria-expanded={showMobilePreview}
+          className="builder-preview-toggle"
+          onClick={() => setShowMobilePreview((current) => !current)}
+          type="button"
+        >
+          {showMobilePreview ? "상단 미리보기 접기" : "상단 미리보기 펼치기"}
+        </button>
         {uploadProgress ? (
           <div className="builder-upload-progress" role="status" aria-live="polite">
             <div className="builder-upload-progress-head">
@@ -1109,7 +1123,10 @@ export function BuilderStudio({
         ) : null}
 
         <div className="builder-form-section" hidden={currentStep !== 0}>
-          <h3>1. 기본 정보</h3>
+          <h3>1. 기본 내용</h3>
+          <p className="builder-field-legend">
+            <span className="builder-required">필수</span> 날짜와 장소를 먼저 적고, 나머지는 천천히 완성해도 괜찮아요.
+          </p>
           <div className="builder-template-picker" aria-label="초대장 템플릿 선택">
             <div className="builder-template-picker-head">
               <div>
@@ -1217,17 +1234,18 @@ export function BuilderStudio({
             </div>
           </div>
           <label>
-            행사 카테고리
+            행사 카테고리 <span className="builder-readonly">자동 선택</span>
             <input className={inputClassName} readOnly value={payload.category} />
           </label>
           <label>
-            행사 제목
-            <input className={inputClassName} value={payload.title} onChange={(event) => updateField("title", event.target.value)} />
+            행사 제목 <span className="builder-required">필수</span>
+            <input aria-required="true" className={inputClassName} value={payload.title} onChange={(event) => updateField("title", event.target.value)} />
           </label>
           <div className="builder-date-field">
-            <label htmlFor="builder-event-date">행사 일시</label>
+            <label htmlFor="builder-event-date">행사 일시 <span className="builder-required">필수</span></label>
             <div className="builder-date-row">
               <input
+                aria-required="true"
                 className={inputClassName}
                 id="builder-event-date"
                 ref={eventDateInputRef}
@@ -1259,113 +1277,60 @@ export function BuilderStudio({
             </p>
           </div>
           <label>
-            행사장 이름
-            <input className={inputClassName} value={payload.venueName} onChange={(event) => updateField("venueName", event.target.value)} />
+            행사장 이름 <span className="builder-required">필수</span>
+            <input aria-required="true" className={inputClassName} value={payload.venueName} onChange={(event) => updateField("venueName", event.target.value)} />
           </label>
-          <div className="builder-address-field">
-            <label className="builder-address-label" htmlFor="builder-venue-address">
-              행사장 주소 / 지도 주소
-            </label>
-            <div className="inline-input-row builder-address-search-row">
-              <input
-                id="builder-venue-address"
-                className={inputClassName}
-                placeholder={addressSearchPending ? "주소 검색을 불러오는 중입니다" : "주소를 직접 입력하거나 주소 검색을 누르세요"}
-                value={payload.venueAddress}
-                onChange={(event) => updateVenueAddress(event.target.value)}
-              />
-              <button className="inline-input-btn builder-address-search-button" disabled={addressSearchPending} type="button" onClick={requestAddressSearch}>
-                {addressSearchPending ? "불러오는 중" : "주소 검색"}
-              </button>
-            </div>
-          </div>
-          <p className="builder-help">주소 검색 버튼을 누르면 Daum 우편번호 서비스가 열리고, 직접 입력해도 지도 검색 링크가 함께 채워집니다.</p>
-          {addressSearchMessage ? <p className="builder-help">{addressSearchMessage}</p> : null}
-          {addressSearchVisible ? (
-            <div className="builder-address-search-panel">
-              <div className="builder-address-search-panel-header">
-                <strong>도로명주소 검색</strong>
-                <button type="button" onClick={() => setAddressSearchVisible(false)}>
-                  닫기
-                </button>
-              </div>
-              <div ref={addressSearchLayerRef} className="builder-address-search-layer" />
-            </div>
-          ) : null}
-          <div className="form-two-col">
-            <label>
-              지번주소
-              <input className={inputClassName} value={payload.jibunAddress} onChange={(event) => updateField("jibunAddress", event.target.value)} />
-            </label>
-            <label>
-              우편번호
-              <input className={inputClassName} value={payload.zonecode} onChange={(event) => updateField("zonecode", event.target.value)} />
-            </label>
-          </div>
-          <details className="builder-map-fields">
-            <summary>지도 링크와 교통 안내 직접 수정</summary>
-            <label>
-              네이버 지도 링크
-              <input className={inputClassName} value={payload.naverMapLink} onChange={(event) => updateField("naverMapLink", event.target.value)} />
-            </label>
-            <label>
-              카카오 지도 링크
-              <input className={inputClassName} value={payload.kakaoMapLink} onChange={(event) => updateField("kakaoMapLink", event.target.value)} />
-            </label>
-            <label>
-              교통 안내 메모
-              <textarea className={inputClassName} rows={3} value={payload.transportNote} onChange={(event) => updateField("transportNote", event.target.value)} />
-            </label>
-          </details>
           <label>
-            초대 메시지
+            초대 메시지 <span className="builder-optional">선택</span>
             <textarea className={inputClassName} rows={4} value={payload.message} onChange={(event) => updateField("message", event.target.value)} />
           </label>
         </div>
 
         <div className="builder-form-section" hidden={currentStep !== 1}>
-          <h3>2. 신랑 · 신부 / 혼주 정보</h3>
+          <h3>2. 주인공 정보</h3>
+          <p className="builder-field-legend"><span className="builder-required">필수</span> 주인공 이름만 먼저 적고, 연락처와 가족 정보는 필요할 때 추가하세요.</p>
           <div className="form-two-col">
             <label>
-              신랑 성함
-              <input className={inputClassName} value={payload.groomName} onChange={(event) => updateField("groomName", event.target.value)} />
+              신랑 성함 <span className="builder-required">필수</span>
+              <input aria-required="true" className={inputClassName} value={payload.groomName} onChange={(event) => updateField("groomName", event.target.value)} />
             </label>
             <label>
-              신부 성함
-              <input className={inputClassName} value={payload.brideName} onChange={(event) => updateField("brideName", event.target.value)} />
+              신부 성함 <span className="builder-required">필수</span>
+              <input aria-required="true" className={inputClassName} value={payload.brideName} onChange={(event) => updateField("brideName", event.target.value)} />
             </label>
             <label>
-              신랑 연락처
+              신랑 연락처 <span className="builder-optional">선택</span>
               <input className={inputClassName} value={payload.groomPhone} onChange={(event) => updateField("groomPhone", event.target.value)} />
             </label>
             <label>
-              신부 연락처
+              신부 연락처 <span className="builder-optional">선택</span>
               <input className={inputClassName} value={payload.bridePhone} onChange={(event) => updateField("bridePhone", event.target.value)} />
             </label>
             <label>
-              신랑 아버지
+              신랑 아버지 <span className="builder-optional">선택</span>
               <input className={inputClassName} value={payload.groomFatherName} onChange={(event) => updateField("groomFatherName", event.target.value)} />
             </label>
             <label>
-              신랑 어머니
+              신랑 어머니 <span className="builder-optional">선택</span>
               <input className={inputClassName} value={payload.groomMotherName} onChange={(event) => updateField("groomMotherName", event.target.value)} />
             </label>
             <label>
-              신부 아버지
+              신부 아버지 <span className="builder-optional">선택</span>
               <input className={inputClassName} value={payload.brideFatherName} onChange={(event) => updateField("brideFatherName", event.target.value)} />
             </label>
             <label>
-              신부 어머니
+              신부 어머니 <span className="builder-optional">선택</span>
               <input className={inputClassName} value={payload.brideMotherName} onChange={(event) => updateField("brideMotherName", event.target.value)} />
             </label>
           </div>
         </div>
 
         <div className="builder-form-section" hidden={currentStep !== 2}>
-          <h3>3. 사진 설정</h3>
-          <p className="builder-help">메인 사진과 배경 이미지는 공개 화면의 첫인상을 결정합니다. 발행 전 최종 이미지를 먼저 골라 두세요.</p>
+          <h3>3. 사진</h3>
+          <p className="builder-field-legend"><span className="builder-optional">선택</span> 사진은 나중에 추가하거나 바꿀 수 있어요.</p>
+          <p className="builder-help">메인·배경 사진은 세로형 4:5 이상을 권장하고, 이미지 초대장은 9:16 비율이 가장 자연스러워요.</p>
             <label>
-              메인 사진 업로드
+              메인 사진 업로드 <span className="builder-optional">선택</span>
               <div className="builder-upload-control">
                 <span className="builder-upload-filename">
                   {pendingMainImageFile?.name || (payload.mainImageUrl ? "현재 메인 사진이 연결되어 있습니다." : "선택된 파일 없음")}
@@ -1375,7 +1340,7 @@ export function BuilderStudio({
               </div>
             </label>
             <label>
-              배경 사진 업로드
+              배경 사진 업로드 <span className="builder-optional">선택</span>
               <div className="builder-upload-control">
                 <span className="builder-upload-filename">
                   {pendingBackgroundImageFile?.name || (payload.backgroundImageUrl ? "현재 배경 사진이 연결되어 있습니다." : "선택된 파일 없음")}
@@ -1385,7 +1350,7 @@ export function BuilderStudio({
               </div>
             </label>
             <label>
-              갤러리 사진 업로드
+              갤러리 사진 업로드 <span className="builder-optional">선택</span>
               <div className="builder-upload-control">
                 <span className="builder-upload-filename">
                   {pendingGalleryFiles.length
@@ -1455,11 +1420,12 @@ export function BuilderStudio({
               ))}
             </div>
           ) : null}
-          <p className="builder-help">이미지는 저장 시 Storage로 업로드되고, payload에는 URL만 기록됩니다.</p>
+          <p className="builder-help">선택한 사진은 저장 후 초대장과 미리보기에 안전하게 반영됩니다.</p>
         </div>
 
         <div className="builder-form-section" hidden={currentStep !== 3}>
-          <h3>4. 계좌 · 카카오페이</h3>
+          <h3>4. 마음 전하실 곳</h3>
+          <p className="builder-field-legend"><span className="builder-optional">선택</span> 계좌나 송금 링크가 필요할 때만 입력하세요. 공개 초대장에서는 접힌 상태로 보여요.</p>
           <div className="form-two-col">
             <label>
               신랑측 은행
@@ -1492,6 +1458,78 @@ export function BuilderStudio({
           </label>
         </div>
 
+        <div className="builder-form-section" hidden={currentStep !== 4}>
+          <h3>5. 오시는 길</h3>
+          <p className="builder-field-legend"><span className="builder-required">필수</span> 주소를 검색하면 지도 링크도 함께 준비해 드려요.</p>
+          <div className="builder-address-field">
+            <label className="builder-address-label" htmlFor="builder-venue-address">
+              행사장 주소 / 지도 주소 <span className="builder-required">필수</span>
+            </label>
+            <div className="inline-input-row builder-address-search-row">
+              <input
+                aria-required="true"
+                id="builder-venue-address"
+                className={inputClassName}
+                placeholder={addressSearchPending ? "주소 검색을 불러오는 중입니다" : "주소를 직접 입력하거나 주소 검색을 누르세요"}
+                value={payload.venueAddress}
+                onChange={(event) => updateVenueAddress(event.target.value)}
+              />
+              <button className="inline-input-btn builder-address-search-button" disabled={addressSearchPending} type="button" onClick={requestAddressSearch}>
+                {addressSearchPending ? "불러오는 중" : "주소 검색"}
+              </button>
+            </div>
+          </div>
+          <p className="builder-help">주소 검색 버튼을 누르면 도로명주소를 찾을 수 있고, 직접 입력해도 지도 검색 링크가 함께 채워집니다.</p>
+          {addressSearchMessage ? <p className="builder-help">{addressSearchMessage}</p> : null}
+          {addressSearchVisible ? (
+            <div className="builder-address-search-panel">
+              <div className="builder-address-search-panel-header">
+                <strong>도로명주소 검색</strong>
+                <button type="button" onClick={() => setAddressSearchVisible(false)}>
+                  닫기
+                </button>
+              </div>
+              <div ref={addressSearchLayerRef} className="builder-address-search-layer" />
+            </div>
+          ) : null}
+          <div className="form-two-col">
+            <label>
+              지번주소 <span className="builder-optional">선택</span>
+              <input className={inputClassName} value={payload.jibunAddress} onChange={(event) => updateField("jibunAddress", event.target.value)} />
+            </label>
+            <label>
+              우편번호 <span className="builder-optional">선택</span>
+              <input className={inputClassName} value={payload.zonecode} onChange={(event) => updateField("zonecode", event.target.value)} />
+            </label>
+          </div>
+          <details className="builder-map-fields">
+            <summary>지도 링크와 교통 안내 직접 수정 <span className="builder-optional">선택</span></summary>
+            <label>
+              네이버 지도 링크
+              <input className={inputClassName} value={payload.naverMapLink} onChange={(event) => updateField("naverMapLink", event.target.value)} />
+            </label>
+            <label>
+              카카오 지도 링크
+              <input className={inputClassName} value={payload.kakaoMapLink} onChange={(event) => updateField("kakaoMapLink", event.target.value)} />
+            </label>
+            <label>
+              교통 안내 메모
+              <textarea className={inputClassName} rows={3} value={payload.transportNote} onChange={(event) => updateField("transportNote", event.target.value)} />
+            </label>
+          </details>
+        </div>
+
+        <div className="builder-form-section builder-review-section" hidden={currentStep !== 5}>
+          <h3>6. 마지막 확인</h3>
+          <p className="builder-field-legend">받는 사람이 보게 될 핵심 내용을 확인한 뒤 저장하거나 공개하세요.</p>
+          <dl className="builder-review-list">
+            <div><dt>주인공</dt><dd>{builderPreviewNames}</dd></div>
+            <div><dt>날짜</dt><dd>{builderPreviewDate}</dd></div>
+            <div><dt>장소</dt><dd>{builderPreviewVenue}</dd></div>
+            <div><dt>디자인</dt><dd>{selectedTemplate.name}</dd></div>
+          </dl>
+        </div>
+
         <div className="builder-step-actions">
           <button
             className="btn-outline"
@@ -1501,21 +1539,23 @@ export function BuilderStudio({
           >
             이전 단계
           </button>
-          <button
-            className="btn-primary"
-            disabled={pending || currentStep === lastStepIndex}
-            onClick={() => moveStep(1)}
-            type="button"
-          >
-            다음 단계
-          </button>
+          {currentStep < lastStepIndex ? (
+            <button
+              className="btn-primary"
+              disabled={pending}
+              onClick={() => moveStep(1)}
+              type="button"
+            >
+              다음 단계
+            </button>
+          ) : null}
         </div>
 
-        <button className="btn-primary form-submit" disabled={pending} type="submit">
-          {pending ? "저장 중..." : "초안 저장"}
-        </button>
         {currentStep === lastStepIndex ? (
           <>
+            <button className="btn-primary form-submit" disabled={pending} type="submit">
+              {pending ? "저장 중..." : "작성 내용 저장"}
+            </button>
             <button
               className="btn-primary form-submit"
               disabled={pending}
@@ -1525,7 +1565,7 @@ export function BuilderStudio({
               }}
               type="button"
             >
-              실제 화면 보기
+              받는 사람이 보게 될 모습 확인하기
             </button>
             <button
               className="btn-outline form-submit"
@@ -1553,7 +1593,7 @@ export function BuilderStudio({
             </button>
           </>
         ) : (
-          <p className="builder-help">마지막 단계에서 실제 화면을 확인한 뒤 무료 공개 링크를 만들 수 있습니다.</p>
+          <p className="builder-help">마지막 확인 단계에서 작성 내용을 저장하고 공개 링크를 만들 수 있습니다.</p>
         )}
         {meta.status && meta.status !== "draft" && meta.status !== "published" ? (
           <p className="form-message error">
@@ -1563,7 +1603,10 @@ export function BuilderStudio({
         <p className={`form-message ${messageType}`}>{message}</p>
       </form>
 
-      <div className="builder-preview-wrap">
+      <div
+        className={showMobilePreview ? "builder-preview-wrap is-mobile-open" : "builder-preview-wrap"}
+        id="builder-live-preview"
+      >
         <div className="phone-mock builder-phone builder-phone-large">
           <div className={isStandaloneArtworkTemplate ? "phone-screen builder-screen is-standalone-artwork" : "phone-screen builder-screen"}>
             <div className="builder-template-preview">
@@ -1615,7 +1658,7 @@ export function BuilderStudio({
                     <p className="builder-preview-venue">{builderPreviewVenue}</p>
                     <p className="builder-preview-message">{payload.message || "소중한 자리에 함께해 주세요"}</p>
                     <p className="builder-preview-note">
-                      실제 화면 보기에서 전체 초대장 레이아웃을 확인할 수 있습니다.
+                      받는 화면 확인에서 전체 초대장 구성을 확인할 수 있습니다.
                     </p>
                   </div>
                 </>
