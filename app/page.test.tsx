@@ -40,7 +40,14 @@ describe("HomePage", () => {
     expect(text).toContain("소중한 날의 첫인사,");
     expect(html).toContain('href="#featured-templates">디자인 먼저 보기');
     expect(html).toContain('href="/image-text">내 이미지로 만들기');
-    expect(html).toContain("ANIME PICK");
+    ["플로럴 세레모니 04", "플로럴 세레모니 05", "플로럴 세레모니 06", "플로럴 세레모니 07", "플로럴 세레모니 08"].forEach((name) => {
+      expect(text).toContain(name);
+    });
+    ["웨딩 포토 콘셉트 01", "웨딩 포토 콘셉트 02", "웨딩 포토 콘셉트 03", "웨딩 포토 콘셉트 04", "웨딩 포토 콘셉트 05", "웨딩 포토 콘셉트 06", "웨딩 포토 콘셉트 07", "웨딩 포토 콘셉트 08", "웨딩 포토 콘셉트 09", "웨딩 포토 콘셉트 10"].forEach((name) => {
+      expect(text).toContain(name);
+    });
+    expect(html).toContain("FLORAL PICK");
+    expect(html).toContain("PHOTO PICK");
     expect(html).not.toContain("제작은 1분이면 충분해요");
     expect(html).not.toContain("이미지 초대장 보조 제작");
     expect(html).not.toContain("실제 공유 화면 기준");

@@ -9,26 +9,26 @@ a:focus-visible,
 input:focus-visible,
 select:focus-visible,
 textarea:focus-visible {
-  outline: 3px solid rgba(108,74,50,0.34);
+  outline: 3px solid rgba(183,130,138,0.34);
   outline-offset: 3px;
 }
 ul { list-style: none; }
 
 /* ===== VARIABLES ===== */
 :root {
-  --primary: #B98356;
-  --primary-light: #F1E3D5;
-  --primary-dark: #6C4A32;
-  --accent: #A8755C;
-  --accent-soft: #F4E5DB;
-  --bg-cream: #FBF7F0;
-  --bg-light: #F6F0E8;
-  --text-dark: #2B241D;
-  --text-mid: #665B50;
-  --text-light: #9B8F83;
-  --border: #E5D8CA;
-  --shadow: 0 12px 36px rgba(63, 45, 30, 0.08);
-  --shadow-lg: 0 24px 70px rgba(63, 45, 30, 0.14);
+  --primary: #B7828A;
+  --primary-light: #F8ECEC;
+  --primary-dark: #865A63;
+  --accent: #C4939A;
+  --accent-soft: #FAF1F0;
+  --bg-cream: #FFFBF7;
+  --bg-light: #FAF6F2;
+  --text-dark: #302A28;
+  --text-mid: #716863;
+  --text-light: #9D938D;
+  --border: #EADFD8;
+  --shadow: 0 12px 36px rgba(75, 56, 49, 0.06);
+  --shadow-lg: 0 24px 70px rgba(75, 56, 49, 0.1);
   --radius: 28px;
   --radius-sm: 14px;
   --ease-apple: cubic-bezier(0.22, 1, 0.36, 1);
@@ -196,16 +196,16 @@ ul { list-style: none; }
 }
 .hero-btns { display: flex; gap: 14px; margin-bottom: 48px; flex-wrap: wrap; }
 .btn-hero-primary {
-  background: #6C4A32; color: #fff;
+  background: var(--primary); color: #fff;
   border-radius: 999px; padding: 16px 34px;
   font-size: 1rem; font-weight: 700;
-  box-shadow: 0 10px 26px rgba(108,74,50,0.22);
+  box-shadow: 0 10px 26px rgba(183,130,138,0.18);
   transition: all 0.2s;
 }
-.btn-hero-primary:hover { background: #533721; transform: translateY(-2px); box-shadow: 0 16px 34px rgba(108,74,50,0.28); }
+.btn-hero-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 16px 34px rgba(134,90,99,0.2); }
 .btn-hero-outline {
   background: transparent; color: var(--primary-dark);
-  border: 1.5px solid rgba(108,74,50,0.42); border-radius: 999px;
+  border: 1.5px solid rgba(183,130,138,0.42); border-radius: 999px;
   padding: 14px 32px; font-size: 1rem; font-weight: 700;
   transition: all 0.2s;
 }

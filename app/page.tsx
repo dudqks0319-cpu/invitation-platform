@@ -24,8 +24,35 @@ const quickEvents = [
   { category: "housewarming", label: "집들이", note: "새로운 공간의 시작" }
 ];
 
-const featuredTemplateIds = ["wedding-anime-2026", "dol-cute", "birthday-fun", "house-warm"];
+const floralCeremonyTemplateIds = [
+  "wedding-barunson-anime-04",
+  "wedding-barunson-anime-05",
+  "wedding-barunson-anime-06",
+  "wedding-barunson-anime-07",
+  "wedding-barunson-anime-08"
+];
+const weddingPhotoTemplateIds = [
+  "wedding-barunson-anime-09",
+  "wedding-barunson-anime-10",
+  "wedding-barunson-anime-11",
+  "wedding-barunson-anime-12",
+  "wedding-barunson-anime-13",
+  "wedding-barunson-anime-14",
+  "wedding-barunson-anime-15",
+  "wedding-barunson-anime-16",
+  "wedding-barunson-anime-17",
+  "wedding-barunson-anime-18"
+];
+const featuredTemplateIds = [...floralCeremonyTemplateIds, ...weddingPhotoTemplateIds];
 const featuredTemplates = featuredTemplateIds
+  .map((id) => templates.find((template) => template.id === id))
+  .filter((template): template is NonNullable<typeof template> => Boolean(template));
+const heroTemplateIds = [
+  "wedding-barunson-anime-04",
+  "wedding-barunson-anime-08",
+  "wedding-barunson-anime-09"
+];
+const heroTemplates = heroTemplateIds
   .map((id) => templates.find((template) => template.id === id))
   .filter((template): template is NonNullable<typeof template> => Boolean(template));
 
@@ -136,13 +163,13 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </ul>
           </div>
 
-          <div aria-label="오삼오삼 애니 감성 추천 디자인" className="os-release-hero-art">
+          <div aria-label="오삼오삼 플로럴 및 웨딩 포토 추천 디자인" className="os-release-hero-art">
             <div className="os-release-hero-art-label">
               <Sparkles aria-hidden="true" size={16} />
               오삼오삼 셀렉션
             </div>
             <div className="os-release-card-stack">
-              {featuredTemplates.slice(0, 3).map((template, index) => (
+              {heroTemplates.map((template, index) => (
                 <Link
                   aria-label={`${template.name} 미리보기`}
                   className={`os-release-stack-card os-release-stack-card-${index + 1}`}
@@ -184,7 +211,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <div className="os-release-section-heading os-release-section-heading-left">
               <p className="os-release-eyebrow">오삼오삼 셀렉션</p>
               <h2 id="featured-title">먼저, 마음이 가는 디자인을 골라보세요.</h2>
-              <p>애니 감성부터 사진형까지, 오래 보아도 질리지 않는 디자인을 차분히 모았어요.</p>
+              <p>플로럴 세레모니 04~08과 웨딩 포토 콘셉트를 한곳에 차분히 모았어요.</p>
             </div>
             <Link className="os-release-text-link" href="#templates">전체 디자인 보기</Link>
           </div>
@@ -197,7 +224,9 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                   href={`/preview?template=${template.id}`}
                 >
                   <TemplateMarkup template={template} variant="browser" />
-                  {template.id.includes("anime") ? <span className="os-release-featured-badge">ANIME PICK</span> : null}
+                  <span className="os-release-featured-badge">
+                    {floralCeremonyTemplateIds.includes(template.id) ? "FLORAL PICK" : "PHOTO PICK"}
+                  </span>
                 </Link>
                 <div className="os-release-featured-copy">
                   <span>{template.badge}</span>

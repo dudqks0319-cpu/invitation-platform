@@ -1,14 +1,14 @@
 .os-home {
-  --os-burgundy: #75414a;
-  --os-burgundy-dark: #60343c;
-  --os-burgundy-soft: #f4e5e5;
-  --os-ivory: #f8f4ee;
-  --os-paper: #fffdf9;
-  --os-paper-muted: #f4ede5;
-  --os-ink: #2b2522;
-  --os-body: #6d635d;
-  --os-muted: #958a83;
-  --os-border: #e4d8cf;
+  --os-burgundy: #b27d86;
+  --os-burgundy-dark: #895c65;
+  --os-burgundy-soft: #f8ebec;
+  --os-ivory: #fffbf7;
+  --os-paper: #ffffff;
+  --os-paper-muted: #faf5f0;
+  --os-ink: #302a28;
+  --os-body: #716965;
+  --os-muted: #9b918b;
+  --os-border: #eadfd8;
   min-height: 100vh;
   background: var(--os-ivory);
   color: var(--os-ink);
@@ -29,7 +29,7 @@
 
 .os-home a:focus-visible,
 .os-home button:focus-visible {
-  outline: 3px solid rgba(117, 65, 74, 0.38);
+  outline: 3px solid rgba(178, 125, 134, 0.34);
   outline-offset: 3px;
 }
 
@@ -93,8 +93,8 @@
 }
 
 .os-home .site-header {
-  background: rgba(255, 253, 249, 0.94);
-  border-bottom: 1px solid rgba(87, 64, 53, 0.1);
+  background: rgba(255, 253, 250, 0.96);
+  border-bottom: 1px solid rgba(125, 94, 86, 0.09);
   box-shadow: none;
   -webkit-backdrop-filter: blur(20px) saturate(150%);
   backdrop-filter: blur(20px) saturate(150%);
@@ -110,9 +110,9 @@
 }
 
 .os-home .logo-icon {
-  border-color: rgba(117, 65, 74, 0.18);
-  background: var(--os-burgundy);
-  color: #fff;
+  border-color: rgba(178, 125, 134, 0.22);
+  background: var(--os-burgundy-soft);
+  color: var(--os-burgundy-dark);
   box-shadow: none;
 }
 
@@ -169,9 +169,9 @@
   overflow: hidden;
   padding: 164px 0 104px;
   background:
-    radial-gradient(circle at 84% 16%, rgba(154, 91, 100, 0.16), transparent 31%),
-    radial-gradient(circle at 14% 88%, rgba(204, 164, 118, 0.17), transparent 29%),
-    linear-gradient(180deg, #fbf8f3 0%, #f4ede5 100%);
+    radial-gradient(circle at 84% 16%, rgba(205, 157, 165, 0.14), transparent 31%),
+    radial-gradient(circle at 14% 88%, rgba(224, 195, 164, 0.14), transparent 29%),
+    linear-gradient(180deg, #fffdfb 0%, #faf5f0 100%);
 }
 
 .os-release-hero-grid {
@@ -183,7 +183,7 @@
 
 .os-release-hero-copy h1 {
   margin: 0;
-  color: #28211f;
+  color: var(--os-ink);
   font-size: clamp(3.35rem, 6.4vw, 5.8rem);
   font-weight: 600;
   line-height: 1.08;
@@ -195,7 +195,7 @@
 
 .os-release-hero-description {
   margin-top: 28px;
-  color: #655d58;
+  color: var(--os-body);
   font-size: clamp(1rem, 1.7vw, 1.12rem);
   line-height: 1.9;
 }
@@ -217,14 +217,14 @@
   border-radius: 999px;
   padding: 0 22px;
   font-size: 0.92rem;
-  font-weight: 800;
+  font-weight: 750;
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .os-release-primary-cta {
   background: var(--os-burgundy);
   color: #fff;
-  box-shadow: 0 15px 32px rgba(85, 48, 55, 0.18);
+  box-shadow: 0 12px 28px rgba(137, 92, 101, 0.14);
 }
 
 .os-release-primary-cta:hover {
@@ -414,7 +414,7 @@
 }
 
 .os-release-featured {
-  background: #f3ebe3;
+  background: #fbf6f2;
 }
 
 .os-release-heading-row {
@@ -450,7 +450,7 @@
   border: 1px solid var(--os-border);
   border-radius: 22px;
   background: var(--os-paper);
-  box-shadow: 0 12px 34px rgba(62, 46, 39, 0.06);
+  box-shadow: 0 10px 30px rgba(75, 56, 49, 0.045);
 }
 
 .os-release-featured-preview {
@@ -1100,7 +1100,7 @@
 
   .os-release-section,
   .os-release-template-browser {
-    padding-block: 76px;
+    padding-block: 68px;
   }
 
   .os-release-section-heading {
@@ -1128,25 +1128,29 @@
   }
 
   .os-release-hero {
-    padding: 116px 0 72px;
+    padding: 100px 0 64px;
   }
 
   .os-release-hero-copy h1 {
-    font-size: clamp(2.65rem, 13vw, 3.8rem);
-    line-height: 1.14;
+    max-width: 9.5em;
+    font-size: clamp(2.35rem, 10.8vw, 3rem);
+    line-height: 1.17;
   }
 
   .os-release-mobile-title-break {
-    display: block;
+    display: inline;
   }
 
   .os-release-hero-description {
-    font-size: 0.94rem;
+    margin-top: 22px;
+    font-size: 0.93rem;
+    line-height: 1.75;
   }
 
   .os-release-hero-actions {
     display: grid;
     grid-template-columns: 1fr;
+    margin-top: 26px;
   }
 
   .os-release-primary-cta,
@@ -1157,19 +1161,20 @@
   .os-release-proof-list {
     align-items: flex-start;
     flex-direction: column;
+    margin-top: 22px;
   }
 
   .os-release-hero-art {
-    min-height: 485px;
+    min-height: 430px;
   }
 
   .os-release-card-stack {
-    height: 405px;
+    height: 370px;
   }
 
   .os-release-stack-card {
-    width: 202px;
-    height: 340px;
+    width: 194px;
+    height: 324px;
     border-width: 6px;
     border-radius: 24px;
   }
