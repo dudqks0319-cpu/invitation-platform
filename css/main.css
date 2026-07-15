@@ -16,13 +16,13 @@ ul { list-style: none; }
 
 /* ===== VARIABLES ===== */
 :root {
-  --primary: #B7828A;
-  --primary-light: #F8ECEC;
-  --primary-dark: #865A63;
-  --accent: #C4939A;
-  --accent-soft: #FAF1F0;
-  --bg-cream: #FFFBF7;
-  --bg-light: #FAF6F2;
+  --primary: #DFA2AF;
+  --primary-light: #FFF0F3;
+  --primary-dark: #8D5260;
+  --accent: #E7B1BA;
+  --accent-soft: #FFF5F4;
+  --bg-cream: #FFFDF9;
+  --bg-light: #FFF8F5;
   --text-dark: #302A28;
   --text-mid: #716863;
   --text-light: #9D938D;
@@ -122,12 +122,13 @@ ul { list-style: none; }
 
 /* ===== BUTTONS ===== */
 .btn-primary {
-  background: var(--primary); color: #fff;
+  background: linear-gradient(135deg, #F0BEC7, var(--primary)); color: #633B45;
+  border: 1px solid #E5A4B0;
   border-radius: 50px; padding: 10px 22px;
   font-size: 0.9rem; font-weight: 600;
   transition: background 0.2s, transform 0.1s;
 }
-.btn-primary:hover { background: var(--primary-dark); transform: translateY(-1px); }
+.btn-primary:hover { background: #E7AFB9; transform: translateY(-1px); }
 .btn-outline {
   background: transparent; color: var(--primary);
   border: 2px solid var(--primary); border-radius: 50px;
@@ -196,13 +197,14 @@ ul { list-style: none; }
 }
 .hero-btns { display: flex; gap: 14px; margin-bottom: 48px; flex-wrap: wrap; }
 .btn-hero-primary {
-  background: var(--primary); color: #fff;
+  background: linear-gradient(135deg, #F0BEC7, var(--primary)); color: #633B45;
+  border: 1px solid #E5A4B0;
   border-radius: 999px; padding: 16px 34px;
   font-size: 1rem; font-weight: 700;
   box-shadow: 0 10px 26px rgba(183,130,138,0.18);
   transition: all 0.2s;
 }
-.btn-hero-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 16px 34px rgba(134,90,99,0.2); }
+.btn-hero-primary:hover { background: #E7AFB9; transform: translateY(-2px); box-shadow: 0 16px 34px rgba(174,107,122,0.18); }
 .btn-hero-outline {
   background: transparent; color: var(--primary-dark);
   border: 1.5px solid rgba(183,130,138,0.42); border-radius: 999px;
