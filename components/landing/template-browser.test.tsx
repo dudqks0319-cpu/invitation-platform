@@ -42,7 +42,7 @@ describe("TemplateBrowser", () => {
     });
 
     const firstCard = container.querySelector(".template-card");
-    expect(firstCard?.getAttribute("aria-label")).toBe("별을 안은 토끼 템플릿 선택");
+    expect(firstCard?.getAttribute("aria-label")).toBe("달토끼 첫별 템플릿 선택");
 
     await act(async () => {
       root.unmount();
@@ -59,8 +59,8 @@ describe("TemplateBrowser", () => {
     });
 
     const expectations = [
-      ["집들이", "새집 한 줄 템플릿 선택"],
-      ["환갑잔치", "학과 모란 템플릿 선택"],
+      ["집들이", "빨간 지붕 화분집 템플릿 선택"],
+      ["환갑잔치", "학과 붉은 모란 템플릿 선택"],
       ["칠순잔치", "칠순 라벤더 01 템플릿 선택"],
       ["팔순잔치", "팔순 로즈골드 01 템플릿 선택"]
     ] as const;
@@ -115,7 +115,7 @@ describe("TemplateBrowser", () => {
     const previewLink = Array.from(container.querySelectorAll("a")).find(
       (link) => link.textContent === "미리보기"
     );
-    expect(previewLink?.getAttribute("href")).toBe("/preview?template=wedding-barunson-anime-04");
+    expect(previewLink?.getAttribute("href")).toBe("/preview?template=wedding-barunson-anime-25");
 
     await act(async () => {
       root.unmount();

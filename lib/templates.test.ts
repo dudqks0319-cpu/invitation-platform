@@ -59,6 +59,20 @@ const referenceStyleTemplates = [
   { id: "hwangap-barunson-anime-07", category: "hwangap" }
 ] as const;
 
+const expandedReferenceStyleTemplates = [
+  ["wedding", 25, 34],
+  ["dol", 16, 25],
+  ["birthday", 5, 14],
+  ["baby", 5, 14],
+  ["housewarming", 10, 19],
+  ["hwangap", 8, 17]
+].flatMap(([category, start, end]) =>
+  Array.from({ length: Number(end) - Number(start) + 1 }, (_, index) => ({
+    id: `${category}-barunson-anime-${String(Number(start) + index).padStart(2, "0")}`,
+    category
+  }))
+);
+
 const representativeTemplates = [
   { id: "wedding-classic", removedEmoji: "🌸" },
   { id: "dol-cute", removedEmoji: "👶" },
@@ -130,6 +144,20 @@ describe("template artwork mapping", () => {
       expect(template, `${id} template should exist`).toBeDefined();
       expect(template?.category).toBe(category);
       expect(template?.html).toContain("/images/custom/barunson-category-anime-2026/");
+      expect(template?.html).toContain(".png");
+      expect(getTemplateDefaultTextPlacement(template!)).toBe("center");
+    }
+  });
+
+  it("registers 10 distinct new invitation backgrounds for each expanded event category", () => {
+    expect(expandedReferenceStyleTemplates).toHaveLength(60);
+
+    for (const { id, category } of expandedReferenceStyleTemplates) {
+      const template = templates.find((item) => item.id === id);
+
+      expect(template, `${id} template should exist`).toBeDefined();
+      expect(template?.category).toBe(category);
+      expect(template?.html).toContain(`/images/custom/barunson-category-anime-2026/${category}-`);
       expect(template?.html).toContain(".png");
       expect(getTemplateDefaultTextPlacement(template!)).toBe("center");
     }
