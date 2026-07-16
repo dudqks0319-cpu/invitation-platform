@@ -62,4 +62,25 @@ describe("TemplateMarkup", () => {
     expect(document.querySelector(".template-markup-browser")).not.toBeNull();
     expect(document.body.textContent).toContain("Kim & Park");
   });
+
+  it("keeps lazy loading on browser artwork previews", () => {
+    document.body.innerHTML = renderToStaticMarkup(
+      <TemplateMarkup
+        variant="browser"
+        template={{
+          id: "wedding-artwork",
+          category: "wedding",
+          name: "아트워크",
+          badge: "결혼식",
+          desc: "테스트",
+          tags: [],
+          html: `<div class="tmpl-standalone-art"><img class="tmpl-card-image" src="/images/card.png" alt="" loading="lazy" decoding="async" /></div>`
+        }}
+      />
+    );
+
+    const artwork = document.querySelector<HTMLImageElement>(".tmpl-card-image");
+    expect(artwork).toHaveAttribute("loading", "lazy");
+    expect(artwork).toHaveAttribute("decoding", "async");
+  });
 });

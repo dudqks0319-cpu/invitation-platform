@@ -32,4 +32,20 @@ describe("sanitizeTemplateMarkup", () => {
     expect(sanitized).not.toContain("javascript:");
     expect(sanitized).toContain('style="color: #333; font-size: 20px;"');
   });
+
+  it("keeps bounded image loading hints and drops them from other elements", () => {
+    const html = `
+      <img src="/images/card.png" loading="lazy" decoding="async" />
+      <img src="/images/bad.png" loading="immediate" decoding="script" />
+      <div loading="lazy" decoding="async">본문</div>
+    `;
+
+    const sanitized = sanitizeTemplateMarkup(html);
+
+    expect(sanitized).toContain('loading="lazy"');
+    expect(sanitized).toContain('decoding="async"');
+    expect(sanitized).not.toContain("immediate");
+    expect(sanitized).not.toContain("script");
+    expect(sanitized).toContain("<div>본문</div>");
+  });
 });

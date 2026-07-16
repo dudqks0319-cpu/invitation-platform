@@ -1,5 +1,5 @@
 const ALLOWED_TAGS = new Set(["div", "span", "p", "strong", "em", "br", "img"]);
-const ALLOWED_ATTRS = new Set(["class", "style", "src", "alt", "aria-hidden"]);
+const ALLOWED_ATTRS = new Set(["class", "style", "src", "alt", "aria-hidden", "loading", "decoding"]);
 const BLOCKED_TAGS = /<\s*\/?\s*(script|style|iframe|object|embed|meta|link|base|form|input|button|textarea|select|option)[^>]*>/gi;
 
 function decodeAttributeValue(value: string) {
@@ -62,6 +62,20 @@ function sanitizeTagAttributes(tagName: string, rawAttributes: string) {
     }
 
     if (normalizedName === "src" && tagName !== "img") {
+      return "";
+    }
+
+    if (normalizedName === "loading") {
+      if (tagName === "img" && ["eager", "lazy"].includes(normalizedValue)) {
+        sanitizedAttributes.push(`loading="${normalizedValue}"`);
+      }
+      return "";
+    }
+
+    if (normalizedName === "decoding") {
+      if (tagName === "img" && ["async", "auto", "sync"].includes(normalizedValue)) {
+        sanitizedAttributes.push(`decoding="${normalizedValue}"`);
+      }
       return "";
     }
 
