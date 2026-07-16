@@ -44,6 +44,21 @@ const newCelebrationTemplateIds = [
   "palsun-barunson-anime-03"
 ] as const;
 
+const referenceStyleTemplates = [
+  { id: "wedding-barunson-anime-19", category: "wedding" },
+  { id: "wedding-barunson-anime-20", category: "wedding" },
+  { id: "wedding-barunson-anime-21", category: "wedding" },
+  { id: "wedding-barunson-anime-22", category: "wedding" },
+  { id: "wedding-barunson-anime-23", category: "wedding" },
+  { id: "wedding-barunson-anime-24", category: "wedding" },
+  { id: "dol-barunson-anime-14", category: "dol" },
+  { id: "dol-barunson-anime-15", category: "dol" },
+  { id: "housewarming-barunson-anime-09", category: "housewarming" },
+  { id: "birthday-barunson-anime-04", category: "birthday" },
+  { id: "baby-barunson-anime-04", category: "baby" },
+  { id: "hwangap-barunson-anime-07", category: "hwangap" }
+] as const;
+
 const representativeTemplates = [
   { id: "wedding-classic", removedEmoji: "🌸" },
   { id: "dol-cute", removedEmoji: "👶" },
@@ -105,6 +120,18 @@ describe("template artwork mapping", () => {
       expect(template, `${id} template should exist`).toBeDefined();
       expect(template?.html).toContain("/images/custom/barunson-category-anime-2026/");
       expect(template?.html).toContain(".png");
+    }
+  });
+
+  it("registers the reference-style artwork at a centered, text-safe placement", () => {
+    for (const { id, category } of referenceStyleTemplates) {
+      const template = templates.find((item) => item.id === id);
+
+      expect(template, `${id} template should exist`).toBeDefined();
+      expect(template?.category).toBe(category);
+      expect(template?.html).toContain("/images/custom/barunson-category-anime-2026/");
+      expect(template?.html).toContain(".png");
+      expect(getTemplateDefaultTextPlacement(template!)).toBe("center");
     }
   });
 

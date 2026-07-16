@@ -43,14 +43,26 @@ const weddingPhotoTemplateIds = [
   "wedding-barunson-anime-17",
   "wedding-barunson-anime-18"
 ];
-const featuredTemplateIds = [...floralCeremonyTemplateIds, ...weddingPhotoTemplateIds];
+const illustrationTemplateIds = [
+  "wedding-barunson-anime-19",
+  "wedding-barunson-anime-20",
+  "wedding-barunson-anime-21",
+  "wedding-barunson-anime-22",
+  "wedding-barunson-anime-23",
+  "wedding-barunson-anime-24"
+];
+const featuredTemplateIds = [
+  ...illustrationTemplateIds,
+  ...floralCeremonyTemplateIds,
+  ...weddingPhotoTemplateIds
+];
 const featuredTemplates = featuredTemplateIds
   .map((id) => templates.find((template) => template.id === id))
   .filter((template): template is NonNullable<typeof template> => Boolean(template));
 const heroTemplateIds = [
-  "wedding-barunson-anime-04",
-  "wedding-barunson-anime-08",
-  "wedding-barunson-anime-09"
+  "wedding-barunson-anime-20",
+  "wedding-barunson-anime-21",
+  "wedding-barunson-anime-23"
 ];
 const heroTemplates = heroTemplateIds
   .map((id) => templates.find((template) => template.id === id))
@@ -163,7 +175,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </ul>
           </div>
 
-          <div aria-label="오삼오삼 플로럴 및 웨딩 포토 추천 디자인" className="os-release-hero-art">
+          <div aria-label="오삼오삼 애니 일러스트 추천 디자인" className="os-release-hero-art">
             <div className="os-release-hero-art-label">
               <Sparkles aria-hidden="true" size={16} />
               오삼오삼 셀렉션
@@ -211,7 +223,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             <div className="os-release-section-heading os-release-section-heading-left">
               <p className="os-release-eyebrow">오삼오삼 셀렉션</p>
               <h2 id="featured-title">먼저, 마음이 가는 디자인을 골라보세요.</h2>
-              <p>플로럴 세레모니 04~08과 웨딩 포토 콘셉트를 한곳에 차분히 모았어요.</p>
+              <p>큰 여백과 작은 일러스트가 어우러진 새 디자인부터 플로럴과 웨딩 포토까지 모았어요.</p>
             </div>
             <Link className="os-release-text-link" href="#templates">전체 디자인 보기</Link>
           </div>
@@ -225,7 +237,11 @@ export default async function HomePage({ searchParams }: HomePageProps) {
                 >
                   <TemplateMarkup template={template} variant="browser" />
                   <span className="os-release-featured-badge">
-                    {floralCeremonyTemplateIds.includes(template.id) ? "FLORAL PICK" : "PHOTO PICK"}
+                    {illustrationTemplateIds.includes(template.id)
+                      ? "ILLUSTRATION PICK"
+                      : floralCeremonyTemplateIds.includes(template.id)
+                        ? "FLORAL PICK"
+                        : "PHOTO PICK"}
                   </span>
                 </Link>
                 <div className="os-release-featured-copy">

@@ -23,7 +23,19 @@ const CENTERED_TEXT_TEMPLATE_IDS = new Set([
   "wedding-illustration-curtain",
   "wedding-botanical-vertical",
   "wedding-photo-overlay",
-  "wedding-photo-hero"
+  "wedding-photo-hero",
+  "wedding-barunson-anime-19",
+  "wedding-barunson-anime-20",
+  "wedding-barunson-anime-21",
+  "wedding-barunson-anime-22",
+  "wedding-barunson-anime-23",
+  "wedding-barunson-anime-24",
+  "dol-barunson-anime-14",
+  "dol-barunson-anime-15",
+  "housewarming-barunson-anime-09",
+  "birthday-barunson-anime-04",
+  "baby-barunson-anime-04",
+  "hwangap-barunson-anime-07"
 ]);
 
 export function getTemplateDefaultTextPlacement(template: TemplatePreset) {
@@ -288,6 +300,60 @@ const barunsonCategoryAnimeTemplates: TemplatePreset[] = [
     html: imageOnly("tmpl-character-card wedding-barunson-anime-18", "/images/custom/barunson-category-anime-2026/wedding-18.png")
   },
   {
+    id: "wedding-barunson-anime-19",
+    category: "wedding",
+    name: "초록 라인 약속",
+    badge: "결혼식",
+    desc: "가느다란 민트 식물 선화와 작은 꽃다발로 여백을 살린 청첩장",
+    tags: ["#라인드로잉", "#미니멀", "#웨딩"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-19", "/images/custom/barunson-category-anime-2026/wedding-19.png")
+  },
+  {
+    id: "wedding-barunson-anime-20",
+    category: "wedding",
+    name: "한복의 품격",
+    badge: "결혼식",
+    desc: "파스텔 한복 커플을 작게 담아 전통과 여백을 조화시킨 청첩장",
+    tags: ["#한복", "#전통", "#애니"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-20", "/images/custom/barunson-category-anime-2026/wedding-20.png")
+  },
+  {
+    id: "wedding-barunson-anime-21",
+    category: "wedding",
+    name: "다정한 첫걸음",
+    badge: "결혼식",
+    desc: "살구빛 튤립 사이 작은 커플 일러스트가 머무는 밝은 청첩장",
+    tags: ["#튤립", "#커플", "#여백"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-21", "/images/custom/barunson-category-anime-2026/wedding-21.png")
+  },
+  {
+    id: "wedding-barunson-anime-22",
+    category: "wedding",
+    name: "베리 보태니컬",
+    badge: "결혼식",
+    desc: "얇은 그린 리스와 작은 베리 포인트로 단정하게 완성한 카드",
+    tags: ["#리스", "#보태니컬", "#미니멀"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-22", "/images/custom/barunson-category-anime-2026/wedding-22.png")
+  },
+  {
+    id: "wedding-barunson-anime-23",
+    category: "wedding",
+    name: "노란 꽃길",
+    badge: "결혼식",
+    desc: "작은 커플과 노란 들꽃을 아래에 두어 문구 여백을 넉넉히 남긴 청첩장",
+    tags: ["#들꽃", "#애니", "#따뜻한"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-23", "/images/custom/barunson-category-anime-2026/wedding-23.png")
+  },
+  {
+    id: "wedding-barunson-anime-24",
+    category: "wedding",
+    name: "푸른 백합 라인",
+    badge: "결혼식",
+    desc: "연한 블루 백합 선화와 작은 리본으로 맑게 정리한 미니멀 카드",
+    tags: ["#백합", "#라인", "#블루"],
+    html: imageOnly("tmpl-character-card wedding-barunson-anime-24", "/images/custom/barunson-category-anime-2026/wedding-24.png")
+  },
+  {
     id: "dol-barunson-anime-01",
     category: "dol",
     name: "첫돌 파티 01",
@@ -405,6 +471,24 @@ const barunsonCategoryAnimeTemplates: TemplatePreset[] = [
     html: imageOnly("tmpl-character-card dol-barunson-anime-13", "/images/custom/barunson-category-anime-2026/dol-13.png")
   },
   {
+    id: "dol-barunson-anime-14",
+    category: "dol",
+    name: "별을 안은 토끼",
+    badge: "돌잔치",
+    desc: "별을 안은 작은 토끼와 노란 체크 포인트가 포근한 첫돌 카드",
+    tags: ["#토끼", "#체크", "#첫돌"],
+    html: imageOnly("tmpl-character-card dol-barunson-anime-14", "/images/custom/barunson-category-anime-2026/dol-14.png")
+  },
+  {
+    id: "dol-barunson-anime-15",
+    category: "dol",
+    name: "복주머니 호랑이",
+    badge: "돌잔치",
+    desc: "한복 호랑이와 복주머니를 작게 담은 밝은 전통 첫돌 초대장",
+    tags: ["#호랑이", "#한복", "#전통"],
+    html: imageOnly("tmpl-character-card dol-barunson-anime-15", "/images/custom/barunson-category-anime-2026/dol-15.png")
+  },
+  {
     id: "housewarming-barunson-anime-01",
     category: "housewarming",
     name: "햇살 집들이 01",
@@ -477,6 +561,15 @@ const barunsonCategoryAnimeTemplates: TemplatePreset[] = [
     html: imageOnly("tmpl-character-card housewarming-barunson-anime-08", "/images/custom/barunson-category-anime-2026/housewarming-08.png")
   },
   {
+    id: "housewarming-barunson-anime-09",
+    category: "housewarming",
+    name: "새집 한 줄",
+    badge: "집들이",
+    desc: "작은 집과 화분을 한 줄 일러스트로 담아 여백을 넓힌 집들이 카드",
+    tags: ["#새집", "#라인", "#미니멀"],
+    html: imageOnly("tmpl-character-card housewarming-barunson-anime-09", "/images/custom/barunson-category-anime-2026/housewarming-09.png")
+  },
+  {
     id: "hwangap-barunson-anime-01",
     category: "hwangap",
     name: "전통 축하 01",
@@ -529,6 +622,15 @@ const barunsonCategoryAnimeTemplates: TemplatePreset[] = [
     desc: "로즈골드 무드와 넓은 여백이 있는 프리미엄 환갑 초대장",
     tags: ["#환갑", "#로즈골드", "#프리미엄"],
     html: imageOnly("tmpl-character-card hwangap-barunson-anime-06", "/images/custom/barunson-category-anime-2026/hwangap-06.png")
+  },
+  {
+    id: "hwangap-barunson-anime-07",
+    category: "hwangap",
+    name: "학과 모란",
+    badge: "환갑잔치",
+    desc: "학 두 마리와 코랄 모란을 현대 민화로 풀어낸 품격 있는 초대장",
+    tags: ["#학", "#모란", "#민화"],
+    html: imageOnly("tmpl-character-card hwangap-barunson-anime-07", "/images/custom/barunson-category-anime-2026/hwangap-07.png")
   },
   {
     id: "chilsun-barunson-anime-01",
@@ -639,6 +741,15 @@ const barunsonCategoryAnimeTemplates: TemplatePreset[] = [
     html: imageOnly("tmpl-character-card birthday-barunson-anime-03", "/images/custom/barunson-category-anime-2026/birthday-03.jpg")
   },
   {
+    id: "birthday-barunson-anime-04",
+    category: "birthday",
+    name: "곰과 케이크",
+    badge: "생일파티",
+    desc: "작은 곰과 케이크 낙서를 중심으로 여백을 살린 밝은 생일 초대장",
+    tags: ["#곰", "#케이크", "#드로잉"],
+    html: imageOnly("tmpl-character-card birthday-barunson-anime-04", "/images/custom/barunson-category-anime-2026/birthday-04.png")
+  },
+  {
     id: "baby-barunson-anime-01",
     category: "baby",
     name: "베이비 클라우드 01",
@@ -664,6 +775,15 @@ const barunsonCategoryAnimeTemplates: TemplatePreset[] = [
     desc: "아기 소식과 파티 정보를 단정하게 배치하는 세로형 템플릿",
     tags: ["#아기", "#파티", "#세로형"],
     html: imageOnly("tmpl-character-card baby-barunson-anime-03", "/images/custom/barunson-category-anime-2026/baby-03.jpg")
+  },
+  {
+    id: "baby-barunson-anime-04",
+    category: "baby",
+    name: "달빛 모빌",
+    badge: "베이비샤워",
+    desc: "달과 구름, 작은 곰 인형 모빌을 위쪽에 둔 포근한 베이비샤워 카드",
+    tags: ["#모빌", "#달", "#곰"],
+    html: imageOnly("tmpl-character-card baby-barunson-anime-04", "/images/custom/barunson-category-anime-2026/baby-04.png")
   },
   {
     id: "graduation-barunson-anime-01",
@@ -736,10 +856,18 @@ const featuredWeddingTemplateIds = new Set<string>([
   "wedding-barunson-anime-15",
   "wedding-barunson-anime-16",
   "wedding-barunson-anime-17",
-  "wedding-barunson-anime-18"
+  "wedding-barunson-anime-18",
+  "wedding-barunson-anime-19",
+  "wedding-barunson-anime-20",
+  "wedding-barunson-anime-21",
+  "wedding-barunson-anime-22",
+  "wedding-barunson-anime-23",
+  "wedding-barunson-anime-24"
 ]);
 
 const featuredDolTemplateIds = [
+  "dol-barunson-anime-14",
+  "dol-barunson-anime-15",
   "dol-barunson-anime-13",
   "dol-barunson-anime-04",
   "dol-barunson-anime-05",
@@ -753,6 +881,7 @@ const featuredDolTemplateIds = [
 ] as const;
 
 const featuredHousewarmingTemplateIds = [
+  "housewarming-barunson-anime-09",
   "housewarming-barunson-anime-04",
   "housewarming-barunson-anime-05",
   "housewarming-barunson-anime-06",
@@ -761,6 +890,7 @@ const featuredHousewarmingTemplateIds = [
 ] as const;
 
 const featuredHwangapTemplateIds = [
+  "hwangap-barunson-anime-07",
   "hwangap-barunson-anime-04",
   "hwangap-barunson-anime-05",
   "hwangap-barunson-anime-06"

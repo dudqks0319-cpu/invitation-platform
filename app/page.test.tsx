@@ -46,6 +46,10 @@ describe("HomePage", () => {
     ["웨딩 포토 콘셉트 01", "웨딩 포토 콘셉트 02", "웨딩 포토 콘셉트 03", "웨딩 포토 콘셉트 04", "웨딩 포토 콘셉트 05", "웨딩 포토 콘셉트 06", "웨딩 포토 콘셉트 07", "웨딩 포토 콘셉트 08", "웨딩 포토 콘셉트 09", "웨딩 포토 콘셉트 10"].forEach((name) => {
       expect(text).toContain(name);
     });
+    ["초록 라인 약속", "한복의 품격", "다정한 첫걸음", "베리 보태니컬", "노란 꽃길", "푸른 백합 라인"].forEach((name) => {
+      expect(text).toContain(name);
+    });
+    expect(html).toContain("ILLUSTRATION PICK");
     expect(html).toContain("FLORAL PICK");
     expect(html).toContain("PHOTO PICK");
     expect(html).not.toContain("제작은 1분이면 충분해요");

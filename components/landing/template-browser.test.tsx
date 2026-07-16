@@ -42,7 +42,7 @@ describe("TemplateBrowser", () => {
     });
 
     const firstCard = container.querySelector(".template-card");
-    expect(firstCard?.getAttribute("aria-label")).toBe("첫돌 포토 콘셉트 10 템플릿 선택");
+    expect(firstCard?.getAttribute("aria-label")).toBe("별을 안은 토끼 템플릿 선택");
 
     await act(async () => {
       root.unmount();
@@ -59,8 +59,8 @@ describe("TemplateBrowser", () => {
     });
 
     const expectations = [
-      ["집들이", "햇살 거실 템플릿 선택"],
-      ["환갑잔치", "환갑 애니 블룸 01 템플릿 선택"],
+      ["집들이", "새집 한 줄 템플릿 선택"],
+      ["환갑잔치", "학과 모란 템플릿 선택"],
       ["칠순잔치", "칠순 라벤더 01 템플릿 선택"],
       ["팔순잔치", "팔순 로즈골드 01 템플릿 선택"]
     ] as const;
