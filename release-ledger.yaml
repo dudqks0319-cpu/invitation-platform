@@ -1,4 +1,4 @@
-updated_at: "2026-07-21T08:45:00+09:00"
+updated_at: "2026-07-21T09:00:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
@@ -7,10 +7,11 @@ public:
   released_at: "2026-06-29T06:55:38Z"
 candidate:
   version: "1.0.3"
-  git_sha: pending
+  git_sha: "8fcbfffce2d6d62af5c8b2846b0dc0c77fe1cf90"
   native_local_build_number: 52
   eas_remote_build_number_before_increment: 59
-  eas_build_number: pending
+  eas_build_number: 60
+  signed_ipa_state: failed_provisioning_profile_certificate_mismatch
   eas_build_id: pending
   eas_submit_id: pending
   app_store_connect_state: pending_build
@@ -28,4 +29,4 @@ verification:
   bundled_home_assets: passed
   free_only_release_gate: passed
   critical_dependency_advisories: 0
-next_action: "Commit candidate, create EAS production build, and upload to TestFlight."
+next_action: "Obtain explicit approval to refresh the iOS provisioning profile, then retry the local signed IPA build."
