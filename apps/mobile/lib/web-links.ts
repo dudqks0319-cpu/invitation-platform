@@ -1,7 +1,20 @@
-const DEFAULT_WEB_BASE_URL = "https://invitehub.co.kr";
+const DEFAULT_WEB_BASE_URL = "https://invitation-platform-plum.vercel.app";
+const LEGACY_VERCEL_PROJECT_HOST_PATTERN = /^invitation-platform(?:-[a-z0-9-]+)?-youngbeens-projects\.vercel\.app$/i;
 
 export function getInviteHubBaseUrl(baseUrl = process.env.EXPO_PUBLIC_WEB_BASE_URL || DEFAULT_WEB_BASE_URL) {
-  return baseUrl.replace(/\/$/, "");
+  const trimmedBaseUrl = baseUrl.trim();
+
+  try {
+    const url = new URL(trimmedBaseUrl);
+
+    if (LEGACY_VERCEL_PROJECT_HOST_PATTERN.test(url.hostname)) {
+      return DEFAULT_WEB_BASE_URL;
+    }
+
+    return url.toString().replace(/\/+$/, "");
+  } catch {
+    return DEFAULT_WEB_BASE_URL;
+  }
 }
 
 function buildPathUrl(path: string, baseUrl?: string) {

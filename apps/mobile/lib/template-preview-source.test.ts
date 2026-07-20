@@ -17,4 +17,8 @@ describe("template-preview-source", () => {
 
     expect(missingCanvasIds).toEqual([]);
   });
+
+  it("keeps preview and canvas ids aligned so one bundled asset set can be reused", () => {
+    expect([...bundledTemplatePreviewIds]).toEqual([...bundledTemplateCanvasIds]);
+  });
 });

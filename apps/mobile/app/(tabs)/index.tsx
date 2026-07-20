@@ -39,7 +39,7 @@ export default function HomeScreen() {
             justifyContent: "space-between"
           }}
         >
-          <Text style={{ color: theme.colors.accent, fontSize: 20, fontWeight: "800" }}>💌 InviteHub</Text>
+          <Text style={{ color: theme.colors.accent, fontSize: 20, fontWeight: "800" }}>💌 오삼오삼</Text>
           <Pressable
             accessibilityLabel="로그인"
             onPress={() => {
@@ -62,6 +62,9 @@ export default function HomeScreen() {
 
         <View style={{ paddingHorizontal: 18, paddingTop: 24 }}>
           <HeroSection
+            onOpenCategory={(category) => {
+              router.push({ pathname: "/templates", params: { category } });
+            }}
             onUseTemplate={(template) => {
               void handleUseTemplate(template);
             }}

@@ -95,7 +95,7 @@ export function getMapApiStatusLabel(config: MapApiConfig | null) {
   }
 
   if (config.kakao.enabled) {
-    return "카카오 지도 API 연동됨 · 네이버 지도 API 키 필요";
+    return "카카오 지도 API 연동됨 · 네이버 지도는 외부 링크로 열림";
   }
 
   if (config.naver.enabled) {

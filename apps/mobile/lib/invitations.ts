@@ -19,6 +19,9 @@ type RemoteInvitationRow = {
 
 const STORAGE_BUCKET = "invitation-assets";
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 7;
+const PUBLIC_SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{2,30}[a-z0-9]$/i;
+const SHORT_SLUG_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
+const SHORT_SLUG_TOKEN_LENGTH = 10;
 
 export type PublishReadiness = {
   canPublish: boolean;
@@ -29,18 +32,29 @@ export function requiresPaymentBeforePublish(payload: InvitationPayload) {
   return !getMobileInvitationPricing(payload).isFree;
 }
 
-function slugify(input: string) {
-  return input
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9가-힣\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+function createShortInvitationSlug() {
+  const bytes = new Uint8Array(SHORT_SLUG_TOKEN_LENGTH);
+
+  if (globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(bytes);
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256);
+    }
+  }
+
+  const token = Array.from(bytes, (byte) => SHORT_SLUG_ALPHABET[byte % SHORT_SLUG_ALPHABET.length]).join("");
+  return `iv-${token}`;
 }
 
 function ensureSlug(payload: InvitationPayload) {
-  return payload.share.slug || `${slugify(payload.title || "invitehub")}-${Math.random().toString(36).slice(2, 8)}`;
+  const existingSlug = payload.share.slug.trim().toLowerCase();
+
+  if (PUBLIC_SLUG_PATTERN.test(existingSlug)) {
+    return existingSlug;
+  }
+
+  return createShortInvitationSlug();
 }
 
 export function getPublishReadiness(payload: InvitationPayload): PublishReadiness {

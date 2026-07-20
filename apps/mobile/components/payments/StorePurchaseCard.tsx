@@ -10,6 +10,7 @@ type StorePurchaseCardProps = {
   invitationId?: string;
   onBeforePurchase?: () => Promise<{ invitationId: string } | null>;
   onVerified?: (result: { invitationId: string; slug: string }) => void;
+  userId?: string;
 };
 
 export function StorePurchaseCard({
@@ -17,14 +18,16 @@ export function StorePurchaseCard({
   disabledReason,
   invitationId,
   onBeforePurchase,
-  onVerified
+  onVerified,
+  userId
 }: StorePurchaseCardProps) {
-  const { canPurchase, connected, error, message, notice, pendingPurchase, product, productIds, provider, purchase } =
+  const { canPurchase, connected, error, message, notice, pendingPurchase, product, productIds, provider, purchase, restore } =
     useStorePurchase({
       accessToken,
       invitationId,
       onBeforePurchase,
-      onVerified
+      onVerified,
+      userId
     });
 
   const title = provider === "apple_iap" ? "Apple 인앱결제" : provider === "google_play" ? "Google Play 결제" : "스토어 결제";
@@ -37,9 +40,9 @@ export function StorePurchaseCard({
           ? `상품: ${product.displayName ?? product.id}${product.displayPrice ? ` · ${product.displayPrice}` : ""}`
           : productIds.length > 0
             ? connected
-              ? "스토어 상품을 불러오는 중입니다."
+              ? "RevenueCat 상품을 불러오는 중입니다."
               : "스토어 연결을 준비 중입니다."
-            : "환경변수에 스토어 상품 ID를 설정하면 실제 구매 버튼이 활성화됩니다."}
+            : "환경변수에 RevenueCat 키와 스토어 상품 ID를 설정하면 실제 구매 버튼이 활성화됩니다."}
       </Text>
       {message ? (
         <Text style={{ color: theme.colors.success, lineHeight: 22, marginTop: 10 }}>{message}</Text>
@@ -51,10 +54,10 @@ export function StorePurchaseCard({
         <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginTop: 10 }}>{disabledReason}</Text>
       ) : null}
       <Text style={{ color: theme.colors.textLight, lineHeight: 20, marginTop: 10 }}>
-        유료 옵션 초대장은 앱 스토어 결제를 완료해야 발행됩니다.
+        프리미엄 발행권은 초대장 1개 최종 발행, 공유 링크, RSVP, 방명록, 지도와 계좌 표시를 포함합니다.
       </Text>
       <Button
-        accessibilityLabel="스토어 결제 시작"
+        accessibilityLabel="발행권 구매"
         onPress={canPurchase && !disabledReason ? () => void purchase() : undefined}
         variant={canPurchase && !disabledReason ? "primary" : "outline"}
       >
@@ -63,8 +66,15 @@ export function StorePurchaseCard({
           : disabledReason
             ? "결제 전 준비 필요"
             : canPurchase
-              ? "스토어 결제로 발행권 구매"
-              : "스토어 상품 설정 필요"}
+              ? "발행권 구매하기"
+              : "RevenueCat 상품 설정 필요"}
+      </Button>
+      <Button
+        accessibilityLabel="구매 복원"
+        onPress={!pendingPurchase && !disabledReason ? () => void restore() : undefined}
+        variant="outline"
+      >
+        구매 복원
       </Button>
     </Card>
   );

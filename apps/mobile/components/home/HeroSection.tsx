@@ -2,10 +2,15 @@
 
 import { Image, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { theme } from "@/components/ui/theme";
-import { getHomeTemplateSections, type MobileTemplateGalleryItem } from "@/lib/template-gallery";
+import {
+  getHomeHeroTemplates,
+  getHomeTemplateSections,
+  type MobileTemplateGalleryItem
+} from "@/lib/template-gallery";
 import { getBundledTemplatePreviewSource } from "@/lib/template-preview-source";
 
 type HeroSectionProps = {
+  onOpenCategory: (categoryKey: string) => void;
   onUseTemplate: (template: MobileTemplateGalleryItem) => void;
 };
 
@@ -111,9 +116,90 @@ function TemplateCard({
   );
 }
 
-export function HeroSection({ onUseTemplate }: HeroSectionProps) {
+function HeroStackCard({
+  position,
+  stackWidth,
+  onUseTemplate,
+  template
+}: {
+  position: "left" | "center" | "right";
+  stackWidth: number;
+  onUseTemplate: (template: MobileTemplateGalleryItem) => void;
+  template: MobileTemplateGalleryItem;
+}) {
+  const previewSource = getBundledTemplatePreviewSource(template.id);
+  const isCenter = position === "center";
+  const cardWidth = isCenter ? Math.min(190, stackWidth * 0.54) : Math.min(160, stackWidth * 0.45);
+  const cardHeight = cardWidth / (941 / 1672);
+  const horizontalOffset = position === "left" ? 0 : position === "right" ? stackWidth - cardWidth : (stackWidth - cardWidth) / 2;
+  const rotation = position === "left" ? "-7deg" : position === "right" ? "7deg" : "0deg";
+
+  return (
+    <Pressable
+      accessibilityHint="선택하면 이 디자인으로 제작을 시작합니다."
+      accessibilityLabel={`${template.name} 메인 디자인 선택`}
+      accessibilityRole="button"
+      onPress={() => onUseTemplate(template)}
+      style={{
+        position: "absolute",
+        left: horizontalOffset,
+        top: isCenter ? 0 : 28,
+        width: cardWidth,
+        height: cardHeight,
+        borderRadius: isCenter ? 20 : 17,
+        borderWidth: 5,
+        borderColor: "rgba(255,255,255,0.98)",
+        backgroundColor: "#FFF9F3",
+        overflow: "hidden",
+        shadowColor: "#6E5548",
+        shadowOffset: { width: 0, height: 15 },
+        shadowOpacity: isCenter ? 0.2 : 0.13,
+        shadowRadius: 20,
+        elevation: isCenter ? 8 : 4,
+        zIndex: isCenter ? 3 : 1,
+        transform: [{ rotate: rotation }]
+      }}
+    >
+      {previewSource ? (
+        <Image
+          accessibilityIgnoresInvertColors
+          accessibilityLabel={`${template.name} 웨딩 이미지`}
+          resizeMode="cover"
+          source={previewSource}
+          style={{ width: "100%", height: "100%" }}
+        />
+      ) : null}
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          left: 10,
+          right: 10,
+          bottom: 10,
+          minHeight: isCenter ? 58 : 52,
+          borderRadius: 13,
+          backgroundColor: "rgba(255,255,255,0.94)",
+          justifyContent: "center",
+          paddingHorizontal: 12,
+          paddingVertical: 8
+        }}
+      >
+        <Text style={{ color: theme.colors.accent, fontSize: 10, fontWeight: "800" }}>결혼식</Text>
+        <Text numberOfLines={1} style={{ color: theme.colors.ink, fontSize: isCenter ? 14 : 12, fontWeight: "800", marginTop: 2 }}>
+          {template.name}
+        </Text>
+      </View>
+    </Pressable>
+  );
+}
+
+export function HeroSection({ onOpenCategory, onUseTemplate }: HeroSectionProps) {
   const { width } = useWindowDimensions();
   const cardWidth = Math.min(224, Math.max(176, width * 0.52));
+  const heroStackWidth = Math.min(360, Math.max(284, width - 36));
+  const heroCenterCardWidth = Math.min(190, heroStackWidth * 0.54);
+  const heroStackHeight = heroCenterCardWidth / (941 / 1672) + 24;
+  const heroTemplates = getHomeHeroTemplates();
   const sections = getHomeTemplateSections();
 
   return (
@@ -144,13 +230,82 @@ export function HeroSection({ onUseTemplate }: HeroSectionProps) {
         </Text>
       </View>
 
+      <View
+        accessibilityLabel="오삼오삼 웨딩 디자인 셀렉션"
+        style={{
+          alignItems: "center",
+          gap: 14,
+          paddingTop: 2
+        }}
+      >
+        <View
+          style={{
+            alignSelf: "flex-start",
+            borderRadius: 999,
+            borderWidth: 1,
+            borderColor: "rgba(184,107,122,0.24)",
+            backgroundColor: "rgba(255,255,255,0.82)",
+            paddingHorizontal: 13,
+            paddingVertical: 8
+          }}
+        >
+          <Text style={{ color: theme.colors.accent, fontSize: 12, fontWeight: "800" }}>✦ 오삼오삼 셀렉션</Text>
+        </View>
+
+        <View style={{ width: heroStackWidth, height: heroStackHeight }}>
+          {heroTemplates.map((template, index) => (
+            <HeroStackCard
+              key={template.id}
+              onUseTemplate={onUseTemplate}
+              position={index === 0 ? "left" : index === 1 ? "center" : "right"}
+              stackWidth={heroStackWidth}
+              template={template}
+            />
+          ))}
+        </View>
+      </View>
+
       {sections.map((section) => (
         <View key={section.key} style={{ gap: 12 }}>
-          <View style={{ gap: 3 }}>
-            <Text style={{ color: theme.colors.ink, fontSize: 22, fontWeight: "800", lineHeight: 29 }}>
-              {section.title}
+          <View style={{ gap: 6 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12
+              }}
+            >
+              <Pressable
+                accessibilityLabel={`${section.title} 전체 보기`}
+                accessibilityRole="button"
+                onPress={() => onOpenCategory(section.categoryKeys[0])}
+                style={{ flex: 1, minHeight: 44, justifyContent: "center" }}
+              >
+                <Text style={{ color: theme.colors.ink, fontSize: 22, fontWeight: "800", lineHeight: 29 }}>
+                  {section.title}
+                </Text>
+              </Pressable>
+              <Pressable
+                accessibilityLabel={`${section.title} 전체 보기`}
+                accessibilityRole="button"
+                onPress={() => onOpenCategory(section.categoryKeys[0])}
+                style={{
+                  minHeight: 44,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: "rgba(139,115,85,0.22)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  paddingHorizontal: 14
+                }}
+              >
+                <Text style={{ color: theme.colors.accent, fontSize: 13, fontWeight: "800" }}>전체 보기</Text>
+              </Pressable>
+            </View>
+            <Text style={{ color: theme.colors.muted, fontSize: 14, lineHeight: 21 }}>
+              {section.subtitle} · {section.templates.length}개
             </Text>
-            <Text style={{ color: theme.colors.muted, fontSize: 14, lineHeight: 21 }}>{section.subtitle}</Text>
           </View>
 
           <ScrollView

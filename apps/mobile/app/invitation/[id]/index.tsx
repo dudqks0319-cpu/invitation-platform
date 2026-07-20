@@ -140,7 +140,7 @@ export default function InvitationDetailScreen() {
       ) : null}
       {draft ? (
         <Card eyebrow="공유 전 검수" title="하객에게 보이는 초대장">
-          <InvitationPreviewCard compact payload={draft.payload} />
+          <InvitationPreviewCard fitToViewport payload={draft.payload} />
         </Card>
       ) : null}
       <Card eyebrow={draft?.syncStatus || "draft"} title={title}>
@@ -232,7 +232,7 @@ export default function InvitationDetailScreen() {
               onPress={() => {
                 setError("");
                 setMessage("");
-                void shareInvitationLink(draft.payload.share.slug, draft.payload.title || "InviteHub 초대장")
+                void shareInvitationLink(draft.payload.share.slug, draft.payload.title || "오삼오삼 초대장")
                   .then(() => setMessage("공유 시트를 열었습니다."))
                   .catch((caught) => setError(caught instanceof Error ? caught.message : "공유에 실패했습니다."));
               }}

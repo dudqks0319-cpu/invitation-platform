@@ -49,7 +49,7 @@ function parsePublicBooleanFlag(value: string | undefined, defaultValue = false)
   return defaultValue;
 }
 
-const paidPublishingNativeAvailable = paidPublishingEnabled && hasPackage("react-native-iap");
+const paidPublishingNativeAvailable = paidPublishingEnabled && hasPackage("react-native-purchases");
 const googleSignInNativeAvailable =
   nativeSocialAuthEnabled && hasPackage("@react-native-google-signin/google-signin");
 const kakaoNativeAvailable =
@@ -58,6 +58,10 @@ const kakaoNativeAvailable =
 function isOptionalNativePluginEnabled(pluginName: string) {
   if (pluginName === "react-native-iap") {
     return paidPublishingNativeAvailable;
+  }
+
+  if (pluginName === "expo-iap") {
+    return false;
   }
 
   if (pluginName === "@react-native-google-signin/google-signin") {
@@ -110,7 +114,6 @@ const mergedPlugins: ExpoPlugin[] = [
       }
     }
   ],
-  ...(paidPublishingNativeAvailable ? ["react-native-iap"] : []),
   ...(googleSignInPlugin ? [googleSignInPlugin] : []),
   ...(kakaoPlugin ? [kakaoPlugin] : [])
 ];
@@ -134,7 +137,8 @@ const appConfig = {
   },
   android: {
     ...baseConfig.android,
-    package: androidPackage
+    package: androidPackage,
+    allowBackup: false
   },
   plugins: [
     ...mergedPlugins,

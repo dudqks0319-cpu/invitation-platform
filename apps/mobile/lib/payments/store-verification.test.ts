@@ -7,7 +7,7 @@ describe("buildStoreVerifyBody", () => {
       invitationId: "invitation-1",
       provider: "apple_iap",
       purchase: {
-        productId: "publish.credit.ios",
+        productId: "com.invitehub.publish.credit",
         transactionId: "tx-1"
       }
     });
@@ -15,7 +15,7 @@ describe("buildStoreVerifyBody", () => {
     expect(body).toEqual({
       invitationId: "invitation-1",
       provider: "apple_iap",
-      productId: "publish.credit.ios",
+      productId: "com.invitehub.publish.credit",
       transactionId: "tx-1"
     });
   });
@@ -44,7 +44,7 @@ describe("buildStoreVerifyBody", () => {
         invitationId: "invitation-1",
         provider: "apple_iap",
         purchase: {
-          productId: "publish.credit.ios"
+          productId: "com.invitehub.publish.credit"
         }
       })
     ).toThrow("transactionId");

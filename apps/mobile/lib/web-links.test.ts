@@ -11,8 +11,24 @@ import {
 } from "./web-links";
 
 describe("web-links", () => {
+  it("uses the verified Vercel deployment as the release default", () => {
+    expect(getInviteHubBaseUrl()).toBe("https://invitation-platform-plum.vercel.app");
+    expect(getPublicInvitationUrl("hello-world")).toBe(
+      "https://invitation-platform-plum.vercel.app/i/hello-world"
+    );
+  });
+
   it("normalizes the web base url", () => {
     expect(getInviteHubBaseUrl("https://invitehub.co.kr/")).toBe("https://invitehub.co.kr");
+  });
+
+  it("canonicalizes old long Vercel project hosts to the short release host", () => {
+    expect(getInviteHubBaseUrl("https://invitation-platform-youngbeens-projects.vercel.app/")).toBe(
+      "https://invitation-platform-plum.vercel.app"
+    );
+    expect(getInviteHubBaseUrl("https://invitation-platform-5kk4ztnh1-youngbeens-projects.vercel.app/")).toBe(
+      "https://invitation-platform-plum.vercel.app"
+    );
   });
 
   it("builds the templates url", () => {

@@ -14,6 +14,8 @@ describe("native startup safety", () => {
     expect(useAuth).not.toContain('import * as WebBrowser from "expo-web-browser"');
     expect(useAuth).not.toContain("WebBrowser.maybeCompleteAuthSession");
     expect(useAuth).toContain('await import("expo-apple-authentication")');
+    expect(useAuth).toContain('await import("expo-crypto")');
+    expect(useAuth).toContain('"SHA-256"');
 
     expect(share).not.toContain('import * as WebBrowser from "expo-web-browser"');
     expect(share).toContain('await import("expo-web-browser")');

@@ -2,12 +2,26 @@ import { describe, expect, it } from "vitest";
 import {
   featuredMobileTemplateIds,
   getFeaturedMobileTemplates,
+  getHomeHeroTemplates,
   getHomeTemplateSections,
   getMobileTemplateById,
   getMobileTemplatesByCategory,
   homeTemplateSections,
+  homeHeroTemplateIds,
   mobileTemplateGallery
 } from "./template-gallery";
+
+const barunsonCategoryAnimeCategories = [
+  "wedding",
+  "dol",
+  "housewarming",
+  "hwangap",
+  "bridal",
+  "birthday",
+  "baby",
+  "graduation",
+  "business"
+];
 
 describe("mobile template gallery", () => {
   it("keeps featured templates backed by real gallery entries", () => {
@@ -24,6 +38,18 @@ describe("mobile template gallery", () => {
     expect(firstNonWeddingIndex).toBeGreaterThanOrEqual(6);
   });
 
+  it("uses Floral Ceremony 04 and two wedding photo concepts in the home hero", () => {
+    const heroTemplates = getHomeHeroTemplates();
+
+    expect(heroTemplates).toHaveLength(3);
+    expect(heroTemplates.map((template) => template.id)).toEqual([...homeHeroTemplateIds]);
+    expect(heroTemplates.map((template) => template.id)).toEqual([
+      "wedding-barunson-anime-09",
+      "wedding-barunson-anime-04",
+      "wedding-barunson-anime-10"
+    ]);
+  });
+
   it("finds templates by id and category", () => {
     expect(getMobileTemplateById("wedding-modern")?.category).toBe("wedding");
     expect(getMobileTemplatesByCategory("wedding").length).toBeGreaterThan(1);
@@ -31,11 +57,57 @@ describe("mobile template gallery", () => {
     expect(mobileTemplateGallery.every((template) => template.id.length > 0)).toBe(true);
   });
 
+  it("marks textless uploaded wedding images for list-only sample text overlay", () => {
+    expect(getMobileTemplateById("wedding-envelope-photo")?.sampleTextOverlay).toBe(true);
+    expect(getMobileTemplateById("wedding-anime-textspace-10")?.sampleTextOverlay).toBe(true);
+    expect(getMobileTemplateById("wedding-classic")?.sampleTextOverlay).toBeUndefined();
+  });
+
   it("keeps the simplified home sections backed by template cards", () => {
     const sections = getHomeTemplateSections();
+    const weddingTemplates = getMobileTemplatesByCategory("wedding");
+    const partyTemplateCount = ["birthday", "housewarming", "baby", "graduation", "business"].reduce(
+      (count, category) => count + getMobileTemplatesByCategory(category).length,
+      0
+    );
 
     expect(sections.map((section) => section.key)).toEqual(homeTemplateSections.map((section) => section.key));
     expect(sections[0].title).toBe("청첩장 템플릿");
     expect(sections.every((section) => section.templates.length >= 3)).toBe(true);
+    expect(sections[0].templates).toHaveLength(weddingTemplates.length);
+    expect(sections.find((section) => section.key === "party")?.templates).toHaveLength(partyTemplateCount);
+    expect(sections.flatMap((section) => section.templates).map((template) => template.id).sort()).toEqual(
+      mobileTemplateGallery.map((template) => template.id).sort()
+    );
+  });
+
+  it("shows the expanded Barunson-style anime set", () => {
+    const barunsonAnimeTemplates = mobileTemplateGallery.filter((template) =>
+      template.id.includes("barunson-anime")
+    );
+
+    expect(barunsonAnimeTemplates).toHaveLength(30);
+
+    for (const category of barunsonCategoryAnimeCategories) {
+      const categoryTemplates = barunsonAnimeTemplates.filter((template) => template.category === category);
+
+      expect(categoryTemplates.map((template) => template.id)).toEqual(
+        category === "wedding"
+          ? [
+              "wedding-barunson-anime-01",
+              "wedding-barunson-anime-02",
+              "wedding-barunson-anime-03",
+              "wedding-barunson-anime-04",
+              "wedding-barunson-anime-09",
+              "wedding-barunson-anime-10"
+            ]
+          : [
+              `${category}-barunson-anime-01`,
+              `${category}-barunson-anime-02`,
+              `${category}-barunson-anime-03`
+            ]
+      );
+      expect(categoryTemplates.every((template) => template.sampleTextOverlay)).toBe(true);
+    }
   });
 });

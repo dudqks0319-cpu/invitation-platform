@@ -24,6 +24,7 @@ type StorePurchaseCardProps = {
   invitationId?: string;
   onBeforePurchase?: () => Promise<{ invitationId: string } | null>;
   onVerified?: (result: { invitationId: string; slug: string }) => void;
+  userId?: string;
 };
 type StorePurchaseCardComponent = ComponentType<StorePurchaseCardProps>;
 
@@ -49,6 +50,7 @@ export default function BuilderPreviewScreen() {
   const requiresPurchase = draft ? requiresStorePurchase(draft.payload) : false;
   const paidPublishingEnabled = isPaidPublishingEnabled();
   const paidPublishUnavailable = requiresPurchase && !paidPublishingEnabled;
+  const isPublished = Boolean(draft?.payload.isPublished);
   const remoteAccessMode = getRemoteAccessMode(status, user);
   const canUsePaidAccount = remoteAccessMode === "full-account";
   const paidPublishBlockReason = getPaidPublishBlockReason(status, user);
@@ -60,14 +62,14 @@ export default function BuilderPreviewScreen() {
   const addOnLines = pricing.breakdown
     .filter((item) => item.amount > 0)
     .map((item) => `${item.label} ${item.amount.toLocaleString("ko-KR")}원`);
-  const statusLabel = draft?.payload.isPublished
+  const statusLabel = isPublished
     ? "공개 중"
     : paidPublishUnavailable
-      ? "사진 발행 준비 중"
+      ? "사진 발행 미지원"
       : requiresPurchase
         ? "스토어 결제 후 발행"
         : "비공개 초안";
-  const publishGuide = draft?.payload.isPublished
+  const publishGuide = isPublished
     ? "지금 공유 가능한 링크가 준비되어 있습니다."
     : paidPublishUnavailable
       ? PAID_PUBLISH_DISABLED_MESSAGE
@@ -79,8 +81,9 @@ export default function BuilderPreviewScreen() {
 
   useEffect(() => {
     if (!paidPublishingEnabled) {
-      setStorePurchaseCard(null);
-      return;
+      const timer = setTimeout(() => setStorePurchaseCard(null), 0);
+
+      return () => clearTimeout(timer);
     }
 
     let mounted = true;
@@ -203,7 +206,7 @@ export default function BuilderPreviewScreen() {
     setMessage("");
 
     try {
-      await shareInvitationLink(draft.payload.share.slug, draft.payload.title || "InviteHub 초대장");
+      await shareInvitationLink(draft.payload.share.slug, draft.payload.title || "오삼오삼 초대장");
       setMessage("공유 시트를 열었습니다.");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "공유에 실패했습니다.");
@@ -222,6 +225,26 @@ export default function BuilderPreviewScreen() {
         </Card>
       ) : null}
       {draft ? <InvitationPreviewCard fitToViewport payload={draft.payload} /> : null}
+      {isPublished ? (
+        <Card eyebrow="공유하기" title="초대장이 발행되었습니다">
+          <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
+            공개 링크가 준비되었습니다. 이제 하객에게 바로 공유하면 됩니다.
+          </Text>
+          {publicUrl ? (
+            <Text style={{ color: theme.colors.text, fontSize: 13, lineHeight: 20 }}>
+              {publicUrl}
+            </Text>
+          ) : null}
+          <Button
+            accessibilityLabel="초대장 공유하기"
+            onPress={canShare ? () => void handleShare() : undefined}
+          >
+            {pending === "share" ? "공유 중..." : "초대장 공유하기"}
+          </Button>
+        </Card>
+      ) : null}
+      {!isPublished ? (
+        <>
       <Card eyebrow="발행 흐름" title="검수 → 결제 확인 → 링크 공유">
         <View style={{ flexDirection: "row", gap: 10 }}>
           {flowState.steps.map((step, index) => {
@@ -429,10 +452,10 @@ export default function BuilderPreviewScreen() {
           </View>
         </View>
       </Card>
-      <Card eyebrow="요금 안내" title={requiresPurchase ? "스토어 발행권" : "무료 발행"}>
+      <Card eyebrow="발행 안내" title={paidPublishUnavailable ? "사진 제거 필요" : requiresPurchase ? "스토어 발행권" : "무료 발행"}>
         <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
           {paidPublishUnavailable
-            ? "현재 제출 버전에서는 사진 없는 무료 발행만 제공합니다. 사진 포함 발행권은 App Store 상품 준비 후 다시 활성화합니다."
+            ? "이번 무료 베타에서는 사진 없는 공개 링크 발행만 제공합니다. 업로드한 사진을 제거하면 무료로 발행할 수 있습니다."
             : requiresPurchase
             ? `사진이 포함된 초대장은 iOS에서는 Apple IAP, Android에서는 Google Play Billing으로 ${pricing.amount.toLocaleString("ko-KR")}원 결제 후 발행됩니다.`
             : "지금 선택한 구성은 무료입니다. 공개 링크를 바로 발행할 수 있습니다."}
@@ -483,6 +506,7 @@ export default function BuilderPreviewScreen() {
                   setMessage(`스토어 결제가 완료되어 공개 링크를 발행했습니다.\n${getPublicInvitationUrl(slug)}`);
                   setError("");
                 }}
+                userId={canUsePaidAccount ? user?.id : ""}
               />
             ) : (
               <Card eyebrow="앱 결제" title="스토어 결제 준비 중">
@@ -575,13 +599,15 @@ export default function BuilderPreviewScreen() {
         <Link
           asChild
           href={{
-            pathname: "/invitation/[id]/index",
+            pathname: "/invitation/[id]",
             params: { id: localId ?? "demo" }
           }}
         >
           <Button accessibilityLabel="운영 화면 예시로 이동" variant="outline">운영 화면 보기</Button>
         </Link>
       </View>
+        </>
+      ) : null}
     </Screen>
   );
 }

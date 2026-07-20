@@ -21,6 +21,7 @@
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = InviteHub/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = InviteHub/Info.plist; sourceTree = "<group>"; };
 		1BB643748DBF6597B8162CAE /* Pods-InviteHub.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-InviteHub.release.xcconfig"; path = "Target Support Files/Pods-InviteHub/Pods-InviteHub.release.xcconfig"; sourceTree = "<group>"; };
+		4F93D3A12C8F11B000D8E2AB /* InviteHub.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; name = InviteHub.storekit; path = InviteHub/InviteHub.storekit; sourceTree = "<group>"; };
 		5BC7307D209BE614407A0C1F /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-InviteHub/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		7100BEE1A5C794BE7B930D00 /* libPods-InviteHub.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-InviteHub.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = InviteHub/SplashScreen.storyboard; sourceTree = "<group>"; };
@@ -54,6 +55,7 @@
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
 				E0E4432E80617FF68036ACE2 /* PrivacyInfo.xcprivacy */,
+				4F93D3A12C8F11B000D8E2AB /* InviteHub.storekit */,
 			);
 			name = InviteHub;
 			sourceTree = "<group>";
@@ -342,7 +344,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = InviteHub/InviteHub.entitlements;
-				CURRENT_PROJECT_VERSION = 49;
+				CURRENT_PROJECT_VERSION = 52;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -354,7 +356,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.0.3;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",
@@ -379,7 +381,7 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = InviteHub/InviteHub.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 49;
+				CURRENT_PROJECT_VERSION = 52;
 				DEVELOPMENT_TEAM = 3FG9QJC8WC;
 				INFOPLIST_FILE = InviteHub/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
@@ -387,7 +389,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.1;
+				MARKETING_VERSION = 1.0.3;
 				OTHER_LDFLAGS = (
 					"$(inherited)",
 					"-ObjC",

@@ -1,0 +1,40 @@
+{
+  "identifier" : "InviteHubPaidPublish",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "3300",
+      "familyShareable" : false,
+      "internalID" : "D3C2F3A0-5A0E-47E1-9B6C-1D59B8F96A01",
+      "localizations" : [
+        {
+          "description" : "Publishes an invitation that includes photos.",
+          "displayName" : "Photo Publish Pass",
+          "locale" : "en_US"
+        },
+        {
+          "description" : "사진이 포함된 초대장을 발행합니다.",
+          "displayName" : "사진 포함 발행권",
+          "locale" : "ko_KR"
+        }
+      ],
+      "productID" : "com.invitehub.publish.credit",
+      "referenceName" : "Photo Publish Pass",
+      "type" : "Consumable"
+    }
+  ],
+  "settings" : {
+    "_failTransactionsEnabled" : false,
+    "_locale" : "ko_KR",
+    "_storefront" : "KOR"
+  },
+  "subscriptionGroups" : [
+
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

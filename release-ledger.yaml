@@ -1,0 +1,31 @@
+updated_at: "2026-07-21T08:45:00+09:00"
+platform: ios
+app_store_id: "6763630299"
+bundle_id: "com.invitehub.app"
+public:
+  version: "1.0.2"
+  released_at: "2026-06-29T06:55:38Z"
+candidate:
+  version: "1.0.3"
+  git_sha: pending
+  native_local_build_number: 52
+  eas_remote_build_number_before_increment: 59
+  eas_build_number: pending
+  eas_build_id: pending
+  eas_submit_id: pending
+  app_store_connect_state: pending_build
+  testflight_state: pending_build
+  real_device_result: pending
+  app_review_state: not_submitted
+verification:
+  mobile_tests: "93/93 passed"
+  full_tests: "241/241 passed"
+  lint: passed
+  typecheck: passed
+  ios_release_simulator_build: passed
+  ios_release_simulator_launch: passed
+  simulator_screenshot: "/tmp/osamosam-v103-home.png"
+  bundled_home_assets: passed
+  free_only_release_gate: passed
+  critical_dependency_advisories: 0
+next_action: "Commit candidate, create EAS production build, and upload to TestFlight."

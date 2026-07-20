@@ -13,7 +13,7 @@ async function loadConfig(envPatch: Record<string, string | undefined>) {
   return configModule.default as {
     scheme: string;
     ios: { bundleIdentifier: string };
-    android: { package: string };
+    android: { package: string; allowBackup?: boolean };
     plugins: Array<string | [string, Record<string, unknown>?]>;
   };
 }
@@ -30,14 +30,15 @@ describe("mobile app config", () => {
       EAS_BUILD_PROFILE: "production"
     }) as {
       ios: { bundleIdentifier: string; infoPlist?: Record<string, unknown> };
-      android: { package: string };
+      android: { package: string; allowBackup?: boolean };
       scheme: string;
     };
 
     expect(config.ios.bundleIdentifier).toBe("com.invitehub.app");
     expect(config.android.package).toBe("com.invitehub.app");
+    expect(config.android.allowBackup).toBe(false);
     expect(config.scheme).toBe("invitehub");
-    expect(config.ios.infoPlist?.CFBundleName).toBe("초대장허브");
+    expect(config.ios.infoPlist?.CFBundleName).toBe("오삼오삼");
   });
 
   it("keeps dev identifiers outside production builds", async () => {
@@ -56,7 +57,7 @@ describe("mobile app config", () => {
       EXPO_PUBLIC_ENABLE_PAID_PUBLISH: undefined
     });
 
-    expect(config.plugins).not.toContain("react-native-iap");
+    expect(config.plugins).not.toContain("expo-iap");
   });
 
   it("does not include Google or Kakao native config by default", async () => {
@@ -68,11 +69,12 @@ describe("mobile app config", () => {
     expect(config.plugins).not.toContain("@react-native-kakao/core");
   });
 
-  it("keeps IAP native config excluded while the native package is not installed", async () => {
+  it("uses RevenueCat autolinking without adding the old direct IAP plugin", async () => {
     const config = await loadConfig({
       EXPO_PUBLIC_ENABLE_PAID_PUBLISH: "true"
     });
 
+    expect(config.plugins).not.toContain("expo-iap");
     expect(config.plugins).not.toContain("react-native-iap");
   });
 

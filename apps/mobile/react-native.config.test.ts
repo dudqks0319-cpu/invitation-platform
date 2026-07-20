@@ -29,11 +29,10 @@ afterEach(() => {
 });
 
 describe("react-native autolinking config", () => {
-  it("excludes StoreKit native modules for the free first submission", () => {
+  it("excludes RevenueCat native modules for the free first submission", () => {
     const config = loadReactNativeConfig({});
 
-    expect(config.dependencies["react-native-iap"]?.platforms?.ios).toBeNull();
-    expect(config.dependencies["react-native-nitro-modules"]?.platforms?.ios).toBeNull();
+    expect(config.dependencies["react-native-purchases"]?.platforms?.ios).toBeNull();
   });
 
   it("excludes native Google and Kakao modules by default", () => {
@@ -44,11 +43,10 @@ describe("react-native autolinking config", () => {
     expect(config.dependencies["@react-native-kakao/user"]?.platforms?.ios).toBeNull();
   });
 
-  it("keeps StoreKit native modules available when paid publishing is enabled", () => {
+  it("keeps RevenueCat native modules available when paid publishing is enabled", () => {
     const config = loadReactNativeConfig({ paidPublishing: "true" });
 
-    expect(config.dependencies["react-native-iap"]).toBeUndefined();
-    expect(config.dependencies["react-native-nitro-modules"]).toBeUndefined();
+    expect(config.dependencies["react-native-purchases"]).toBeUndefined();
   });
 
   it("keeps native social modules available only when explicitly enabled", () => {
