@@ -1,4 +1,4 @@
-updated_at: "2026-07-22T05:49:00+09:00"
+updated_at: "2026-07-22T05:58:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
@@ -12,19 +12,23 @@ candidate:
   eas_remote_build_number_before_increment: 59
   eas_build_number: 60
   signed_ipa_state: failed_provisioning_profile_certificate_mismatch
-  distribution_certificate_serial: "9D393964730772CF3E23F745A8A349B"
+  distribution_certificate_serial: "1000663C2896A072792619D856B214DB"
   distribution_certificate_changed: false
-  provisioning_profile_id: "2CM9RWYY6M"
-  provisioning_profile_refreshed_at: "2026-07-21T10:10:00+09:00"
-  provisioning_profile_certificate_id: "9MV8MJ4Z93"
+  eas_distribution_certificate_association_changed: true
+  provisioning_profile_id: "X5APU28F2N"
+  provisioning_profile_refreshed_at: "2026-07-22T05:55:00+09:00"
+  provisioning_profile_certificate_id: "Q5L5FYUDB3"
   apple_portal_login_verified: true
   eas_apple_login_verified: true
   eas_credential_validation: ready_but_local_signing_mismatch_persists
   alternate_existing_certificate_id: "Q5L5FYUDB3"
   alternate_existing_certificate_serial: "1000663C2896A072792619D856B214DB"
-  alternate_certificate_selected: false
+  alternate_certificate_selected: true
+  alternate_certificate_build_result: failed_same_signing_identity_mismatch
+  local_valid_codesigning_identities: 0
   apple_profile_edit_state: "rejected_missing_app_id_and_profile_name_parameters"
-  apple_certificate_or_profile_change_applied: false
+  apple_certificate_or_profile_change_applied: true
+  apple_certificate_created_deleted_or_revoked: false
   eas_build_id: pending
   eas_submit_id: pending
   app_store_connect_state: pending_build
@@ -43,4 +47,4 @@ verification:
   free_only_release_gate: passed
   runtime_critical_dependency_advisories: 0
   clean_build_full_tree_critical_advisories: 1
-next_action: "Await explicit owner approval to switch the EAS project to existing certificate Q5L5FYUDB3 and regenerate only the provisioning profile; do not create, delete, replace, or revoke Apple certificates."
+next_action: "Obtain the original matching P12 for the existing Apple Distribution certificate, or obtain explicit owner approval to revoke broken certificate 9MV8MJ4Z93 and generate a new EAS-managed certificate/profile pair. Never revoke Q5L5FYUDB3 because it is shared with shake-my-meal."

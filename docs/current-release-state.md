@@ -1,6 +1,6 @@
 # 오삼오삼 iOS 현재 릴리스 상태
 
-Last updated: 2026-07-22 05:49 KST
+Last updated: 2026-07-22 05:58 KST
 
 이 문서는 iOS App Store 릴리스의 단일 현재 상태 원장이다. 로컬 코드,
 EAS 빌드, TestFlight, App Store 심사, 실기기 검증을 서로 다른 증거로 기록한다.
@@ -22,7 +22,7 @@ EAS 빌드, TestFlight, App Store 심사, 실기기 검증을 서로 다른 증�
 | EAS iOS build id | Pending |
 | EAS iOS build number | `60` reserved; signed IPA was not produced |
 | EAS submission id | Pending |
-| App Store Connect / TestFlight | No 1.0.3 upload. EAS successfully authenticated to Apple and fetched the current certificates and profiles, reporting the existing credentials ready. A fresh local Build 60 attempt still failed because profile `2CM9RWYY6M` does not include the signing identity loaded from the stored P12. No certificate or profile change was applied |
+| App Store Connect / TestFlight | No 1.0.3 upload. With owner approval, EAS was switched to existing certificate `Q5L5FYUDB3` and generated profile `X5APU28F2N`. EAS validated the pair as ready, but a fresh local Build 60 attempt still failed because the new profile does not include the signing identity loaded from the stored P12 |
 | Real-device result | Pending TestFlight install, launch, Apple/email login, template selection, and free-publish smoke test |
 | App Store version selection | Pending; do not select or submit a build until real-device smoke passes |
 | Public release state | Still `1.0.2`; no 1.0.3 review submission or public rollout yet |
@@ -44,8 +44,12 @@ retry the local Build 60 IPA without uploading source. That validation completed
 2026-07-22, but the retry failed with the same mismatch. EAS lists another existing,
 valid certificate (`Q5L5FYUDB3`, serial `1000663C2896A072792619D856B214DB`)
 that is already associated with this EAS project. Switching the project to that
-existing certificate and regenerating its provisioning profile requires explicit
-owner approval; no selection was made during inspection.
+existing certificate and regenerating its provisioning profile was approved and
+completed. EAS now reports certificate `Q5L5FYUDB3` and profile `X5APU28F2N` as
+ready, but the local Build 60 retry still loaded `Apple Distribution: Youngbeen Jung`
+and failed the same inclusion check. The Mac keychain reports zero valid code-signing
+identities, so a matching private key cannot be recovered locally. No Apple
+certificate was created, deleted, or revoked.
 
 ## 1.0.3 release notes draft
 
@@ -55,9 +59,11 @@ owner approval; no selection was made during inspection.
 
 ## Remaining release gates
 
-1. With explicit owner approval, switch the EAS project to existing certificate
-   `Q5L5FYUDB3` and regenerate only the provisioning profile. Do not create, replace,
-   delete, or revoke an Apple certificate.
+1. Choose one credential-recovery path: provide the original matching `.p12` backup
+   for the existing Apple Distribution certificate, or explicitly approve revoking
+   the unused/broken `9MV8MJ4Z93` certificate and generating a new EAS-managed
+   distribution certificate/profile pair. Do not revoke `Q5L5FYUDB3`, because EAS
+   shows it is also used by `@jyb1126/shake-my-meal`.
 2. Identify the full-tree critical dependency advisory reported by the clean EAS
    install and record whether it affects runtime or build tooling.
 3. Re-run the local signed IPA build without uploading source to Expo.
