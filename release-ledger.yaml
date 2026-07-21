@@ -1,4 +1,4 @@
-updated_at: "2026-07-21T16:04:00+09:00"
+updated_at: "2026-07-22T05:49:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
@@ -18,6 +18,11 @@ candidate:
   provisioning_profile_refreshed_at: "2026-07-21T10:10:00+09:00"
   provisioning_profile_certificate_id: "9MV8MJ4Z93"
   apple_portal_login_verified: true
+  eas_apple_login_verified: true
+  eas_credential_validation: ready_but_local_signing_mismatch_persists
+  alternate_existing_certificate_id: "Q5L5FYUDB3"
+  alternate_existing_certificate_serial: "1000663C2896A072792619D856B214DB"
+  alternate_certificate_selected: false
   apple_profile_edit_state: "rejected_missing_app_id_and_profile_name_parameters"
   apple_certificate_or_profile_change_applied: false
   eas_build_id: pending
@@ -38,4 +43,4 @@ verification:
   free_only_release_gate: passed
   runtime_critical_dependency_advisories: 0
   clean_build_full_tree_critical_advisories: 1
-next_action: "After Expo network access is approved, revalidate the existing EAS certificate/profile association and retry the local Build 60 IPA; do not replace or revoke certificates without separate approval."
+next_action: "Await explicit owner approval to switch the EAS project to existing certificate Q5L5FYUDB3 and regenerate only the provisioning profile; do not create, delete, replace, or revoke Apple certificates."
