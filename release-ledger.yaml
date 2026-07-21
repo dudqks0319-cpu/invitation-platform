@@ -1,4 +1,4 @@
-updated_at: "2026-07-21T09:00:00+09:00"
+updated_at: "2026-07-21T10:18:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
@@ -7,11 +7,15 @@ public:
   released_at: "2026-06-29T06:55:38Z"
 candidate:
   version: "1.0.3"
-  git_sha: "8fcbfffce2d6d62af5c8b2846b0dc0c77fe1cf90"
+  git_sha: "b7753375bd60632abb957ace82bf51ecc66d8787"
   native_local_build_number: 52
   eas_remote_build_number_before_increment: 59
   eas_build_number: 60
   signed_ipa_state: failed_provisioning_profile_certificate_mismatch
+  distribution_certificate_serial: "9D393964730772CF3E23F745A8A349B"
+  distribution_certificate_changed: false
+  provisioning_profile_id: "2CM9RWYY6M"
+  provisioning_profile_refreshed_at: "2026-07-21T10:10:00+09:00"
   eas_build_id: pending
   eas_submit_id: pending
   app_store_connect_state: pending_build
@@ -28,5 +32,6 @@ verification:
   simulator_screenshot: "/tmp/osamosam-v103-home.png"
   bundled_home_assets: passed
   free_only_release_gate: passed
-  critical_dependency_advisories: 0
-next_action: "Obtain explicit approval to refresh the iOS provisioning profile, then retry the local signed IPA build."
+  runtime_critical_dependency_advisories: 0
+  clean_build_full_tree_critical_advisories: 1
+next_action: "Sign in to Apple Developer in the in-app browser and compare the active distribution certificate with the new provisioning profile; do not replace or revoke certificates without separate approval."
