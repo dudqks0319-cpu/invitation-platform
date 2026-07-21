@@ -1,4 +1,4 @@
-updated_at: "2026-07-22T05:58:00+09:00"
+updated_at: "2026-07-22T06:42:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
@@ -11,13 +11,13 @@ candidate:
   native_local_build_number: 52
   eas_remote_build_number_before_increment: 59
   eas_build_number: 60
-  signed_ipa_state: failed_provisioning_profile_certificate_mismatch
-  distribution_certificate_serial: "1000663C2896A072792619D856B214DB"
-  distribution_certificate_changed: false
+  signed_ipa_state: failed_same_mismatch_after_new_certificate_pair
+  distribution_certificate_serial: "65FE7FE2EED7B54C24F3C811A0028AB1"
+  distribution_certificate_changed: true
   eas_distribution_certificate_association_changed: true
-  provisioning_profile_id: "X5APU28F2N"
-  provisioning_profile_refreshed_at: "2026-07-22T05:55:00+09:00"
-  provisioning_profile_certificate_id: "Q5L5FYUDB3"
+  provisioning_profile_id: "Q9U792B5HK"
+  provisioning_profile_refreshed_at: "2026-07-22T06:38:00+09:00"
+  provisioning_profile_certificate_id: new_eas_managed_certificate
   apple_portal_login_verified: true
   eas_apple_login_verified: true
   eas_credential_validation: ready_but_local_signing_mismatch_persists
@@ -28,7 +28,14 @@ candidate:
   local_valid_codesigning_identities: 0
   apple_profile_edit_state: "rejected_missing_app_id_and_profile_name_parameters"
   apple_certificate_or_profile_change_applied: true
-  apple_certificate_created_deleted_or_revoked: false
+  revoked_certificate_id: "9MV8MJ4Z93"
+  revoked_certificate_serial: "9D393964730772CF3E23F745A8A349B"
+  revoked_at: "2026-07-22T06:27:00+09:00"
+  protected_shared_certificate_id: "Q5L5FYUDB3"
+  protected_shared_certificate_modified: false
+  apple_certificate_created_deleted_or_revoked: true
+  new_certificate_and_profile_apple_validation: passed
+  local_build_cli_version: "18.4.0"
   eas_build_id: pending
   eas_submit_id: pending
   app_store_connect_state: pending_build
@@ -47,4 +54,4 @@ verification:
   free_only_release_gate: passed
   runtime_critical_dependency_advisories: 0
   clean_build_full_tree_critical_advisories: 1
-next_action: "Obtain the original matching P12 for the existing Apple Distribution certificate, or obtain explicit owner approval to revoke broken certificate 9MV8MJ4Z93 and generate a new EAS-managed certificate/profile pair. Never revoke Q5L5FYUDB3 because it is shared with shake-my-meal."
+next_action: "Await explicit approval to download and run EAS CLI 21.0.2 once, then retry the source-private local Build 60. Do not use cloud build or modify shared certificate Q5L5FYUDB3."
