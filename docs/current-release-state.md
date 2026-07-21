@@ -1,6 +1,6 @@
 # 오삼오삼 iOS 현재 릴리스 상태
 
-Last updated: 2026-07-22 06:42 KST
+Last updated: 2026-07-22 07:05 KST
 
 이 문서는 iOS App Store 릴리스의 단일 현재 상태 원장이다. 로컬 코드,
 EAS 빌드, TestFlight, App Store 심사, 실기기 검증을 서로 다른 증거로 기록한다.
@@ -22,7 +22,7 @@ EAS 빌드, TestFlight, App Store 심사, 실기기 검증을 서로 다른 증�
 | EAS iOS build id | Pending |
 | EAS iOS build number | `60` reserved; signed IPA was not produced |
 | EAS submission id | Pending |
-| App Store Connect / TestFlight | No 1.0.3 upload. With explicit owner approval, certificate `9MV8MJ4Z93` was revoked. EAS created new certificate serial `65FE7FE2EED7B54C24F3C811A0028AB1` and profile `Q9U792B5HK`, and Apple validation passed. The installed EAS CLI `18.4.0` local Build 60 still failed with the same signing-identity mismatch |
+| App Store Connect / TestFlight | No 1.0.3 upload. With explicit owner approval, certificate `9MV8MJ4Z93` was revoked. EAS created new certificate serial `65FE7FE2EED7B54C24F3C811A0028AB1` and profile `Q9U792B5HK`, and Apple validation passed. The owner-approved one-time EAS CLI `21.0.2` local Build 60 still failed with the same signing-identity mismatch |
 | Real-device result | Pending TestFlight install, launch, Apple/email login, template selection, and free-publish smoke test |
 | App Store version selection | Pending; do not select or submit a build until real-device smoke passes |
 | Public release state | Still `1.0.2`; no 1.0.3 review submission or public rollout yet |
@@ -50,9 +50,16 @@ ready, but the local Build 60 retry still loaded `Apple Distribution: Youngbeen 
 and failed the same inclusion check. The Mac keychain reports zero valid code-signing
 identities, so a matching private key cannot be recovered locally. With explicit
 owner approval, `9MV8MJ4Z93` was then revoked and EAS generated a new certificate
-and profile pair. Apple/EAS validation passed, but the old local EAS CLI `18.4.0`
-still produced the same mismatch. The shared `Q5L5FYUDB3` certificate was not
-revoked or modified. No IPA was produced.
+and profile pair. Apple/EAS validation passed. The owner-approved one-time retry
+with current EAS CLI `21.0.2` selected the new serial
+`65FE7FE2EED7B54C24F3C811A0028AB1` and profile `Q9U792B5HK`, but still produced
+the same mismatch. A read-only Xcode settings audit found no pinned certificate
+serial, fingerprint, or provisioning profile ID. The project-level Release default
+is `iPhone Developer`, while the EAS archive attempt did select
+`Apple Distribution: Youngbeen Jung (3FG9QJC8WC)` before failing the profile
+membership check. This rules out the EAS CLI version and a project-pinned profile
+as the immediate cause. The shared `Q5L5FYUDB3` certificate was not revoked or
+modified. No IPA was produced.
 
 ## 1.0.3 release notes draft
 
@@ -62,9 +69,11 @@ revoked or modified. No IPA was produced.
 
 ## Remaining release gates
 
-1. With explicit approval for a one-time tool download, retry the same source-private
-   local Build 60 using current EAS CLI `21.0.2`. Do not use EAS cloud build because
-   that would upload the private source archive.
+1. With explicit approval for sensitive credential inspection, temporarily download
+   the EAS local `credentials.json`/P12, compare only the public certificate serial
+   and fingerprint against the provisioning profile, never print passwords, P12,
+   or base64 material, and delete the temporary credential files after verification.
+   Do not use EAS cloud build because that would upload the private source archive.
 2. Identify the full-tree critical dependency advisory reported by the clean EAS
    install and record whether it affects runtime or build tooling.
 3. Re-run the local signed IPA build without uploading source to Expo.

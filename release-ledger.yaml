@@ -1,4 +1,4 @@
-updated_at: "2026-07-22T06:42:00+09:00"
+updated_at: "2026-07-22T07:05:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
@@ -11,7 +11,7 @@ candidate:
   native_local_build_number: 52
   eas_remote_build_number_before_increment: 59
   eas_build_number: 60
-  signed_ipa_state: failed_same_mismatch_after_new_certificate_pair
+  signed_ipa_state: failed_same_mismatch_after_new_certificate_pair_and_eas_cli_21_0_2
   distribution_certificate_serial: "65FE7FE2EED7B54C24F3C811A0028AB1"
   distribution_certificate_changed: true
   eas_distribution_certificate_association_changed: true
@@ -35,7 +35,12 @@ candidate:
   protected_shared_certificate_modified: false
   apple_certificate_created_deleted_or_revoked: true
   new_certificate_and_profile_apple_validation: passed
-  local_build_cli_version: "18.4.0"
+  previous_local_build_cli_version: "18.4.0"
+  local_build_cli_version: "21.0.2"
+  latest_cli_one_time_execution_approved: true
+  latest_cli_build_result: failed_same_signing_identity_mismatch
+  xcode_signing_settings_audit: no_pinned_certificate_fingerprint_or_profile_id
+  xcode_release_default_identity: iPhone_Developer_overridden_by_eas_archive
   eas_build_id: pending
   eas_submit_id: pending
   app_store_connect_state: pending_build
@@ -54,4 +59,4 @@ verification:
   free_only_release_gate: passed
   runtime_critical_dependency_advisories: 0
   clean_build_full_tree_critical_advisories: 1
-next_action: "Await explicit approval to download and run EAS CLI 21.0.2 once, then retry the source-private local Build 60. Do not use cloud build or modify shared certificate Q5L5FYUDB3."
+next_action: "Await explicit approval for temporary EAS credentials.json/P12 inspection. Compare only public certificate serials and fingerprints, redact all secrets, delete temporary credential files after verification, do not use cloud build, and do not modify shared certificate Q5L5FYUDB3."
