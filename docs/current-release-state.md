@@ -1,6 +1,6 @@
 # 오삼오삼 iOS 현재 릴리스 상태
 
-Last updated: 2026-07-21 10:18 KST
+Last updated: 2026-07-21 16:04 KST
 
 이 문서는 iOS App Store 릴리스의 단일 현재 상태 원장이다. 로컬 코드,
 EAS 빌드, TestFlight, App Store 심사, 실기기 검증을 서로 다른 증거로 기록한다.
@@ -22,7 +22,7 @@ EAS 빌드, TestFlight, App Store 심사, 실기기 검증을 서로 다른 증�
 | EAS iOS build id | Pending |
 | EAS iOS build number | `60` reserved; signed IPA was not produced |
 | EAS submission id | Pending |
-| App Store Connect / TestFlight | No 1.0.3 upload. A new provisioning profile (`2CM9RWYY6M`) was created on 2026-07-21 while preserving distribution certificate serial `9D393964730772CF3E23F745A8A349B`, but Xcode still reports that the profile does not include the P12 signing certificate |
+| App Store Connect / TestFlight | No 1.0.3 upload. Apple Developer and App Store Connect login were verified in Chrome. Profile `2CM9RWYY6M` still selects certificate `9MV8MJ4Z93`; an attempted edit to the existing Xcode 11+ certificate `RXUUW3KY79` was rejected by Apple's form with missing `appIdId` and `provisioningProfileName` parameters, so no certificate or profile change was applied |
 | Real-device result | Pending TestFlight install, launch, Apple/email login, template selection, and free-publish smoke test |
 | App Store version selection | Pending; do not select or submit a build until real-device smoke passes |
 | Public release state | Still `1.0.2`; no 1.0.3 review submission or public rollout yet |
@@ -35,8 +35,12 @@ path was blocked because it uploads private source to Expo. The safer local buil
 reserved Build 60. With owner approval, the old profile was removed from the EAS
 project and a new profile was created against the unchanged distribution certificate.
 Signing still fails, which indicates that EAS's certificate metadata and the actual
-stored P12 may not match. The next safe check is read-only inspection in Apple
-Developer; replacing or revoking a certificate remains unapproved.
+stored P12 may not match. Apple Developer login and read-only inspection are complete:
+the active profile still points at certificate `9MV8MJ4Z93`. Apple rejected an edit
+that selected existing certificate `RXUUW3KY79` because its form omitted the profile
+name and App ID parameters. No certificate was replaced or revoked. The next safe
+step is to revalidate the EAS credential association after network approval, then
+retry the local Build 60 IPA without uploading source.
 
 ## 1.0.3 release notes draft
 
@@ -46,9 +50,9 @@ Developer; replacing or revoking a certificate remains unapproved.
 
 ## Remaining release gates
 
-1. In Apple Developer, compare the active distribution certificate with the new
-   profile and the P12 fingerprint reported by the local build. Do not replace or
-   revoke a certificate without separate approval.
+1. Revalidate the EAS distribution-certificate/provisioning-profile association
+   after Expo network access is approved. Do not replace or revoke a certificate
+   without separate approval.
 2. Identify the full-tree critical dependency advisory reported by the clean EAS
    install and record whether it affects runtime or build tooling.
 3. Re-run the local signed IPA build without uploading source to Expo.

@@ -1,4 +1,4 @@
-updated_at: "2026-07-21T10:18:00+09:00"
+updated_at: "2026-07-21T16:04:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
@@ -16,6 +16,10 @@ candidate:
   distribution_certificate_changed: false
   provisioning_profile_id: "2CM9RWYY6M"
   provisioning_profile_refreshed_at: "2026-07-21T10:10:00+09:00"
+  provisioning_profile_certificate_id: "9MV8MJ4Z93"
+  apple_portal_login_verified: true
+  apple_profile_edit_state: "rejected_missing_app_id_and_profile_name_parameters"
+  apple_certificate_or_profile_change_applied: false
   eas_build_id: pending
   eas_submit_id: pending
   app_store_connect_state: pending_build
@@ -34,4 +38,4 @@ verification:
   free_only_release_gate: passed
   runtime_critical_dependency_advisories: 0
   clean_build_full_tree_critical_advisories: 1
-next_action: "Sign in to Apple Developer in the in-app browser and compare the active distribution certificate with the new provisioning profile; do not replace or revoke certificates without separate approval."
+next_action: "After Expo network access is approved, revalidate the existing EAS certificate/profile association and retry the local Build 60 IPA; do not replace or revoke certificates without separate approval."
