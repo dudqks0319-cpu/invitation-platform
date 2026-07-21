@@ -63,6 +63,10 @@
         "resourceClass": "m-medium"
       }
     },
+    "production-local": {
+      "extends": "production",
+      "autoIncrement": false
+    },
     "testflight": {
       "extends": "production"
     }
