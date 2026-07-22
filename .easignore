@@ -61,6 +61,7 @@ apps/mobile/assets/template-previews/genspark/
 apps/mobile/assets/template-previews/generated/
 apps/mobile/assets/template-previews/generated/**
 apps/mobile/assets/template-previews/custom/**/*.png
+!apps/mobile/assets/template-previews/custom/barunson-category-anime-2026/*.png
 apps/mobile/assets/template-previews/custom/birthday/birthday-04.jpeg
 apps/mobile/assets/template-previews/custom/birthday/birthday-05.jpeg
 apps/mobile/assets/template-previews/custom/birthday/birthday-06.jpeg
