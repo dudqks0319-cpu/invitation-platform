@@ -1,4 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("expo/fetch", () => ({ fetch: globalThis.fetch }));
+
 import {
   MOBILE_TEMPLATE_CATALOG_CACHE_KEY,
   MOBILE_TEMPLATE_CATALOG_MAX_BYTES,

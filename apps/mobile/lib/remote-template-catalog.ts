@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { fetch as expoFetch } from "expo/fetch";
 import type { MobileTemplateGalleryItem } from "./template-gallery";
 
 export const MOBILE_TEMPLATE_CATALOG_URL =
@@ -23,6 +24,7 @@ const canonicalAssetOrigin = new URL(MOBILE_TEMPLATE_CATALOG_URL).origin;
 
 type Storage = Pick<typeof AsyncStorage, "getItem" | "setItem">;
 type Fetcher = typeof fetch;
+const defaultCatalogFetcher = expoFetch as unknown as Fetcher;
 
 export type RemoteMobileTemplateCatalog = {
   schemaVersion: 1;
@@ -215,7 +217,7 @@ export async function writeCachedTemplateCatalog(
 }
 
 export async function fetchRemoteTemplateCatalog(
-  fetcher: Fetcher = fetch,
+  fetcher: Fetcher = defaultCatalogFetcher,
   timeoutMs = MOBILE_TEMPLATE_CATALOG_TIMEOUT_MS
 ) {
   const controller = new AbortController();
@@ -252,7 +254,7 @@ export async function fetchRemoteTemplateCatalog(
 
 export async function refreshRemoteTemplateCatalog(
   lastKnownGood: RemoteMobileTemplateCatalog | null,
-  fetcher: Fetcher = fetch,
+  fetcher: Fetcher = defaultCatalogFetcher,
   storage: Storage = AsyncStorage,
   timeoutMs = MOBILE_TEMPLATE_CATALOG_TIMEOUT_MS
 ) {
