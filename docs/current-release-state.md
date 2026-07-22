@@ -1,6 +1,6 @@
 # 오삼오삼 iOS 현재 릴리스 상태
 
-Last updated: 2026-07-22 07:05 KST
+Last updated: 2026-07-22 09:21 KST
 
 이 문서는 iOS App Store 릴리스의 단일 현재 상태 원장이다. 로컬 코드,
 EAS 빌드, TestFlight, App Store 심사, 실기기 검증을 서로 다른 증거로 기록한다.
@@ -58,8 +58,19 @@ serial, fingerprint, or provisioning profile ID. The project-level Release defau
 is `iPhone Developer`, while the EAS archive attempt did select
 `Apple Distribution: Youngbeen Jung (3FG9QJC8WC)` before failing the profile
 membership check. This rules out the EAS CLI version and a project-pinned profile
-as the immediate cause. The shared `Q5L5FYUDB3` certificate was not revoked or
-modified. No IPA was produced.
+as the immediate cause. With a second explicit owner approval, the EAS
+`credentials.json`, P12, and provisioning profile were downloaded only to a
+mode-`700` temporary directory outside the repository. OpenSSL inspection found
+that the P12 leaf certificate and the profile's single embedded certificate have
+the identical serial `65FE7FE2EED7B54C24F3C811A0028AB1` and identical SHA-256
+fingerprint. The remote P12/profile mismatch hypothesis is therefore falsified.
+The build error names `Apple Distribution: Youngbeen Jung (3FG9QJC8WC)`, while
+the downloaded matching certificate subject uses the legacy common name
+`iPhone Distribution: Youngbeen Jung (3FG9QJC8WC)`. This naming difference is
+not by itself a proven cause; the remaining proof gap is the identity selected
+inside the ephemeral local-build keychain. All downloaded sensitive files were
+deleted and their absence was verified. The repository remained clean. The
+shared `Q5L5FYUDB3` certificate was not revoked or modified. No IPA was produced.
 
 ## 1.0.3 release notes draft
 
@@ -69,10 +80,9 @@ modified. No IPA was produced.
 
 ## Remaining release gates
 
-1. With explicit approval for sensitive credential inspection, temporarily download
-   the EAS local `credentials.json`/P12, compare only the public certificate serial
-   and fingerprint against the provisioning profile, never print passwords, P12,
-   or base64 material, and delete the temporary credential files after verification.
+1. With separate explicit approval, run one source-private local Build 60 with its
+   temporary workspace preserved, inspect only the public keychain identity hashes
+   and Xcode signing invocation, then delete the preserved credential/build files.
    Do not use EAS cloud build because that would upload the private source archive.
 2. Identify the full-tree critical dependency advisory reported by the clean EAS
    install and record whether it affects runtime or build tooling.

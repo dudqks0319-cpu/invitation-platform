@@ -1,4 +1,4 @@
-updated_at: "2026-07-22T07:05:00+09:00"
+updated_at: "2026-07-22T09:21:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
@@ -41,6 +41,20 @@ candidate:
   latest_cli_build_result: failed_same_signing_identity_mismatch
   xcode_signing_settings_audit: no_pinned_certificate_fingerprint_or_profile_id
   xcode_release_default_identity: iPhone_Developer_overridden_by_eas_archive
+  eas_credential_download_inspection_approved: true
+  eas_credential_temp_directory_mode: "700"
+  eas_credential_file_mode: "600"
+  p12_certificate_sha256: "BE5F8A78CCDFC881A2792925FD124169B0EE73E80EC3E852AA876E8463A69256"
+  profile_certificate_sha256: "BE5F8A78CCDFC881A2792925FD124169B0EE73E80EC3E852AA876E8463A69256"
+  p12_profile_serial_match: true
+  p12_profile_sha256_match: true
+  p12_profile_mismatch_hypothesis: falsified
+  p12_certificate_common_name: "iPhone Distribution: Youngbeen Jung (3FG9QJC8WC)"
+  xcode_error_identity_name: "Apple Distribution: Youngbeen Jung (3FG9QJC8WC)"
+  local_build_ephemeral_keychain_identity_proof: pending
+  sensitive_credential_temp_files_deleted: true
+  repository_credential_files_created: false
+  security_validation_report: "/private/tmp/codex-security-scans/invitation-platform/2bc460e_20260722T091941+0900/artifacts/05_findings/CRED-SIGN-001/validation_report.md"
   eas_build_id: pending
   eas_submit_id: pending
   app_store_connect_state: pending_build
@@ -59,4 +73,4 @@ verification:
   free_only_release_gate: passed
   runtime_critical_dependency_advisories: 0
   clean_build_full_tree_critical_advisories: 1
-next_action: "Await explicit approval for temporary EAS credentials.json/P12 inspection. Compare only public certificate serials and fingerprints, redact all secrets, delete temporary credential files after verification, do not use cloud build, and do not modify shared certificate Q5L5FYUDB3."
+next_action: "Await separate explicit approval for one source-private local Build 60 with EAS_LOCAL_BUILD_SKIP_CLEANUP=1. Inspect only public temporary-keychain identity hashes and the signing invocation, then delete the preserved workspace. Do not use cloud build or modify shared certificate Q5L5FYUDB3."
