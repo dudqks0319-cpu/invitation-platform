@@ -1,6 +1,6 @@
 # 오삼오삼 iOS 현재 릴리스 상태
 
-Last updated: 2026-07-22 13:56 KST
+Last updated: 2026-07-22 21:41 KST
 
 이 문서는 iOS App Store 릴리스의 단일 현재 상태 원장이다. 로컬 코드,
 EAS 빌드, TestFlight, App Store 심사, 실기기 검증을 서로 다른 증거로 기록한다.
@@ -10,14 +10,16 @@ EAS 빌드, TestFlight, App Store 심사, 실기기 검증을 서로 다른 증�
 | Release workspace | `/Users/jyb-m3max/Desktop/codex/invitation-platform/.worktrees/osamosam-appstore-v103` |
 | Branch | `agent/osamosam-appstore-v103` |
 | Source commit | `1ee33a4b477bcee4d550076be3dadea165ea76e6` |
+| Post-Build-61 remote-catalog source | `2f58640` on top of `d2c86b4`; not included in Build 61 |
 | Public App Store version | `1.0.2`, released 2026-06-29, bundle `com.invitehub.app`, App Store id `6763630299` |
 | Local candidate | `1.0.3 (61)`; signed local IPA produced and uploaded to TestFlight |
 | Display name | `오삼오삼` |
 | Main visual | Center card uses realistic names, date, and venue in the image whitespace; visible template-name labels removed. New animated templates are ordered first |
-| Local tests | `69/69` files, `249/249` tests passed; mobile lint, typecheck, Expo iOS export, and release simulator build passed |
+| Local tests | `72/72` files, `267/267` tests passed; root/mobile lint and typecheck, Next production build, Expo iOS export, and Release simulator build passed |
 | Local release bundle | `/tmp/osamosam-v103-build61.ipa`; 149,394,623 bytes; SHA-256 `9e961c3e9952724a5ace770d7c08efe628deba9a83075e6a132388e750df40a2` |
-| Simulator result | iPhone 17 Pro, iOS 26.2, Release build launched without a crash; hero screenshot `/tmp/osamosam-build61-home-final.png`, wedding carousel screenshot `/tmp/osamosam-build61-home-wedding-final.png` |
+| Simulator result | Build 61 evidence remains at `/tmp/osamosam-build61-home-final.png`; post-Build-61 Release source also launched on iPhone 17 Pro/iOS 26.2 and cached production catalog `v1-3f329e74` with 180/180 remote templates; screenshot `/tmp/osamosam-remote-catalog-expo-fetch.png` |
 | Security gate | Codex Security source diff scan: `12/12` files covered, `0` findings; no repository credentials; temporary P12/keychains/workspaces deleted; 60/60 new IPA assets hash-matched |
+| Remote-catalog security gate | Codex Security scan: `15/15` files covered, `0` reportable findings; follow-up review of Expo streaming fetch compatibility found no regression. Fixed HTTPS origin/path, schema/version validation, 192 KiB streamed-byte limit, 250-item limit, 4-second abort, and last-known-good fallback are enforced |
 | Residual dependency risk | Clean EAS install: 18 advisories (1 low, 12 moderate, 4 high, 1 critical). Expo Doctor: 15/19 checks passed, with duplicate/config/native-sync issues and 12 SDK package-version mismatches. Resolve or risk-accept before App Review |
 | EAS iOS build id | Not applicable: source-private local build; no EAS cloud build was created |
 | EAS iOS build number | `61` |
@@ -26,6 +28,8 @@ EAS 빌드, TestFlight, App Store 심사, 실기기 검증을 서로 다른 증�
 | Real-device result | Pending exact Build 61 TestFlight install, launch, Apple/email login, new-template selection, and free-publish smoke test |
 | App Store version selection | Pending; do not select or submit a build until real-device smoke passes |
 | Public release state | Still `1.0.2`; no 1.0.3 review submission or public rollout yet |
+| Vercel production catalog | Deployment `dpl_6RtysPoBGCHiaRzjGtCQMhXdyrCc`, alias `https://invitation-platform-plum.vercel.app`, API version `v1-3f329e74`, 180 unique records and 180/180 reachable images |
+| Automatic template update state | Implemented in source after Build 61. Once a new binary containing `2f58640` is approved, the app refreshes the Vercel catalog on launch/foreground and retains bundled templates as offline fallback |
 
 ## Current verdict
 
@@ -48,6 +52,21 @@ this is not yet a TestFlight-install or public-release result. Every preserved-b
 securely deleted, temporary keychains were destroyed, and no credentials were
 written to the repository.
 
+## Remote template delivery after Build 61
+
+The production Vercel endpoint now publishes the validated mobile template
+catalog. A clean Release simulator install fetched and persisted schema version
+`1`, catalog version `v1-3f329e74`, and all 180 records. The first records are
+`wedding-barunson-anime-25`, `26`, and `27`, so the newest templates appear
+before bundled fallbacks.
+
+Build 61 does not contain this remote-catalog client. One new iOS binary (planned
+as Build 62) and App Review are therefore required once. After that binary is
+installed, changing the server catalog or its versioned images and deploying to
+Vercel updates the in-app catalog on the next launch or foreground refresh; a
+new iOS build is not required for catalog-only changes. No Build 62/EAS build or
+App Store submission was started in this work session.
+
 ## 1.0.3 release notes draft
 
 - 메인 화면의 웨딩 이미지에 실제 이름, 날짜, 장소를 배치해 청첩장 느낌을 강화했습니다.
@@ -57,16 +76,18 @@ written to the repository.
 
 ## Remaining release gates
 
-1. Sign in to App Store Connect in Chrome if the session has expired, then confirm Apple finished processing Build 61 and it appears in TestFlight.
+1. Keep Build 61 state separate from the remote-catalog source: confirm its current TestFlight state, but do not treat it as containing automatic Vercel updates.
 2. Identify the full-tree critical dependency advisory and resolve or explicitly
    risk-accept the 18 advisories and four Expo Doctor failures before App Review.
-3. On a real iPhone, uninstall the old app if stale data is suspected, install
-   exact TestFlight Build 61, and verify launch, Apple/email login, main hero,
-   all six new-template categories, builder preview, and free publish/share.
-4. Create/select App Store version `1.0.3`, save Korean release notes and current
-   screenshots, verify privacy/review contact, and select only the verified build.
-5. Submit for App Review. Public availability remains pending Apple approval and
-   the chosen release mode.
+3. With explicit EAS approval, create one new candidate containing commit
+   `2f58640` (planned Build 62), then record build ID, submit ID, processing state,
+   and exact binary metadata separately.
+4. On a real iPhone, install that exact candidate and verify launch, remote
+   catalog order, at least one remote-only template preview, login, and free
+   publish/share before selecting it for review.
+5. Create/select the App Store version, save Korean release notes and current
+   screenshots, verify privacy/review contact, and submit only the verified build.
+   Public availability remains pending Apple approval and the chosen release mode.
 
 ## Stop conditions
 
