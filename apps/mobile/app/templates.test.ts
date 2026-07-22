@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { selectTemplateAndOpenBuilder } from "../lib/template-selection";
+
+const screenSource = readFileSync(join(process.cwd(), "apps/mobile/app/templates.tsx"), "utf8");
 
 describe("template selection flow", () => {
   it("creates exactly one draft before pushing the selected card to basic editing", async () => {
@@ -37,5 +41,22 @@ describe("template selection flow", () => {
       params: { localId: "draft-123" }
     });
     expect(events).toEqual(["draft", "push"]);
+  });
+});
+
+describe("template discovery screen", () => {
+  it("uses one virtualized list with stable IDs and no draft mutation", () => {
+    expect(screenSource).toContain("FlatList");
+    expect(screenSource).toContain("keyExtractor={(template) => template.id}");
+    expect(screenSource).not.toContain("<ScrollView");
+    expect(screenSource).not.toMatch(/createAndPersistDraft|selectTemplateAndOpenBuilder/);
+  });
+
+  it("wires truthful recovery states, no-results reset, and debounced result announcements", () => {
+    expect(screenSource).toContain("저장된 디자인을 보여드려요");
+    expect(screenSource).toContain("기본 디자인 150개를 보여드려요");
+    expect(screenSource).toContain("필터 초기화");
+    expect(screenSource).toContain("announceForAccessibility");
+    expect(screenSource).toContain("useDebouncedValue");
   });
 });

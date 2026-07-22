@@ -3,6 +3,10 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const templatesScreenSource = readFileSync(join(process.cwd(), "apps/mobile/app/templates.tsx"), "utf8");
+const templateCardSource = readFileSync(
+  join(process.cwd(), "apps/mobile/components/templates/TemplateCard.tsx"),
+  "utf8"
+);
 const heroSectionSource = readFileSync(join(process.cwd(), "apps/mobile/components/home/HeroSection.tsx"), "utf8");
 const sampleOverlaySource = readFileSync(
   join(process.cwd(), "apps/mobile/components/templates/TemplateSampleTextOverlay.tsx"),
@@ -22,7 +26,7 @@ describe("template card sample overlay", () => {
 
   it("uses event-specific sample copy instead of wedding copy for every category", () => {
     expect(sampleOverlaySource).toContain("export function TemplateSampleTextOverlay({");
-    expect(templatesScreenSource).toContain("<TemplateSampleTextOverlay template={template} />");
+    expect(templateCardSource).toContain("<TemplateSampleTextOverlay template={template} />");
 
     for (const category of [
       "wedding",
@@ -43,7 +47,7 @@ describe("template card sample overlay", () => {
     expect(sampleOverlaySource).toContain("template.textSafeArea ?? resolveTemplateTextSafeArea");
     expect(sampleOverlaySource).toContain("top: `${safeArea.topPct}%`");
     expect(sampleOverlaySource).toContain("bottom: `${100 - safeArea.bottomPct}%`");
-    expect(templatesScreenSource).toContain("aspectRatio: 941 / 1672");
+    expect(templateCardSource).toContain("aspectRatio: 941 / 1672");
   });
 
   it("replaces template-name labels with real invitation copy in the home hero stack", () => {
@@ -64,7 +68,7 @@ describe("template card sample overlay", () => {
   });
 
   it("uses one shared overlay implementation and keeps the long message below the artwork", () => {
-    expect(templatesScreenSource).toContain('import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";');
+    expect(templateCardSource).toContain('import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";');
     expect(templatesScreenSource).not.toContain("function TemplateSampleTextOverlay(");
     expect(invitationPreviewSource).toContain("selectedTemplate?.textSafeArea ?? resolveTemplateTextSafeArea");
     expect(invitationPreviewSource.indexOf("</ImageBackground>")).toBeLessThan(

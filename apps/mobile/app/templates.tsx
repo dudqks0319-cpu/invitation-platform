@@ -1,235 +1,299 @@
-/* eslint-disable jsx-a11y/alt-text */
-
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Image, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import {
+  AccessibilityInfo,
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  Text,
+  useWindowDimensions,
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
-import { Pill } from "@/components/ui/Pill";
+import { TemplateCard } from "@/components/templates/TemplateCard";
+import { TemplateFilters } from "@/components/templates/TemplateFilters";
 import { theme } from "@/components/ui/theme";
-import { useAuth } from "@/hooks/useAuth";
 import { useTemplateCatalog } from "@/hooks/useTemplateCatalog";
-import { getDraftOwnerId } from "@/lib/auth-access";
-import { createAndPersistDraft } from "@/lib/drafts";
+import { useTemplateDiscoveryState } from "@/hooks/useTemplateDiscoveryState";
+import {
+  emptyTemplateDiscoveryFilters,
+  filterTemplateDiscoveryItems,
+  getTemplateDiscoveryActiveFilterSummary
+} from "@/lib/template-discovery";
+import {
+  getTemplateDiscoveryCardWidth,
+  getTemplateDiscoveryColumnCount,
+  TEMPLATE_DISCOVERY_COLUMN_GAP,
+  TEMPLATE_DISCOVERY_HORIZONTAL_INSET
+} from "@/lib/template-discovery-layout";
+import { createTemplatePreviewDestination } from "@/lib/template-discovery-navigation";
 import { mobileTemplateCategories, type MobileTemplateGalleryItem } from "@/lib/template-gallery";
-import { getTemplatePreviewSource } from "@/lib/template-image-source";
-import { selectTemplateAndOpenBuilder } from "@/lib/template-selection";
 
+const RESULT_COMMIT_DELAY_MS = 300;
+const RESULT_ANNOUNCEMENT_DELAY_MS = 350;
+const allowedCategoryKeys = new Set(mobileTemplateCategories.map((category) => category.key));
+
+function useDebouncedValue<T>(value: T, delayMs: number) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => setDebouncedValue(value), delayMs);
+    return () => clearTimeout(timeout);
+  }, [delayMs, value]);
+
+  return debouncedValue;
+}
+
+function CatalogStatus({
+  source,
+  refreshing,
+  error,
+  canRetry,
+  onRetry
+}: {
+  source: "loading" | "remote" | "cache" | "bundled-fallback";
+  refreshing: boolean;
+  error: string | null;
+  canRetry: boolean;
+  onRetry: () => void;
+}) {
+  if (source === "loading") return null;
+
+  const sourceCopy = source === "cache"
+    ? "저장된 디자인을 보여드려요"
+    : source === "bundled-fallback"
+      ? "기본 디자인 150개를 보여드려요"
+      : null;
+
+  if (!sourceCopy && !refreshing && !error) return null;
+
+  return (
+    <View
+      accessibilityLiveRegion="polite"
+      style={{
+        gap: 8,
+        borderRadius: theme.radius.md,
+        borderWidth: 1,
+        borderColor: theme.colors.border,
+        backgroundColor: theme.colors.surface,
+        padding: 14
+      }}
+    >
+      {sourceCopy ? (
+        <Text style={{ color: theme.colors.ink, fontSize: 14, fontWeight: "800" }}>{sourceCopy}</Text>
+      ) : null}
+      {refreshing ? (
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <ActivityIndicator color={theme.colors.primaryDark} size="small" />
+          <Text style={{ color: theme.colors.muted, fontSize: 13 }}>최신 디자인을 확인하고 있어요</Text>
+        </View>
+      ) : null}
+      {error ? (
+        <View style={{ gap: 8 }}>
+          <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 19 }}>
+            {error} {canRetry ? "현재 목록을 보면서 다시 시도할 수 있어요." : "현재 목록은 계속 둘러볼 수 있어요."}
+          </Text>
+          {canRetry ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={onRetry}
+              style={({ pressed }) => ({
+                alignSelf: "flex-start",
+                minHeight: 44,
+                justifyContent: "center",
+                paddingHorizontal: 10,
+                opacity: pressed ? 0.76 : 1
+              })}
+            >
+              <Text style={{ color: theme.colors.primaryDark, fontSize: 14, fontWeight: "800" }}>다시 시도</Text>
+            </Pressable>
+          ) : null}
+        </View>
+      ) : null}
+    </View>
+  );
+}
 
 export default function TemplatesScreen() {
   const router = useRouter();
-  const { category: initialCategory } = useLocalSearchParams<{ category?: string }>();
-  const { status, user } = useAuth();
-  const { templates } = useTemplateCatalog();
-  const { width } = useWindowDimensions();
-  const draftOwnerId = getDraftOwnerId(status === "authenticated" ? user : null);
-  const [category, setCategory] = useState<string>(() => {
-    const categoryParam = Array.isArray(initialCategory) ? initialCategory[0] : initialCategory;
-    return mobileTemplateCategories.some((item) => item.key === categoryParam)
-      ? categoryParam
-      : mobileTemplateCategories[0].key;
-  });
-  const cardWidth = Math.max(148, Math.floor((width - 54) / 2));
-
-  const filteredTemplates = useMemo(
-    () => templates.filter((template) => template.category === category),
-    [category, templates]
+  const { category: initialCategoryParam } = useLocalSearchParams<{ category?: string | string[] }>();
+  const { templates, source, refreshing, error, canRetry, retry } = useTemplateCatalog();
+  const { filters, scrollOffset, initializeCategory, setFilters, setScrollOffset } = useTemplateDiscoveryState();
+  const { width, fontScale } = useWindowDimensions();
+  const [listWidth, setListWidth] = useState(width);
+  const currentScrollOffsetRef = useRef(scrollOffset);
+  const announcedOnceRef = useRef(false);
+  const initialCategory = Array.isArray(initialCategoryParam) ? initialCategoryParam[0] : initialCategoryParam;
+  const debouncedQuery = useDebouncedValue(filters.query, RESULT_COMMIT_DELAY_MS);
+  const committedFilters = useMemo(
+    () => ({ category: filters.category, moods: filters.moods, query: debouncedQuery }),
+    [debouncedQuery, filters.category, filters.moods]
   );
+  const filteredTemplates = useMemo(
+    () => filterTemplateDiscoveryItems(templates, committedFilters, mobileTemplateCategories),
+    [committedFilters, templates]
+  );
+  const activeFilterSummary = getTemplateDiscoveryActiveFilterSummary(committedFilters, mobileTemplateCategories);
+  const columnCount = getTemplateDiscoveryColumnCount(fontScale);
+  const cardWidth = getTemplateDiscoveryCardWidth(listWidth, fontScale);
 
-  async function handleUseTemplate(template: MobileTemplateGalleryItem) {
-    await selectTemplateAndOpenBuilder({
-      template,
-      draftOwnerId,
-      createAndPersistDraft,
-      router
-    });
-  }
+  useEffect(() => {
+    initializeCategory(initialCategory, allowedCategoryKeys);
+  }, [initialCategory, initializeCategory]);
+
+  useEffect(() => {
+    if (source === "loading") return;
+    if (!announcedOnceRef.current) {
+      announcedOnceRef.current = true;
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      AccessibilityInfo.announceForAccessibility(
+        `${activeFilterSummary}, 디자인 ${filteredTemplates.length}개`
+      );
+    }, RESULT_ANNOUNCEMENT_DELAY_MS);
+    return () => clearTimeout(timeout);
+  }, [activeFilterSummary, filteredTemplates.length, source]);
 
   function handleBack() {
+    setScrollOffset(currentScrollOffsetRef.current);
     if (router.canGoBack()) {
       router.back();
       return;
     }
-
     router.replace("/");
   }
 
+  function handleOpenPreview(template: MobileTemplateGalleryItem) {
+    const destination = createTemplatePreviewDestination(template.id);
+    if (!destination) return;
+    setScrollOffset(currentScrollOffsetRef.current);
+    router.push(destination);
+  }
+
+  function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
+    currentScrollOffsetRef.current = Math.max(0, event.nativeEvent.contentOffset.y);
+  }
+
+  function commitScrollOffset() {
+    setScrollOffset(currentScrollOffsetRef.current);
+  }
+
+  function resetFilters() {
+    setFilters({ ...emptyTemplateDiscoveryFilters, moods: [] });
+  }
+
+  const listHeader = (
+    <View style={{ gap: 18, paddingBottom: 20 }}>
+      <View style={{ height: 68, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <Pressable
+          accessibilityLabel="뒤로가기"
+          accessibilityRole="button"
+          onPress={handleBack}
+          style={({ pressed }) => ({
+            width: 44,
+            height: 44,
+            borderRadius: 22,
+            backgroundColor: theme.colors.surface,
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1,
+            borderColor: theme.colors.border,
+            opacity: pressed ? 0.78 : 1
+          })}
+        >
+          <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "700" }}>‹</Text>
+        </Pressable>
+        <Text style={{ flexShrink: 1, color: theme.colors.text, fontSize: 24, fontWeight: "800", textAlign: "center" }}>
+          디자인 둘러보기
+        </Text>
+        <View style={{ width: 44 }} />
+      </View>
+
+      <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24 }}>
+        행사와 분위기에 맞는 예시 디자인을 찾고, 카드를 눌러 먼저 미리보세요.
+      </Text>
+
+      <CatalogStatus source={source} refreshing={refreshing} error={error} canRetry={canRetry} onRetry={retry} />
+
+      <TemplateFilters
+        categories={mobileTemplateCategories}
+        filters={filters}
+        onFiltersChange={setFilters}
+        onReset={resetFilters}
+      />
+
+      <Text accessibilityLiveRegion="polite" style={{ color: theme.colors.ink, fontSize: 15, fontWeight: "800" }}>
+        디자인 {source === "loading" ? "불러오는 중" : `${filteredTemplates.length}개`}
+      </Text>
+    </View>
+  );
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <ScrollView contentContainerStyle={{ padding: 18, gap: 20, paddingBottom: 36 }}>
-        <View
-          style={{
-            height: 68,
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between"
-          }}
-        >
-          <Pressable
-            accessibilityLabel="뒤로가기"
-            onPress={handleBack}
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 22,
-              backgroundColor: "rgba(255,255,255,0.92)",
-              alignItems: "center",
-              justifyContent: "center",
-              borderWidth: 1,
-              borderColor: theme.colors.border
-            }}
-          >
-            <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "700" }}>‹</Text>
-          </Pressable>
-          <Text style={{ color: theme.colors.text, fontSize: 24, fontWeight: "700" }}>디자인 둘러보기</Text>
-          <View style={{ width: 44 }} />
-        </View>
-
-        <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24 }}>
-          {mobileTemplateCategories.find((item) => item.key === category)?.label ?? "초대장"} 디자인 {filteredTemplates.length}개를 볼 수 있습니다.
-          고르면 편집 화면에서 이름, 날짜, 장소만 바꾸면 됩니다.
-        </Text>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 10, paddingRight: 8 }}
-        >
-          {mobileTemplateCategories.map((item) => (
-            <Pressable
-              key={item.key}
-              accessibilityLabel={`${item.label} 템플릿 보기`}
-              accessibilityRole="button"
-              accessibilityState={{ selected: item.key === category }}
-              onPress={() => setCategory(item.key)}
-            >
-              <Pill active={item.key === category} label={`${item.emoji} ${item.label}`} />
-            </Pressable>
-          ))}
-        </ScrollView>
-
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12 }}>
-          {filteredTemplates.map((template) => {
-            const previewSource = getTemplatePreviewSource(template);
-            const isDarkFallback = template.id === "business-dark";
-            return (
+      <FlatList
+        key={`template-grid-${columnCount}`}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingHorizontal: TEMPLATE_DISCOVERY_HORIZONTAL_INSET,
+          paddingBottom: 36
+        }}
+        contentOffset={{ x: 0, y: scrollOffset }}
+        columnWrapperStyle={columnCount === 2 ? { gap: TEMPLATE_DISCOVERY_COLUMN_GAP } : undefined}
+        data={source === "loading" ? [] : filteredTemplates}
+        initialNumToRender={8}
+        ItemSeparatorComponent={() => <View style={{ height: TEMPLATE_DISCOVERY_COLUMN_GAP }} />}
+        keyExtractor={(template) => template.id}
+        ListEmptyComponent={
+          source === "loading" ? (
+            <View accessibilityRole="progressbar" style={{ minHeight: 220, alignItems: "center", justifyContent: "center", gap: 12 }}>
+              <ActivityIndicator color={theme.colors.primaryDark} />
+              <Text style={{ color: theme.colors.muted, fontSize: 14 }}>디자인을 불러오고 있어요</Text>
+            </View>
+          ) : (
+            <View style={{ minHeight: 220, alignItems: "center", justifyContent: "center", gap: 12, paddingHorizontal: 20 }}>
+              <Text style={{ color: theme.colors.ink, fontSize: 18, fontWeight: "800", textAlign: "center" }}>
+                조건에 맞는 디자인이 없어요
+              </Text>
+              <Text style={{ color: theme.colors.muted, fontSize: 14, lineHeight: 21, textAlign: "center" }}>
+                적용된 필터: {activeFilterSummary}
+              </Text>
               <Pressable
-                accessibilityLabel={`${template.name} 템플릿으로 시작`}
+                accessibilityLabel="필터 초기화"
                 accessibilityRole="button"
-                key={template.id}
-                onPress={() => void handleUseTemplate(template)}
-                style={{
-                  width: cardWidth,
-                  backgroundColor: "#fff",
-                  borderRadius: 24,
-                  borderWidth: 1,
-                  borderColor: theme.colors.border,
-                  overflow: "hidden",
-                  shadowColor: theme.shadow.card.shadowColor,
-                  shadowOffset: { width: 0, height: 14 },
-                  shadowOpacity: 1,
-                  shadowRadius: 26,
-                  elevation: 5
-                }}
+                onPress={resetFilters}
+                style={({ pressed }) => ({
+                  minHeight: 44,
+                  justifyContent: "center",
+                  borderRadius: theme.radius.pill,
+                  backgroundColor: theme.colors.primaryLight,
+                  paddingHorizontal: 18,
+                  opacity: pressed ? 0.78 : 1
+                })}
               >
-                <View
-                  style={{
-                    height: 236,
-                    backgroundColor: "#F7EFE6",
-                    padding: 10,
-                    alignItems: "center",
-                    justifyContent: "center"
-                  }}
-                >
-                  {previewSource ? (
-                    <View style={{ height: "100%", aspectRatio: 941 / 1672, borderRadius: 18, overflow: "hidden" }}>
-                      <Image
-                        accessibilityIgnoresInvertColors
-                        accessibilityLabel={`${template.name} 템플릿 미리보기`}
-                        source={previewSource}
-                        style={{ width: "100%", height: "100%" }}
-                        resizeMode="cover"
-                      />
-                      {template.sampleTextOverlay ? (
-                        <TemplateSampleTextOverlay template={template} />
-                      ) : null}
-                    </View>
-                  ) : (
-                    <View
-                      style={{
-                        width: "72%",
-                        aspectRatio: 0.58,
-                        borderRadius: 28,
-                        backgroundColor: isDarkFallback ? "#111827" : "rgba(255,250,244,0.92)",
-                        borderWidth: 1,
-                        borderColor: isDarkFallback ? "rgba(214,179,106,0.42)" : "rgba(172,137,102,0.12)",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        paddingHorizontal: 18
-                      }}
-                    >
-                      <Text
-                        style={{
-                          color: isDarkFallback ? "#D6B36A" : "#b28a5f",
-                          fontSize: 12,
-                          letterSpacing: 0,
-                          textAlign: "center"
-                        }}
-                      >
-                        {isDarkFallback ? "PREMIUM EVENT" : "INVITATION"}
-                      </Text>
-                      <Text
-                        style={{
-                          color: isDarkFallback ? "#F5E7C8" : "#7d5d42",
-                          fontSize: 28,
-                          fontStyle: "italic",
-                          marginTop: 12,
-                          textAlign: "center"
-                        }}
-                      >
-                        {template.name}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-
-                <View style={{ padding: 14, gap: 9 }}>
-                  <View
-                    style={{
-                      alignSelf: "flex-start",
-                      backgroundColor: theme.colors.primaryLight,
-                      borderRadius: 999,
-                      paddingHorizontal: 12,
-                      paddingVertical: 6
-                    }}
-                  >
-                    <Text style={{ color: theme.colors.primaryDark, fontSize: 12, fontWeight: "700" }}>{template.badge}</Text>
-                  </View>
-                  <Text style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "800", lineHeight: 23 }}>{template.name}</Text>
-                  <Text numberOfLines={2} style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 19 }}>
-                    {template.desc}
-                  </Text>
-                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-                    {template.tags.slice(0, 2).map((tag) => (
-                      <View
-                        key={tag}
-                        style={{
-                          borderRadius: 999,
-                          backgroundColor: theme.colors.surfaceSoft,
-                          paddingHorizontal: 12,
-                          paddingVertical: 7
-                        }}
-                      >
-                        <Text style={{ color: theme.colors.textLight, fontSize: 13, fontWeight: "600" }}>{tag}</Text>
-                      </View>
-                    ))}
-                  </View>
-                </View>
+                <Text style={{ color: theme.colors.primaryDark, fontSize: 14, fontWeight: "800" }}>필터 초기화</Text>
               </Pressable>
-            );
-          })}
-        </View>
-      </ScrollView>
+            </View>
+          )
+        }
+        ListHeaderComponent={listHeader}
+        maxToRenderPerBatch={8}
+        numColumns={columnCount}
+        onLayout={(event) => setListWidth(event.nativeEvent.layout.width)}
+        onMomentumScrollEnd={commitScrollOffset}
+        onScroll={handleScroll}
+        onScrollEndDrag={commitScrollOffset}
+        removeClippedSubviews
+        renderItem={({ item }) => (
+          <TemplateCard template={item} onOpenPreview={handleOpenPreview} width={cardWidth} />
+        )}
+        scrollEventThrottle={100}
+        showsVerticalScrollIndicator={false}
+        windowSize={7}
+      />
     </SafeAreaView>
   );
 }

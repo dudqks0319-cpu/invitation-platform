@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Image, Pressable, Text, View } from "react-native";
+import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
 import { getTemplatePreviewSource } from "@/lib/template-image-source";
 import type { MobileTemplateGalleryItem } from "@/lib/template-gallery";
 import { theme } from "@/components/ui/theme";
@@ -13,6 +14,7 @@ type TemplateCardProps = {
 export function TemplateCard({ template, onOpenPreview, width }: TemplateCardProps) {
   const [imageFailed, setImageFailed] = useState(false);
   const previewSource = imageFailed ? null : getTemplatePreviewSource(template);
+  const previewHeight = width ? Math.max(220, Math.min(420, Math.round(width * 1.3))) : 220;
 
   return (
     <Pressable
@@ -32,19 +34,31 @@ export function TemplateCard({ template, onOpenPreview, width }: TemplateCardPro
         ...theme.shadow.card
       })}
     >
-      <View accessible={false} style={{ height: 220, backgroundColor: theme.colors.surfaceSoft, padding: 10 }}>
+      <View
+        accessible={false}
+        style={{
+          height: previewHeight,
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: theme.colors.surfaceSoft,
+          padding: 10
+        }}
+      >
         {previewSource ? (
-          <Image
-            alt=""
-            accessible={false}
-            accessibilityElementsHidden
-            accessibilityIgnoresInvertColors
-            importantForAccessibility="no-hide-descendants"
-            onError={() => setImageFailed(true)}
-            resizeMode="cover"
-            source={previewSource}
-            style={{ width: "100%", height: "100%", borderRadius: theme.radius.md }}
-          />
+          <View style={{ height: "100%", aspectRatio: 941 / 1672, borderRadius: theme.radius.md, overflow: "hidden" }}>
+            <Image
+              alt=""
+              accessible={false}
+              accessibilityElementsHidden
+              accessibilityIgnoresInvertColors
+              importantForAccessibility="no-hide-descendants"
+              onError={() => setImageFailed(true)}
+              resizeMode="cover"
+              source={previewSource}
+              style={{ width: "100%", height: "100%" }}
+            />
+            {template.sampleTextOverlay ? <TemplateSampleTextOverlay template={template} /> : null}
+          </View>
         ) : (
           <View
             accessible={false}

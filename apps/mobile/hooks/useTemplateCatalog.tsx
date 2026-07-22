@@ -1,51 +1,82 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useReducer, useRef, type ReactNode } from "react";
 import { AppState } from "react-native";
 import { mobileTemplateGallery, type MobileTemplateGalleryItem } from "@/lib/template-gallery";
 import {
   mergeTemplateCatalog,
   readCachedTemplateCatalog,
-  refreshRemoteTemplateCatalog
+  fetchRemoteTemplateCatalog,
+  writeCachedTemplateCatalog
 } from "@/lib/remote-template-catalog";
+import {
+  createInitialTemplateCatalogState,
+  reduceTemplateCatalogState,
+  TEMPLATE_CATALOG_MAX_MANUAL_RETRIES,
+  type TemplateCatalogSource
+} from "@/lib/template-catalog-state";
 
 const ACTIVE_REFRESH_COOLDOWN_MS = 5 * 60 * 1000;
 
 type TemplateCatalogValue = {
   templates: MobileTemplateGalleryItem[];
   findById: (templateId: string) => MobileTemplateGalleryItem | null;
+  source: TemplateCatalogSource;
+  refreshing: boolean;
+  error: string | null;
+  canRetry: boolean;
+  retry: () => void;
 };
 
 const TemplateCatalogContext = createContext<TemplateCatalogValue | null>(null);
 
 export function TemplateCatalogProvider({ children }: { children: ReactNode }) {
-  const [templates, setTemplates] = useState<MobileTemplateGalleryItem[]>(mobileTemplateGallery);
+  const [state, dispatch] = useReducer(
+    reduceTemplateCatalogState,
+    mobileTemplateGallery,
+    createInitialTemplateCatalogState
+  );
+  const mountedRef = useRef(true);
+  const refreshInFlightRef = useRef<Promise<void> | null>(null);
+  const lastRefreshAtRef = useRef(0);
+
+  const refresh = useCallback((force = false) => {
+    const now = Date.now();
+    if (
+      refreshInFlightRef.current ||
+      (!force && now - lastRefreshAtRef.current < ACTIVE_REFRESH_COOLDOWN_MS)
+    ) {
+      return;
+    }
+
+    lastRefreshAtRef.current = now;
+    dispatch({ type: "refresh-started" });
+    refreshInFlightRef.current = fetchRemoteTemplateCatalog()
+      .then(async (remote) => {
+        await writeCachedTemplateCatalog(remote);
+        if (mountedRef.current) {
+          dispatch({
+            type: "remote-ready",
+            templates: mergeTemplateCatalog(mobileTemplateGallery, remote.templates)
+          });
+        }
+      })
+      .catch(() => {
+        if (mountedRef.current) dispatch({ type: "remote-failed" });
+      })
+      .finally(() => {
+        refreshInFlightRef.current = null;
+      });
+  }, []);
 
   useEffect(() => {
-    let mounted = true;
-    let lastRefreshAt = 0;
-    let lastKnownGood: Awaited<ReturnType<typeof readCachedTemplateCatalog>> = null;
-    let refreshInFlight: Promise<void> | null = null;
-
-    const refresh = (force = false) => {
-      const now = Date.now();
-      if (refreshInFlight || (!force && now - lastRefreshAt < ACTIVE_REFRESH_COOLDOWN_MS)) return;
-
-      lastRefreshAt = now;
-      refreshInFlight = refreshRemoteTemplateCatalog(lastKnownGood)
-        .then((remote) => {
-          if (!remote) return;
-          lastKnownGood = remote;
-          if (mounted) setTemplates(mergeTemplateCatalog(mobileTemplateGallery, remote.templates));
-        })
-        .finally(() => {
-          refreshInFlight = null;
-        });
-    };
+    mountedRef.current = true;
 
     void (async () => {
       const cached = await readCachedTemplateCatalog();
-      if (mounted && cached) {
-        lastKnownGood = cached;
-        setTemplates(mergeTemplateCatalog(mobileTemplateGallery, cached.templates));
+      if (mountedRef.current && cached) {
+        dispatch({
+          type: "cache-ready",
+          templates: mergeTemplateCatalog(mobileTemplateGallery, cached.templates)
+        });
       }
       refresh(true);
     })();
@@ -55,18 +86,29 @@ export function TemplateCatalogProvider({ children }: { children: ReactNode }) {
     });
 
     return () => {
-      mounted = false;
+      mountedRef.current = false;
       subscription.remove();
     };
-  }, []);
+  }, [refresh]);
+
+  const retry = useCallback(() => {
+    if (state.refreshing || state.manualRetryCount >= TEMPLATE_CATALOG_MAX_MANUAL_RETRIES) return;
+    dispatch({ type: "manual-retry" });
+    refresh(true);
+  }, [refresh, state.manualRetryCount, state.refreshing]);
 
   const value = useMemo<TemplateCatalogValue>(() => {
-    const byId = new Map(templates.map((template) => [template.id, template]));
+    const byId = new Map(state.templates.map((template) => [template.id, template]));
     return {
-      templates,
-      findById: (templateId) => byId.get(templateId) ?? null
+      templates: state.templates,
+      findById: (templateId) => byId.get(templateId) ?? null,
+      source: state.source,
+      refreshing: state.refreshing,
+      error: state.error,
+      canRetry: !state.refreshing && state.manualRetryCount < TEMPLATE_CATALOG_MAX_MANUAL_RETRIES,
+      retry
     };
-  }, [templates]);
+  }, [retry, state]);
 
   return <TemplateCatalogContext.Provider value={value}>{children}</TemplateCatalogContext.Provider>;
 }
