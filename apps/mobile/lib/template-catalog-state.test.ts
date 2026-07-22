@@ -1,8 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { MobileTemplateGalleryItem } from "./template-gallery";
 import {
   createInitialTemplateCatalogState,
+  publishRemoteTemplateCatalog,
   reduceTemplateCatalogState,
+  startTemplateCatalogInitialization,
   TEMPLATE_CATALOG_MAX_MANUAL_RETRIES,
   TEMPLATE_CATALOG_SAFE_ERROR
 } from "./template-catalog-state";
@@ -26,6 +28,52 @@ describe("template catalog UI state", () => {
     expect(initial).toMatchObject({ source: "loading", refreshing: true, templates: bundled });
     expect(cacheState).toMatchObject({ source: "cache", refreshing: true, templates: cached });
     expect(remoteState).toMatchObject({ source: "remote", refreshing: false, templates: remote, error: null });
+  });
+
+  it("starts remote loading without waiting for a stalled cache read", async () => {
+    let resolveCache!: (value: MobileTemplateGalleryItem[] | null) => void;
+    const readCache = () => new Promise<MobileTemplateGalleryItem[] | null>((resolve) => {
+      resolveCache = resolve;
+    });
+    const startRemote = vi.fn();
+    const onCacheReady = vi.fn();
+
+    const initialization = startTemplateCatalogInitialization({ readCache, startRemote, onCacheReady });
+    expect(startRemote).toHaveBeenCalledTimes(1);
+    expect(onCacheReady).not.toHaveBeenCalled();
+
+    resolveCache(cached);
+    await initialization;
+    expect(onCacheReady).toHaveBeenCalledWith(cached);
+  });
+
+  it("publishes remote data before best-effort cache persistence settles", () => {
+    const events: string[] = [];
+    const persist = vi.fn((templates: MobileTemplateGalleryItem[]) => {
+      void templates;
+      return new Promise<void>(() => undefined);
+    });
+
+    publishRemoteTemplateCatalog({
+      remote,
+      onRemoteReady: () => events.push("remote-ready"),
+      persist: (templates) => {
+        events.push("persist-started");
+        return persist(templates);
+      }
+    });
+
+    expect(events).toEqual(["remote-ready", "persist-started"]);
+    expect(persist).toHaveBeenCalledWith(remote);
+  });
+
+  it("never lets a late cache result downgrade remote-ready state", () => {
+    const remoteState = reduceTemplateCatalogState(createInitialTemplateCatalogState(bundled), {
+      type: "remote-ready",
+      templates: remote
+    });
+
+    expect(reduceTemplateCatalogState(remoteState, { type: "cache-ready", templates: cached })).toBe(remoteState);
   });
 
   it("reports cache or bundled fallback after failure without leaking raw errors", () => {

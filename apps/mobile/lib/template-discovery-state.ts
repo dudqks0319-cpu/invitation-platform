@@ -3,29 +3,38 @@ import { emptyTemplateDiscoveryFilters, type TemplateDiscoveryFilters } from "./
 export type TemplateDiscoveryState = {
   filters: TemplateDiscoveryFilters;
   scrollOffset: number;
-  routeCategoryInitialized: boolean;
+  entryKey: string | null;
 };
 
 export function createInitialTemplateDiscoveryState(): TemplateDiscoveryState {
   return {
     filters: { ...emptyTemplateDiscoveryFilters, moods: [] },
     scrollOffset: 0,
-    routeCategoryInitialized: false
+    entryKey: null
   };
 }
 
-export function initializeTemplateDiscoveryCategory(
+export function normalizeTemplateDiscoveryEntryKey(entryKey: string | undefined) {
+  return entryKey && /^[a-z0-9-]{1,80}$/.test(entryKey)
+    ? entryKey
+    : "templates-entry-legacy";
+}
+
+export function enterTemplateDiscovery(
   state: TemplateDiscoveryState,
-  category: string | undefined,
+  entry: { entryKey: string | undefined; category: string | undefined },
   allowedCategories: ReadonlySet<string>
 ): TemplateDiscoveryState {
-  if (state.routeCategoryInitialized) return state;
+  const entryKey = normalizeTemplateDiscoveryEntryKey(entry.entryKey);
+  if (state.entryKey === entryKey) return state;
+
   return {
-    ...state,
-    routeCategoryInitialized: true,
+    entryKey,
+    scrollOffset: 0,
     filters: {
-      ...state.filters,
-      category: category && allowedCategories.has(category) ? category : "all"
+      ...emptyTemplateDiscoveryFilters,
+      moods: [],
+      category: entry.category && allowedCategories.has(entry.category) ? entry.category : "all"
     }
   };
 }

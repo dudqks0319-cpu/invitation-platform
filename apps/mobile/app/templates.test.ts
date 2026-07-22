@@ -4,6 +4,11 @@ import { join } from "node:path";
 import { selectTemplateAndOpenBuilder } from "../lib/template-selection";
 
 const screenSource = readFileSync(join(process.cwd(), "apps/mobile/app/templates.tsx"), "utf8");
+const filtersSource = readFileSync(
+  join(process.cwd(), "apps/mobile/components/templates/TemplateFilters.tsx"),
+  "utf8"
+);
+const homeSource = readFileSync(join(process.cwd(), "apps/mobile/app/(tabs)/index.tsx"), "utf8");
 
 describe("template selection flow", () => {
   it("creates exactly one draft before pushing the selected card to basic editing", async () => {
@@ -58,5 +63,15 @@ describe("template discovery screen", () => {
     expect(screenSource).toContain("필터 초기화");
     expect(screenSource).toContain("announceForAccessibility");
     expect(screenSource).toContain("useDebouncedValue");
+    expect(screenSource.match(/announceForAccessibility/g)).toHaveLength(1);
+    expect(filtersSource).not.toContain("accessibilityLiveRegion");
+    expect(screenSource.match(/accessibilityLiveRegion/g) ?? []).toHaveLength(1);
+  });
+
+  it("gives each fresh Home category entry a new non-PII discovery session key", () => {
+    expect(homeSource).toContain("createTemplateDiscoveryEntryKey()");
+    expect(homeSource).toContain("params: { category, entryKey }");
+    expect(screenSource).toContain("entryKey");
+    expect(screenSource).toContain("enterDiscovery");
   });
 });

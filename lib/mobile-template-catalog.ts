@@ -1,4 +1,4 @@
-import { getTemplateDefaultTextPlacement, type TemplatePreset } from "@/lib/templates";
+import { getTemplateDefaultTextPlacement, type TemplatePreset } from "./templates";
 import { resolveTemplateTextSafeArea, type TemplateTextSafeArea } from "@invitehub/shared";
 
 export const MOBILE_TEMPLATE_CATALOG_SCHEMA_VERSION = 1 as const;

@@ -38,7 +38,8 @@ export function reduceTemplateCatalogState(
 ): TemplateCatalogState {
   switch (action.type) {
     case "cache-ready":
-      return { ...state, templates: action.templates, source: "cache", refreshing: true };
+      if (state.source === "remote") return state;
+      return { ...state, templates: action.templates, source: "cache" };
     case "refresh-started":
       return { ...state, refreshing: true, error: null };
     case "remote-ready":
@@ -60,5 +61,41 @@ export function reduceTemplateCatalogState(
         error: null,
         manualRetryCount: state.manualRetryCount + 1
       };
+  }
+}
+
+export function startTemplateCatalogInitialization<T>({
+  readCache,
+  startRemote,
+  onCacheReady
+}: {
+  readCache: () => Promise<T | null>;
+  startRemote: () => void;
+  onCacheReady: (cached: T) => void;
+}) {
+  const cacheRead = readCache()
+    .then((cached) => {
+      if (cached) onCacheReady(cached);
+    })
+    .catch(() => undefined);
+
+  startRemote();
+  return cacheRead;
+}
+
+export function publishRemoteTemplateCatalog<T>({
+  remote,
+  onRemoteReady,
+  persist
+}: {
+  remote: T;
+  onRemoteReady: (remote: T) => void;
+  persist: (remote: T) => Promise<void>;
+}) {
+  onRemoteReady(remote);
+  try {
+    void persist(remote).catch(() => undefined);
+  } catch {
+    // Persistence is best-effort after the remote state is already visible.
   }
 }

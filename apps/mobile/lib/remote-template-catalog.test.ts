@@ -5,6 +5,7 @@ vi.mock("expo/fetch", () => ({ fetch: globalThis.fetch }));
 import {
   MOBILE_TEMPLATE_CATALOG_CACHE_KEY,
   MOBILE_TEMPLATE_CATALOG_MAX_BYTES,
+  MOBILE_TEMPLATE_CATALOG_STORAGE_TIMEOUT_MS,
   MOBILE_TEMPLATE_CATALOG_URL,
   fetchRemoteTemplateCatalog,
   mergeTemplateCatalog,
@@ -142,6 +143,22 @@ describe("remote mobile template catalog", () => {
     await expect(readCachedTemplateCatalog(storage)).resolves.toBe(
       templateCatalogContract.cache.acceptsOnlyValidatedCatalogs ? null : catalog
     );
+  });
+
+  it("bounds stalled cache reads and writes", async () => {
+    vi.useFakeTimers();
+    const storage = {
+      getItem: vi.fn(() => new Promise<string | null>(() => undefined)),
+      setItem: vi.fn(() => new Promise<void>(() => undefined))
+    };
+    const catalog = parseRemoteTemplateCatalog(validCatalog());
+
+    const read = readCachedTemplateCatalog(storage);
+    const write = writeCachedTemplateCatalog(catalog, storage);
+    await vi.advanceTimersByTimeAsync(MOBILE_TEMPLATE_CATALOG_STORAGE_TIMEOUT_MS);
+
+    await expect(read).resolves.toBeNull();
+    await expect(write).resolves.toBeUndefined();
   });
 
   it("keeps the cached last-known-good catalog after a network failure", async () => {

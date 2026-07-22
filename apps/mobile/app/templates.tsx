@@ -29,18 +29,21 @@ import {
   TEMPLATE_DISCOVERY_HORIZONTAL_INSET
 } from "@/lib/template-discovery-layout";
 import { createTemplatePreviewDestination } from "@/lib/template-discovery-navigation";
+import { normalizeTemplateDiscoveryEntryKey } from "@/lib/template-discovery-state";
 import { mobileTemplateCategories, type MobileTemplateGalleryItem } from "@/lib/template-gallery";
+import {
+  createTemplateResultAnnouncer,
+  scheduleTemplateResultCommit,
+  TEMPLATE_RESULT_COMMIT_DELAY_MS
+} from "@/lib/template-result-announcement";
 
-const RESULT_COMMIT_DELAY_MS = 300;
-const RESULT_ANNOUNCEMENT_DELAY_MS = 350;
 const allowedCategoryKeys = new Set(mobileTemplateCategories.map((category) => category.key));
 
 function useDebouncedValue<T>(value: T, delayMs: number) {
   const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {
-    const timeout = setTimeout(() => setDebouncedValue(value), delayMs);
-    return () => clearTimeout(timeout);
+    return scheduleTemplateResultCommit(value, setDebouncedValue, delayMs);
   }, [delayMs, value]);
 
   return debouncedValue;
@@ -118,15 +121,34 @@ function CatalogStatus({
 
 export default function TemplatesScreen() {
   const router = useRouter();
-  const { category: initialCategoryParam } = useLocalSearchParams<{ category?: string | string[] }>();
+  const { category: initialCategoryParam, entryKey: entryKeyParam } = useLocalSearchParams<{
+    category?: string | string[];
+    entryKey?: string | string[];
+  }>();
   const { templates, source, refreshing, error, canRetry, retry } = useTemplateCatalog();
-  const { filters, scrollOffset, initializeCategory, setFilters, setScrollOffset } = useTemplateDiscoveryState();
+  const {
+    filters,
+    scrollOffset,
+    entryKey: activeEntryKey,
+    enterDiscovery,
+    setFilters,
+    setScrollOffset
+  } = useTemplateDiscoveryState();
   const { width, fontScale } = useWindowDimensions();
   const [listWidth, setListWidth] = useState(width);
   const currentScrollOffsetRef = useRef(scrollOffset);
   const announcedOnceRef = useRef(false);
+  const resultAnnouncer = useMemo(
+    () => createTemplateResultAnnouncer((message) => {
+      AccessibilityInfo.announceForAccessibility(message);
+    }),
+    []
+  );
   const initialCategory = Array.isArray(initialCategoryParam) ? initialCategoryParam[0] : initialCategoryParam;
-  const debouncedQuery = useDebouncedValue(filters.query, RESULT_COMMIT_DELAY_MS);
+  const entryKey = Array.isArray(entryKeyParam) ? entryKeyParam[0] : entryKeyParam;
+  const normalizedEntryKey = normalizeTemplateDiscoveryEntryKey(entryKey);
+  const restoredScrollOffset = activeEntryKey === normalizedEntryKey ? scrollOffset : 0;
+  const debouncedQuery = useDebouncedValue(filters.query, TEMPLATE_RESULT_COMMIT_DELAY_MS);
   const committedFilters = useMemo(
     () => ({ category: filters.category, moods: filters.moods, query: debouncedQuery }),
     [debouncedQuery, filters.category, filters.moods]
@@ -138,25 +160,26 @@ export default function TemplatesScreen() {
   const activeFilterSummary = getTemplateDiscoveryActiveFilterSummary(committedFilters, mobileTemplateCategories);
   const columnCount = getTemplateDiscoveryColumnCount(fontScale);
   const cardWidth = getTemplateDiscoveryCardWidth(listWidth, fontScale);
+  const resultsAreReady = source !== "loading";
 
   useEffect(() => {
-    initializeCategory(initialCategory, allowedCategoryKeys);
-  }, [initialCategory, initializeCategory]);
+    enterDiscovery({ entryKey, category: initialCategory }, allowedCategoryKeys);
+  }, [enterDiscovery, entryKey, initialCategory]);
 
   useEffect(() => {
-    if (source === "loading") return;
+    currentScrollOffsetRef.current = restoredScrollOffset;
+  }, [restoredScrollOffset]);
+
+  useEffect(() => {
+    if (!resultsAreReady) return;
     if (!announcedOnceRef.current) {
       announcedOnceRef.current = true;
       return;
     }
 
-    const timeout = setTimeout(() => {
-      AccessibilityInfo.announceForAccessibility(
-        `${activeFilterSummary}, 디자인 ${filteredTemplates.length}개`
-      );
-    }, RESULT_ANNOUNCEMENT_DELAY_MS);
-    return () => clearTimeout(timeout);
-  }, [activeFilterSummary, filteredTemplates.length, source]);
+    resultAnnouncer.schedule(`${activeFilterSummary}, 디자인 ${filteredTemplates.length}개`);
+    return () => resultAnnouncer.cancel();
+  }, [activeFilterSummary, filteredTemplates.length, resultAnnouncer, resultsAreReady]);
 
   function handleBack() {
     setScrollOffset(currentScrollOffsetRef.current);
@@ -226,7 +249,7 @@ export default function TemplatesScreen() {
         onReset={resetFilters}
       />
 
-      <Text accessibilityLiveRegion="polite" style={{ color: theme.colors.ink, fontSize: 15, fontWeight: "800" }}>
+      <Text style={{ color: theme.colors.ink, fontSize: 15, fontWeight: "800" }}>
         디자인 {source === "loading" ? "불러오는 중" : `${filteredTemplates.length}개`}
       </Text>
     </View>
@@ -235,13 +258,13 @@ export default function TemplatesScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <FlatList
-        key={`template-grid-${columnCount}`}
+        key={`template-grid-${columnCount}-${normalizedEntryKey}`}
         contentContainerStyle={{
           flexGrow: 1,
           paddingHorizontal: TEMPLATE_DISCOVERY_HORIZONTAL_INSET,
           paddingBottom: 36
         }}
-        contentOffset={{ x: 0, y: scrollOffset }}
+        contentOffset={{ x: 0, y: restoredScrollOffset }}
         columnWrapperStyle={columnCount === 2 ? { gap: TEMPLATE_DISCOVERY_COLUMN_GAP } : undefined}
         data={source === "loading" ? [] : filteredTemplates}
         initialNumToRender={8}

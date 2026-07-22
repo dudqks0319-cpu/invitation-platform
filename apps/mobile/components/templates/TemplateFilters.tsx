@@ -83,7 +83,7 @@ export function TemplateFilters({ filters, categories, onFiltersChange, onReset 
       </View>
 
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-        <Text accessibilityLiveRegion="polite" style={{ flex: 1, color: theme.colors.muted, fontSize: 13, lineHeight: 19 }}>
+        <Text style={{ flex: 1, color: theme.colors.muted, fontSize: 13, lineHeight: 19 }}>
           오삼오삼 셀렉션 · {summary} · 이 디자인으로 시작하기
         </Text>
         <Pressable

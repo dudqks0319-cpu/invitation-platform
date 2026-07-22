@@ -9,7 +9,9 @@ import {
 } from "@/lib/remote-template-catalog";
 import {
   createInitialTemplateCatalogState,
+  publishRemoteTemplateCatalog,
   reduceTemplateCatalogState,
+  startTemplateCatalogInitialization,
   TEMPLATE_CATALOG_MAX_MANUAL_RETRIES,
   type TemplateCatalogSource
 } from "@/lib/template-catalog-state";
@@ -50,14 +52,19 @@ export function TemplateCatalogProvider({ children }: { children: ReactNode }) {
     lastRefreshAtRef.current = now;
     dispatch({ type: "refresh-started" });
     refreshInFlightRef.current = fetchRemoteTemplateCatalog()
-      .then(async (remote) => {
-        await writeCachedTemplateCatalog(remote);
-        if (mountedRef.current) {
-          dispatch({
-            type: "remote-ready",
-            templates: mergeTemplateCatalog(mobileTemplateGallery, remote.templates)
-          });
-        }
+      .then((remote) => {
+        publishRemoteTemplateCatalog({
+          remote,
+          onRemoteReady: (catalog) => {
+            if (mountedRef.current) {
+              dispatch({
+                type: "remote-ready",
+                templates: mergeTemplateCatalog(mobileTemplateGallery, catalog.templates)
+              });
+            }
+          },
+          persist: writeCachedTemplateCatalog
+        });
       })
       .catch(() => {
         if (mountedRef.current) dispatch({ type: "remote-failed" });
@@ -70,16 +77,18 @@ export function TemplateCatalogProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     mountedRef.current = true;
 
-    void (async () => {
-      const cached = await readCachedTemplateCatalog();
-      if (mountedRef.current && cached) {
-        dispatch({
-          type: "cache-ready",
-          templates: mergeTemplateCatalog(mobileTemplateGallery, cached.templates)
-        });
+    void startTemplateCatalogInitialization({
+      readCache: readCachedTemplateCatalog,
+      startRemote: () => refresh(true),
+      onCacheReady: (cached) => {
+        if (mountedRef.current) {
+          dispatch({
+            type: "cache-ready",
+            templates: mergeTemplateCatalog(mobileTemplateGallery, cached.templates)
+          });
+        }
       }
-      refresh(true);
-    })();
+    });
 
     const subscription = AppState.addEventListener("change", (state) => {
       if (state === "active") refresh();

@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { HeroSection } from "@/components/home/HeroSection";
 import { theme } from "@/components/ui/theme";
 import type { MobileTemplateGalleryItem } from "@/lib/template-gallery";
+import { createTemplateDiscoveryEntryKey } from "@/lib/template-discovery-entry";
 
 const HOME_TEMPLATE_OWNER_ID = "local-home-template-owner";
 
@@ -63,7 +64,8 @@ export default function HomeScreen() {
         <View style={{ paddingHorizontal: 18, paddingTop: 24 }}>
           <HeroSection
             onOpenCategory={(category) => {
-              router.push({ pathname: "/templates", params: { category } });
+              const entryKey = createTemplateDiscoveryEntryKey();
+              router.push({ pathname: "/templates", params: { category, entryKey } });
             }}
             onUseTemplate={(template) => {
               void handleUseTemplate(template);

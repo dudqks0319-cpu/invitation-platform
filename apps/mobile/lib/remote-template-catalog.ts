@@ -9,6 +9,7 @@ export const MOBILE_TEMPLATE_CATALOG_CACHE_KEY = "invitehub.mobile-template-cata
 export const MOBILE_TEMPLATE_CATALOG_MAX_ITEMS = 250;
 export const MOBILE_TEMPLATE_CATALOG_MAX_BYTES = 192 * 1024;
 export const MOBILE_TEMPLATE_CATALOG_TIMEOUT_MS = 4_000;
+export const MOBILE_TEMPLATE_CATALOG_STORAGE_TIMEOUT_MS = 750;
 
 const allowedCategories = new Set([
   "wedding",
@@ -26,6 +27,20 @@ const canonicalAssetOrigin = new URL(MOBILE_TEMPLATE_CATALOG_URL).origin;
 type Storage = Pick<typeof AsyncStorage, "getItem" | "setItem">;
 type Fetcher = typeof fetch;
 const defaultCatalogFetcher = expoFetch as unknown as Fetcher;
+
+async function settleStorageWithin<T>(operation: Promise<T>, fallback: T) {
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      operation,
+      new Promise<T>((resolve) => {
+        timeout = setTimeout(() => resolve(fallback), MOBILE_TEMPLATE_CATALOG_STORAGE_TIMEOUT_MS);
+      })
+    ]);
+  } finally {
+    if (timeout) clearTimeout(timeout);
+  }
+}
 
 export type RemoteMobileTemplateCatalog = {
   schemaVersion: 1;
@@ -208,7 +223,10 @@ async function readBoundedResponseText(response: Response) {
 
 export async function readCachedTemplateCatalog(storage: Storage = AsyncStorage) {
   try {
-    const cached = await storage.getItem(MOBILE_TEMPLATE_CATALOG_CACHE_KEY);
+    const cached = await settleStorageWithin(
+      storage.getItem(MOBILE_TEMPLATE_CATALOG_CACHE_KEY),
+      null
+    );
     return cached ? parseRemoteTemplateCatalogText(cached) : null;
   } catch {
     return null;
@@ -222,7 +240,10 @@ export async function writeCachedTemplateCatalog(
   const serialized = JSON.stringify(catalog);
   if (utf8ByteLength(serialized) > MOBILE_TEMPLATE_CATALOG_MAX_BYTES) return;
 
-  await storage.setItem(MOBILE_TEMPLATE_CATALOG_CACHE_KEY, serialized).catch(() => undefined);
+  await settleStorageWithin(
+    storage.setItem(MOBILE_TEMPLATE_CATALOG_CACHE_KEY, serialized),
+    undefined
+  ).catch(() => undefined);
 }
 
 export async function fetchRemoteTemplateCatalog(
