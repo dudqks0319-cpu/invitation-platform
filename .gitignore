@@ -26,7 +26,7 @@ logs/
 public
 !app/api/public/
 !app/api/public/**
-src
+/src
 .vercel
 .env*.local
 apps/mobile/dist/

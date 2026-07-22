@@ -1,4 +1,5 @@
 import { getTemplateDefaultTextPlacement, type TemplatePreset } from "@/lib/templates";
+import { resolveTemplateTextSafeArea, type TemplateTextSafeArea } from "@invitehub/shared";
 
 export const MOBILE_TEMPLATE_CATALOG_SCHEMA_VERSION = 1 as const;
 export const MOBILE_TEMPLATE_CATALOG_MAX_ITEMS = 250;
@@ -27,6 +28,7 @@ export type PublicMobileTemplateCatalogItem = {
   previewUrl: string;
   sampleTextOverlay: boolean;
   textPlacement: "top" | "center" | "bottom";
+  textSafeArea: TemplateTextSafeArea;
 };
 
 export type PublicMobileTemplateCatalog = {
@@ -86,6 +88,7 @@ function withCatalogVersion(previewUrl: string, catalogVersion: string) {
 export function toPublicMobileTemplate(template: TemplatePreset): PublicMobileTemplateCatalogItem | null {
   const previewUrl = resolveCanonicalAssetUrl(extractTemplateImageSource(template.html));
   if (!previewUrl || !supportedMobileCategories.has(template.category)) return null;
+  const textPlacement = getTemplateDefaultTextPlacement(template);
 
   return {
     id: template.id,
@@ -96,7 +99,12 @@ export function toPublicMobileTemplate(template: TemplatePreset): PublicMobileTe
     tags: template.tags.slice(0, 5),
     previewUrl,
     sampleTextOverlay: true,
-    textPlacement: getTemplateDefaultTextPlacement(template)
+    textPlacement,
+    textSafeArea: resolveTemplateTextSafeArea({
+      templateId: template.id,
+      category: template.category,
+      textPlacement
+    })
   };
 }
 

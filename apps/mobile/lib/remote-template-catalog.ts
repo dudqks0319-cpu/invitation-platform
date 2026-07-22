@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetch as expoFetch } from "expo/fetch";
+import { isTemplateTextSafeArea, resolveTemplateTextSafeArea } from "@invitehub/shared";
 import type { MobileTemplateGalleryItem } from "./template-gallery";
 
 export const MOBILE_TEMPLATE_CATALOG_URL =
@@ -95,10 +96,13 @@ function normalizeTemplate(value: unknown): MobileTemplateGalleryItem | null {
     !tags.every((tag) => isBoundedString(tag, 24)) ||
     !previewUrl ||
     typeof value.sampleTextOverlay !== "boolean" ||
-    (value.textPlacement !== undefined && !["top", "center", "bottom"].includes(String(value.textPlacement)))
+    (value.textPlacement !== undefined && !["top", "center", "bottom"].includes(String(value.textPlacement))) ||
+    (value.textSafeArea !== undefined && !isTemplateTextSafeArea(value.textSafeArea))
   ) {
     return null;
   }
+
+  const textPlacement = (value.textPlacement as "top" | "center" | "bottom" | undefined) ?? "center";
 
   return {
     id: value.id,
@@ -109,7 +113,12 @@ function normalizeTemplate(value: unknown): MobileTemplateGalleryItem | null {
     tags: [...tags],
     previewUrl,
     sampleTextOverlay: value.sampleTextOverlay,
-    textPlacement: (value.textPlacement as "top" | "center" | "bottom" | undefined) ?? "center",
+    textPlacement,
+    textSafeArea: value.textSafeArea ?? resolveTemplateTextSafeArea({
+      templateId: value.id,
+      category: value.category,
+      textPlacement
+    }),
     remote: true
   };
 }

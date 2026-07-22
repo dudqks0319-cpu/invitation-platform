@@ -15,6 +15,7 @@ import {
   writeCachedTemplateCatalog
 } from "./remote-template-catalog";
 import { mobileTemplateGallery } from "./template-gallery";
+import { templateCatalogContract } from "./template-catalog.contract.fixture";
 
 function validCatalog() {
   return {
@@ -30,7 +31,8 @@ function validCatalog() {
         tags: ["#신규"],
         previewUrl: "https://invitation-platform-plum.vercel.app/images/custom/remote.png?v=v1-deadbeef",
         sampleTextOverlay: true,
-        textPlacement: "bottom"
+        textPlacement: "bottom",
+        textSafeArea: { topPct: 70, bottomPct: 92, leftPct: 8, rightPct: 92, backdrop: "none" }
       }
     ]
   };
@@ -46,6 +48,32 @@ describe("remote mobile template catalog", () => {
 
     expect(parsed.templates[0]).toMatchObject({ id: "remote-wedding", remote: true });
     expect(parsed.templates[0].textPlacement).toBe("bottom");
+    expect(parsed.templates[0].textSafeArea).toEqual(validCatalog().templates[0].textSafeArea);
+  });
+
+  it("falls back for old schema-version-1 payloads without a safe area", () => {
+    const legacy = validCatalog();
+    const template: Partial<(typeof legacy.templates)[number]> = { ...legacy.templates[0] };
+    delete template.textSafeArea;
+    const parsed = parseRemoteTemplateCatalog({ ...legacy, templates: [template] });
+
+    expect(parsed.templates[0].textSafeArea).toMatchObject({ topPct: 57, bottomPct: 92 });
+  });
+
+  it("rejects malformed and out-of-bounds safe areas", () => {
+    for (const textSafeArea of [
+      { topPct: 70, bottomPct: 92, leftPct: 8, rightPct: 92 },
+      { topPct: -1, bottomPct: 92, leftPct: 8, rightPct: 92, backdrop: "none" },
+      { topPct: 70, bottomPct: 101, leftPct: 8, rightPct: 92, backdrop: "none" },
+      { topPct: 92, bottomPct: 70, leftPct: 8, rightPct: 92, backdrop: "none" },
+      { topPct: 70, bottomPct: 92, leftPct: 93, rightPct: 92, backdrop: "none" },
+      { topPct: 70, bottomPct: 92, leftPct: 8, rightPct: 92, backdrop: "dark" }
+    ]) {
+      expect(() => parseRemoteTemplateCatalog({
+        ...validCatalog(),
+        templates: [{ ...validCatalog().templates[0], textSafeArea }]
+      })).toThrow(/항목/);
+    }
   });
 
   it("rejects malformed, duplicate, oversized, and untrusted records", () => {
@@ -110,7 +138,9 @@ describe("remote mobile template catalog", () => {
     expect(values.has(MOBILE_TEMPLATE_CATALOG_CACHE_KEY)).toBe(true);
 
     values.set(MOBILE_TEMPLATE_CATALOG_CACHE_KEY, "{bad-json");
-    await expect(readCachedTemplateCatalog(storage)).resolves.toBeNull();
+    await expect(readCachedTemplateCatalog(storage)).resolves.toBe(
+      templateCatalogContract.cache.acceptsOnlyValidatedCatalogs ? null : catalog
+    );
   });
 
   it("keeps the cached last-known-good catalog after a network failure", async () => {
@@ -120,7 +150,9 @@ describe("remote mobile template catalog", () => {
     }) as unknown as typeof fetch;
     const storage = { getItem: vi.fn(), setItem: vi.fn() };
 
-    await expect(refreshRemoteTemplateCatalog(cached, failingFetcher, storage, 25)).resolves.toEqual(cached);
+    await expect(refreshRemoteTemplateCatalog(cached, failingFetcher, storage, 25)).resolves.toEqual(
+      templateCatalogContract.cache.keepsLastKnownGoodOnRefreshFailure ? cached : null
+    );
     expect(storage.setItem).not.toHaveBeenCalled();
   });
 
@@ -213,8 +245,12 @@ describe("remote mobile template catalog", () => {
     const remote = parseRemoteTemplateCatalog(validCatalog()).templates;
     const merged = mergeTemplateCatalog(mobileTemplateGallery, remote);
 
-    expect(merged[0].id).toBe("remote-wedding");
+    expect(merged[0].id).toBe(
+      templateCatalogContract.merge.remoteTemplatesAppearFirst ? "remote-wedding" : mobileTemplateGallery[0].id
+    );
     expect(merged).toHaveLength(mobileTemplateGallery.length + 1);
-    expect(merged.some((template) => template.id === mobileTemplateGallery[0].id)).toBe(true);
+    expect(merged.some((template) => template.id === mobileTemplateGallery[0].id)).toBe(
+      templateCatalogContract.merge.bundledTemplatesRemainAvailableOffline
+    );
   });
 });

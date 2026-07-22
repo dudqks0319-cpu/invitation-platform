@@ -7,6 +7,8 @@ import {
   toPublicMobileTemplate
 } from "@/lib/mobile-template-catalog";
 import { GET } from "@/app/api/mobile/v1/templates/route";
+import { isTemplateTextSafeArea } from "@invitehub/shared";
+import { templateCatalogContract } from "@/apps/mobile/lib/template-catalog.contract.fixture";
 
 describe("GET /api/mobile/v1/templates", () => {
   it("returns the canonical root catalog with versioned HTTPS assets", async () => {
@@ -19,6 +21,19 @@ describe("GET /api/mobile/v1/templates", () => {
     expect(payload.templates[0].previewUrl).toMatch(
       /^https:\/\/invitation-platform-plum\.vercel\.app\/images\/.+\?v=v1-[a-f0-9]{8}$/
     );
+    expect(payload.templates).toHaveLength(templateCatalogContract.remoteTemplateCount);
+    expect(payload.templates.every((template: { textSafeArea: unknown }) => isTemplateTextSafeArea(template.textSafeArea))).toBe(true);
+    expect(new Set(payload.templates.map((template: { id: string }) => template.id)).size).toBe(
+      templateCatalogContract.remoteTemplateCount
+    );
+    expect(
+      payload.templates.filter((template: Record<string, unknown>) =>
+        templateCatalogContract.remoteRequiredMetadata.some((field) => {
+          const value = template[field];
+          return value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0);
+        })
+      )
+    ).toEqual([]);
     expect(response.headers.get("Cache-Control")).toContain("stale-while-revalidate");
     expect(Number(response.headers.get("Content-Length"))).toBeLessThanOrEqual(MOBILE_TEMPLATE_CATALOG_MAX_BYTES);
   });
