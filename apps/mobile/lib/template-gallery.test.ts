@@ -8,6 +8,7 @@ import {
   getMobileTemplatesByCategory,
   homeTemplateSections,
   homeHeroTemplateIds,
+  latestGeneratedInvitationTemplates,
   mobileTemplateGallery
 } from "./template-gallery";
 
@@ -22,6 +23,15 @@ const barunsonCategoryAnimeCategories = [
   "graduation",
   "business"
 ];
+
+const latestGeneratedCategoryRanges = {
+  wedding: [25, 34],
+  dol: [16, 25],
+  birthday: [5, 14],
+  baby: [5, 14],
+  housewarming: [10, 19],
+  hwangap: [8, 17]
+} as const;
 
 describe("mobile template gallery", () => {
   it("keeps featured templates backed by real gallery entries", () => {
@@ -86,28 +96,30 @@ describe("mobile template gallery", () => {
       template.id.includes("barunson-anime")
     );
 
-    expect(barunsonAnimeTemplates).toHaveLength(30);
+    expect(barunsonAnimeTemplates).toHaveLength(90);
 
     for (const category of barunsonCategoryAnimeCategories) {
       const categoryTemplates = barunsonAnimeTemplates.filter((template) => template.category === category);
 
-      expect(categoryTemplates.map((template) => template.id)).toEqual(
-        category === "wedding"
-          ? [
-              "wedding-barunson-anime-01",
-              "wedding-barunson-anime-02",
-              "wedding-barunson-anime-03",
-              "wedding-barunson-anime-04",
-              "wedding-barunson-anime-09",
-              "wedding-barunson-anime-10"
-            ]
-          : [
-              `${category}-barunson-anime-01`,
-              `${category}-barunson-anime-02`,
-              `${category}-barunson-anime-03`
-            ]
+      expect(categoryTemplates).toHaveLength(
+        category === "wedding" ? 16 : category in latestGeneratedCategoryRanges ? 13 : 3
       );
       expect(categoryTemplates.every((template) => template.sampleTextOverlay)).toBe(true);
     }
+  });
+
+  it("places all 60 newly generated templates first in their categories", () => {
+    expect(latestGeneratedInvitationTemplates).toHaveLength(60);
+    expect(mobileTemplateGallery.slice(0, 60)).toEqual(latestGeneratedInvitationTemplates);
+
+    for (const [category, [start, end]] of Object.entries(latestGeneratedCategoryRanges)) {
+      const expectedIds = Array.from({ length: end - start + 1 }, (_, index) =>
+        `${category}-barunson-anime-${String(start + index).padStart(2, "0")}`
+      );
+
+      expect(getMobileTemplatesByCategory(category).slice(0, 10).map((template) => template.id)).toEqual(expectedIds);
+    }
+
+    expect(getFeaturedMobileTemplates().every((template) => latestGeneratedInvitationTemplates.includes(template))).toBe(true);
   });
 });

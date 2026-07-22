@@ -1,6 +1,7 @@
 /* eslint-disable jsx-a11y/alt-text */
 
 import { Image, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
 import { theme } from "@/components/ui/theme";
 import {
   getHomeHeroTemplates,
@@ -72,13 +73,18 @@ function TemplateCard({
           <Text style={{ color: "#fff", fontSize: 12, fontWeight: "800" }}>선택</Text>
         </View>
         {previewSource ? (
-          <Image
-            accessibilityIgnoresInvertColors
-            accessibilityLabel={`${template.name} 초대장 완성 예시`}
-            resizeMode="contain"
-            source={previewSource}
-            style={{ width: "100%", height: "100%", borderRadius: 6 }}
-          />
+          <View style={{ height: "100%", aspectRatio: 941 / 1672, borderRadius: 6, overflow: "hidden" }}>
+            <Image
+              accessibilityIgnoresInvertColors
+              accessibilityLabel={`${template.name} 초대장 완성 예시`}
+              resizeMode="cover"
+              source={previewSource}
+              style={{ width: "100%", height: "100%" }}
+            />
+            {template.sampleTextOverlay ? (
+              <TemplateSampleTextOverlay category={template.category} />
+            ) : null}
+          </View>
         ) : (
           <View
             style={{
@@ -113,6 +119,73 @@ function TemplateCard({
         </Text>
       </View>
     </Pressable>
+  );
+}
+
+function WeddingHeroInvitationOverlay() {
+  return (
+    <View pointerEvents="none" style={{ position: "absolute", inset: 0 }}>
+      <View
+        style={{
+          position: "absolute",
+          left: 14,
+          right: 14,
+          top: "6%",
+          alignItems: "center"
+        }}
+      >
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.62}
+          style={{ color: "rgba(116,82,62,0.78)", fontSize: 9, fontStyle: "italic", fontWeight: "700" }}
+        >
+          WE ARE GETTING MARRIED
+        </Text>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.62}
+          style={{
+            color: "rgba(58,50,44,0.82)",
+            fontSize: 10,
+            fontWeight: "800",
+            marginTop: 3,
+            textAlign: "center",
+            width: "100%"
+          }}
+        >
+          2026. 09. 20 · SUN 12:30
+        </Text>
+      </View>
+
+      <View
+        style={{
+          position: "absolute",
+          left: 12,
+          right: 12,
+          bottom: "7%",
+          alignItems: "center"
+        }}
+      >
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.62}
+          style={{ color: "#2B2927", fontSize: 15, fontWeight: "900", textAlign: "center", width: "100%" }}
+        >
+          이준서 ♥ 김은재
+        </Text>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+          style={{ color: "rgba(55,55,55,0.78)", fontSize: 9, fontWeight: "800", marginTop: 4, textAlign: "center", width: "100%" }}
+        >
+          라비에벨 가든홀
+        </Text>
+      </View>
+    </View>
   );
 }
 
@@ -169,26 +242,7 @@ function HeroStackCard({
           style={{ width: "100%", height: "100%" }}
         />
       ) : null}
-      <View
-        pointerEvents="none"
-        style={{
-          position: "absolute",
-          left: 10,
-          right: 10,
-          bottom: 10,
-          minHeight: isCenter ? 58 : 52,
-          borderRadius: 13,
-          backgroundColor: "rgba(255,255,255,0.94)",
-          justifyContent: "center",
-          paddingHorizontal: 12,
-          paddingVertical: 8
-        }}
-      >
-        <Text style={{ color: theme.colors.accent, fontSize: 10, fontWeight: "800" }}>결혼식</Text>
-        <Text numberOfLines={1} style={{ color: theme.colors.ink, fontSize: isCenter ? 14 : 12, fontWeight: "800", marginTop: 2 }}>
-          {template.name}
-        </Text>
-      </View>
+      <WeddingHeroInvitationOverlay />
     </Pressable>
   );
 }

@@ -26,8 +26,30 @@ const CENTERED_TEXT_TEMPLATE_IDS = new Set([
   "wedding-photo-hero"
 ]);
 
+const EXPANDED_TEXT_SAFE_TEMPLATE_RANGES = {
+  wedding: [25, 34],
+  dol: [16, 25],
+  birthday: [5, 14],
+  baby: [5, 14],
+  housewarming: [10, 19],
+  hwangap: [8, 17]
+} as const;
+
+function isExpandedTextSafeTemplate(templateId: string) {
+  const match = templateId.match(/^([a-z]+)-barunson-anime-(\d+)$/);
+  if (!match) {
+    return false;
+  }
+
+  const category = match[1] as keyof typeof EXPANDED_TEXT_SAFE_TEMPLATE_RANGES;
+  const range = EXPANDED_TEXT_SAFE_TEMPLATE_RANGES[category];
+  const sequence = Number(match[2]);
+
+  return Boolean(range && sequence >= range[0] && sequence <= range[1]);
+}
+
 export function getTemplateDefaultTextPlacement(template: TemplatePreset) {
-  if (CENTERED_TEXT_TEMPLATE_IDS.has(template.id)) {
+  if (CENTERED_TEXT_TEMPLATE_IDS.has(template.id) || isExpandedTextSafeTemplate(template.id)) {
     return "center" as const;
   }
 
@@ -39,6 +61,77 @@ function imageOnly(className: string, src: string) {
     <img class="tmpl-card-image" src="${src}" alt="" loading="lazy" decoding="async" />
   </div>`;
 }
+
+const expandedInvitationTemplateGroups = [
+  {
+    category: "wedding",
+    badge: "결혼식",
+    start: 25,
+    names: ["들꽃 아치", "청실홍실 새", "살구 튤립 정원", "자작나무 약속", "동백의 계절", "라벤더 산책", "달빛 목련", "시트러스 블룸", "분홍 코스모스", "푸른 리본 비둘기"],
+    desc: "꽃과 자연 모티프를 밝은 여백에 담은 세로형 모바일 청첩장",
+    tags: ["#애니", "#웨딩", "#여백"]
+  },
+  {
+    category: "dol",
+    badge: "돌잔치",
+    start: 16,
+    names: ["달토끼 첫별", "풍선 든 호랑이", "별이불 곰", "숲속 아기 사슴", "복숭아 오리", "구름 여우", "장구 치는 강아지", "선물 든 다람쥐", "무지개 양", "꽃모자 고양이"],
+    desc: "사랑스러운 동물 캐릭터와 넓은 문구 공간을 갖춘 돌잔치 초대장",
+    tags: ["#캐릭터", "#돌잔치", "#파스텔"]
+  },
+  {
+    category: "birthday",
+    badge: "생일파티",
+    start: 5,
+    names: ["북극곰 케이크", "펭귄 콘페티", "풍선 강아지", "선물 고양이", "컵케이크 토끼", "공룡 파티", "촛불 병아리", "바람개비 여우", "무지개 양", "별고래 축하"],
+    desc: "밝은 파티 소품과 캐릭터를 각기 다르게 구성한 생일 초대장",
+    tags: ["#생일", "#파티", "#캐릭터"]
+  },
+  {
+    category: "baby",
+    badge: "베이비샤워",
+    start: 5,
+    names: ["달토끼 모빌", "구름 양 모빌", "백조 요람", "별 코끼리", "풍선 곰", "꽃사슴", "잠든 여우달", "구름 고래", "목마 토끼", "무지개 오리"],
+    desc: "포근한 모빌과 아기 동물 모티프를 담은 베이비샤워 초대장",
+    tags: ["#베이비", "#모빌", "#포근함"]
+  },
+  {
+    category: "housewarming",
+    badge: "집들이",
+    start: 10,
+    names: ["빨간 지붕 화분집", "열쇠와 올리브", "차 한 잔의 집", "포근한 소파", "정원 대문", "상자 위 새싹", "저녁의 스탠드", "아침 창문", "작은 주방 선반", "우리 동네 집들"],
+    desc: "새집의 따뜻한 장면과 생활 소품을 담은 감성 집들이 초대장",
+    tags: ["#집들이", "#홈", "#따뜻함"]
+  },
+  {
+    category: "hwangap",
+    badge: "환갑잔치",
+    start: 8,
+    names: ["학과 붉은 모란", "장수 복숭아", "매화와 까치", "소나무 아침해", "연꽃 학정원", "동백 병풍", "산수 십장생", "대나무 부채", "국화 매듭", "감나무 새"],
+    desc: "현대적으로 다듬은 민화와 수묵 모티프를 담은 품격 있는 환갑 초대장",
+    tags: ["#환갑", "#전통", "#민화"]
+  }
+] as const;
+
+const expandedInvitationTemplates: TemplatePreset[] = expandedInvitationTemplateGroups.flatMap((group) =>
+  group.names.map((name, index) => {
+    const sequence = String(group.start + index).padStart(2, "0");
+    const id = `${group.category}-barunson-anime-${sequence}`;
+
+    return {
+      id,
+      category: group.category,
+      name,
+      badge: group.badge,
+      desc: group.desc,
+      tags: [...group.tags],
+      html: imageOnly(
+        `tmpl-character-card ${id}`,
+        `/images/custom/barunson-category-anime-2026/${group.category}-${sequence}.png`
+      )
+    };
+  })
+);
 
 const anime2026Templates: TemplatePreset[] = [
   {
@@ -125,6 +218,7 @@ const anime2026Templates: TemplatePreset[] = [
 ];
 
 const barunsonCategoryAnimeTemplates: TemplatePreset[] = [
+  ...expandedInvitationTemplates,
   {
     id: "wedding-barunson-anime-01",
     category: "wedding",
@@ -722,6 +816,16 @@ const barunsonCategoryAnimeTemplates: TemplatePreset[] = [
 ];
 
 const featuredWeddingTemplateIds = new Set<string>([
+  "wedding-barunson-anime-25",
+  "wedding-barunson-anime-26",
+  "wedding-barunson-anime-27",
+  "wedding-barunson-anime-28",
+  "wedding-barunson-anime-29",
+  "wedding-barunson-anime-30",
+  "wedding-barunson-anime-31",
+  "wedding-barunson-anime-32",
+  "wedding-barunson-anime-33",
+  "wedding-barunson-anime-34",
   "wedding-barunson-anime-04",
   "wedding-barunson-anime-05",
   "wedding-barunson-anime-06",
@@ -740,6 +844,16 @@ const featuredWeddingTemplateIds = new Set<string>([
 ]);
 
 const featuredDolTemplateIds = [
+  "dol-barunson-anime-16",
+  "dol-barunson-anime-17",
+  "dol-barunson-anime-18",
+  "dol-barunson-anime-19",
+  "dol-barunson-anime-20",
+  "dol-barunson-anime-21",
+  "dol-barunson-anime-22",
+  "dol-barunson-anime-23",
+  "dol-barunson-anime-24",
+  "dol-barunson-anime-25",
   "dol-barunson-anime-13",
   "dol-barunson-anime-04",
   "dol-barunson-anime-05",
@@ -753,6 +867,16 @@ const featuredDolTemplateIds = [
 ] as const;
 
 const featuredHousewarmingTemplateIds = [
+  "housewarming-barunson-anime-10",
+  "housewarming-barunson-anime-11",
+  "housewarming-barunson-anime-12",
+  "housewarming-barunson-anime-13",
+  "housewarming-barunson-anime-14",
+  "housewarming-barunson-anime-15",
+  "housewarming-barunson-anime-16",
+  "housewarming-barunson-anime-17",
+  "housewarming-barunson-anime-18",
+  "housewarming-barunson-anime-19",
   "housewarming-barunson-anime-04",
   "housewarming-barunson-anime-05",
   "housewarming-barunson-anime-06",
@@ -761,6 +885,16 @@ const featuredHousewarmingTemplateIds = [
 ] as const;
 
 const featuredHwangapTemplateIds = [
+  "hwangap-barunson-anime-08",
+  "hwangap-barunson-anime-09",
+  "hwangap-barunson-anime-10",
+  "hwangap-barunson-anime-11",
+  "hwangap-barunson-anime-12",
+  "hwangap-barunson-anime-13",
+  "hwangap-barunson-anime-14",
+  "hwangap-barunson-anime-15",
+  "hwangap-barunson-anime-16",
+  "hwangap-barunson-anime-17",
   "hwangap-barunson-anime-04",
   "hwangap-barunson-anime-05",
   "hwangap-barunson-anime-06"

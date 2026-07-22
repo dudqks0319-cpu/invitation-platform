@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 
-import { mobileTemplateGallery } from "../apps/mobile/lib/template-gallery";
+import { latestGeneratedInvitationTemplates, mobileTemplateGallery } from "../apps/mobile/lib/template-gallery";
 import { getTemplateDefaultTextPlacement, templates } from "@/lib/templates";
 
 const newWeddingTemplateIds = [
@@ -96,6 +96,20 @@ describe("template artwork mapping", () => {
       .map((template) => template.id);
 
     expect(missingWebTemplates).toEqual([]);
+  });
+
+  it("registers all 60 latest templates as centered editable canvases", () => {
+    expect(latestGeneratedInvitationTemplates).toHaveLength(60);
+
+    for (const mobileTemplate of latestGeneratedInvitationTemplates) {
+      const template = templates.find((item) => item.id === mobileTemplate.id);
+
+      expect(template, `${mobileTemplate.id} template should exist`).toBeDefined();
+      expect(template?.category).toBe(mobileTemplate.category);
+      expect(template?.html).toContain("/images/custom/barunson-category-anime-2026/");
+      expect(template?.html).toContain(".png");
+      expect(getTemplateDefaultTextPlacement(template!)).toBe("center");
+    }
   });
 
   it("registers new housewarming and milestone birthday anime templates with local png artwork", () => {

@@ -34,6 +34,70 @@ export const mobileTemplateCategories: MobileTemplateCategory[] = [
   { key: "business", label: "비즈니스", emoji: "📋" }
 ];
 
+const latestGeneratedTemplateGroups = [
+  {
+    category: "wedding",
+    badge: "결혼식",
+    start: 25,
+    names: ["들꽃 아치", "청실홍실 새", "살구 튤립 정원", "자작나무 약속", "동백의 계절", "라벤더 산책", "달빛 목련", "시트러스 블룸", "분홍 코스모스", "푸른 리본 비둘기"],
+    desc: "꽃과 자연 모티프를 밝은 여백에 담은 세로형 모바일 청첩장.",
+    tags: ["#애니", "#웨딩", "#여백"]
+  },
+  {
+    category: "dol",
+    badge: "돌잔치",
+    start: 16,
+    names: ["달토끼 첫별", "풍선 든 호랑이", "별이불 곰", "숲속 아기 사슴", "복숭아 오리", "구름 여우", "장구 치는 강아지", "선물 든 다람쥐", "무지개 양", "꽃모자 고양이"],
+    desc: "사랑스러운 동물 캐릭터와 넓은 문구 공간을 갖춘 돌잔치 초대장.",
+    tags: ["#캐릭터", "#돌잔치", "#파스텔"]
+  },
+  {
+    category: "birthday",
+    badge: "생일파티",
+    start: 5,
+    names: ["북극곰 케이크", "펭귄 콘페티", "풍선 강아지", "선물 고양이", "컵케이크 토끼", "공룡 파티", "촛불 병아리", "바람개비 여우", "무지개 양", "별고래 축하"],
+    desc: "밝은 파티 소품과 캐릭터를 각기 다르게 구성한 생일 초대장.",
+    tags: ["#생일", "#파티", "#캐릭터"]
+  },
+  {
+    category: "baby",
+    badge: "베이비샤워",
+    start: 5,
+    names: ["달토끼 모빌", "구름 양 모빌", "백조 요람", "별 코끼리", "풍선 곰", "꽃사슴", "잠든 여우달", "구름 고래", "목마 토끼", "무지개 오리"],
+    desc: "포근한 모빌과 아기 동물 모티프를 담은 베이비샤워 초대장.",
+    tags: ["#베이비", "#모빌", "#포근함"]
+  },
+  {
+    category: "housewarming",
+    badge: "집들이",
+    start: 10,
+    names: ["빨간 지붕 화분집", "열쇠와 올리브", "차 한 잔의 집", "포근한 소파", "정원 대문", "상자 위 새싹", "저녁의 스탠드", "아침 창문", "작은 주방 선반", "우리 동네 집들"],
+    desc: "새집의 따뜻한 장면과 생활 소품을 담은 감성 집들이 초대장.",
+    tags: ["#집들이", "#홈", "#따뜻함"]
+  },
+  {
+    category: "hwangap",
+    badge: "환갑잔치",
+    start: 8,
+    names: ["학과 붉은 모란", "장수 복숭아", "매화와 까치", "소나무 아침해", "연꽃 학정원", "동백 병풍", "산수 십장생", "대나무 부채", "국화 매듭", "감나무 새"],
+    desc: "현대적으로 다듬은 민화와 수묵 모티프를 담은 품격 있는 환갑 초대장.",
+    tags: ["#환갑", "#전통", "#민화"]
+  }
+] as const;
+
+export const latestGeneratedInvitationTemplates: MobileTemplateGalleryItem[] = latestGeneratedTemplateGroups.flatMap(
+  (group) =>
+    group.names.map((name, index) => ({
+      id: `${group.category}-barunson-anime-${String(group.start + index).padStart(2, "0")}`,
+      category: group.category,
+      name,
+      badge: group.badge,
+      desc: group.desc,
+      tags: [...group.tags],
+      sampleTextOverlay: true
+    }))
+);
+
 const barunsonCategoryAnimeTemplates: MobileTemplateGalleryItem[] = [
   { id: "wedding-barunson-anime-01", category: "wedding", name: "플로럴 세레모니 01", badge: "결혼식", desc: "애니메이션 일러스트와 넓은 여백을 살린 세로형 모바일 청첩장.", tags: ["#애니", "#청첩장", "#세로형"], sampleTextOverlay: true },
   { id: "wedding-barunson-anime-02", category: "wedding", name: "플로럴 세레모니 02", badge: "결혼식", desc: "밝은 플라워 무드와 카드형 여백이 어울리는 모바일 웨딩 초대장.", tags: ["#플라워", "#웨딩", "#여백"], sampleTextOverlay: true },
@@ -68,6 +132,7 @@ const barunsonCategoryAnimeTemplates: MobileTemplateGalleryItem[] = [
 ];
 
 export const mobileTemplateGallery: MobileTemplateGalleryItem[] = [
+  ...latestGeneratedInvitationTemplates,
   { id: "wedding-classic", category: "wedding", name: "로즈 프레임", badge: "결혼식", desc: "로즈 가득한 보더 프레임 위에 정갈하게 올리는 클래식 웨딩 카드.", tags: ["#로즈", "#프레임", "#클래식"], previewPath: "/images/custom/wedding/wedding-01.jpeg" },
   { id: "wedding-modern", category: "wedding", name: "유칼립투스 아치", badge: "결혼식", desc: "은은한 보태니컬 아치가 둘러주는 산뜻하고 차분한 웨딩 카드.", tags: ["#보태니컬", "#그린", "#아치"], previewPath: "/images/custom/wedding/wedding-02.jpeg" },
   { id: "wedding-floral", category: "wedding", name: "미니멀 블룸", badge: "결혼식", desc: "여백이 넓은 미니멀 카드에 작은 꽃다발을 더한 단정한 초대장.", tags: ["#미니멀", "#화이트", "#블룸"], previewPath: "/images/custom/wedding/wedding-03.jpeg" },
@@ -132,16 +197,16 @@ export const mobileTemplateGallery: MobileTemplateGalleryItem[] = [
 ];
 
 export const featuredMobileTemplateIds = [
-  "wedding-rose-gold",
-  "wedding-nature",
-  "wedding-classic",
-  "wedding-modern",
-  "wedding-minimal",
-  "wedding-floral",
-  "wedding-photo-hero",
-  "wedding-green-arch",
-  "dol-nature",
-  "hwangap-floral"
+  "wedding-barunson-anime-25",
+  "wedding-barunson-anime-26",
+  "wedding-barunson-anime-27",
+  "wedding-barunson-anime-28",
+  "wedding-barunson-anime-29",
+  "wedding-barunson-anime-30",
+  "dol-barunson-anime-16",
+  "birthday-barunson-anime-05",
+  "housewarming-barunson-anime-10",
+  "hwangap-barunson-anime-08"
 ] as const;
 
 export const homeHeroTemplateIds = [
