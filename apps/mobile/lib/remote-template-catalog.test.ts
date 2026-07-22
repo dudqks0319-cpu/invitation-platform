@@ -17,7 +17,7 @@ import {
 import { mobileTemplateGallery } from "./template-gallery";
 import { templateCatalogContract } from "./template-catalog.contract.fixture";
 
-function validCatalog() {
+function validCatalog(templateOverrides: Record<string, unknown> = {}) {
   return {
     schemaVersion: 1,
     catalogVersion: "v1-deadbeef",
@@ -32,7 +32,8 @@ function validCatalog() {
         previewUrl: "https://invitation-platform-plum.vercel.app/images/custom/remote.png?v=v1-deadbeef",
         sampleTextOverlay: true,
         textPlacement: "bottom",
-        textSafeArea: { topPct: 70, bottomPct: 92, leftPct: 8, rightPct: 92, backdrop: "none" }
+        textSafeArea: { topPct: 70, bottomPct: 92, leftPct: 8, rightPct: 92, backdrop: "none" },
+        ...templateOverrides
       }
     ]
   };
@@ -241,14 +242,35 @@ describe("remote mobile template catalog", () => {
     expect(text).not.toHaveBeenCalled();
   });
 
-  it("merges remote updates first while retaining bundled offline fallbacks", () => {
-    const remote = parseRemoteTemplateCatalog(validCatalog()).templates;
+  it("uses the remote record exactly once when it replaces a bundled ID, while retaining offline fallbacks", () => {
+    const bundled = mobileTemplateGallery.find((template) => template.id === "wedding-classic");
+    if (!bundled) throw new Error("expected bundled template fixture");
+
+    const remote = parseRemoteTemplateCatalog(validCatalog({
+      id: bundled.id,
+      category: bundled.category,
+      name: "원격 로즈 프레임",
+      badge: "원격 결혼식",
+      desc: "원격 카탈로그가 번들 항목을 교체합니다.",
+      tags: ["#원격"],
+      previewUrl: "https://invitation-platform-plum.vercel.app/images/custom/remote-replacement.png?v=v1-deadbeef"
+    })).templates;
     const merged = mergeTemplateCatalog(mobileTemplateGallery, remote);
+    const replaced = merged.filter((template) => template.id === bundled.id);
 
     expect(merged[0].id).toBe(
-      templateCatalogContract.merge.remoteTemplatesAppearFirst ? "remote-wedding" : mobileTemplateGallery[0].id
+      templateCatalogContract.merge.remoteTemplatesAppearFirst ? bundled.id : mobileTemplateGallery[0].id
     );
-    expect(merged).toHaveLength(mobileTemplateGallery.length + 1);
+    expect(replaced).toHaveLength(1);
+    expect(replaced[0]).toMatchObject({
+      id: bundled.id,
+      name: "원격 로즈 프레임",
+      badge: "원격 결혼식",
+      tags: ["#원격"],
+      previewUrl: "https://invitation-platform-plum.vercel.app/images/custom/remote-replacement.png?v=v1-deadbeef",
+      remote: true
+    });
+    expect(merged).toHaveLength(mobileTemplateGallery.length);
     expect(merged.some((template) => template.id === mobileTemplateGallery[0].id)).toBe(
       templateCatalogContract.merge.bundledTemplatesRemainAvailableOffline
     );

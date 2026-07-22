@@ -13,6 +13,7 @@ import { getDraftOwnerId } from "@/lib/auth-access";
 import { createAndPersistDraft } from "@/lib/drafts";
 import { mobileTemplateCategories, type MobileTemplateGalleryItem } from "@/lib/template-gallery";
 import { getTemplatePreviewSource } from "@/lib/template-image-source";
+import { selectTemplateAndOpenBuilder } from "@/lib/template-selection";
 
 
 export default function TemplatesScreen() {
@@ -36,12 +37,12 @@ export default function TemplatesScreen() {
   );
 
   async function handleUseTemplate(template: MobileTemplateGalleryItem) {
-    const draft = await createAndPersistDraft(draftOwnerId, {
-      templateId: template.id,
-      eventType: template.category,
-      title: `${template.badge} 초대장`
+    await selectTemplateAndOpenBuilder({
+      template,
+      draftOwnerId,
+      createAndPersistDraft,
+      router
     });
-    router.push({ pathname: "/builder/step1-basic", params: { localId: draft.localId } });
   }
 
   function handleBack() {
