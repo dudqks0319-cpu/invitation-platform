@@ -11,14 +11,19 @@ describe("template preview route", () => {
   it("resolves catalog IDs and records only a recent template ID without draft mutation on open", () => {
     expect(routeSource).toContain("findById(templateId)");
     expect(routeSource).toContain("recordRecentlyViewedTemplate(template.id)");
+    expect(routeSource).toContain("getDraftOwnerId(user)");
+    expect(routeSource).toContain("inspectDraftsForTemplatePreview(ownerId)");
+    expect(routeSource).toContain("isValidTemplatePreviewIntentKey(previewIntentKey)");
+    expect(routeSource).not.toContain("listDrafts");
     expect(routeSource).not.toMatch(/useEffect[\s\S]{0,500}createAndPersistDraft/);
   });
 
   it("shows the intentional CTA, busy state, failure retry, list return, and explicit existing-draft choices", () => {
     expect(routeSource).toContain("이 디자인으로 시작하기");
     expect(routeSource).toContain("초대장을 만드는 중");
-    expect(routeSource).toContain("accessibilityState={{ busy: isCreating, disabled: isCreating }}");
+    expect(routeSource).toContain("accessibilityState={actionAccessibility.accessibilityState}");
     expect(routeSource).toContain("다시 시도");
+    expect(routeSource).toContain("다시 확인");
     expect(routeSource).toContain("디자인 목록으로 돌아가기");
     expect(routeSource).toContain("이어서 편집");
     expect(routeSource).toContain("새로 시작");

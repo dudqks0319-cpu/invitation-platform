@@ -128,7 +128,7 @@ describe("intentional draft creation", () => {
     const navigate = vi.fn();
     const controller = createTemplatePreviewDraftController({ createDraft, navigate });
 
-    controller.resume(existing.localId);
+    await controller.resume(existing.localId);
     expect(createDraft).not.toHaveBeenCalled();
     expect(navigate).toHaveBeenCalledWith("existing-1");
 
@@ -136,5 +136,43 @@ describe("intentional draft creation", () => {
     await freshController.start({ id: "wedding-classic", category: "wedding", badge: "결혼식" });
     expect(createDraft).toHaveBeenCalledTimes(1);
     expect(createDraft).not.toHaveBeenCalledWith(expect.objectContaining({ localId: "existing-1" }));
+  });
+
+  it("can resume from failed state and reports success only after navigation succeeds", async () => {
+    const createDraft = vi.fn().mockRejectedValueOnce(new Error("create failed"));
+    const navigate = vi.fn()
+      .mockImplementationOnce(() => {
+        throw new Error("navigation failed");
+      })
+      .mockImplementationOnce(() => undefined);
+    const controller = createTemplatePreviewDraftController({ createDraft, navigate });
+
+    await expect(controller.start({ id: "wedding-classic", category: "wedding", badge: "결혼식" })).rejects.toThrow();
+    await expect(controller.resume("existing-draft")).rejects.toThrow("navigation failed");
+    expect(controller.getState().status).toBe("failed");
+    expect(controller.getResumeLocalId()).toBe("existing-draft");
+
+    await controller.retry();
+    expect(controller.getState()).toEqual({ status: "success", error: null });
+    expect(navigate).toHaveBeenCalledTimes(2);
+    expect(navigate).toHaveBeenLastCalledWith("existing-draft");
+    expect(createDraft).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not navigate an old owner's draft after its action controller unmounts", async () => {
+    let resolveDraft!: (draft: { localId: string }) => void;
+    const createDraft = vi.fn(() => new Promise<{ localId: string }>((resolve) => {
+      resolveDraft = resolve;
+    }));
+    const navigate = vi.fn();
+    const controller = createTemplatePreviewDraftController({ createDraft, navigate });
+    const pending = controller.start({ id: "wedding-classic", category: "wedding", badge: "결혼식" });
+
+    controller.deactivate();
+    resolveDraft({ localId: "account-a-draft" });
+    await pending;
+
+    expect(createDraft).toHaveBeenCalledTimes(1);
+    expect(navigate).not.toHaveBeenCalled();
   });
 });

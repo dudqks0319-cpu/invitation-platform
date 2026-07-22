@@ -140,12 +140,14 @@ export function createTemplatePreviewDraftController({
   navigate
 }: {
   createDraft: (template: SelectableTemplate) => Promise<{ localId: string }>;
-  navigate: (localId: string) => void;
+  navigate: (localId: string) => void | Promise<void>;
 }) {
   let state: CreationState = { status: "idle", error: null };
   let selection: SelectableTemplate | null = null;
   let inFlight: Promise<void> | null = null;
   let persistedDraftId: string | null = null;
+  let resumeLocalId: string | null = null;
+  let active = true;
 
   const start = (template: SelectableTemplate): Promise<void> => {
     if (inFlight) return inFlight;
@@ -158,7 +160,12 @@ export function createTemplatePreviewDraftController({
     inFlight = creation
       .then((draft) => {
         persistedDraftId = draft.localId;
-        navigate(draft.localId);
+        resumeLocalId = draft.localId;
+        if (!active) return;
+        return navigate(draft.localId);
+      })
+      .then(() => {
+        resumeLocalId = null;
         state = { status: "success", error: null };
       })
       .catch((error: unknown) => {
@@ -171,19 +178,45 @@ export function createTemplatePreviewDraftController({
     return inFlight;
   };
 
+  const resume = (localId: string): Promise<void> => {
+    if (inFlight) return inFlight;
+    if (state.status === "success") return Promise.resolve();
+    resumeLocalId = localId;
+    state = { status: "creating", error: null };
+    inFlight = Promise.resolve()
+      .then(() => {
+        if (!active) return;
+        return navigate(localId);
+      })
+      .then(() => {
+        resumeLocalId = null;
+        state = { status: "success", error: null };
+      })
+      .catch((error: unknown) => {
+        state = { status: "failed", error: "초안 편집 화면을 열지 못했어요. 다시 시도해 주세요." };
+        throw error;
+      })
+      .finally(() => {
+        inFlight = null;
+      });
+    return inFlight;
+  };
+
   return {
     start,
     retry() {
-      if (!selection || state.status !== "failed") return Promise.resolve();
+      if (state.status !== "failed") return Promise.resolve();
+      if (resumeLocalId) return resume(resumeLocalId);
+      if (!selection) return Promise.resolve();
       return start(selection);
     },
-    resume(localId: string) {
-      if (state.status !== "idle") return;
-      state = { status: "success", error: null };
-      navigate(localId);
-    },
+    resume,
     getState: () => state,
-    getSelection: () => selection
+    getSelection: () => selection,
+    getResumeLocalId: () => resumeLocalId,
+    deactivate() {
+      active = false;
+    }
   };
 }
 

@@ -5,42 +5,163 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { InvitationPreviewCard } from "@/components/invitation/InvitationPreviewCard";
 import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
 import { theme } from "@/components/ui/theme";
+import { useAuth } from "@/hooks/useAuth";
 import { useTemplateCatalog } from "@/hooks/useTemplateCatalog";
-import { createAndPersistDraft, listDrafts, type MobileInvitationDraft } from "@/lib/drafts";
+import { getDraftOwnerId } from "@/lib/auth-access";
+import { createOrReuseTemplatePreviewDraft, inspectDraftsForTemplatePreview } from "@/lib/drafts";
 import { getTemplatePreviewSource } from "@/lib/template-image-source";
+import type { MobileTemplateGalleryItem } from "@/lib/template-gallery";
+import { isValidTemplatePreviewIntentKey } from "@/lib/template-discovery-navigation";
 import {
   createTemplatePreviewDraftController,
   createTemplatePreviewPayload,
-  findRecoverableTemplateDraft,
-  getTemplatePreviewExample,
-  TEMPLATE_PREVIEW_OWNER_ID
+  getTemplatePreviewExample
 } from "@/lib/template-preview-flow";
+import {
+  getTemplatePreviewActionAccessibility,
+  getTemplatePreviewGate,
+  shouldInspectTemplatePreviewDrafts,
+  type TemplatePreviewDraftSummary,
+  type TemplatePreviewInspection
+} from "@/lib/template-preview-presenter";
 import { recordRecentlyViewedTemplate } from "@/lib/template-preview-recent";
 
 type CreationStatus = "idle" | "creating" | "failed" | "success";
 
-export default function TemplatePreviewScreen() {
+function TemplatePreviewActions({
+  ownerId,
+  previewIntentKey,
+  recoverableDraft,
+  template
+}: {
+  ownerId: string;
+  previewIntentKey: string;
+  recoverableDraft: TemplatePreviewDraftSummary | null;
+  template: MobileTemplateGalleryItem;
+}) {
   const router = useRouter();
-  const { templateId: templateIdParam } = useLocalSearchParams<{ templateId?: string | string[] }>();
-  const { findById } = useTemplateCatalog();
-  const templateId = Array.isArray(templateIdParam) ? templateIdParam[0] : templateIdParam;
-  const template = templateId ? findById(templateId) : null;
-  const example = template ? getTemplatePreviewExample(template.category) : null;
-  const payload = template ? createTemplatePreviewPayload(template.category, template.id) : null;
-  const [recoverableDraft, setRecoverableDraft] = useState<MobileInvitationDraft | null>(null);
-  const [checkingDraft, setCheckingDraft] = useState(true);
   const [creationStatus, setCreationStatus] = useState<CreationStatus>("idle");
   const [creationError, setCreationError] = useState<string | null>(null);
   const [controller] = useState(() => createTemplatePreviewDraftController({
-      createDraft: (selectedTemplate) => createAndPersistDraft(TEMPLATE_PREVIEW_OWNER_ID, {
-        templateId: selectedTemplate.id,
-        eventType: selectedTemplate.category,
-        title: `${selectedTemplate.badge} 초대장`
-      }),
-      navigate: (localId) => {
-        router.push({ pathname: "/builder/step1-basic", params: { localId } });
-      }
-    }));
+    createDraft: (selectedTemplate) => createOrReuseTemplatePreviewDraft(ownerId, {
+      templateId: selectedTemplate.id,
+      eventType: selectedTemplate.category,
+      title: `${selectedTemplate.badge} 초대장`,
+      previewIntentKey
+    }),
+    navigate: (localId) => {
+      router.push({ pathname: "/builder/step1-basic", params: { localId } });
+    }
+  }));
+  const isCreating = creationStatus === "creating";
+  const actionAccessibility = getTemplatePreviewActionAccessibility(creationStatus);
+
+  useEffect(() => () => {
+    controller.deactivate();
+  }, [controller]);
+
+  async function runAction(action: () => Promise<void>) {
+    if (isCreating || creationStatus === "success") return;
+    setCreationStatus("creating");
+    setCreationError(null);
+    try {
+      await action();
+      setCreationStatus(controller.getState().status);
+    } catch {
+      const state = controller.getState();
+      setCreationStatus(state.status);
+      setCreationError(state.error);
+    }
+  }
+
+  return (
+    <>
+      {recoverableDraft ? (
+        <View style={{ borderRadius: theme.radius.lg, borderWidth: 1, borderColor: theme.colors.primary, backgroundColor: theme.colors.primaryLight, padding: 18, gap: 12 }}>
+          <Text style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "800" }}>편집 중인 초안이 있어요</Text>
+          <Text style={{ color: theme.colors.muted, fontSize: 14, lineHeight: 22 }}>
+            이어서 편집하면 기존 내용을 그대로 열고, 새로 시작하면 기존 초안을 덮어쓰지 않고 이 디자인으로 별도 초안을 만듭니다.
+          </Text>
+          <Text style={{ color: theme.colors.textLight, fontSize: 12, lineHeight: 18 }}>
+            로그인한 계정의 초안만 확인합니다. 로그인 전 로컬 초안은 계정으로 자동 이전하지 않습니다.
+          </Text>
+          <View style={{ gap: 10 }}>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={actionAccessibility.accessibilityState}
+              disabled={isCreating}
+              onPress={() => void runAction(() => controller.resume(recoverableDraft.localId))}
+              style={{ minHeight: 48, borderRadius: theme.radius.pill, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.primary, alignItems: "center", justifyContent: "center", opacity: isCreating ? 0.64 : 1 }}
+            >
+              <Text style={{ color: theme.colors.primaryDark, fontSize: 15, fontWeight: "800" }}>이어서 편집</Text>
+            </Pressable>
+            <Pressable
+              accessibilityRole="button"
+              accessibilityState={actionAccessibility.accessibilityState}
+              disabled={isCreating}
+              onPress={() => void runAction(() => controller.start(template))}
+              style={{ minHeight: 48, borderRadius: theme.radius.pill, backgroundColor: theme.colors.primary, alignItems: "center", justifyContent: "center", opacity: isCreating ? 0.64 : 1 }}
+            >
+              <Text style={{ color: "#fff", fontSize: 15, fontWeight: "800" }}>{isCreating ? "초대장을 만드는 중" : "새로 시작"}</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityState={actionAccessibility.accessibilityState}
+          disabled={isCreating}
+          onPress={() => void runAction(() => controller.start(template))}
+          style={{ minHeight: 54, borderRadius: theme.radius.pill, backgroundColor: theme.colors.primary, alignItems: "center", justifyContent: "center", opacity: isCreating ? 0.64 : 1, ...theme.shadow.heroButton }}
+        >
+          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "900" }}>{isCreating ? "초대장을 만드는 중" : "이 디자인으로 시작하기"}</Text>
+        </Pressable>
+      )}
+
+      {creationStatus === "failed" ? (
+        <View accessibilityLiveRegion={actionAccessibility.errorLiveRegion} style={{ borderRadius: theme.radius.md, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, padding: 16, gap: 10 }}>
+          <Text style={{ color: theme.colors.ink, fontSize: 14, fontWeight: "800" }}>{creationError}</Text>
+          <Pressable accessibilityRole="button" onPress={() => void runAction(() => controller.retry())} style={{ minHeight: 44, justifyContent: "center" }}>
+            <Text style={{ color: theme.colors.primaryDark, fontSize: 14, fontWeight: "800" }}>다시 시도</Text>
+          </Pressable>
+          <Pressable accessibilityRole="button" onPress={() => router.dismissTo("/templates")} style={{ minHeight: 44, justifyContent: "center" }}>
+            <Text style={{ color: theme.colors.muted, fontSize: 14, fontWeight: "800" }}>디자인 목록으로 돌아가기</Text>
+          </Pressable>
+        </View>
+      ) : null}
+    </>
+  );
+}
+
+export default function TemplatePreviewScreen() {
+  const router = useRouter();
+  const { status: authStatus, user } = useAuth();
+  const { templateId: templateIdParam, previewIntentKey: previewIntentKeyParam } = useLocalSearchParams<{
+    templateId?: string | string[];
+    previewIntentKey?: string | string[];
+  }>();
+  const { findById } = useTemplateCatalog();
+  const templateId = Array.isArray(templateIdParam) ? templateIdParam[0] : templateIdParam;
+  const previewIntentKey = Array.isArray(previewIntentKeyParam) ? previewIntentKeyParam[0] : previewIntentKeyParam;
+  const hasValidIntent = isValidTemplatePreviewIntentKey(previewIntentKey);
+  const ownerId = getDraftOwnerId(user);
+  const template = templateId ? findById(templateId) : null;
+  const example = template ? getTemplatePreviewExample(template.category) : null;
+  const payload = template ? createTemplatePreviewPayload(template.category, template.id) : null;
+  const [inspection, setInspection] = useState<TemplatePreviewInspection>({
+    status: "idle",
+    ownerId: null,
+    drafts: [],
+    error: null
+  });
+  const [inspectionAttempt, setInspectionAttempt] = useState(0);
+  const gate = getTemplatePreviewGate({
+    authStatus,
+    ownerId,
+    hasTemplate: Boolean(template),
+    hasValidIntent,
+    inspection
+  });
 
   useEffect(() => {
     if (!template) return;
@@ -48,23 +169,19 @@ export default function TemplatePreviewScreen() {
   }, [template]);
 
   useEffect(() => {
+    if (!shouldInspectTemplatePreviewDrafts({ authStatus, hasTemplate: Boolean(template), hasValidIntent })) return;
     let active = true;
-    listDrafts()
+    inspectDraftsForTemplatePreview(ownerId)
       .then((drafts) => {
-        if (active) {
-          setRecoverableDraft(findRecoverableTemplateDraft(drafts, TEMPLATE_PREVIEW_OWNER_ID));
-        }
+        if (active) setInspection({ status: "ready", ownerId, drafts, error: null });
       })
       .catch(() => {
-        if (active) setRecoverableDraft(null);
-      })
-      .finally(() => {
-        if (active) setCheckingDraft(false);
+        if (active) setInspection({ status: "error", ownerId, drafts: [], error: "초안 저장소를 확인하지 못했어요." });
       });
     return () => {
       active = false;
     };
-  }, [template?.id]);
+  }, [authStatus, hasValidIntent, inspectionAttempt, ownerId, template]);
 
   function returnToList() {
     if (router.canGoBack()) {
@@ -74,39 +191,16 @@ export default function TemplatePreviewScreen() {
     router.replace("/templates");
   }
 
-  function returnToTemplateList() {
-    router.dismissTo("/templates");
+  function retryInspection() {
+    setInspection({ status: "idle", ownerId: null, drafts: [], error: null });
+    setInspectionAttempt((attempt) => attempt + 1);
   }
 
-  async function startNewDraft(isRetry = false) {
-    if (!template || creationStatus === "creating" || creationStatus === "success") return;
-    setCreationStatus("creating");
-    setCreationError(null);
-    try {
-      if (isRetry) {
-        await controller.retry();
-      } else {
-        await controller.start(template);
-      }
-      setCreationStatus(controller.getState().status);
-    } catch {
-      const state = controller.getState();
-      setCreationStatus(state.status);
-      setCreationError(state.error);
-    }
-  }
-
-  function resumeDraft() {
-    if (!recoverableDraft) return;
-    controller.resume(recoverableDraft.localId);
-    setCreationStatus(controller.getState().status);
-  }
-
-  if (!template || !example || !payload) {
+  if (!template || !example || !payload || !hasValidIntent) {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background, padding: 24, justifyContent: "center", gap: 16 }}>
         <Text accessibilityRole="header" style={{ color: theme.colors.ink, fontSize: 22, fontWeight: "800", textAlign: "center" }}>
-          디자인을 찾을 수 없어요
+          {template ? "미리보기 시작 정보를 확인할 수 없어요" : "디자인을 찾을 수 없어요"}
         </Text>
         <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 23, textAlign: "center" }}>
           안전한 디자인 목록에서 다시 선택해 주세요.
@@ -123,8 +217,6 @@ export default function TemplatePreviewScreen() {
   }
 
   const previewSource = getTemplatePreviewSource(template);
-  const isCreating = creationStatus === "creating";
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 48, gap: 22 }} showsVerticalScrollIndicator={false}>
@@ -189,58 +281,30 @@ export default function TemplatePreviewScreen() {
           ))}
         </View>
 
-        {checkingDraft ? (
+        {gate.status === "auth-loading" || gate.status === "checking" ? (
           <View accessibilityLiveRegion="polite" style={{ minHeight: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 }}>
             <ActivityIndicator color={theme.colors.primaryDark} size="small" />
-            <Text style={{ color: theme.colors.muted, fontSize: 14 }}>기존 초안 확인 중</Text>
+            <Text style={{ color: theme.colors.muted, fontSize: 14 }}>{gate.message}</Text>
           </View>
-        ) : recoverableDraft ? (
-          <View style={{ borderRadius: theme.radius.lg, borderWidth: 1, borderColor: theme.colors.primary, backgroundColor: theme.colors.primaryLight, padding: 18, gap: 12 }}>
-            <Text style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "800" }}>편집 중인 초안이 있어요</Text>
-            <Text style={{ color: theme.colors.muted, fontSize: 14, lineHeight: 22 }}>
-              이어서 편집하면 기존 내용을 그대로 열고, 새로 시작하면 기존 초안을 덮어쓰지 않고 이 디자인으로 별도 초안을 만듭니다.
-            </Text>
-            <View style={{ gap: 10 }}>
-              <Pressable
-                accessibilityRole="button"
-                onPress={resumeDraft}
-                style={{ minHeight: 48, borderRadius: theme.radius.pill, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.primary, alignItems: "center", justifyContent: "center" }}
-              >
-                <Text style={{ color: theme.colors.primaryDark, fontSize: 15, fontWeight: "800" }}>이어서 편집</Text>
-              </Pressable>
-              <Pressable
-                accessibilityRole="button"
-                accessibilityState={{ busy: isCreating, disabled: isCreating }}
-                disabled={isCreating}
-                onPress={() => void startNewDraft()}
-                style={{ minHeight: 48, borderRadius: theme.radius.pill, backgroundColor: theme.colors.primary, alignItems: "center", justifyContent: "center", opacity: isCreating ? 0.64 : 1 }}
-              >
-                <Text style={{ color: "#fff", fontSize: 15, fontWeight: "800" }}>{isCreating ? "초대장을 만드는 중" : "새로 시작"}</Text>
-              </Pressable>
-            </View>
-          </View>
-        ) : (
-          <Pressable
-            accessibilityRole="button"
-            accessibilityState={{ busy: isCreating, disabled: isCreating }}
-            disabled={isCreating}
-            onPress={() => void startNewDraft()}
-            style={{ minHeight: 54, borderRadius: theme.radius.pill, backgroundColor: theme.colors.primary, alignItems: "center", justifyContent: "center", opacity: isCreating ? 0.64 : 1, ...theme.shadow.heroButton }}
-          >
-            <Text style={{ color: "#fff", fontSize: 16, fontWeight: "900" }}>{isCreating ? "초대장을 만드는 중" : "이 디자인으로 시작하기"}</Text>
-          </Pressable>
-        )}
-
-        {creationStatus === "failed" ? (
+        ) : gate.status === "load-error" ? (
           <View accessibilityLiveRegion="assertive" style={{ borderRadius: theme.radius.md, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, padding: 16, gap: 10 }}>
-            <Text style={{ color: theme.colors.ink, fontSize: 14, fontWeight: "800" }}>{creationError}</Text>
-            <Pressable accessibilityRole="button" onPress={() => void startNewDraft(true)} style={{ minHeight: 44, justifyContent: "center" }}>
-              <Text style={{ color: theme.colors.primaryDark, fontSize: 14, fontWeight: "800" }}>다시 시도</Text>
+            <Text style={{ color: theme.colors.ink, fontSize: 14, fontWeight: "800" }}>{gate.message}</Text>
+            <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 20 }}>안전을 위해 초안을 확인하기 전에는 새 초대장을 만들거나 기존 초안을 열 수 없어요.</Text>
+            <Pressable accessibilityRole="button" onPress={retryInspection} style={{ minHeight: 44, justifyContent: "center" }}>
+              <Text style={{ color: theme.colors.primaryDark, fontSize: 14, fontWeight: "800" }}>다시 확인</Text>
             </Pressable>
-            <Pressable accessibilityRole="button" onPress={returnToTemplateList} style={{ minHeight: 44, justifyContent: "center" }}>
+            <Pressable accessibilityRole="button" onPress={() => router.dismissTo("/templates")} style={{ minHeight: 44, justifyContent: "center" }}>
               <Text style={{ color: theme.colors.muted, fontSize: 14, fontWeight: "800" }}>디자인 목록으로 돌아가기</Text>
             </Pressable>
           </View>
+        ) : gate.status === "ready" && previewIntentKey ? (
+          <TemplatePreviewActions
+            key={`${ownerId}:${previewIntentKey}`}
+            ownerId={ownerId}
+            previewIntentKey={previewIntentKey}
+            recoverableDraft={gate.recoverableDraft}
+            template={template}
+          />
         ) : null}
       </ScrollView>
     </SafeAreaView>

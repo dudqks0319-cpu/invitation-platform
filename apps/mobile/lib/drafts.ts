@@ -5,6 +5,7 @@ import {
   type InvitationDraft,
   type PendingPhotoUpload
 } from "./invitation-shared";
+import { isValidTemplatePreviewIntentKey } from "./template-discovery-navigation";
 
 export type MobileInvitationDraft = InvitationDraft & {
   sourcePayload?: Record<string, unknown>;
@@ -15,9 +16,47 @@ const CORRUPT_DRAFT_STORAGE_PREFIX = `${DRAFT_STORAGE_KEY}:corrupt`;
 const PREVIEW_OWNER_ID = "local-preview-owner";
 
 type DraftMap = Record<string, MobileInvitationDraft>;
+const previewDraftInFlight = new Map<string, Promise<MobileInvitationDraft>>();
 
 function isDraftMap(value: unknown): value is DraftMap {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function isInspectableDraft(value: unknown): value is MobileInvitationDraft {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const draft = value as Partial<MobileInvitationDraft>;
+  const payload = draft.payload as Partial<MobileInvitationDraft["payload"]> | undefined;
+  return Boolean(
+    typeof draft.localId === "string" &&
+    typeof draft.localUpdatedAt === "string" &&
+    payload &&
+    typeof payload.ownerId === "string" &&
+    typeof payload.templateId === "string" &&
+    typeof payload.isPublished === "boolean"
+  );
+}
+
+async function readDraftMapForPreview(): Promise<DraftMap> {
+  let raw: string | null;
+  try {
+    raw = await AsyncStorage.getItem(DRAFT_STORAGE_KEY);
+  } catch {
+    throw new Error("초안 저장소를 확인하지 못했어요.");
+  }
+  if (!raw) return {};
+
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (
+      isDraftMap(parsed) &&
+      Object.entries(parsed).every(([key, draft]) => isInspectableDraft(draft) && draft.localId === key)
+    ) {
+      return parsed;
+    }
+  } catch {
+    // Preview inspection is strictly read-only and never quarantines corrupt data.
+  }
+  throw new Error("초안 저장소를 확인하지 못했어요.");
 }
 
 async function readDraftMap(): Promise<DraftMap> {
@@ -107,6 +146,13 @@ export async function listDrafts() {
   return Object.values(drafts).sort((a, b) => b.localUpdatedAt.localeCompare(a.localUpdatedAt));
 }
 
+export async function inspectDraftsForTemplatePreview(ownerId: string) {
+  const drafts = await readDraftMapForPreview();
+  return Object.values(drafts)
+    .filter((draft) => draft.payload.ownerId === ownerId && !draft.payload.isPublished)
+    .sort((a, b) => b.localUpdatedAt.localeCompare(a.localUpdatedAt));
+}
+
 export async function loadDraft(localId: string) {
   const drafts = await readDraftMap();
   return drafts[localId] ?? null;
@@ -166,6 +212,54 @@ export async function createAndPersistDraft(
   drafts[created.localId] = created;
   await writeDraftMap(drafts);
   return created;
+}
+
+type TemplatePreviewDraftInput = {
+  eventType: string;
+  templateId: string;
+  title: string;
+  previewIntentKey: string;
+};
+
+function assertTemplatePreviewDraftInput(ownerId: string, input: TemplatePreviewDraftInput) {
+  if (!ownerId || ownerId.length > 128 || /[\u0000-\u001f]/.test(ownerId)) {
+    throw new Error("초안 소유자를 확인할 수 없어요.");
+  }
+  if (!/^[a-z0-9-]{2,80}$/.test(input.templateId) || !isValidTemplatePreviewIntentKey(input.previewIntentKey)) {
+    throw new Error("미리보기 시작 정보를 확인할 수 없어요.");
+  }
+}
+
+async function createOrReuseTemplatePreviewDraftInner(ownerId: string, input: TemplatePreviewDraftInput) {
+  const drafts = await readDraftMapForPreview();
+  const existing = Object.values(drafts).find((draft) => (
+    draft.payload.ownerId === ownerId &&
+    draft.payload.templateId === input.templateId &&
+    draft.sourcePayload?.templatePreviewIntentKey === input.previewIntentKey
+  ));
+  if (existing) return existing;
+
+  const created = createSampleDraft(ownerId, undefined, input.eventType);
+  created.payload.templateId = input.templateId;
+  created.payload.eventType = input.eventType;
+  created.payload.eventData.type = input.eventType;
+  created.sourcePayload = { templatePreviewIntentKey: input.previewIntentKey };
+  drafts[created.localId] = created;
+  await writeDraftMap(drafts);
+  return created;
+}
+
+export function createOrReuseTemplatePreviewDraft(ownerId: string, input: TemplatePreviewDraftInput) {
+  assertTemplatePreviewDraftInput(ownerId, input);
+  const lockKey = `${ownerId}\u0000${input.templateId}\u0000${input.previewIntentKey}`;
+  const active = previewDraftInFlight.get(lockKey);
+  if (active) return active;
+
+  const operation = createOrReuseTemplatePreviewDraftInner(ownerId, input).finally(() => {
+    if (previewDraftInFlight.get(lockKey) === operation) previewDraftInFlight.delete(lockKey);
+  });
+  previewDraftInFlight.set(lockKey, operation);
+  return operation;
 }
 
 export async function deleteDraft(localId: string) {
