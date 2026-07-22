@@ -5,20 +5,14 @@ import { HeroSection } from "@/components/home/HeroSection";
 import { theme } from "@/components/ui/theme";
 import type { MobileTemplateGalleryItem } from "@/lib/template-gallery";
 import { createTemplateDiscoveryEntryKey } from "@/lib/template-discovery-entry";
-
-const HOME_TEMPLATE_OWNER_ID = "local-home-template-owner";
+import { createTemplatePreviewDestination } from "@/lib/template-discovery-navigation";
 
 export default function HomeScreen() {
   const router = useRouter();
 
-  async function handleUseTemplate(template: MobileTemplateGalleryItem) {
-    const { createAndPersistDraft } = await import("@/lib/drafts");
-    const draft = await createAndPersistDraft(HOME_TEMPLATE_OWNER_ID, {
-      templateId: template.id,
-      eventType: template.category,
-      title: `${template.badge} 초대장`
-    });
-    router.push({ pathname: "/builder/step1-basic", params: { localId: draft.localId } });
+  function handleOpenPreview(template: MobileTemplateGalleryItem) {
+    const destination = createTemplatePreviewDestination(template.id);
+    if (destination) router.push(destination);
   }
 
   return (
@@ -67,9 +61,7 @@ export default function HomeScreen() {
               const entryKey = createTemplateDiscoveryEntryKey();
               router.push({ pathname: "/templates", params: { category, entryKey } });
             }}
-            onUseTemplate={(template) => {
-              void handleUseTemplate(template);
-            }}
+            onOpenPreview={handleOpenPreview}
           />
         </View>
       </ScrollView>

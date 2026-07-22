@@ -13,26 +13,26 @@ import { getTemplatePreviewSource } from "@/lib/template-image-source";
 
 type HeroSectionProps = {
   onOpenCategory: (categoryKey: string) => void;
-  onUseTemplate: (template: MobileTemplateGalleryItem) => void;
+  onOpenPreview: (template: MobileTemplateGalleryItem) => void;
 };
 
 function TemplateCard({
   cardWidth,
-  onUseTemplate,
+  onOpenPreview,
   template
 }: {
   cardWidth: number;
-  onUseTemplate: (template: MobileTemplateGalleryItem) => void;
+  onOpenPreview: (template: MobileTemplateGalleryItem) => void;
   template: MobileTemplateGalleryItem;
 }) {
   const previewSource = getTemplatePreviewSource(template);
 
   return (
     <Pressable
-      accessibilityHint="선택하면 제작 페이지로 이동합니다."
-      accessibilityLabel={`${template.name} 디자인 선택`}
+      accessibilityHint="선택하면 예시 미리보기로 이동합니다."
+      accessibilityLabel={`${template.name} 디자인 미리보기`}
       accessibilityRole="button"
-      onPress={() => onUseTemplate(template)}
+      onPress={() => onOpenPreview(template)}
       style={{
         width: cardWidth,
         borderRadius: 8,
@@ -71,7 +71,7 @@ function TemplateCard({
             paddingHorizontal: 12
           }}
         >
-          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "800" }}>선택</Text>
+          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "800" }}>미리보기</Text>
         </View>
         {previewSource ? (
           <View style={{ height: "100%", aspectRatio: 941 / 1672, borderRadius: 6, overflow: "hidden" }}>
@@ -127,12 +127,12 @@ function TemplateCard({
 function HeroStackCard({
   position,
   stackWidth,
-  onUseTemplate,
+  onOpenPreview,
   template
 }: {
   position: "left" | "center" | "right";
   stackWidth: number;
-  onUseTemplate: (template: MobileTemplateGalleryItem) => void;
+  onOpenPreview: (template: MobileTemplateGalleryItem) => void;
   template: MobileTemplateGalleryItem;
 }) {
   const previewSource = getTemplatePreviewSource(template);
@@ -144,10 +144,10 @@ function HeroStackCard({
 
   return (
     <Pressable
-      accessibilityHint="선택하면 이 디자인으로 제작을 시작합니다."
-      accessibilityLabel={`${template.name} 메인 디자인 선택`}
+      accessibilityHint="선택하면 예시 미리보기로 이동합니다."
+      accessibilityLabel={`${template.name} 메인 디자인 미리보기`}
       accessibilityRole="button"
-      onPress={() => onUseTemplate(template)}
+      onPress={() => onOpenPreview(template)}
       style={{
         position: "absolute",
         left: horizontalOffset,
@@ -182,7 +182,7 @@ function HeroStackCard({
   );
 }
 
-export function HeroSection({ onOpenCategory, onUseTemplate }: HeroSectionProps) {
+export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps) {
   const { width } = useWindowDimensions();
   const { templates } = useTemplateCatalog();
   const cardWidth = Math.min(224, Math.max(176, width * 0.52));
@@ -246,7 +246,7 @@ export function HeroSection({ onOpenCategory, onUseTemplate }: HeroSectionProps)
           {heroTemplates.map((template, index) => (
             <HeroStackCard
               key={template.id}
-              onUseTemplate={onUseTemplate}
+              onOpenPreview={onOpenPreview}
               position={index === 0 ? "left" : index === 1 ? "center" : "right"}
               stackWidth={heroStackWidth}
               template={template}
@@ -308,7 +308,7 @@ export function HeroSection({ onOpenCategory, onUseTemplate }: HeroSectionProps)
               <TemplateCard
                 cardWidth={cardWidth}
                 key={template.id}
-                onUseTemplate={onUseTemplate}
+                onOpenPreview={onOpenPreview}
                 template={template}
               />
             ))}

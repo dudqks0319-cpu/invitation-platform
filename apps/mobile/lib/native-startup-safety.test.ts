@@ -23,7 +23,8 @@ describe("native startup safety", () => {
     expect(home).not.toContain('from "@/hooks/useAuth"');
     expect(home).not.toContain('from "@/lib/drafts"');
     expect(home).not.toContain('from "@/lib/auth-access"');
-    expect(home).toContain('await import("@/lib/drafts")');
+    expect(home).not.toContain('import("@/lib/drafts")');
+    expect(home).toContain("createTemplatePreviewDestination(template.id)");
   });
 
   it("builds React Native iOS from source to avoid duplicate prebuilt runtime classes", () => {
