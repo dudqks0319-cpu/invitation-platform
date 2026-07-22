@@ -2,12 +2,21 @@ updated_at: "2026-07-22T11:24:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
+project:
+  name: osamosam
+  release_workspace: "/Users/jyb-m3max/Desktop/codex/invitation-platform/.worktrees/osamosam-appstore-v103"
+phase: apple_processing
+version: "1.0.3"
+build_number: 60
+git_sha: "b7753375bd60632abb957ace82bf51ecc66d8787"
+branch: "agent/osamosam-appstore-v103"
 public:
   version: "1.0.2"
   released_at: "2026-06-29T06:55:38Z"
 candidate:
   version: "1.0.3"
   git_sha: "b7753375bd60632abb957ace82bf51ecc66d8787"
+  branch: "agent/osamosam-appstore-v103"
   native_local_build_number: 52
   eas_remote_build_number_before_increment: 59
   eas_build_number: 60
@@ -103,4 +112,39 @@ verification:
   ipa_profile_certificate_match: passed
   bundled_home_asset_hashes: passed
   app_store_connect_binary_upload: passed
-next_action: "Wait for Apple processing, confirm Build 60 in TestFlight, then run the required real-iPhone smoke test before selecting the build for App Review."
+local_checks:
+  tests: "241/241 passed"
+  lint: passed
+  typecheck: passed
+  signed_ipa: passed
+runtime_checks:
+  simulator_release_launch: passed
+  real_iphone_testflight: pending
+external_checks:
+  app_store_connect_upload: passed
+  apple_processing: pending
+  app_review: not_submitted
+security:
+  repository_credential_files_created: false
+  temporary_p12_files_deleted: true
+  temporary_keychains_destroyed: true
+  unresolved_critical_advisories: 1
+blockers:
+  - id: apple-processing
+    severity: P1
+    status: open
+    owner: release-owner
+    due: before-testflight-install
+  - id: dependency-advisories
+    severity: P1
+    status: open
+    owner: engineering-owner
+    due: before-app-review
+  - id: real-device-smoke
+    severity: P1
+    status: open
+    owner: release-owner
+    due: before-app-review-build-selection
+next_action:
+  summary: "Wait for Apple processing, confirm Build 60 in TestFlight, then run the required real-iPhone smoke test before selecting the build for App Review."
+  command: "open 'https://appstoreconnect.apple.com/apps/6763630299/testflight/ios'"
