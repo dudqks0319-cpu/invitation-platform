@@ -12,7 +12,10 @@ export type MobileTemplateGalleryItem = {
   desc: string;
   tags: string[];
   previewPath?: string;
+  previewUrl?: string;
   sampleTextOverlay?: boolean;
+  textPlacement?: "top" | "center" | "bottom";
+  remote?: boolean;
 };
 
 export type HomeTemplateSection = {
@@ -248,30 +251,40 @@ export const homeTemplateSections: HomeTemplateSection[] = [
   }
 ];
 
-export function getMobileTemplateById(templateId: string) {
-  return mobileTemplateGallery.find((template) => template.id === templateId) ?? null;
+export function getMobileTemplateById(templateId: string, gallery = mobileTemplateGallery) {
+  return gallery.find((template) => template.id === templateId) ?? null;
 }
 
-export function getMobileTemplatesByCategory(category: string) {
-  return mobileTemplateGallery.filter((template) => template.category === category);
+export function getMobileTemplatesByCategory(category: string, gallery = mobileTemplateGallery) {
+  return gallery.filter((template) => template.category === category);
 }
 
-export function getFeaturedMobileTemplates(limit = featuredMobileTemplateIds.length) {
+export function getFeaturedMobileTemplates(limit = featuredMobileTemplateIds.length, gallery = mobileTemplateGallery) {
   return featuredMobileTemplateIds
-    .map((templateId) => getMobileTemplateById(templateId))
+    .map((templateId) => getMobileTemplateById(templateId, gallery))
     .filter((template): template is MobileTemplateGalleryItem => Boolean(template))
     .slice(0, limit);
 }
 
-export function getHomeHeroTemplates() {
-  return homeHeroTemplateIds
-    .map((templateId) => getMobileTemplateById(templateId))
+export function getHomeHeroTemplates(gallery = mobileTemplateGallery) {
+  const preferredTemplates = homeHeroTemplateIds
+    .map((templateId) => getMobileTemplateById(templateId, gallery))
     .filter((template): template is MobileTemplateGalleryItem => Boolean(template));
+  const remoteWeddingTemplates = gallery.filter((template) => template.remote && template.category === "wedding");
+  const seen = new Set<string>();
+
+  return [...remoteWeddingTemplates, ...preferredTemplates]
+    .filter((template) => {
+      if (seen.has(template.id)) return false;
+      seen.add(template.id);
+      return true;
+    })
+    .slice(0, 3);
 }
 
-export function getHomeTemplateSections() {
+export function getHomeTemplateSections(gallery = mobileTemplateGallery) {
   return homeTemplateSections.map((section) => ({
     ...section,
-    templates: mobileTemplateGallery.filter((template) => section.categoryKeys.includes(template.category))
+    templates: gallery.filter((template) => section.categoryKeys.includes(template.category))
   }));
 }

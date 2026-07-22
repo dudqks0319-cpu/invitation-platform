@@ -7,27 +7,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Pill } from "@/components/ui/Pill";
 import { theme } from "@/components/ui/theme";
 import { useAuth } from "@/hooks/useAuth";
+import { useTemplateCatalog } from "@/hooks/useTemplateCatalog";
 import { getDraftOwnerId } from "@/lib/auth-access";
 import { createAndPersistDraft } from "@/lib/drafts";
-import { mobileTemplateCategories, mobileTemplateGallery, type MobileTemplateGalleryItem } from "@/lib/template-gallery";
-import { getInviteHubBaseUrl } from "@/lib/web-links";
-import { getBundledTemplatePreviewSource } from "@/lib/template-preview-source";
-
-function getTemplatePreviewUrl(template: MobileTemplateGalleryItem) {
-  if (!template.previewPath) return null;
-  if (template.previewPath.startsWith("http")) return template.previewPath;
-  return `${getInviteHubBaseUrl()}${template.previewPath}`;
-}
-
-function getTemplatePreviewSource(template: MobileTemplateGalleryItem) {
-  const bundledSource = getBundledTemplatePreviewSource(template.id);
-  if (bundledSource) {
-    return bundledSource;
-  }
-
-  const imageUrl = getTemplatePreviewUrl(template);
-  return imageUrl ? { uri: imageUrl } : null;
-}
+import { mobileTemplateCategories, type MobileTemplateGalleryItem } from "@/lib/template-gallery";
+import { getTemplatePreviewSource } from "@/lib/template-image-source";
 
 const templateSampleCopy = {
   wedding: {
@@ -107,9 +91,20 @@ const templateSampleSafeZones = {
   business: { top: "22%", bottom: "43%" }
 } as const;
 
-function TemplateSampleTextOverlay({ category }: { category: string }) {
+function TemplateSampleTextOverlay({
+  category,
+  textPlacement
+}: {
+  category: string;
+  textPlacement?: "top" | "center" | "bottom";
+}) {
   const copy = templateSampleCopy[category as keyof typeof templateSampleCopy] ?? templateSampleCopy.wedding;
-  const safeZone = templateSampleSafeZones[category as keyof typeof templateSampleSafeZones] ?? templateSampleSafeZones.wedding;
+  const categorySafeZone = templateSampleSafeZones[category as keyof typeof templateSampleSafeZones] ?? templateSampleSafeZones.wedding;
+  const safeZone = textPlacement === "top"
+    ? ({ top: "8%", bottom: "57%" } as const)
+    : textPlacement === "bottom"
+      ? ({ top: "57%", bottom: "8%" } as const)
+      : categorySafeZone;
 
   return (
     <View
@@ -213,6 +208,7 @@ export default function TemplatesScreen() {
   const router = useRouter();
   const { category: initialCategory } = useLocalSearchParams<{ category?: string }>();
   const { status, user } = useAuth();
+  const { templates } = useTemplateCatalog();
   const { width } = useWindowDimensions();
   const draftOwnerId = getDraftOwnerId(status === "authenticated" ? user : null);
   const [category, setCategory] = useState<string>(() => {
@@ -224,8 +220,8 @@ export default function TemplatesScreen() {
   const cardWidth = Math.max(148, Math.floor((width - 54) / 2));
 
   const filteredTemplates = useMemo(
-    () => mobileTemplateGallery.filter((template) => template.category === category),
-    [category]
+    () => templates.filter((template) => template.category === category),
+    [category, templates]
   );
 
   async function handleUseTemplate(template: MobileTemplateGalleryItem) {
@@ -342,7 +338,12 @@ export default function TemplatesScreen() {
                         style={{ width: "100%", height: "100%" }}
                         resizeMode="cover"
                       />
-                      {template.sampleTextOverlay ? <TemplateSampleTextOverlay category={template.category} /> : null}
+                      {template.sampleTextOverlay ? (
+                        <TemplateSampleTextOverlay
+                          category={template.category}
+                          textPlacement={template.textPlacement}
+                        />
+                      ) : null}
                     </View>
                   ) : (
                     <View

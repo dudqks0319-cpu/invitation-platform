@@ -1,10 +1,10 @@
 import { ImageBackground, Linking, Pressable, Text, View } from "react-native";
 import { theme } from "@/components/ui/theme";
+import { useTemplateCatalog } from "@/hooks/useTemplateCatalog";
 import { formatInviteDateTime } from "@/lib/date-time";
 import type { InvitationPayload } from "@/lib/invitation-shared";
 import { getInvitationMapLinks, type InvitationMapLinks } from "@/lib/map-links";
-import { mobileTemplateGallery } from "@/lib/template-gallery";
-import { getBundledTemplateCanvasSource } from "@/lib/template-preview-source";
+import { getTemplateCanvasSource } from "@/lib/template-image-source";
 
 type TemplateAccent = {
   background: string;
@@ -128,16 +128,22 @@ export function InvitationPreviewCard({
   fitToViewport?: boolean;
   payload: InvitationPayload;
 }) {
-  const selectedTemplate = mobileTemplateGallery.find((item) => item.id === payload.templateId);
+  const { findById } = useTemplateCatalog();
+  const selectedTemplate = findById(payload.templateId);
   const accent = templateAccents[selectedTemplate?.category ?? "wedding"] ?? templateAccents.wedding;
   const mapLinks = getInvitationMapLinks(payload);
-  const templateCanvasSource = getBundledTemplateCanvasSource(payload.templateId);
+  const templateCanvasSource = getTemplateCanvasSource(selectedTemplate);
   const displayDateTime = formatInviteDateTime(payload.eventDateTime) || payload.eventDateTime || "행사 일시를 입력해 주세요.";
   const groomName = payload.eventData.groom.name || "신랑";
   const brideName = payload.eventData.bride.name || "신부";
   const isWedding = (selectedTemplate?.category ?? payload.eventType) === "wedding";
   const primaryTitle = isWedding ? `${groomName}  ♡  ${brideName}` : payload.title || selectedTemplate?.badge || "초대합니다";
   const scaled = compact || fitToViewport;
+  const textBounds = selectedTemplate?.textPlacement === "top"
+    ? ({ top: "8%", bottom: "57%" } as const)
+    : selectedTemplate?.textPlacement === "bottom"
+      ? ({ top: "57%", bottom: "8%" } as const)
+      : ({ top: "25%", bottom: "20%" } as const);
 
   return (
     <View
@@ -173,8 +179,8 @@ export function InvitationPreviewCard({
             position: "absolute",
             left: scaled ? 42 : 50,
             right: scaled ? 42 : 50,
-            top: "25%",
-            bottom: "20%",
+            top: textBounds.top,
+            bottom: textBounds.bottom,
             alignItems: "center",
             justifyContent: "center",
             gap: scaled ? 9 : 12

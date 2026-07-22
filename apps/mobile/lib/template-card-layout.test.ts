@@ -17,8 +17,8 @@ describe("template card sample overlay", () => {
   });
 
   it("uses event-specific sample copy instead of wedding copy for every category", () => {
-    expect(sampleOverlaySource).toContain("function TemplateSampleTextOverlay({ category }");
-    expect(templatesScreenSource).toContain("<TemplateSampleTextOverlay category={template.category} />");
+    expect(sampleOverlaySource).toContain("export function TemplateSampleTextOverlay({");
+    expect(templatesScreenSource).toContain("textPlacement={template.textPlacement}");
 
     for (const category of [
       "wedding",
@@ -56,6 +56,6 @@ describe("template card sample overlay", () => {
 
   it("adds real invitation copy to the front wedding cards on home", () => {
     expect(heroSectionSource).toContain("template.sampleTextOverlay ? (");
-    expect(heroSectionSource).toContain("<TemplateSampleTextOverlay category={template.category} />");
+    expect(heroSectionSource).toContain("<TemplateSampleTextOverlay category={template.category} textPlacement={template.textPlacement} />");
   });
 });

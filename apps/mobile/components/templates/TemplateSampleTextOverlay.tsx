@@ -78,9 +78,20 @@ const templateSampleSafeZones = {
   business: { top: "22%", bottom: "43%" }
 } as const;
 
-export function TemplateSampleTextOverlay({ category }: { category: string }) {
+export function TemplateSampleTextOverlay({
+  category,
+  textPlacement
+}: {
+  category: string;
+  textPlacement?: "top" | "center" | "bottom";
+}) {
   const copy = templateSampleCopy[category as keyof typeof templateSampleCopy] ?? templateSampleCopy.wedding;
-  const safeZone = templateSampleSafeZones[category as keyof typeof templateSampleSafeZones] ?? templateSampleSafeZones.wedding;
+  const categorySafeZone = templateSampleSafeZones[category as keyof typeof templateSampleSafeZones] ?? templateSampleSafeZones.wedding;
+  const safeZone = textPlacement === "top"
+    ? ({ top: "8%", bottom: "57%" } as const)
+    : textPlacement === "bottom"
+      ? ({ top: "57%", bottom: "8%" } as const)
+      : categorySafeZone;
 
   return (
     <View

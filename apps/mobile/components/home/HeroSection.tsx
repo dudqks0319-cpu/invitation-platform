@@ -3,12 +3,13 @@
 import { Image, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
 import { theme } from "@/components/ui/theme";
+import { useTemplateCatalog } from "@/hooks/useTemplateCatalog";
 import {
   getHomeHeroTemplates,
   getHomeTemplateSections,
   type MobileTemplateGalleryItem
 } from "@/lib/template-gallery";
-import { getBundledTemplatePreviewSource } from "@/lib/template-preview-source";
+import { getTemplatePreviewSource } from "@/lib/template-image-source";
 
 type HeroSectionProps = {
   onOpenCategory: (categoryKey: string) => void;
@@ -24,7 +25,7 @@ function TemplateCard({
   onUseTemplate: (template: MobileTemplateGalleryItem) => void;
   template: MobileTemplateGalleryItem;
 }) {
-  const previewSource = getBundledTemplatePreviewSource(template.id);
+  const previewSource = getTemplatePreviewSource(template);
 
   return (
     <Pressable
@@ -82,7 +83,7 @@ function TemplateCard({
               style={{ width: "100%", height: "100%" }}
             />
             {template.sampleTextOverlay ? (
-              <TemplateSampleTextOverlay category={template.category} />
+              <TemplateSampleTextOverlay category={template.category} textPlacement={template.textPlacement} />
             ) : null}
           </View>
         ) : (
@@ -200,7 +201,7 @@ function HeroStackCard({
   onUseTemplate: (template: MobileTemplateGalleryItem) => void;
   template: MobileTemplateGalleryItem;
 }) {
-  const previewSource = getBundledTemplatePreviewSource(template.id);
+  const previewSource = getTemplatePreviewSource(template);
   const isCenter = position === "center";
   const cardWidth = isCenter ? Math.min(190, stackWidth * 0.54) : Math.min(160, stackWidth * 0.45);
   const cardHeight = cardWidth / (941 / 1672);
@@ -249,12 +250,13 @@ function HeroStackCard({
 
 export function HeroSection({ onOpenCategory, onUseTemplate }: HeroSectionProps) {
   const { width } = useWindowDimensions();
+  const { templates } = useTemplateCatalog();
   const cardWidth = Math.min(224, Math.max(176, width * 0.52));
   const heroStackWidth = Math.min(360, Math.max(284, width - 36));
   const heroCenterCardWidth = Math.min(190, heroStackWidth * 0.54);
   const heroStackHeight = heroCenterCardWidth / (941 / 1672) + 24;
-  const heroTemplates = getHomeHeroTemplates();
-  const sections = getHomeTemplateSections();
+  const heroTemplates = getHomeHeroTemplates(templates);
+  const sections = getHomeTemplateSections(templates);
 
   return (
     <View
