@@ -4,6 +4,7 @@ import {
   filterTemplateDiscoveryItems,
   getTemplateDiscoveryActiveFilterSummary,
   normalizeTemplateDiscoveryQuery,
+  TEMPLATE_DISCOVERY_QUERY_MAX_LENGTH,
   type TemplateDiscoveryFilters
 } from "./template-discovery";
 
@@ -55,7 +56,8 @@ describe("template discovery", () => {
     expect(normalizeTemplateDiscoveryQuery("#애니")).toBe("애니");
     expect(() => normalizeTemplateDiscoveryQuery("!@#$%^&*()[]{}?")).not.toThrow();
     expect(() => filterTemplateDiscoveryItems(templates, { ...allFilters, query: "!@#$%^&*()[]{}?" }, categories)).not.toThrow();
-    expect(normalizeTemplateDiscoveryQuery("가".repeat(500)).length).toBeLessThanOrEqual(80);
+    const pastedQuery = normalizeTemplateDiscoveryQuery("가".repeat(TEMPLATE_DISCOVERY_QUERY_MAX_LENGTH + 420));
+    expect(pastedQuery).toHaveLength(TEMPLATE_DISCOVERY_QUERY_MAX_LENGTH);
   });
 
   it("searches only reviewed display metadata with Korean partial matching", () => {

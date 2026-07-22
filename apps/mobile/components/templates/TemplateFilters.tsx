@@ -2,16 +2,15 @@ import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import type { MobileTemplateCategory } from "@/lib/template-gallery";
 import {
   getTemplateDiscoveryActiveFilterSummary,
+  TEMPLATE_DISCOVERY_QUERY_MAX_LENGTH,
   templateDiscoveryMoods,
-  type TemplateDiscoveryFilters,
-  type TemplateDiscoveryMood
+  type TemplateDiscoveryFilters
 } from "@/lib/template-discovery";
 import { theme } from "@/components/ui/theme";
 
 type TemplateFiltersProps = {
   filters: TemplateDiscoveryFilters;
   categories: readonly MobileTemplateCategory[];
-  moods?: readonly TemplateDiscoveryMood[];
   onFiltersChange: (filters: TemplateDiscoveryFilters) => void;
   onReset: () => void;
 };
@@ -41,8 +40,8 @@ function FilterChip({ label, active, onPress }: { label: string; active: boolean
   );
 }
 
-export function TemplateFilters({ filters, categories, moods = templateDiscoveryMoods, onFiltersChange, onReset }: TemplateFiltersProps) {
-  const summary = getTemplateDiscoveryActiveFilterSummary(filters, categories, moods);
+export function TemplateFilters({ filters, categories, onFiltersChange, onReset }: TemplateFiltersProps) {
+  const summary = getTemplateDiscoveryActiveFilterSummary(filters, categories);
 
   function toggleMood(moodKey: string) {
     const selected = filters.moods.includes(moodKey);
@@ -54,9 +53,11 @@ export function TemplateFilters({ filters, categories, moods = templateDiscovery
 
   return (
     <View style={{ gap: 14 }}>
+      <Text style={{ color: theme.colors.ink, fontSize: 16, fontWeight: "800" }}>디자인 검색</Text>
       <TextInput
         accessibilityHint="이름, 행사, 설명, 태그 또는 행사별 디자인으로 검색합니다."
         accessibilityLabel="디자인 검색"
+        maxLength={TEMPLATE_DISCOVERY_QUERY_MAX_LENGTH}
         onChangeText={(query) => onFiltersChange({ ...filters, query })}
         placeholder="디자인을 검색해 보세요"
         placeholderTextColor={theme.colors.textLight}
@@ -77,7 +78,7 @@ export function TemplateFilters({ filters, categories, moods = templateDiscovery
       <View style={{ gap: 8 }}>
         <Text style={{ color: theme.colors.ink, fontSize: 16, fontWeight: "800" }}>형식별 디자인</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-          {moods.map((mood) => <FilterChip key={mood.key} label={mood.label} active={filters.moods.includes(mood.key)} onPress={() => toggleMood(mood.key)} />)}
+          {templateDiscoveryMoods.map((mood) => <FilterChip key={mood.key} label={mood.label} active={filters.moods.includes(mood.key)} onPress={() => toggleMood(mood.key)} />)}
         </View>
       </View>
 

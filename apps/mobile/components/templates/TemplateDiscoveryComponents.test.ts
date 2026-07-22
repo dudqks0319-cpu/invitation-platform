@@ -22,6 +22,9 @@ describe("template discovery components", () => {
   it("exposes controlled search, selected states, the required copy hierarchy, and one reset callback", () => {
     expect(filtersSource).toContain("value={filters.query}");
     expect(filtersSource).toContain("onChangeText");
+    expect(filtersSource).toContain("TEMPLATE_DISCOVERY_QUERY_MAX_LENGTH");
+    expect(filtersSource).toContain("maxLength={TEMPLATE_DISCOVERY_QUERY_MAX_LENGTH}");
+    expect(filtersSource).toMatch(/<Text[^>]*>디자인 검색<\/Text>\s*<TextInput/);
     expect(filtersSource).toContain("행사별 디자인");
     expect(filtersSource).toContain("형식별 디자인");
     expect(filtersSource).toContain("오삼오삼 셀렉션");
@@ -29,5 +32,7 @@ describe("template discovery components", () => {
     expect(filtersSource).toContain("accessibilityState={{ selected: active }}");
     expect(filtersSource).toMatch(/minHeight:\s*44/);
     expect(filtersSource).toContain("onReset()");
+    expect(filtersSource).not.toContain("moods?:");
+    expect(filtersSource).toContain("templateDiscoveryMoods.map");
   });
 });
