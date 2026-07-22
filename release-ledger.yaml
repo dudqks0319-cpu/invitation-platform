@@ -1,4 +1,4 @@
-updated_at: "2026-07-22T11:24:00+09:00"
+updated_at: "2026-07-22T13:56:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
@@ -7,19 +7,19 @@ project:
   release_workspace: "/Users/jyb-m3max/Desktop/codex/invitation-platform/.worktrees/osamosam-appstore-v103"
 phase: apple_processing
 version: "1.0.3"
-build_number: 60
-git_sha: "b7753375bd60632abb957ace82bf51ecc66d8787"
+build_number: 61
+git_sha: "1ee33a4b477bcee4d550076be3dadea165ea76e6"
 branch: "agent/osamosam-appstore-v103"
 public:
   version: "1.0.2"
   released_at: "2026-06-29T06:55:38Z"
 candidate:
   version: "1.0.3"
-  git_sha: "b7753375bd60632abb957ace82bf51ecc66d8787"
+  git_sha: "1ee33a4b477bcee4d550076be3dadea165ea76e6"
   branch: "agent/osamosam-appstore-v103"
   native_local_build_number: 52
-  eas_remote_build_number_before_increment: 59
-  eas_build_number: 60
+  eas_remote_build_number_before_increment: 60
+  eas_build_number: 61
   signed_ipa_state: produced_verified_and_uploaded_to_app_store_connect
   distribution_certificate_serial: "65FE7FE2EED7B54C24F3C811A0028AB1"
   distribution_certificate_changed: true
@@ -69,38 +69,40 @@ candidate:
   ipa_export_result: passed
   sensitive_credential_temp_files_deleted: true
   repository_credential_files_created: false
-  security_validation_report: "/private/tmp/codex-security-scans/invitation-platform/b775337_20260722T112414+0900/artifacts/05_findings/CRED-SIGN-001/validation_report.md"
-  ipa_path: "/tmp/osamosam-v103-build60.ipa"
-  ipa_bytes: 48466272
-  ipa_sha256: "cd855d19d77d5feb9b3cbfd116343fb7651fcf3bc0d7bb339fc3bafc3692e383"
-  successful_xcode_archive: "/Users/jyb-m3max/Library/Developer/Xcode/Archives/2026-07-22/InviteHub 2026-07-22 11.15.04.xcarchive"
+  signing_validation_report: "/private/tmp/codex-security-scans/invitation-platform/b775337_20260722T112414+0900/artifacts/05_findings/CRED-SIGN-001/validation_report.md"
+  source_security_report: "/private/var/folders/dx/2zprs00s3050gd97w54748700000gn/T/codex-security-scans-wVOiPG/osamosam-appstore-v103/e0b788d4371fe6262e5dc14d2fa30899a55645a9_20260722T041222Z_kfdnmzt5/report.md"
+  ipa_path: "/tmp/osamosam-v103-build61.ipa"
+  ipa_bytes: 149394623
+  ipa_sha256: "9e961c3e9952724a5ace770d7c08efe628deba9a83075e6a132388e750df40a2"
+  successful_xcode_archive: "/Users/jyb-m3max/Library/Developer/Xcode/Archives/2026-07-22/InviteHub 2026-07-22 13.47.28.xcarchive"
   successful_xcode_archive_retained_for_dsym: true
   ipa_bundle_id: "com.invitehub.app"
   ipa_version: "1.0.3"
-  ipa_build_number: 60
+  ipa_build_number: 61
   ipa_display_name: "오삼오삼"
   ipa_profile_uuid: "c97260e7-df1b-4276-b738-3760918998b1"
   ipa_profile_app_id: "3FG9QJC8WC.com.invitehub.app"
   ipa_profile_get_task_allow: false
   bundled_home_asset_sha256_match: true
+  bundled_new_template_assets_sha256_match: "60/60"
   ipa_local_strict_codesign_check: "certificate_chain_not_locally_trusted_after_ephemeral_keychain_cleanup"
   xcode_export_signing_validation: passed
   eas_build_id: not_applicable_source_private_local_build
-  eas_submit_id: "2ff4d83a-7c55-4476-85c0-0c639eba587a"
+  eas_submit_id: "6f876ba8-be5e-4d52-bdf5-b7440d69bc5d"
   eas_submit_state: uploaded_to_app_store_connect
-  app_store_connect_uploaded_at: "2026-07-22T11:23:00+09:00"
+  app_store_connect_uploaded_at: "2026-07-22T13:55:00+09:00"
   app_store_connect_state: uploaded_processing
   testflight_state: apple_processing
-  real_device_result: pending
+  real_device_result: pending_exact_build_61
   app_review_state: not_submitted
 verification:
-  mobile_tests: "93/93 passed"
-  full_tests: "241/241 passed"
+  mobile_focused_tests: "5 files / 29 tests passed"
+  full_tests: "69 files / 249 tests passed"
   lint: passed
   typecheck: passed
   ios_release_simulator_build: passed
   ios_release_simulator_launch: passed
-  simulator_screenshot: "/tmp/osamosam-v103-home.png"
+  simulator_screenshots: "/tmp/osamosam-build61-home-final.png, /tmp/osamosam-build61-home-wedding-final.png, /tmp/osamosam-build61-wedding-safezone.png"
   bundled_home_assets: passed
   free_only_release_gate: passed
   runtime_critical_dependency_advisories: 0
@@ -111,15 +113,18 @@ verification:
   ipa_metadata: passed
   ipa_profile_certificate_match: passed
   bundled_home_asset_hashes: passed
+  bundled_new_template_asset_hashes: "60/60 passed"
+  codex_security_diff_scan: "12/12 files covered, 0 findings"
+  codex_security_scan_id: "84e0e9d3-34ce-4a02-860e-de93d7ea907e"
   app_store_connect_binary_upload: passed
 local_checks:
-  tests: "241/241 passed"
+  tests: "249/249 passed"
   lint: passed
   typecheck: passed
   signed_ipa: passed
 runtime_checks:
   simulator_release_launch: passed
-  real_iphone_testflight: pending
+  real_iphone_testflight_build_61: pending
 external_checks:
   app_store_connect_upload: passed
   apple_processing: pending
@@ -146,5 +151,5 @@ blockers:
     owner: release-owner
     due: before-app-review-build-selection
 next_action:
-  summary: "Wait for Apple processing, confirm Build 60 in TestFlight, then run the required real-iPhone smoke test before selecting the build for App Review."
+  summary: "Sign in to App Store Connect in Chrome if needed, confirm Build 61 finishes Apple processing, then run the required real-iPhone smoke test before selecting any build for App Review."
   command: "open 'https://appstoreconnect.apple.com/apps/6763630299/testflight/ios'"
