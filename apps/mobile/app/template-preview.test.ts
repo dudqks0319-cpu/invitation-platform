@@ -33,6 +33,23 @@ describe("template preview route", () => {
     expect(routeSource).toContain("새로 시작");
   });
 
+  it("requires explicit consent before quarantining and resetting corrupt draft storage", () => {
+    expect(routeSource).toContain("isCorruptDraftStorageError(error)");
+    expect(routeSource).toContain("Alert.alert(");
+    expect(routeSource).toContain("원본을 별도 백업에 그대로 보관한 뒤");
+    expect(routeSource).toContain('{ text: "취소", style: "cancel" }');
+    expect(routeSource).toContain('{ text: "백업 후 초기화", style: "destructive"');
+    expect(routeSource).toContain("await quarantineAndResetCorruptDraftStorage()");
+  });
+
+  it("distinguishes catalog loading from an invalid ID and retains the first validated selection", () => {
+    expect(routeSource).toContain("source: catalogSource");
+    expect(routeSource).toContain('catalogSource === "loading"');
+    expect(routeSource).toContain("디자인을 불러오는 중이에요.");
+    expect(routeSource).toContain("retainFirstValidatedTemplateSelection(");
+    expect(routeSource).toContain("retainedTemplateSelection !== selectedTemplateSnapshot");
+  });
+
   it("renders an example-labelled safe preview plus a readable wrapping information region", () => {
     expect(routeSource).toContain("InvitationPreviewCard");
     expect(routeSource).toContain("TemplateSampleTextOverlay");

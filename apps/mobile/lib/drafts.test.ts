@@ -4,6 +4,7 @@ import {
   createOrReuseTemplatePreviewDraft,
   createLocalDraft,
   inspectDraftsForTemplatePreview,
+  quarantineAndResetCorruptDraftStorage,
   listDrafts
 } from "./drafts";
 import { createTemplatePreviewDraftController } from "./template-preview-flow";
@@ -42,23 +43,74 @@ describe("mobile draft storage recovery", () => {
     storage.setItem.mockResolvedValue(undefined);
   });
 
-  it("backs up and clears corrupted local draft storage instead of throwing", async () => {
-    vi.spyOn(Date, "now").mockReturnValue(1778244000000);
+  it("leaves corrupted storage untouched during ordinary reads", async () => {
     storage.getItem.mockResolvedValue("{broken-json");
 
-    await expect(listDrafts()).resolves.toEqual([]);
+    await expect(listDrafts()).rejects.toMatchObject({ reason: "corrupt" });
 
-    expect(storage.setItem).toHaveBeenCalledWith(
-      "invitehub:mobile:drafts:corrupt:1778244000000",
-      "{broken-json"
-    );
-    expect(storage.removeItem).toHaveBeenCalledWith("invitehub:mobile:drafts");
+    expect(storage.setItem).not.toHaveBeenCalled();
+    expect(storage.removeItem).not.toHaveBeenCalled();
   });
 
   it("inspects corrupt preview storage read-only and fails closed without quarantine or deletion", async () => {
     storage.getItem.mockResolvedValue("{broken-json");
 
-    await expect(inspectDraftsForTemplatePreview("owner-a")).rejects.toThrow("초안 저장소를 확인하지 못했어요");
+    await expect(inspectDraftsForTemplatePreview("owner-a")).rejects.toMatchObject({ reason: "corrupt" });
+
+    expect(storage.setItem).not.toHaveBeenCalled();
+    expect(storage.removeItem).not.toHaveBeenCalled();
+  });
+
+  it("quarantines the untouched raw value before resetting only after explicit recovery", async () => {
+    vi.spyOn(Date, "now").mockReturnValue(1778244000000);
+    storage.getItem.mockResolvedValue("{broken-json");
+
+    await expect(quarantineAndResetCorruptDraftStorage()).resolves.toEqual({
+      quarantineKey: "invitehub:mobile:drafts:corrupt:1778244000000"
+    });
+
+    expect(storage.setItem).toHaveBeenCalledWith(
+      "invitehub:mobile:drafts:corrupt:1778244000000",
+      "{broken-json"
+    );
+    expect(storage.setItem.mock.invocationCallOrder[0]).toBeLessThan(storage.removeItem.mock.invocationCallOrder[0]);
+    expect(storage.removeItem).toHaveBeenCalledWith("invitehub:mobile:drafts");
+  });
+
+  it("does not delete corrupt storage when the untouched backup cannot be written", async () => {
+    storage.getItem.mockResolvedValue("{broken-json");
+    storage.setItem.mockRejectedValue(new Error("disk full"));
+
+    await expect(quarantineAndResetCorruptDraftStorage()).rejects.toThrow(
+      "손상된 초안 원본을 백업하지 못해 초기화하지 않았어요"
+    );
+
+    expect(storage.removeItem).not.toHaveBeenCalled();
+  });
+
+  it("reports a reset failure after preserving the corrupt original and its quarantine copy", async () => {
+    storage.getItem.mockResolvedValue("{broken-json");
+    storage.removeItem.mockRejectedValue(new Error("remove failed"));
+
+    await expect(quarantineAndResetCorruptDraftStorage()).rejects.toThrow(
+      "손상된 초안 원본은 백업했지만 저장소를 초기화하지 못했어요"
+    );
+
+    expect(storage.setItem).toHaveBeenCalledWith(
+      expect.stringContaining("invitehub:mobile:drafts:corrupt:"),
+      "{broken-json"
+    );
+    expect(storage.removeItem).toHaveBeenCalledWith("invitehub:mobile:drafts");
+  });
+
+  it("refuses to reset valid draft storage even when recovery is requested", async () => {
+    storage.getItem.mockResolvedValue(JSON.stringify({
+      "account-a": validDraft("account-a", "account-a", "2026-07-21T00:00:00.000Z")
+    }));
+
+    await expect(quarantineAndResetCorruptDraftStorage()).rejects.toThrow(
+      "초안 저장소가 정상이라 초기화하지 않았어요"
+    );
 
     expect(storage.setItem).not.toHaveBeenCalled();
     expect(storage.removeItem).not.toHaveBeenCalled();
@@ -85,7 +137,7 @@ describe("mobile draft storage recovery", () => {
       delete malformed[field];
       storage.getItem.mockResolvedValue(JSON.stringify({ "account-a": malformed }));
 
-      await expect(inspectDraftsForTemplatePreview("account-a")).rejects.toThrow("초안 저장소를 확인하지 못했어요");
+      await expect(inspectDraftsForTemplatePreview("account-a")).rejects.toMatchObject({ reason: "corrupt" });
 
       expect(storage.setItem).not.toHaveBeenCalled();
       expect(storage.removeItem).not.toHaveBeenCalled();
@@ -118,7 +170,7 @@ describe("mobile draft storage recovery", () => {
     removeField(malformed);
     storage.getItem.mockResolvedValue(JSON.stringify({ "account-a": malformed }));
 
-    await expect(inspectDraftsForTemplatePreview("account-a")).rejects.toThrow("초안 저장소를 확인하지 못했어요");
+    await expect(inspectDraftsForTemplatePreview("account-a")).rejects.toMatchObject({ reason: "corrupt" });
 
     expect(storage.setItem).not.toHaveBeenCalled();
     expect(storage.removeItem).not.toHaveBeenCalled();
@@ -129,7 +181,7 @@ describe("mobile draft storage recovery", () => {
     malformed.pendingPhotos = [{ localUri: "file:///photo.jpg", slot: "main" } as never];
     storage.getItem.mockResolvedValue(JSON.stringify({ "account-a": malformed }));
 
-    await expect(inspectDraftsForTemplatePreview("account-a")).rejects.toThrow("초안 저장소를 확인하지 못했어요");
+    await expect(inspectDraftsForTemplatePreview("account-a")).rejects.toMatchObject({ reason: "corrupt" });
 
     expect(storage.setItem).not.toHaveBeenCalled();
     expect(storage.removeItem).not.toHaveBeenCalled();

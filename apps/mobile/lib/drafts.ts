@@ -15,6 +15,22 @@ const DRAFT_STORAGE_KEY = "invitehub:mobile:drafts";
 const CORRUPT_DRAFT_STORAGE_PREFIX = `${DRAFT_STORAGE_KEY}:corrupt`;
 const PREVIEW_OWNER_ID = "local-preview-owner";
 
+export class DraftStorageInspectionError extends Error {
+  readonly reason: "corrupt" | "unavailable";
+
+  constructor(reason: "corrupt" | "unavailable") {
+    super(reason === "corrupt"
+      ? "저장된 초안 데이터가 손상되어 안전하게 열 수 없어요."
+      : "초안 저장소를 확인하지 못했어요.");
+    this.name = "DraftStorageInspectionError";
+    this.reason = reason;
+  }
+}
+
+export function isCorruptDraftStorageError(error: unknown): error is DraftStorageInspectionError {
+  return error instanceof DraftStorageInspectionError && error.reason === "corrupt";
+}
+
 type DraftMap = Record<string, MobileInvitationDraft>;
 const previewDraftInFlight = new Map<string, Promise<MobileInvitationDraft>>();
 
@@ -117,15 +133,7 @@ function isInspectableDraft(value: unknown): value is MobileInvitationDraft {
     (value.sourcePayload === undefined || isRecord(value.sourcePayload));
 }
 
-async function readDraftMapForPreview(): Promise<DraftMap> {
-  let raw: string | null;
-  try {
-    raw = await AsyncStorage.getItem(DRAFT_STORAGE_KEY);
-  } catch {
-    throw new Error("초안 저장소를 확인하지 못했어요.");
-  }
-  if (!raw) return {};
-
+function parseInspectableDraftMap(raw: string): DraftMap | null {
   try {
     const parsed = JSON.parse(raw) as unknown;
     if (
@@ -135,13 +143,32 @@ async function readDraftMapForPreview(): Promise<DraftMap> {
       return parsed;
     }
   } catch {
-    // Preview inspection is strictly read-only and never quarantines corrupt data.
+    // Invalid JSON is handled as corrupt storage by the caller.
   }
-  throw new Error("초안 저장소를 확인하지 못했어요.");
+  return null;
+}
+
+async function readDraftMapForPreview(): Promise<DraftMap> {
+  let raw: string | null;
+  try {
+    raw = await AsyncStorage.getItem(DRAFT_STORAGE_KEY);
+  } catch {
+    throw new DraftStorageInspectionError("unavailable");
+  }
+  if (!raw) return {};
+
+  const drafts = parseInspectableDraftMap(raw);
+  if (drafts) return drafts;
+  throw new DraftStorageInspectionError("corrupt");
 }
 
 async function readDraftMap(): Promise<DraftMap> {
-  const raw = await AsyncStorage.getItem(DRAFT_STORAGE_KEY);
+  let raw: string | null;
+  try {
+    raw = await AsyncStorage.getItem(DRAFT_STORAGE_KEY);
+  } catch {
+    throw new DraftStorageInspectionError("unavailable");
+  }
   if (!raw) {
     return {};
   }
@@ -152,17 +179,41 @@ async function readDraftMap(): Promise<DraftMap> {
       return parsed;
     }
   } catch {
-    // A corrupted local draft cache must not prevent the app from launching.
+    // Reads are intentionally non-mutating; recovery requires explicit consent.
+  }
+  throw new DraftStorageInspectionError("corrupt");
+}
+
+export async function quarantineAndResetCorruptDraftStorage() {
+  let raw: string | null;
+  try {
+    raw = await AsyncStorage.getItem(DRAFT_STORAGE_KEY);
+  } catch {
+    throw new DraftStorageInspectionError("unavailable");
+  }
+
+  if (!raw) {
+    throw new Error("초기화할 손상된 초안 데이터가 없어요.");
+  }
+
+  if (parseInspectableDraftMap(raw)) {
+    throw new Error("초안 저장소가 정상이라 초기화하지 않았어요.");
+  }
+
+  const quarantineKey = `${CORRUPT_DRAFT_STORAGE_PREFIX}:${Date.now()}`;
+  try {
+    await AsyncStorage.setItem(quarantineKey, raw);
+  } catch {
+    throw new Error("손상된 초안 원본을 백업하지 못해 초기화하지 않았어요.");
   }
 
   try {
-    await AsyncStorage.setItem(`${CORRUPT_DRAFT_STORAGE_PREFIX}:${Date.now()}`, raw);
     await AsyncStorage.removeItem(DRAFT_STORAGE_KEY);
   } catch {
-    await AsyncStorage.removeItem(DRAFT_STORAGE_KEY).catch(() => undefined);
+    throw new Error("손상된 초안 원본은 백업했지만 저장소를 초기화하지 못했어요.");
   }
 
-  return {};
+  return { quarantineKey };
 }
 
 async function writeDraftMap(drafts: DraftMap) {
