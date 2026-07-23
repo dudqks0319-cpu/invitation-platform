@@ -22,18 +22,99 @@ function isDraftMap(value: unknown): value is DraftMap {
   return Boolean(value && typeof value === "object" && !Array.isArray(value));
 }
 
-function isInspectableDraft(value: unknown): value is MobileInvitationDraft {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
-  const draft = value as Partial<MobileInvitationDraft>;
-  const payload = draft.payload as Partial<MobileInvitationDraft["payload"]> | undefined;
-  return Boolean(
-    typeof draft.localId === "string" &&
-    typeof draft.localUpdatedAt === "string" &&
-    payload &&
-    typeof payload.ownerId === "string" &&
-    typeof payload.templateId === "string" &&
-    typeof payload.isPublished === "boolean"
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
+function isOptionalString(value: unknown) {
+  return value === undefined || typeof value === "string";
+}
+
+function isInvitationParty(value: unknown) {
+  return isRecord(value) && typeof value.name === "string" && isOptionalString(value.phone);
+}
+
+function isInvitationParents(value: unknown) {
+  return isRecord(value) &&
+    (value.father === undefined || isInvitationParty(value.father)) &&
+    (value.mother === undefined || isInvitationParty(value.mother));
+}
+
+function isBankAccount(value: unknown) {
+  return isRecord(value) &&
+    typeof value.bank === "string" &&
+    typeof value.holder === "string" &&
+    typeof value.account === "string";
+}
+
+function isInvitationPayload(value: unknown) {
+  if (!isRecord(value)) return false;
+  const eventData = value.eventData;
+  const photos = value.photos;
+  const accounts = value.accounts;
+  const location = value.location;
+  const share = value.share;
+
+  return (
+    typeof value.schemaVersion === "number" && Number.isInteger(value.schemaVersion) && value.schemaVersion > 0 &&
+    typeof value.eventType === "string" &&
+    typeof value.templateId === "string" &&
+    typeof value.title === "string" &&
+    typeof value.eventDateTime === "string" &&
+    typeof value.venueName === "string" &&
+    typeof value.venueAddress === "string" &&
+    typeof value.message === "string" &&
+    isRecord(eventData) &&
+    typeof eventData.type === "string" &&
+    isInvitationParty(eventData.groom) &&
+    isInvitationParty(eventData.bride) &&
+    isInvitationParents(eventData.groomParents) &&
+    isInvitationParents(eventData.brideParents) &&
+    isRecord(photos) &&
+    typeof photos.mainUri === "string" &&
+    typeof photos.backgroundUri === "string" &&
+    Array.isArray(photos.gallery) &&
+    photos.gallery.every((item) => (
+      isRecord(item) &&
+      typeof item.uri === "string" &&
+      Number.isInteger(item.order) &&
+      Number(item.order) >= 0
+    )) &&
+    isRecord(accounts) &&
+    (accounts.primary === undefined || isBankAccount(accounts.primary)) &&
+    (accounts.secondary === undefined || isBankAccount(accounts.secondary)) &&
+    typeof accounts.kakaoPayLink === "string" &&
+    isRecord(location) &&
+    typeof location.naverMapUrl === "string" &&
+    isOptionalString(location.kakaoMapUrl) &&
+    typeof location.transportNote === "string" &&
+    isRecord(share) &&
+    typeof share.slug === "string" &&
+    typeof value.ownerId === "string" &&
+    (value.planTier === "free" || value.planTier === "premium") &&
+    typeof value.isPublished === "boolean"
   );
+}
+
+function isPendingPhoto(value: unknown) {
+  if (!isRecord(value)) return false;
+  const validSlot = value.slot === "main" || value.slot === "background" || value.slot === "gallery";
+  return typeof value.localUri === "string" &&
+    validSlot &&
+    (value.order === undefined || (Number.isInteger(value.order) && Number(value.order) >= 0)) &&
+    Number.isInteger(value.retryCount) && Number(value.retryCount) >= 0;
+}
+
+function isInspectableDraft(value: unknown): value is MobileInvitationDraft {
+  if (!isRecord(value)) return false;
+  return typeof value.localId === "string" && value.localId.length > 0 &&
+    isOptionalString(value.serverId) &&
+    isInvitationPayload(value.payload) &&
+    Array.isArray(value.pendingPhotos) && value.pendingPhotos.every(isPendingPhoto) &&
+    (value.syncStatus === "pending" || value.syncStatus === "synced" || value.syncStatus === "failed") &&
+    typeof value.localUpdatedAt === "string" && value.localUpdatedAt.length > 0 &&
+    typeof value.isDirty === "boolean" &&
+    (value.sourcePayload === undefined || isRecord(value.sourcePayload));
 }
 
 async function readDraftMapForPreview(): Promise<DraftMap> {
