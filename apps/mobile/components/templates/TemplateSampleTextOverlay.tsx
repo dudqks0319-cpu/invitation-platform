@@ -1,72 +1,19 @@
-import { Text, View } from "react-native";
+import { useState } from "react";
+import { Text, View, useWindowDimensions } from "react-native";
 import { resolveTemplateTextSafeArea } from "@invitehub/shared";
 import type { MobileTemplateGalleryItem } from "@/lib/template-gallery";
 import { getTemplateSampleOverlayPresentation } from "@/lib/template-sample-overlay-presentation";
 
-const templateSampleCopy = {
-  wedding: {
-    headline: "We are getting married",
-    badge: "결혼식",
-    title: "이준서 ♥ 김은재",
-    date: "2026.09.20 SUN 12:30",
-    venue: "라비에벨 가든홀"
-  },
-  dol: {
-    headline: "Our first birthday",
-    badge: "돌잔치",
-    title: "도윤이의 첫돌",
-    date: "2026.09.20 SUN 12:30",
-    venue: "라움 패밀리홀"
-  },
-  hwangap: {
-    headline: "Happy 60th Birthday",
-    badge: "환갑잔치",
-    title: "아버지의 환갑",
-    date: "2026.10.18 SUN 12:00",
-    venue: "더채플 연회장"
-  },
-  bridal: {
-    headline: "Bride to be",
-    badge: "브라이덜샤워",
-    title: "은채의 브라이덜샤워",
-    date: "2026.08.29 SAT 14:00",
-    venue: "가든 스튜디오"
-  },
-  birthday: {
-    headline: "Happy Birthday",
-    badge: "생일파티",
-    title: "서윤이의 생일",
-    date: "2026.09.12 SAT 17:00",
-    venue: "루프탑 파티룸"
-  },
-  housewarming: {
-    headline: "Welcome Home",
-    badge: "집들이",
-    title: "새집에 초대합니다",
-    date: "2026.09.05 SAT 18:00",
-    venue: "서울 성동구 새빛로 53"
-  },
-  baby: {
-    headline: "Welcome, Little One",
-    badge: "베이비샤워",
-    title: "아기를 기다려요",
-    date: "2026.10.03 SAT 13:00",
-    venue: "클라우드 스튜디오"
-  },
-  graduation: {
-    headline: "Congratulations",
-    badge: "졸업파티",
-    title: "졸업을 축하해요",
-    date: "2027.02.19 FRI 11:00",
-    venue: "한빛대학교 강당"
-  },
-  business: {
-    headline: "Grand Opening",
-    badge: "비즈니스",
-    title: "OPENING DAY",
-    date: "2026.09.25 FRI 18:30",
-    venue: "오삼오삼 라운지"
-  }
+const templateSampleTitle = {
+  wedding: "우리 결혼합니다",
+  dol: "도윤이의 첫돌",
+  hwangap: "아버지의 환갑",
+  bridal: "브라이덜샤워",
+  birthday: "생일을 축하해요",
+  housewarming: "새집에 초대합니다",
+  baby: "아기를 기다려요",
+  graduation: "졸업을 축하해요",
+  business: "OPENING DAY"
 } as const;
 
 export function TemplateSampleTextOverlay({
@@ -74,19 +21,24 @@ export function TemplateSampleTextOverlay({
 }: {
   template: MobileTemplateGalleryItem;
 }) {
-  const copy = templateSampleCopy[template.category as keyof typeof templateSampleCopy] ?? templateSampleCopy.wedding;
+  const [safeAreaHeight, setSafeAreaHeight] = useState(0);
+  const { fontScale } = useWindowDimensions();
+  const title = templateSampleTitle[template.category as keyof typeof templateSampleTitle] ?? templateSampleTitle.wedding;
   const safeArea = template.textSafeArea ?? resolveTemplateTextSafeArea({
     templateId: template.id,
     category: template.category,
     textPlacement: template.textPlacement
   });
-  const compressed = safeArea.bottomPct - safeArea.topPct <= 22;
-  const presentation = getTemplateSampleOverlayPresentation(compressed);
+  const presentation = getTemplateSampleOverlayPresentation({ safeAreaHeight, fontScale });
 
   return (
     <View
       accessible={false}
       importantForAccessibility="no-hide-descendants"
+      onLayout={({ nativeEvent }) => {
+        const nextHeight = nativeEvent.layout.height;
+        setSafeAreaHeight((currentHeight) => Math.abs(currentHeight - nextHeight) < 0.5 ? currentHeight : nextHeight);
+      }}
       pointerEvents="none"
       style={{
         position: "absolute",
@@ -99,83 +51,25 @@ export function TemplateSampleTextOverlay({
         backgroundColor: presentation.backgroundColor,
         borderRadius: 8,
         paddingHorizontal: 5,
-        paddingVertical: 3
+        paddingVertical: presentation.paddingVertical
       }}
     >
-      {presentation.showDecoration ? (
-        <>
-          <Text
-            numberOfLines={1}
-            style={{
-              color: presentation.textColor,
-              fontSize: presentation.headlineFontSize,
-              fontStyle: "italic",
-              fontWeight: "600",
-              textAlign: "center",
-              width: "100%"
-            }}
-          >
-            {copy.headline}
-          </Text>
-          <Text
-            numberOfLines={1}
-            style={{
-              color: presentation.textColor,
-              fontSize: presentation.badgeFontSize,
-              fontWeight: "800",
-              marginTop: 2,
-              textAlign: "center",
-              width: "100%"
-            }}
-          >
-            {copy.badge}
-          </Text>
-        </>
+      {presentation.showTitle ? (
+        <Text
+          allowFontScaling={presentation.allowFontScaling}
+          numberOfLines={1}
+          style={{
+            color: presentation.textColor,
+            fontSize: presentation.titleFontSize,
+            fontWeight: "900",
+            lineHeight: presentation.titleLineHeight,
+            textAlign: "center",
+            width: "100%"
+          }}
+        >
+          {title}
+        </Text>
       ) : null}
-      <Text
-        numberOfLines={presentation.titleNumberOfLines}
-        style={{
-          color: presentation.textColor,
-          fontSize: presentation.titleFontSize,
-          fontWeight: "900",
-          lineHeight: presentation.titleLineHeight,
-          marginTop: compressed ? 1 : 2,
-          textAlign: "center",
-          width: "100%"
-        }}
-      >
-        {copy.title}
-      </Text>
-      {presentation.showDecoration ? (
-        <View style={{ width: 36, height: 1, backgroundColor: presentation.textColor, marginVertical: 3 }} />
-      ) : null}
-      <Text
-        numberOfLines={1}
-        style={{
-          color: presentation.textColor,
-          fontSize: presentation.detailFontSize,
-          fontWeight: "900",
-          lineHeight: presentation.detailLineHeight,
-          textAlign: "center",
-          width: "100%"
-        }}
-      >
-        {copy.date}
-      </Text>
-      <Text
-        numberOfLines={presentation.detailNumberOfLines}
-        style={{
-          color: presentation.textColor,
-          fontSize: presentation.detailFontSize,
-          fontWeight: "800",
-          lineHeight: presentation.detailLineHeight,
-          marginTop: compressed ? 1 : 2,
-          textAlign: "center",
-          width: "100%"
-        }}
-      >
-        {copy.venue}
-      </Text>
     </View>
   );
 }

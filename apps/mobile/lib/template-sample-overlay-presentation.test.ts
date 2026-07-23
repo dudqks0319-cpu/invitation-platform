@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { getTemplateSampleOverlayPresentation } from "./template-sample-overlay-presentation";
+import { getTemplateDiscoveryCardWidth } from "./template-discovery-layout";
+import {
+  getTemplateCardExternalMetadata,
+  getTemplateSampleOverlayPresentation
+} from "./template-sample-overlay-presentation";
 
 function channel(value: string, offset: number) {
   const component = Number.parseInt(value.slice(offset, offset + 2), 16) / 255;
@@ -17,26 +21,48 @@ function contrastRatio(foreground: string, background: string) {
 }
 
 describe("template sample overlay presentation", () => {
-  it.each([false, true])("uses opaque high-contrast tokens for compressed=%s", (compressed) => {
-    const presentation = getTemplateSampleOverlayPresentation(compressed);
+  it("fits one fixed title line in the narrowest reviewed 18% safe area at 375px", () => {
+    const cardWidth = getTemplateDiscoveryCardWidth(375, 1);
+    const artworkHeight = Math.max(220, Math.min(420, Math.round(cardWidth * 1.3)));
+    const safeAreaHeight = artworkHeight * 0.18;
+    const presentation = getTemplateSampleOverlayPresentation({ safeAreaHeight, fontScale: 1 });
 
-    expect(presentation.backgroundColor).toMatch(/^#[0-9A-F]{6}$/i);
-    expect(contrastRatio(presentation.textColor, presentation.backgroundColor)).toBeGreaterThanOrEqual(4.5);
-    expect(Math.min(
-      presentation.headlineFontSize,
-      presentation.badgeFontSize,
-      presentation.titleFontSize,
-      presentation.detailFontSize
-    )).toBeGreaterThanOrEqual(9);
+    expect(cardWidth).toBe(165);
+    expect(artworkHeight).toBe(220);
+    expect(safeAreaHeight).toBeCloseTo(39.6);
+    expect(presentation.showTitle).toBe(true);
+    expect(presentation.titleLineHeight + presentation.paddingVertical * 2)
+      .toBeLessThanOrEqual(safeAreaHeight);
   });
 
-  it("removes decoration in constrained safe areas while retaining required copy sizes", () => {
-    const compressed = getTemplateSampleOverlayPresentation(true);
-    expect(compressed.showDecoration).toBe(false);
-    expect(compressed.titleFontSize).toBeGreaterThan(compressed.detailFontSize);
-    const requiredTextHeight = compressed.titleLineHeight * compressed.titleNumberOfLines
-      + compressed.detailLineHeight
-      + compressed.detailLineHeight * compressed.detailNumberOfLines;
-    expect(requiredTextHeight).toBeLessThanOrEqual(42);
+  it("does not scale or overflow the decorative title at font scale 2", () => {
+    const safeAreaHeight = 220 * 0.18;
+    const regular = getTemplateSampleOverlayPresentation({ safeAreaHeight, fontScale: 1 });
+    const largeText = getTemplateSampleOverlayPresentation({ safeAreaHeight, fontScale: 2 });
+
+    expect(largeText).toEqual(regular);
+    expect(largeText.allowFontScaling).toBe(false);
+    expect(largeText.requiredHeight).toBeLessThanOrEqual(safeAreaHeight);
+  });
+
+  it("hides the decorative title when its measured safe area cannot contain it", () => {
+    const presentation = getTemplateSampleOverlayPresentation({ safeAreaHeight: 29, fontScale: 2 });
+    expect(presentation.requiredHeight).toBe(30);
+    expect(presentation.showTitle).toBe(false);
+  });
+
+  it("uses opaque high-contrast paper and ink tokens", () => {
+    const presentation = getTemplateSampleOverlayPresentation({ safeAreaHeight: 40, fontScale: 2 });
+
+    expect(presentation.backgroundColor).toMatch(/^#[0-9A-F]{6}$/i);
+    expect(presentation.textColor).toMatch(/^#[0-9A-F]{6}$/i);
+    expect(contrastRatio(presentation.textColor, presentation.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("preserves complete external card metadata instead of shortening it for artwork", () => {
+    const name = "아주 긴 템플릿 이름도 카드 아래에서 전부 보여요";
+    const desc = "상세 설명은 장식용 그림 안에 넣지 않고 카드 메타데이터 영역에서 축약 없이 제공합니다.";
+
+    expect(getTemplateCardExternalMetadata({ name, desc })).toEqual({ name, description: desc });
   });
 });

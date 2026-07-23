@@ -8,6 +8,7 @@ import {
   synchronizeTemplateImageRecoveryState
 } from "@/lib/template-image-recovery";
 import type { MobileTemplateGalleryItem } from "@/lib/template-gallery";
+import { getTemplateCardExternalMetadata } from "@/lib/template-sample-overlay-presentation";
 import { getUniqueTemplateTags } from "@/lib/template-tags";
 import { theme } from "@/components/ui/theme";
 
@@ -18,6 +19,7 @@ type TemplateCardProps = {
 };
 
 export const TemplateCard = memo(function TemplateCard({ template, onOpenPreview, width }: TemplateCardProps) {
+  const metadata = getTemplateCardExternalMetadata(template);
   const resolvedSource = getTemplatePreviewSource(template);
   const [imageState, setImageState] = useState(() => createTemplateImageRecoveryState(resolvedSource));
   const synchronizedImageState = synchronizeTemplateImageRecoveryState(imageState, resolvedSource);
@@ -91,10 +93,10 @@ export const TemplateCard = memo(function TemplateCard({ template, onOpenPreview
       <View accessible={false} style={{ padding: 14, gap: 8 }}>
         <Text style={{ color: theme.colors.ink, fontSize: 12, fontWeight: "800" }}>{template.badge}</Text>
         <Text style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "800", lineHeight: 23 }}>
-          {template.name}
+          {metadata.name}
         </Text>
         <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 19 }}>
-          {template.desc}
+          {metadata.description}
         </Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
           {getUniqueTemplateTags(template.tags).slice(0, 3).map((tag) => (
