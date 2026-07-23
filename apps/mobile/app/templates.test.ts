@@ -9,7 +9,6 @@ const filtersSource = readFileSync(
   "utf8"
 );
 const homeSource = readFileSync(join(process.cwd(), "apps/mobile/app/(tabs)/index.tsx"), "utf8");
-const reducedMotionSource = readFileSync(join(process.cwd(), "apps/mobile/hooks/useReducedMotion.ts"), "utf8");
 
 describe("template selection flow", () => {
   it("creates exactly one draft before pushing the selected card to basic editing", async () => {
@@ -78,9 +77,7 @@ describe("template discovery screen", () => {
     expect(screenSource).toContain("enterDiscovery");
   });
 
-  it("supports reduced motion and fast scrolling without clipped persistent blanks", () => {
-    expect(reducedMotionSource).toContain("AccessibilityInfo.isReduceMotionEnabled()");
-    expect(reducedMotionSource).toContain('addEventListener("reduceMotionChanged"');
+  it("keeps the verified reduced-motion branch and bounded fast-scroll configuration", () => {
     expect(screenSource).toContain("reduceMotionEnabled ? null : <ActivityIndicator");
     expect(screenSource).toContain("removeClippedSubviews={false}");
     expect(screenSource).toContain("maxToRenderPerBatch={8}");

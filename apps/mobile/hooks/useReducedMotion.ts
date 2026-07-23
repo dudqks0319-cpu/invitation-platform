@@ -1,20 +1,12 @@
 import { useEffect, useState } from "react";
 import { AccessibilityInfo } from "react-native";
+import { subscribeToReducedMotion } from "@/lib/reduced-motion-state";
 
 export function useReducedMotion() {
   const [reduceMotionEnabled, setReduceMotionEnabled] = useState(false);
 
   useEffect(() => {
-    let active = true;
-    void AccessibilityInfo.isReduceMotionEnabled().then((enabled) => {
-      if (active) setReduceMotionEnabled(enabled);
-    });
-    const subscription = AccessibilityInfo.addEventListener("reduceMotionChanged", setReduceMotionEnabled);
-
-    return () => {
-      active = false;
-      subscription.remove();
-    };
+    return subscribeToReducedMotion(AccessibilityInfo, setReduceMotionEnabled);
   }, []);
 
   return reduceMotionEnabled;

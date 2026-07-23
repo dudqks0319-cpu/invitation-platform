@@ -45,7 +45,8 @@ describe("template preview route", () => {
     expect(routeSource).toContain("function TemplatePreviewImage");
     expect(routeSource).toContain('accessibilityRole="image"');
     expect(routeSource).toContain("aspectRatio: 941 / 1672");
-    expect(routeSource).toContain("onError={() => setImageFailed(true)}");
+    expect(routeSource).toContain("resolveRecoverableTemplateImage");
+    expect(routeSource).toContain("setImageState({ sourceIdentity, failed: true })");
     expect(routeSource).toContain("미리보기 이미지를 표시할 수 없어요");
     expect(routeSource).toContain('importantForAccessibility="no-hide-descendants"');
   });
@@ -58,6 +59,13 @@ describe("template preview route", () => {
     expect(routeSource).not.toContain("theme.colors.textLight");
     expect(invitationPreviewSource).toContain("minHeight: 44");
     expect(invitationPreviewSource).toContain("accessibilityState={{ disabled:");
+    expect(routeSource).toContain("createTemplatePreviewAnnouncementController");
+  });
+
+  it("does not wrap the interactive invitation preview in an accessible ancestor", () => {
+    expect(routeSource).not.toContain("예시 초대장 미리보기 상세");
+    expect(invitationPreviewSource).toContain("previewAccessibility.summary.label");
+    expect(invitationPreviewSource).toContain("previewAccessibility.mapButtons");
   });
 });
 

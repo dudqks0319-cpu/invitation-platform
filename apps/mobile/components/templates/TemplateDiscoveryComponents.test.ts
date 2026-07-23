@@ -19,7 +19,8 @@ describe("template discovery components", () => {
   });
 
   it("keeps an image failure local to the card and preserves preview selection", () => {
-    expect(cardSource).toContain("onError={() => setImageFailed(true)}");
+    expect(cardSource).toContain("resolveRecoverableTemplateImage");
+    expect(cardSource).toContain("setImageState({ sourceIdentity, failed: true })");
     expect(cardSource).toContain("미리보기 이미지를 표시할 수 없어요");
     expect(cardSource).toContain("onOpenPreview(template)");
   });

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ActivityIndicator, Image, Pressable, ScrollView, Text, View } from "react-native";
+import { AccessibilityInfo, ActivityIndicator, Image, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { InvitationPreviewCard } from "@/components/invitation/InvitationPreviewCard";
 import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
@@ -11,6 +11,11 @@ import { useTemplateCatalog } from "@/hooks/useTemplateCatalog";
 import { getDraftOwnerId } from "@/lib/auth-access";
 import { createOrReuseTemplatePreviewDraft, inspectDraftsForTemplatePreview } from "@/lib/drafts";
 import { getTemplatePreviewSource } from "@/lib/template-image-source";
+import {
+  createTemplateImageRecoveryState,
+  resolveRecoverableTemplateImage,
+  synchronizeTemplateImageRecoveryState
+} from "@/lib/template-image-recovery";
 import type { MobileTemplateGalleryItem } from "@/lib/template-gallery";
 import { isValidTemplatePreviewIntentKey } from "@/lib/template-discovery-navigation";
 import {
@@ -26,12 +31,23 @@ import {
   type TemplatePreviewInspection
 } from "@/lib/template-preview-presenter";
 import { recordRecentlyViewedTemplate } from "@/lib/template-preview-recent";
+import { createTemplatePreviewAnnouncementController } from "@/lib/template-preview-announcements";
+import { getUniqueTemplateTags } from "@/lib/template-tags";
 
 type CreationStatus = "idle" | "creating" | "failed" | "success";
 
 function TemplatePreviewImage({ template }: { template: MobileTemplateGalleryItem }) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const previewSource = imageFailed ? null : getTemplatePreviewSource(template);
+  const resolvedSource = getTemplatePreviewSource(template);
+  const [imageState, setImageState] = useState(() => createTemplateImageRecoveryState(resolvedSource));
+  const synchronizedImageState = synchronizeTemplateImageRecoveryState(imageState, resolvedSource);
+  if (imageState !== synchronizedImageState) {
+    setImageState(synchronizedImageState);
+  }
+  const { sourceIdentity, visibleSource: previewSource } = resolveRecoverableTemplateImage(
+    resolvedSource,
+    synchronizedImageState.failed ? synchronizedImageState.sourceIdentity : null
+  );
+  const imageFailed = synchronizedImageState.failed && synchronizedImageState.sourceIdentity === sourceIdentity;
 
   return (
     <View
@@ -57,7 +73,8 @@ function TemplatePreviewImage({ template }: { template: MobileTemplateGalleryIte
             accessibilityElementsHidden
             accessibilityIgnoresInvertColors
             importantForAccessibility="no-hide-descendants"
-            onError={() => setImageFailed(true)}
+            key={sourceIdentity}
+            onError={() => setImageState({ sourceIdentity, failed: true })}
             resizeMode="cover"
             source={previewSource}
             style={{ width: "100%", height: "100%" }}
@@ -106,10 +123,24 @@ function TemplatePreviewActions({
   const isCreating = creationStatus === "creating";
   const isActionDisabled = isCreating || creationStatus === "success";
   const actionAccessibility = getTemplatePreviewActionAccessibility(creationStatus);
+  const [announcementController] = useState(() => createTemplatePreviewAnnouncementController((message) => {
+    AccessibilityInfo.announceForAccessibility(message);
+  }));
 
   useEffect(() => () => {
     controller.deactivate();
-  }, [controller]);
+    announcementController.cancel();
+  }, [announcementController, controller]);
+
+  useEffect(() => {
+    if (Platform.OS !== "ios") return;
+    const message = creationStatus === "creating"
+      ? "초대장을 만드는 중입니다."
+      : creationStatus === "failed"
+        ? creationError ?? "초대장을 만들지 못했어요."
+        : null;
+    announcementController.transition(`creation:${creationStatus}:${message ?? ""}`, message);
+  }, [announcementController, creationError, creationStatus]);
 
   async function runAction(action: () => Promise<void>) {
     if (isCreating || creationStatus === "success") return;
@@ -220,6 +251,21 @@ export default function TemplatePreviewScreen() {
     hasValidIntent,
     inspection
   });
+  const [inspectionAnnouncementController] = useState(() => createTemplatePreviewAnnouncementController((message) => {
+    AccessibilityInfo.announceForAccessibility(message);
+  }));
+
+  useEffect(() => () => {
+    inspectionAnnouncementController.cancel();
+  }, [inspectionAnnouncementController]);
+
+  useEffect(() => {
+    if (Platform.OS !== "ios") return;
+    const message = gate.status === "auth-loading" || gate.status === "checking" || gate.status === "load-error"
+      ? gate.message
+      : null;
+    inspectionAnnouncementController.transition(`inspection:${gate.status}:${message ?? ""}`, message);
+  }, [gate.message, gate.status, inspectionAnnouncementController]);
 
   useEffect(() => {
     if (!template) return;
@@ -299,7 +345,7 @@ export default function TemplatePreviewScreen() {
           <Text style={{ color: theme.colors.ink, fontSize: 28, fontWeight: "900", lineHeight: 36 }}>{template.name}</Text>
           <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 23 }}>{template.desc}</Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
-            {template.tags.map((tag) => (
+            {getUniqueTemplateTags(template.tags).map((tag) => (
               <View key={tag} style={{ borderRadius: theme.radius.pill, backgroundColor: theme.colors.surfaceSoft, paddingHorizontal: 10, paddingVertical: 6 }}>
                 <Text style={{ color: theme.colors.ink, fontSize: 12, fontWeight: "700" }}>{tag}</Text>
               </View>
@@ -309,7 +355,7 @@ export default function TemplatePreviewScreen() {
 
         <TemplatePreviewImage key={template.id} template={template} />
 
-        <View accessible accessibilityLabel={`예시 초대장 미리보기 상세, ${example.title}`} style={{ width: "100%", maxWidth: 420, alignSelf: "center" }}>
+        <View style={{ width: "100%", maxWidth: 420, alignSelf: "center" }}>
           <InvitationPreviewCard compact payload={payload} />
         </View>
 

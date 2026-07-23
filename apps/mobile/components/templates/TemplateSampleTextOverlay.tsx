@@ -1,6 +1,7 @@
 import { Text, View } from "react-native";
 import { resolveTemplateTextSafeArea } from "@invitehub/shared";
 import type { MobileTemplateGalleryItem } from "@/lib/template-gallery";
+import { getTemplateSampleOverlayPresentation } from "@/lib/template-sample-overlay-presentation";
 
 const templateSampleCopy = {
   wedding: {
@@ -80,6 +81,7 @@ export function TemplateSampleTextOverlay({
     textPlacement: template.textPlacement
   });
   const compressed = safeArea.bottomPct - safeArea.topPct <= 22;
+  const presentation = getTemplateSampleOverlayPresentation(compressed);
 
   return (
     <View
@@ -94,51 +96,49 @@ export function TemplateSampleTextOverlay({
         bottom: `${100 - safeArea.bottomPct}%`,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: safeArea.backdrop === "light" ? "rgba(255,252,244,0.82)" : "transparent",
-        borderRadius: safeArea.backdrop === "light" ? 8 : 0,
-        paddingHorizontal: safeArea.backdrop === "light" ? 5 : 0,
-        paddingVertical: safeArea.backdrop === "light" ? 3 : 0
+        backgroundColor: presentation.backgroundColor,
+        borderRadius: 8,
+        paddingHorizontal: 5,
+        paddingVertical: 3
       }}
     >
+      {presentation.showDecoration ? (
+        <>
+          <Text
+            numberOfLines={1}
+            style={{
+              color: presentation.textColor,
+              fontSize: presentation.headlineFontSize,
+              fontStyle: "italic",
+              fontWeight: "600",
+              textAlign: "center",
+              width: "100%"
+            }}
+          >
+            {copy.headline}
+          </Text>
+          <Text
+            numberOfLines={1}
+            style={{
+              color: presentation.textColor,
+              fontSize: presentation.badgeFontSize,
+              fontWeight: "800",
+              marginTop: 2,
+              textAlign: "center",
+              width: "100%"
+            }}
+          >
+            {copy.badge}
+          </Text>
+        </>
+      ) : null}
       <Text
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.56}
+        numberOfLines={presentation.titleNumberOfLines}
         style={{
-          color: "rgba(126,91,65,0.76)",
-          fontSize: compressed ? 7 : 8,
-          fontStyle: "italic",
-          fontWeight: "600",
-          textAlign: "center",
-          width: "100%"
-        }}
-      >
-        {copy.headline}
-      </Text>
-      <Text
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.56}
-        style={{
-          color: "rgba(198,144,114,0.9)",
-          fontSize: compressed ? 7 : 8,
-          fontWeight: "800",
-          marginTop: compressed ? 1 : 2,
-          textAlign: "center",
-          width: "100%"
-        }}
-      >
-        {copy.badge}
-      </Text>
-      <Text
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.56}
-        style={{
-          color: "#2B2B2B",
-          fontSize: compressed ? 13 : 16,
+          color: presentation.textColor,
+          fontSize: presentation.titleFontSize,
           fontWeight: "900",
-          lineHeight: compressed ? 14 : 18,
+          lineHeight: presentation.titleLineHeight,
           marginTop: compressed ? 1 : 2,
           textAlign: "center",
           width: "100%"
@@ -146,15 +146,16 @@ export function TemplateSampleTextOverlay({
       >
         {copy.title}
       </Text>
-      <View style={{ width: 36, height: 1, backgroundColor: "rgba(198,144,114,0.42)", marginVertical: compressed ? 1 : 3 }} />
+      {presentation.showDecoration ? (
+        <View style={{ width: 36, height: 1, backgroundColor: presentation.textColor, marginVertical: 3 }} />
+      ) : null}
       <Text
         numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.56}
         style={{
-          color: "#2B2B2B",
-          fontSize: compressed ? 7 : 8,
+          color: presentation.textColor,
+          fontSize: presentation.detailFontSize,
           fontWeight: "900",
+          lineHeight: presentation.detailLineHeight,
           textAlign: "center",
           width: "100%"
         }}
@@ -162,13 +163,12 @@ export function TemplateSampleTextOverlay({
         {copy.date}
       </Text>
       <Text
-        numberOfLines={1}
-        adjustsFontSizeToFit
-        minimumFontScale={0.56}
+        numberOfLines={presentation.detailNumberOfLines}
         style={{
-          color: "rgba(55,55,55,0.78)",
-          fontSize: compressed ? 7 : 8,
+          color: presentation.textColor,
+          fontSize: presentation.detailFontSize,
           fontWeight: "800",
+          lineHeight: presentation.detailLineHeight,
           marginTop: compressed ? 1 : 2,
           textAlign: "center",
           width: "100%"

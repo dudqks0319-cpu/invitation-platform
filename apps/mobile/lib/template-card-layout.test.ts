@@ -18,10 +18,10 @@ const invitationPreviewSource = readFileSync(
 );
 
 describe("template card sample overlay", () => {
-  it("keeps the main sample title on one line and shrinks it to fit narrow two-column cards", () => {
-    expect(sampleOverlaySource).toMatch(
-      /numberOfLines=\{1\}[\s\S]{0,180}adjustsFontSizeToFit[\s\S]{0,180}minimumFontScale=\{0\.56\}/
-    );
+  it("uses the tested presentation contract instead of forced 0.56 tiny-text shrinking", () => {
+    expect(sampleOverlaySource).toContain("getTemplateSampleOverlayPresentation(compressed)");
+    expect(sampleOverlaySource).not.toContain("minimumFontScale={0.56}");
+    expect(sampleOverlaySource).not.toMatch(/fontSize:\s*compressed\s*\?\s*[78]/);
   });
 
   it("uses event-specific sample copy instead of wedding copy for every category", () => {

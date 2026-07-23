@@ -2,7 +2,13 @@ import { memo, useState } from "react";
 import { Image, Pressable, Text, View } from "react-native";
 import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
 import { getTemplatePreviewSource } from "@/lib/template-image-source";
+import {
+  createTemplateImageRecoveryState,
+  resolveRecoverableTemplateImage,
+  synchronizeTemplateImageRecoveryState
+} from "@/lib/template-image-recovery";
 import type { MobileTemplateGalleryItem } from "@/lib/template-gallery";
+import { getUniqueTemplateTags } from "@/lib/template-tags";
 import { theme } from "@/components/ui/theme";
 
 type TemplateCardProps = {
@@ -12,8 +18,17 @@ type TemplateCardProps = {
 };
 
 export const TemplateCard = memo(function TemplateCard({ template, onOpenPreview, width }: TemplateCardProps) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const previewSource = imageFailed ? null : getTemplatePreviewSource(template);
+  const resolvedSource = getTemplatePreviewSource(template);
+  const [imageState, setImageState] = useState(() => createTemplateImageRecoveryState(resolvedSource));
+  const synchronizedImageState = synchronizeTemplateImageRecoveryState(imageState, resolvedSource);
+  if (imageState !== synchronizedImageState) {
+    setImageState(synchronizedImageState);
+  }
+  const { sourceIdentity, visibleSource: previewSource } = resolveRecoverableTemplateImage(
+    resolvedSource,
+    synchronizedImageState.failed ? synchronizedImageState.sourceIdentity : null
+  );
+  const imageFailed = synchronizedImageState.failed && synchronizedImageState.sourceIdentity === sourceIdentity;
   const previewHeight = width ? Math.max(220, Math.min(420, Math.round(width * 1.3))) : 220;
 
   return (
@@ -53,7 +68,8 @@ export const TemplateCard = memo(function TemplateCard({ template, onOpenPreview
               accessibilityElementsHidden
               accessibilityIgnoresInvertColors
               importantForAccessibility="no-hide-descendants"
-              onError={() => setImageFailed(true)}
+              key={sourceIdentity}
+              onError={() => setImageState({ sourceIdentity, failed: true })}
               resizeMode="cover"
               source={previewSource}
               style={{ width: "100%", height: "100%" }}
@@ -81,7 +97,7 @@ export const TemplateCard = memo(function TemplateCard({ template, onOpenPreview
           {template.desc}
         </Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
-          {template.tags.slice(0, 3).map((tag) => (
+          {getUniqueTemplateTags(template.tags).slice(0, 3).map((tag) => (
             <View key={tag} style={{ borderRadius: theme.radius.pill, backgroundColor: theme.colors.surfaceSoft, paddingHorizontal: 9, paddingVertical: 5 }}>
               <Text style={{ color: theme.colors.ink, fontSize: 11, fontWeight: "700" }}>{tag}</Text>
             </View>
