@@ -67,12 +67,16 @@ describe("template card sample overlay", () => {
     expect(heroSectionSource).toContain("<TemplateSampleTextOverlay template={template} />");
   });
 
-  it("uses one shared overlay implementation and keeps the long message below the artwork", () => {
+  it("uses one shared overlay and keeps complete scalable details below decorative artwork", () => {
     expect(templateCardSource).toContain('import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";');
     expect(templatesScreenSource).not.toContain("function TemplateSampleTextOverlay(");
     expect(invitationPreviewSource).toContain("selectedTemplate?.textSafeArea ?? resolveTemplateTextSafeArea");
-    expect(invitationPreviewSource.indexOf("</ImageBackground>")).toBeLessThan(
-      invitationPreviewSource.indexOf('{payload.message || "초대 메시지를 입력하면 이곳에 반영됩니다."}')
-    );
+    expect(invitationPreviewSource).toContain("backgroundColor: theme.colors.paper");
+    expect(invitationPreviewSource).toContain("allowFontScaling={false}");
+    expect(invitationPreviewSource).not.toContain("adjustsFontSizeToFit");
+    expect(invitationPreviewSource).not.toContain("minimumFontScale");
+    expect(invitationPreviewSource.indexOf("</ImageBackground>")).toBeLessThan(invitationPreviewSource.indexOf("{details.map((detail) => ("));
+    const externalDetailsSource = invitationPreviewSource.slice(invitationPreviewSource.indexOf("{details.map((detail) => ("));
+    expect(externalDetailsSource).not.toContain("numberOfLines");
   });
 });

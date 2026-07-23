@@ -5,15 +5,25 @@ type ReducedMotionAccessibility = {
   addEventListener: (event: "reduceMotionChanged", listener: (enabled: boolean) => void) => ReducedMotionSubscription;
 };
 
+export const REDUCED_MOTION_SAFE_DEFAULT = true;
+
+export function getInitialReducedMotionState() {
+  return REDUCED_MOTION_SAFE_DEFAULT;
+}
+
 export function subscribeToReducedMotion(
   accessibility: ReducedMotionAccessibility,
   onChange: (enabled: boolean) => void
 ) {
   let active = true;
-  void accessibility.isReduceMotionEnabled().then((enabled) => {
+  const publish = (enabled: boolean) => {
     if (active) onChange(enabled);
-  });
-  const subscription = accessibility.addEventListener("reduceMotionChanged", onChange);
+  };
+  void accessibility.isReduceMotionEnabled().then(
+    publish,
+    () => publish(REDUCED_MOTION_SAFE_DEFAULT)
+  );
+  const subscription = accessibility.addEventListener("reduceMotionChanged", publish);
 
   return () => {
     active = false;
