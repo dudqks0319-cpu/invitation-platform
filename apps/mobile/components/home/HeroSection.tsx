@@ -1,10 +1,19 @@
 /* eslint-disable jsx-a11y/alt-text */
 
 import { useState } from "react";
-import { Image, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import {
+  Image,
+  type ImageSourcePropType,
+  Pressable,
+  ScrollView,
+  Text,
+  useWindowDimensions,
+  View
+} from "react-native";
 import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
 import { theme } from "@/components/ui/theme";
 import { useTemplateCatalog } from "@/hooks/useTemplateCatalog";
+import { getFinishedHomeHeroSource } from "@/lib/home-hero-finished-source";
 import {
   getHomeHeroTemplates,
   getHomeTemplateSections,
@@ -22,8 +31,7 @@ type HeroSectionProps = {
   onOpenPreview: (template: MobileTemplateGalleryItem) => void;
 };
 
-function useRecoverablePreview(template: MobileTemplateGalleryItem) {
-  const resolvedSource = getTemplatePreviewSource(template);
+function useRecoverablePreview(resolvedSource: ImageSourcePropType | null) {
   const [imageState, setImageState] = useState(() => createTemplateImageRecoveryState(resolvedSource));
   const synchronizedImageState = synchronizeTemplateImageRecoveryState(imageState, resolvedSource);
   if (imageState !== synchronizedImageState) {
@@ -51,7 +59,9 @@ function TemplateCard({
   onOpenPreview: (template: MobileTemplateGalleryItem) => void;
   template: MobileTemplateGalleryItem;
 }) {
-  const { imageFailed, onImageError, previewSource, sourceIdentity } = useRecoverablePreview(template);
+  const { imageFailed, onImageError, previewSource, sourceIdentity } = useRecoverablePreview(
+    getTemplatePreviewSource(template)
+  );
 
   return (
     <Pressable
@@ -163,7 +173,17 @@ function HeroStackCard({
   onOpenPreview: (template: MobileTemplateGalleryItem) => void;
   template: MobileTemplateGalleryItem;
 }) {
-  const { imageFailed, onImageError, previewSource, sourceIdentity } = useRecoverablePreview(template);
+  const finishedHeroSource = getFinishedHomeHeroSource(template.id);
+  const [finishedHeroImageFailed, setFinishedHeroImageFailed] = useState(false);
+  const usesFinishedHeroImage = Boolean(finishedHeroSource && !finishedHeroImageFailed);
+  const {
+    imageFailed,
+    onImageError: onFallbackImageError,
+    previewSource,
+    sourceIdentity
+  } = useRecoverablePreview(
+    usesFinishedHeroImage ? finishedHeroSource : getTemplatePreviewSource(template)
+  );
   const isCenter = position === "center";
   const cardWidth = isCenter ? Math.min(190, stackWidth * 0.54) : Math.min(160, stackWidth * 0.45);
   const cardHeight = cardWidth / (941 / 1672);
@@ -201,7 +221,13 @@ function HeroStackCard({
           accessibilityIgnoresInvertColors
           accessibilityLabel={`${template.name} 웨딩 이미지`}
           key={sourceIdentity}
-          onError={onImageError}
+          onError={() => {
+            if (usesFinishedHeroImage) {
+              setFinishedHeroImageFailed(true);
+              return;
+            }
+            onFallbackImageError();
+          }}
           resizeMode="cover"
           source={previewSource}
           style={{ width: "100%", height: "100%" }}
@@ -212,7 +238,7 @@ function HeroStackCard({
           style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
         />
       )}
-      <TemplateSampleTextOverlay template={template} />
+      {usesFinishedHeroImage ? null : <TemplateSampleTextOverlay template={template} />}
     </Pressable>
   );
 }
