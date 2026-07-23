@@ -14,9 +14,11 @@ export type {
 
 export {
   isTemplateTextSafeArea,
+  resolveTemplateTextLayout,
   resolveTemplateTextSafeArea
 } from "./template-text-safe-area";
 export type {
+  TemplateTextLayout,
   TemplateTextPlacement,
   TemplateTextSafeArea
 } from "./template-text-safe-area";

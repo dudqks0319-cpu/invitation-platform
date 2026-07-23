@@ -4,6 +4,7 @@ import {
   getTemplateCardExternalMetadata,
   getTemplateSampleLabel,
   getTemplateSampleLabelWidthBudget,
+  getTemplateSampleOverlayContent,
   getTemplateSampleOverlayPresentation
 } from "./template-sample-overlay-presentation";
 
@@ -126,5 +127,19 @@ describe("template sample overlay presentation", () => {
     const desc = "상세 설명은 장식용 그림 안에 넣지 않고 카드 메타데이터 영역에서 축약 없이 제공합니다.";
 
     expect(getTemplateCardExternalMetadata({ name, desc })).toEqual({ name, description: desc });
+  });
+
+  it("uses separate short sample copy above and below centered artwork", () => {
+    expect(getTemplateSampleOverlayContent({
+      arrangement: "top-and-bottom",
+      category: "wedding"
+    })).toEqual(["결혼합니다", "10월 24일"]);
+  });
+
+  it("keeps one category label in the middle gap for framed artwork", () => {
+    expect(getTemplateSampleOverlayContent({
+      arrangement: "single",
+      category: "wedding"
+    })).toEqual(["결혼식"]);
   });
 });

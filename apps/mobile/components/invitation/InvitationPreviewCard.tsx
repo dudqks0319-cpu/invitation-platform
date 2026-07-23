@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ImageBackground, Linking, Pressable, Text, useWindowDimensions, View } from "react-native";
-import { resolveTemplateTextSafeArea } from "@invitehub/shared";
+import { resolveTemplateTextLayout } from "@invitehub/shared";
 import { theme } from "@/components/ui/theme";
 import { useTemplateCatalog } from "@/hooks/useTemplateCatalog";
 import { formatInviteDateTime } from "@/lib/date-time";
@@ -159,15 +159,15 @@ export function InvitationPreviewCard({
   const isWedding = (selectedTemplate?.category ?? payload.eventType) === "wedding";
   const primaryTitle = isWedding ? `${groomName}  ♡  ${brideName}` : payload.title || selectedTemplate?.badge || "초대합니다";
   const scaled = compact || fitToViewport;
-  const textSafeArea = selectedTemplate?.textSafeArea ?? resolveTemplateTextSafeArea({
+  const textLayout = resolveTemplateTextLayout({
     templateId: selectedTemplate?.id ?? payload.templateId,
     category: selectedTemplate?.category ?? payload.eventType,
-    textPlacement: selectedTemplate?.textPlacement
+    textPlacement: selectedTemplate?.textPlacement,
+    fallbackSafeArea: selectedTemplate?.textSafeArea
   });
   const artworkPresentation = getInvitationArtworkPresentation({
     artworkHeight,
-    safeAreaTopPct: textSafeArea.topPct,
-    safeAreaBottomPct: textSafeArea.bottomPct,
+    safeAreas: textLayout.areas,
     fontScale
   });
   const hasMapTarget = Boolean(mapLinks.query || mapLinks.naverUrl || mapLinks.kakaoUrl);
@@ -221,48 +221,59 @@ export function InvitationPreviewCard({
             backgroundColor: accent.background
           }}
         >
-          <View
-            style={{
-              position: "absolute",
-              left: `${textSafeArea.leftPct}%`,
-              right: `${100 - textSafeArea.rightPct}%`,
-              top: `${textSafeArea.topPct}%`,
-              bottom: `${100 - textSafeArea.bottomPct}%`,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: artworkPresentation.backgroundColor,
-              borderRadius: 12,
-              paddingHorizontal: 8,
-              paddingVertical: artworkPresentation.paddingVertical
-            }}
-          >
-            {artworkPresentation.showDetails ? (
-              <>
-                <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: 11, fontStyle: "italic", lineHeight: 14, textAlign: "center", width: "100%" }}>
-                  {accent.headline}
-                </Text>
-                <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: 11, fontWeight: "800", lineHeight: 14, marginTop: 2, textAlign: "center", width: "100%" }}>
-                  {selectedTemplate?.badge || "초대장"}
-                </Text>
-              </>
-            ) : null}
-            {artworkPresentation.showTitle ? (
-              <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: 16, fontWeight: "900", lineHeight: 20, marginTop: artworkPresentation.showDetails ? 2 : 0, textAlign: "center", width: "100%" }}>
-                {primaryTitle}
-              </Text>
-            ) : null}
-            {artworkPresentation.showDetails ? (
-              <>
-                <View style={{ width: 64, height: 1, backgroundColor: artworkPresentation.textColor, marginVertical: 4 }} />
-                <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: 11, fontWeight: "800", lineHeight: 14, textAlign: "center", width: "100%" }}>
-                  {displayDateTime}
-                </Text>
-                <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: 11, fontWeight: "800", lineHeight: 14, marginTop: 2, textAlign: "center", width: "100%" }}>
-                  {payload.venueName || "장소를 입력해 주세요."}
-                </Text>
-              </>
-            ) : null}
-          </View>
+          {artworkPresentation.zones.map((zone, index) => {
+            const safeArea = textLayout.areas[index];
+            const visible = zone.showHeadline || zone.showBadge || zone.showTitle || zone.showDateTime || zone.showVenue;
+            if (!safeArea || !visible) return null;
+
+            return (
+              <View
+                key={`${index}-${safeArea.topPct}-${safeArea.bottomPct}`}
+                style={{
+                  position: "absolute",
+                  left: `${safeArea.leftPct}%`,
+                  right: `${100 - safeArea.rightPct}%`,
+                  top: `${safeArea.topPct}%`,
+                  bottom: `${100 - safeArea.bottomPct}%`,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: artworkPresentation.backgroundColor,
+                  borderRadius: 12,
+                  paddingHorizontal: 8,
+                  paddingVertical: artworkPresentation.paddingVertical
+                }}
+              >
+                {zone.showHeadline ? (
+                  <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: 11, fontStyle: "italic", lineHeight: 14, textAlign: "center", width: "100%" }}>
+                    {accent.headline}
+                  </Text>
+                ) : null}
+                {zone.showBadge ? (
+                  <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: 11, fontWeight: "800", lineHeight: 14, marginTop: 2, textAlign: "center", width: "100%" }}>
+                    {selectedTemplate?.badge || "초대장"}
+                  </Text>
+                ) : null}
+                {zone.showTitle ? (
+                  <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: 16, fontWeight: "900", lineHeight: 20, marginTop: zone.showHeadline || zone.showBadge ? 2 : 0, textAlign: "center", width: "100%" }}>
+                    {primaryTitle}
+                  </Text>
+                ) : null}
+                {zone.content === "combined" && zone.showDateTime ? (
+                  <View style={{ width: 64, height: 1, backgroundColor: artworkPresentation.textColor, marginVertical: 4 }} />
+                ) : null}
+                {zone.showDateTime ? (
+                  <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: 11, fontWeight: "800", lineHeight: 14, textAlign: "center", width: "100%" }}>
+                    {displayDateTime}
+                  </Text>
+                ) : null}
+                {zone.showVenue ? (
+                  <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: 11, fontWeight: "800", lineHeight: 14, marginTop: 2, textAlign: "center", width: "100%" }}>
+                    {payload.venueName || "장소를 입력해 주세요."}
+                  </Text>
+                ) : null}
+              </View>
+            );
+          })}
         </ImageBackground>
       </View>
       <View style={{ padding: scaled ? 16 : 18, gap: 12 }}>

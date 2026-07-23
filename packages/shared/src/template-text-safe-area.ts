@@ -8,7 +8,39 @@ export type TemplateTextSafeArea = {
 
 export type TemplateTextPlacement = "top" | "center" | "bottom";
 
+export type TemplateTextLayout = {
+  arrangement: "single" | "top-and-bottom";
+  areas: readonly TemplateTextSafeArea[];
+};
+
 const HORIZONTAL_SAFE_AREA = { leftPct: 8, rightPct: 92 } as const;
+
+type ReviewedLayoutBounds = {
+  arrangement: TemplateTextLayout["arrangement"];
+  areas: readonly (readonly [number, number, "light"?])[];
+};
+
+const CENTERED_SUBJECT_TEMPLATE_IDS = [
+  "wedding-barunson-anime-04",
+  "wedding-barunson-anime-09",
+  "wedding-barunson-anime-10"
+] as const;
+
+const MIDDLE_GAP_TEMPLATE_IDS = Array.from(
+  { length: 10 },
+  (_, index) => `wedding-barunson-anime-${String(index + 25).padStart(2, "0")}`
+);
+
+const REVIEWED_TEMPLATE_TEXT_LAYOUTS: Record<string, ReviewedLayoutBounds> = Object.fromEntries([
+  ...CENTERED_SUBJECT_TEMPLATE_IDS.map((templateId) => [templateId, {
+    arrangement: "top-and-bottom" as const,
+    areas: [[8, 25], [76, 94]] as const
+  }]),
+  ...MIDDLE_GAP_TEMPLATE_IDS.map((templateId) => [templateId, {
+    arrangement: "single" as const,
+    areas: [[24, 60]] as const
+  }])
+]);
 
 const CATEGORY_CENTER_SAFE_AREAS: Record<string, readonly [number, number]> = {
   wedding: [25, 60],
@@ -163,4 +195,31 @@ export function resolveTemplateTextSafeArea({
 
   const [topPct, bottomPct] = CATEGORY_CENTER_SAFE_AREAS[category] ?? CATEGORY_CENTER_SAFE_AREAS.wedding;
   return fromVerticalBounds(topPct, bottomPct);
+}
+
+export function resolveTemplateTextLayout({
+  category,
+  fallbackSafeArea,
+  templateId,
+  textPlacement = "center"
+}: {
+  category: string;
+  fallbackSafeArea?: TemplateTextSafeArea;
+  templateId: string;
+  textPlacement?: TemplateTextPlacement;
+}): TemplateTextLayout {
+  const reviewed = REVIEWED_TEMPLATE_TEXT_LAYOUTS[templateId];
+  if (reviewed) {
+    return {
+      arrangement: reviewed.arrangement,
+      areas: reviewed.areas.map(([topPct, bottomPct, backdrop]) => (
+        fromVerticalBounds(topPct, bottomPct, backdrop)
+      ))
+    };
+  }
+
+  return {
+    arrangement: "single",
+    areas: [fallbackSafeArea ?? resolveTemplateTextSafeArea({ category, templateId, textPlacement })]
+  };
 }

@@ -26,15 +26,16 @@ describe("template card sample overlay", () => {
     expect(sampleOverlaySource).not.toContain("adjustsFontSizeToFit");
   });
 
-  it("gets reviewed category labels from the shared pure helper", () => {
+  it("gets reviewed layout-aware sample copy from the shared pure helper", () => {
     expect(sampleOverlaySource).toContain("export function TemplateSampleTextOverlay({");
     expect(templateCardSource).toContain("<TemplateSampleTextOverlay template={template} />");
-    expect(sampleOverlaySource).toContain("getTemplateSampleLabel(template.category)");
-    expect(sampleOverlaySource).toContain("if (!label) return null");
+    expect(sampleOverlaySource).toContain("getTemplateSampleOverlayContent({");
+    expect(sampleOverlaySource).toContain("if (content.length === 0) return null");
   });
 
   it("keeps sample copy inside category-specific blank-space safe zones", () => {
-    expect(sampleOverlaySource).toContain("template.textSafeArea ?? resolveTemplateTextSafeArea");
+    expect(sampleOverlaySource).toContain("resolveTemplateTextLayout({");
+    expect(sampleOverlaySource).toContain("layout.areas.map((safeArea, index)");
     expect(sampleOverlaySource).toContain("top: `${safeArea.topPct}%`");
     expect(sampleOverlaySource).toContain("bottom: `${100 - safeArea.bottomPct}%`");
     expect(templateCardSource).toContain("aspectRatio: 941 / 1672");
@@ -48,7 +49,7 @@ describe("template card sample overlay", () => {
 
     expect(heroStackSource).toContain("<TemplateSampleTextOverlay template={template} />");
     expect(heroStackSource).not.toMatch(/>\s*\{template\.name\}\s*<\/Text>/);
-    expect(sampleOverlaySource).toContain("getTemplateSampleLabel");
+    expect(sampleOverlaySource).toContain("getTemplateSampleOverlayContent");
     expect(sampleOverlaySource).not.toMatch(/headline:|badge:|date:|venue:/);
   });
 
@@ -61,7 +62,8 @@ describe("template card sample overlay", () => {
     expect(templateCardSource).toContain('import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";');
     expect(templateCardSource).toContain("getTemplateCardExternalMetadata(template)");
     expect(templatesScreenSource).not.toContain("function TemplateSampleTextOverlay(");
-    expect(invitationPreviewSource).toContain("selectedTemplate?.textSafeArea ?? resolveTemplateTextSafeArea");
+    expect(invitationPreviewSource).toContain("resolveTemplateTextLayout({");
+    expect(invitationPreviewSource).toContain("artworkPresentation.zones.map((zone, index)");
     expect(invitationPreviewSource).toContain("backgroundColor: theme.colors.paper");
     expect(invitationPreviewSource).toContain("allowFontScaling={false}");
     expect(invitationPreviewSource).not.toContain("adjustsFontSizeToFit");

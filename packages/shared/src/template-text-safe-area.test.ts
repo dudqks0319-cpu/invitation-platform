@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { isTemplateTextSafeArea, resolveTemplateTextSafeArea } from "./template-text-safe-area";
+import {
+  isTemplateTextSafeArea,
+  resolveTemplateTextLayout,
+  resolveTemplateTextSafeArea
+} from "./template-text-safe-area";
 
 describe("template text safe areas", () => {
   it("resolves reviewed template-specific zones and backdrops", () => {
@@ -48,5 +52,55 @@ describe("template text safe areas", () => {
     expect(isTemplateTextSafeArea({ ...valid, bottomPct: 101 })).toBe(false);
     expect(isTemplateTextSafeArea({ ...valid, topPct: valid.bottomPct })).toBe(false);
     expect(isTemplateTextSafeArea({ ...valid, extra: true })).toBe(false);
+  });
+
+  it.each([
+    "wedding-barunson-anime-04",
+    "wedding-barunson-anime-09",
+    "wedding-barunson-anime-10"
+  ])("uses reviewed top and bottom blank zones around centered artwork for %s", (templateId) => {
+    expect(resolveTemplateTextLayout({ templateId, category: "wedding" })).toEqual({
+      arrangement: "top-and-bottom",
+      areas: [
+        { topPct: 8, bottomPct: 25, leftPct: 8, rightPct: 92, backdrop: "none" },
+        { topPct: 76, bottomPct: 94, leftPct: 8, rightPct: 92, backdrop: "none" }
+      ]
+    });
+  });
+
+  it.each([
+    "wedding-barunson-anime-25",
+    "wedding-barunson-anime-26",
+    "wedding-barunson-anime-27",
+    "wedding-barunson-anime-28",
+    "wedding-barunson-anime-29",
+    "wedding-barunson-anime-30",
+    "wedding-barunson-anime-31",
+    "wedding-barunson-anime-32",
+    "wedding-barunson-anime-33",
+    "wedding-barunson-anime-34"
+  ])("uses the reviewed middle gap between top and bottom artwork for %s", (templateId) => {
+    expect(resolveTemplateTextLayout({ templateId, category: "wedding" })).toEqual({
+      arrangement: "single",
+      areas: [
+        { topPct: 24, bottomPct: 60, leftPct: 8, rightPct: 92, backdrop: "none" }
+      ]
+    });
+  });
+
+  it("keeps an explicit catalog safe area for unreviewed templates", () => {
+    const fallbackSafeArea = {
+      topPct: 30,
+      bottomPct: 62,
+      leftPct: 10,
+      rightPct: 90,
+      backdrop: "light" as const
+    };
+
+    expect(resolveTemplateTextLayout({
+      templateId: "remote-reviewed-elsewhere",
+      category: "wedding",
+      fallbackSafeArea
+    })).toEqual({ arrangement: "single", areas: [fallbackSafeArea] });
   });
 });

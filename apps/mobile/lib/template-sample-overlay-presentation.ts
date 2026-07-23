@@ -56,6 +56,21 @@ export function getTemplateSampleLabel(category: string) {
   return TEMPLATE_SAMPLE_LABELS[category as keyof typeof TEMPLATE_SAMPLE_LABELS];
 }
 
+export function getTemplateSampleOverlayContent({
+  arrangement,
+  category
+}: {
+  arrangement: "single" | "top-and-bottom";
+  category: string;
+}) {
+  const categoryLabel = getTemplateSampleLabel(category);
+  if (!categoryLabel) return [];
+  if (arrangement === "top-and-bottom" && category === "wedding") {
+    return ["결혼합니다", "10월 24일"];
+  }
+  return [categoryLabel];
+}
+
 export function getTemplateSampleLabelWidthBudget(label: string) {
   return Array.from(label).length * TITLE_FONT_SIZE * GLYPH_WIDTH_SAFETY_FACTOR;
 }
