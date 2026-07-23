@@ -41,15 +41,20 @@ describe("template card sample overlay", () => {
     expect(templateCardSource).toContain("aspectRatio: 941 / 1672");
   });
 
-  it("uses completed invitation artwork in the home hero and overlays only the blank fallback", () => {
+  it("uses a single finished fan composite in the home hero and retains recoverable card fallbacks", () => {
     const heroStackSource = heroSectionSource.slice(
       heroSectionSource.indexOf("function HeroStackCard"),
       heroSectionSource.indexOf("export function HeroSection")
     );
+    const heroSource = heroSectionSource.slice(heroSectionSource.indexOf("export function HeroSection"));
 
     expect(heroStackSource).toContain("getFinishedHomeHeroSource(template.id)");
     expect(heroStackSource).toContain("usesFinishedHeroImage ? null : <TemplateSampleTextOverlay template={template} />");
     expect(heroStackSource).not.toMatch(/>\s*\{template\.name\}\s*<\/Text>/);
+    expect(heroSource).toContain("getFinishedHomeHeroCompositeSource()");
+    expect(heroSource).toContain("onOpenPreview(heroFeaturedTemplate)");
+    expect(heroSource).toContain("resizeMode=\"cover\"");
+    expect(heroSource).toContain("<HeroStackCard");
   });
 
   it("adds real invitation copy to the front wedding cards on home", () => {

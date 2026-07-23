@@ -15,8 +15,9 @@
 | [02-preview-centered-subject-bottom-copy.jpg](./02-preview-centered-subject-bottom-copy.jpg) | 중앙 인물형 실제 미리보기: 인물 아래 안전 영역에 행사 문구 배치 |
 | [03-preview-middle-gap-copy.jpg](./03-preview-middle-gap-copy.jpg) | 위·아래 장식형: 비어 있는 중앙 영역에 전체 초대 문구 배치 |
 | [09-finished-three-card-home.jpg](./09-finished-three-card-home.jpg) | 서로 다른 문구·인물·장소를 넣은 완성 초대장 3장을 메인 히어로에 직접 표시 |
+| [10-finished-composite-home.jpg](./10-finished-composite-home.jpg) | 완성 초대장 3장을 하나의 부채꼴 PNG로 합성해 메인 히어로에 표시 |
 
-`visual-verdict` 최종 판정은 96점, `pass`다. 판정 상태는
+`visual-verdict` 최종 판정은 97점, `pass`다. 판정 상태는
 `.omx/state/osamosam-text-layout/ralph-progress.json`에 남겼다.
 
 ## 메인 완성 초대장 3종
@@ -27,9 +28,10 @@
 | `wedding-barunson-anime-04` | 박도윤·최서아, 2026-11-07 15:00, 더채플 앳 청담 | 상단 제목과 하단 세부 정보가 중앙 커플 영역을 피함 |
 | `wedding-barunson-anime-10` | 김현우·윤하린, 2026-12-05 17:00, 서울 루프탑 웨딩홀 | 상단 제목과 하단 세부 정보가 중앙 인물·장식을 가리지 않음 |
 
-세 이미지는 프로젝트 내부의 941×1672 PNG로 고정 번들되며, 런타임에는
-동일 문구 오버레이를 중복 렌더링하지 않는다. 완성 이미지 로드가 실패하면
-기존 빈 템플릿과 콘텐츠 인지형 문구 배치로 복구한다.
+세 원본 이미지와 부채꼴 합성본은 프로젝트 내부의 941×1672 PNG로 고정
+번들된다. 메인 화면은 합성본 한 장을 표시하므로 카드 사이의 겹침과 회전이
+항상 동일하다. 합성본 로드가 실패할 때만 원본 3장을 개별 카드로 렌더링하며,
+각 원본까지 실패하면 기존 빈 템플릿과 콘텐츠 인지형 문구 배치로 복구한다.
 
 ## 화면·접근성 매트릭스
 

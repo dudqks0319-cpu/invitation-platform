@@ -13,7 +13,10 @@ import {
 import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
 import { theme } from "@/components/ui/theme";
 import { useTemplateCatalog } from "@/hooks/useTemplateCatalog";
-import { getFinishedHomeHeroSource } from "@/lib/home-hero-finished-source";
+import {
+  getFinishedHomeHeroCompositeSource,
+  getFinishedHomeHeroSource
+} from "@/lib/home-hero-finished-source";
 import {
   getHomeHeroTemplates,
   getHomeTemplateSections,
@@ -246,11 +249,13 @@ function HeroStackCard({
 export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps) {
   const { width } = useWindowDimensions();
   const { templates } = useTemplateCatalog();
+  const [finishedHeroCompositeFailed, setFinishedHeroCompositeFailed] = useState(false);
   const cardWidth = Math.min(224, Math.max(176, width * 0.52));
   const heroStackWidth = Math.min(360, Math.max(284, width - 36));
-  const heroCenterCardWidth = Math.min(190, heroStackWidth * 0.54);
-  const heroStackHeight = heroCenterCardWidth / (941 / 1672) + 24;
+  const heroStackHeight = heroStackWidth * 1.02;
   const heroTemplates = getHomeHeroTemplates(templates);
+  const heroFeaturedTemplate = heroTemplates[1] ?? heroTemplates[0];
+  const finishedHeroCompositeSource = getFinishedHomeHeroCompositeSource();
   const sections = getHomeTemplateSections(templates);
 
   return (
@@ -304,15 +309,39 @@ export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps)
         </View>
 
         <View style={{ width: heroStackWidth, height: heroStackHeight }}>
-          {heroTemplates.map((template, index) => (
-            <HeroStackCard
-              key={template.id}
-              onOpenPreview={onOpenPreview}
-              position={index === 0 ? "left" : index === 1 ? "center" : "right"}
-              stackWidth={heroStackWidth}
-              template={template}
-            />
-          ))}
+          {!finishedHeroCompositeFailed && heroFeaturedTemplate ? (
+            <Pressable
+              accessibilityHint="선택하면 가운데 초대장 예시 미리보기로 이동합니다."
+              accessibilityLabel="완성 초대장 3종이 부채꼴로 겹친 오삼오삼 웨딩 디자인 셀렉션"
+              accessibilityRole="button"
+              onPress={() => onOpenPreview(heroFeaturedTemplate)}
+              style={{
+                width: "100%",
+                height: "100%",
+                borderRadius: 24,
+                overflow: "hidden"
+              }}
+            >
+              <Image
+                accessible={false}
+                accessibilityIgnoresInvertColors
+                onError={() => setFinishedHeroCompositeFailed(true)}
+                resizeMode="cover"
+                source={finishedHeroCompositeSource}
+                style={{ width: "100%", height: "100%" }}
+              />
+            </Pressable>
+          ) : (
+            heroTemplates.map((template, index) => (
+              <HeroStackCard
+                key={template.id}
+                onOpenPreview={onOpenPreview}
+                position={index === 0 ? "left" : index === 1 ? "center" : "right"}
+                stackWidth={heroStackWidth}
+                template={template}
+              />
+            ))
+          )}
         </View>
       </View>
 

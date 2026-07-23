@@ -9,6 +9,7 @@ const expectedAssets = [
   ["wedding-barunson-anime-04", "wedding-04-finished-v1.png"],
   ["wedding-barunson-anime-10", "wedding-10-finished-v1.png"]
 ] as const;
+const compositeFilename = "wedding-three-card-fan-v1.png";
 
 function readPngDimensions(path: string) {
   const header = readFileSync(path).subarray(0, 24);
@@ -19,11 +20,11 @@ function readPngDimensions(path: string) {
 }
 
 describe("finished home hero invitation assets", () => {
-  it("ships exactly three static 941x1672 PNG assets in the app bundle", () => {
+  it("ships the three invitations and their single 941x1672 fan composite in the app bundle", () => {
     const assetDirectory = join(process.cwd(), "apps/mobile/assets/home-hero/finished");
 
     expect(readdirSync(assetDirectory).sort()).toEqual(
-      expectedAssets.map(([, filename]) => filename).sort()
+      [...expectedAssets.map(([, filename]) => filename), compositeFilename].sort()
     );
 
     for (const [templateId, filename] of expectedAssets) {
@@ -33,6 +34,14 @@ describe("finished home hero invitation assets", () => {
       expect(readPngDimensions(assetPath), templateId).toEqual({ width: 941, height: 1672 });
       expect(source).toContain(`"${templateId}": require("../assets/home-hero/finished/${filename}")`);
     }
+
+    const compositePath = join(assetDirectory, compositeFilename);
+    expect(existsSync(compositePath)).toBe(true);
+    expect(readPngDimensions(compositePath)).toEqual({ width: 941, height: 1672 });
+    expect(source).toContain(
+      `require("../assets/home-hero/finished/${compositeFilename}")`
+    );
+    expect(source).toContain("export function getFinishedHomeHeroCompositeSource()");
   });
 
   it("does not reference temporary generated-image storage", () => {
