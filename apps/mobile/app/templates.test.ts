@@ -83,4 +83,13 @@ describe("template discovery screen", () => {
     expect(screenSource).toContain("maxToRenderPerBatch={8}");
     expect(screenSource).toContain("windowSize={7}");
   });
+
+  it("renders bounded active recent designs and resets only user-initiated filter changes to the top", () => {
+    expect(screenSource).toContain("loadRecentlyViewedTemplates(templates)");
+    expect(screenSource).toContain("최근 본 디자인");
+    expect(screenSource).toContain("ref={listRef}");
+    expect(screenSource).toContain("listRef.current?.scrollToOffset({ offset: 0, animated: false })");
+    expect(screenSource).toContain("onFiltersChange={changeFiltersFromUser}");
+    expect(screenSource).toContain("contentOffset={{ x: 0, y: restoredScrollOffset }}");
+  });
 });

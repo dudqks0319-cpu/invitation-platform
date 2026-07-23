@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import {
   AccessibilityInfo,
   ActivityIndicator,
@@ -22,7 +22,8 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import {
   emptyTemplateDiscoveryFilters,
   filterTemplateDiscoveryItems,
-  getTemplateDiscoveryActiveFilterSummary
+  getTemplateDiscoveryActiveFilterSummary,
+  type TemplateDiscoveryFilters
 } from "@/lib/template-discovery";
 import {
   getTemplateDiscoveryCardWidth,
@@ -33,6 +34,7 @@ import {
 import { createTemplatePreviewDestination } from "@/lib/template-discovery-navigation";
 import { normalizeTemplateDiscoveryEntryKey } from "@/lib/template-discovery-state";
 import { mobileTemplateCategories, type MobileTemplateGalleryItem } from "@/lib/template-gallery";
+import { loadRecentlyViewedTemplates } from "@/lib/template-preview-recent";
 import {
   createTemplateResultAnnouncer,
   scheduleTemplateResultCommit,
@@ -142,6 +144,8 @@ export default function TemplatesScreen() {
   const { width, fontScale } = useWindowDimensions();
   const reduceMotionEnabled = useReducedMotion();
   const [listWidth, setListWidth] = useState(width);
+  const [recentTemplates, setRecentTemplates] = useState<MobileTemplateGalleryItem[]>([]);
+  const listRef = useRef<FlatList<MobileTemplateGalleryItem>>(null);
   const currentScrollOffsetRef = useRef(scrollOffset);
   const announcedOnceRef = useRef(false);
   const announceAccessibility = useCallback((message: string) => {
@@ -170,6 +174,23 @@ export default function TemplatesScreen() {
   useEffect(() => {
     enterDiscovery({ entryKey, category: initialCategory }, allowedCategoryKeys);
   }, [enterDiscovery, entryKey, initialCategory]);
+
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    if (source === "loading") {
+      setRecentTemplates([]);
+      return () => {
+        active = false;
+      };
+    }
+
+    void loadRecentlyViewedTemplates(templates).then((recent) => {
+      if (active) setRecentTemplates(recent);
+    });
+    return () => {
+      active = false;
+    };
+  }, [source, templates]));
 
   useEffect(() => {
     currentScrollOffsetRef.current = restoredScrollOffset;
@@ -221,8 +242,15 @@ export default function TemplatesScreen() {
     setScrollOffset(currentScrollOffsetRef.current);
   }
 
+  function changeFiltersFromUser(nextFilters: TemplateDiscoveryFilters) {
+    currentScrollOffsetRef.current = 0;
+    setScrollOffset(0);
+    listRef.current?.scrollToOffset({ offset: 0, animated: false });
+    setFilters(nextFilters);
+  }
+
   function resetFilters() {
-    setFilters({ ...emptyTemplateDiscoveryFilters, moods: [] });
+    changeFiltersFromUser({ ...emptyTemplateDiscoveryFilters, moods: [] });
   }
 
   const listHeader = (
@@ -266,10 +294,21 @@ export default function TemplatesScreen() {
         onRetry={retry}
       />
 
+      {recentTemplates.length > 0 ? (
+        <View accessibilityLabel={`최근 본 디자인 ${recentTemplates.length}개`} style={{ gap: 12 }}>
+          <Text style={{ color: theme.colors.ink, fontSize: 18, fontWeight: "800" }}>최근 본 디자인</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: TEMPLATE_DISCOVERY_COLUMN_GAP }}>
+            {recentTemplates.map((template) => (
+              <TemplateCard key={`recent-${template.id}`} template={template} onOpenPreview={handleOpenPreview} width={cardWidth} />
+            ))}
+          </View>
+        </View>
+      ) : null}
+
       <TemplateFilters
         categories={mobileTemplateCategories}
         filters={filters}
-        onFiltersChange={setFilters}
+        onFiltersChange={changeFiltersFromUser}
         onReset={resetFilters}
       />
 
@@ -282,6 +321,7 @@ export default function TemplatesScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <FlatList
+        ref={listRef}
         key={`template-grid-${columnCount}-${normalizedEntryKey}`}
         contentContainerStyle={{
           flexGrow: 1,
