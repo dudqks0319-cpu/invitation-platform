@@ -19,8 +19,7 @@ export const templateCatalogContract = {
     "tags",
     "previewUrl",
     "sampleTextOverlay",
-    "textPlacement",
-    "textSafeArea"
+    "textPlacement"
   ],
   cache: {
     acceptsOnlyValidatedCatalogs: true,

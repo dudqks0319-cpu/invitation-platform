@@ -7,7 +7,6 @@ import {
   toPublicMobileTemplate
 } from "@/lib/mobile-template-catalog";
 import { GET } from "@/app/api/mobile/v1/templates/route";
-import { isTemplateTextSafeArea } from "@invitehub/shared";
 import { templateCatalogContract } from "@/apps/mobile/lib/template-catalog.contract.fixture";
 
 describe("GET /api/mobile/v1/templates", () => {
@@ -22,7 +21,7 @@ describe("GET /api/mobile/v1/templates", () => {
       /^https:\/\/invitation-platform-plum\.vercel\.app\/images\/.+\?v=v1-[a-f0-9]{8}$/
     );
     expect(payload.templates).toHaveLength(templateCatalogContract.remoteTemplateCount);
-    expect(payload.templates.every((template: { textSafeArea: unknown }) => isTemplateTextSafeArea(template.textSafeArea))).toBe(true);
+    expect(payload.templates.every((template: Record<string, unknown>) => !("textSafeArea" in template))).toBe(true);
     expect(new Set(payload.templates.map((template: { id: string }) => template.id)).size).toBe(
       templateCatalogContract.remoteTemplateCount
     );

@@ -17,25 +17,20 @@ import {
 } from "./remote-template-catalog";
 import { mobileTemplateGallery } from "./template-gallery";
 import { templateCatalogContract } from "./template-catalog.contract.fixture";
+import { buildPublicMobileTemplateCatalog } from "../../../lib/mobile-template-catalog";
+import { templates as canonicalTemplates } from "../../../lib/templates";
+
+const validCatalogFixture = buildPublicMobileTemplateCatalog(
+  canonicalTemplates,
+  "remote-contract-test"
+).catalog;
 
 function validCatalog(templateOverrides: Record<string, unknown> = {}) {
   return {
-    schemaVersion: 1,
-    catalogVersion: "v1-deadbeef",
+    ...validCatalogFixture,
     templates: [
-      {
-        id: "remote-wedding",
-        category: "wedding",
-        name: "새 웨딩",
-        badge: "결혼식",
-        desc: "배포 후 추가된 원격 템플릿",
-        tags: ["#신규"],
-        previewUrl: "https://invitation-platform-plum.vercel.app/images/custom/remote.png?v=v1-deadbeef",
-        sampleTextOverlay: true,
-        textPlacement: "bottom",
-        textSafeArea: { topPct: 70, bottomPct: 92, leftPct: 8, rightPct: 92, backdrop: "none" },
-        ...templateOverrides
-      }
+      { ...validCatalogFixture.templates[0], ...templateOverrides },
+      ...validCatalogFixture.templates.slice(1)
     ]
   };
 }
@@ -48,34 +43,20 @@ describe("remote mobile template catalog", () => {
   it("accepts bounded canonical records and marks them as remote", () => {
     const parsed = parseRemoteTemplateCatalog(validCatalog());
 
-    expect(parsed.templates[0]).toMatchObject({ id: "remote-wedding", remote: true });
-    expect(parsed.templates[0].textPlacement).toBe("bottom");
-    expect(parsed.templates[0].textSafeArea).toEqual(validCatalog().templates[0].textSafeArea);
+    expect(parsed.templates[0]).toMatchObject({ id: validCatalog().templates[0].id, remote: true });
+    expect(parsed.templates[0].textSafeArea).toBeDefined();
+    expect(parsed.meta.count).toBe(templateCatalogContract.remoteTemplateCount);
   });
 
-  it("falls back for old schema-version-1 payloads without a safe area", () => {
-    const legacy = validCatalog();
-    const template: Partial<(typeof legacy.templates)[number]> = { ...legacy.templates[0] };
-    delete template.textSafeArea;
-    const parsed = parseRemoteTemplateCatalog({ ...legacy, templates: [template] });
+  it("always resolves safe areas locally instead of trusting a remote API field", () => {
+    const remoteTextSafeArea = { topPct: 0, bottomPct: 1, leftPct: 0, rightPct: 1, backdrop: "solid" };
+    const parsed = parseRemoteTemplateCatalog(validCatalog({
+      textPlacement: "bottom",
+      textSafeArea: remoteTextSafeArea
+    }));
 
     expect(parsed.templates[0].textSafeArea).toMatchObject({ topPct: 57, bottomPct: 92 });
-  });
-
-  it("rejects malformed and out-of-bounds safe areas", () => {
-    for (const textSafeArea of [
-      { topPct: 70, bottomPct: 92, leftPct: 8, rightPct: 92 },
-      { topPct: -1, bottomPct: 92, leftPct: 8, rightPct: 92, backdrop: "none" },
-      { topPct: 70, bottomPct: 101, leftPct: 8, rightPct: 92, backdrop: "none" },
-      { topPct: 92, bottomPct: 70, leftPct: 8, rightPct: 92, backdrop: "none" },
-      { topPct: 70, bottomPct: 92, leftPct: 93, rightPct: 92, backdrop: "none" },
-      { topPct: 70, bottomPct: 92, leftPct: 8, rightPct: 92, backdrop: "dark" }
-    ]) {
-      expect(() => parseRemoteTemplateCatalog({
-        ...validCatalog(),
-        templates: [{ ...validCatalog().templates[0], textSafeArea }]
-      })).toThrow(/항목/);
-    }
+    expect(parsed.templates[0].textSafeArea).not.toEqual(remoteTextSafeArea);
   });
 
   it("rejects malformed, duplicate, oversized, and untrusted records", () => {
@@ -83,46 +64,79 @@ describe("remote mobile template catalog", () => {
     expect(() =>
       parseRemoteTemplateCatalog({
         ...validCatalog(),
-        templates: [
-          {
-            ...validCatalog().templates[0],
-            previewUrl: "https://attacker.example/template.png"
-          }
-        ]
+        templates: validCatalog().templates.map((template, index) => index === 0
+          ? { ...template, previewUrl: "https://attacker.example/template.png" }
+          : template)
       })
     ).toThrow();
     expect(() =>
       parseRemoteTemplateCatalog({
         ...validCatalog(),
-        templates: [
-          {
-            ...validCatalog().templates[0],
-            previewUrl: "https://invitation-platform-plum.vercel.app/api/private?v=v1-deadbeef"
-          }
-        ]
+        templates: validCatalog().templates.map((template, index) => index === 0
+          ? { ...template, previewUrl: `https://invitation-platform-plum.vercel.app/api/private?v=${validCatalog().catalogVersion}` }
+          : template)
       })
     ).toThrow();
     expect(() =>
       parseRemoteTemplateCatalog({
         ...validCatalog(),
-        templates: [
-          {
-            ...validCatalog().templates[0],
-            previewUrl: "https://invitation-platform-plum.vercel.app/images/custom/remote.png?v=v1-cafebabe"
-          }
-        ]
+        templates: validCatalog().templates.map((template, index) => index === 0
+          ? { ...template, previewUrl: "https://invitation-platform-plum.vercel.app/images/custom/remote.png?v=v1-cafebabe" }
+          : template)
       })
     ).toThrow(/버전/);
     expect(() =>
       parseRemoteTemplateCatalog({
         ...validCatalog(),
-        templates: [validCatalog().templates[0], validCatalog().templates[0]]
+        templates: validCatalog().templates.map((template, index) =>
+          index === validCatalog().templates.length - 1 ? validCatalog().templates[0] : template)
       })
     ).toThrow(/중복/);
     expect(() => parseRemoteTemplateCatalogText("x".repeat(MOBILE_TEMPLATE_CATALOG_MAX_BYTES + 1))).toThrow(
       /너무 큽니다/
     );
     expect(() => parseRemoteTemplateCatalogText("not-json")).toThrow(/JSON/);
+  });
+
+  it.each([
+    ["179 records", (catalog: ReturnType<typeof validCatalog>) => ({
+      ...catalog,
+      templates: catalog.templates.slice(0, -1),
+      meta: { ...catalog.meta, count: catalog.templates.length - 1 }
+    })],
+    ["181 records", (catalog: ReturnType<typeof validCatalog>) => ({
+      ...catalog,
+      templates: [...catalog.templates, {
+        ...catalog.templates[0],
+        id: "remote-extra-contract-record",
+        previewUrl: catalog.templates[0].previewUrl.replace("/images/custom/", "/images/custom/extra-")
+      }],
+      meta: { ...catalog.meta, count: catalog.templates.length + 1 }
+    })],
+    ["a missing bundled ID", (catalog: ReturnType<typeof validCatalog>) => ({
+      ...catalog,
+      templates: catalog.templates.map((template, index) => index === 0
+        ? {
+            ...template,
+            id: "remote-replacement-without-bundle-id",
+            previewUrl: template.previewUrl.replace("/images/custom/", "/images/custom/replacement-")
+          }
+        : template)
+    })],
+    ["an inconsistent meta.count", (catalog: ReturnType<typeof validCatalog>) => ({
+      ...catalog,
+      meta: { ...catalog.meta, count: catalog.templates.length - 1 }
+    })]
+  ])("rejects %s and keeps the last-known-good cache intact", async (_name, mutate) => {
+    const cached = parseRemoteTemplateCatalog(validCatalog());
+    const invalid = mutate(validCatalog());
+    const fetcher = vi.fn(async () => new Response(JSON.stringify(invalid), {
+      headers: { "content-type": "application/json" }
+    })) as unknown as typeof fetch;
+    const storage = { getItem: vi.fn(), setItem: vi.fn() };
+
+    await expect(refreshRemoteTemplateCatalog(cached, fetcher, storage)).resolves.toEqual(cached);
+    expect(storage.setItem).not.toHaveBeenCalled();
   });
 
   it("persists and restores only a validated last-known-good catalog", async () => {
@@ -260,34 +274,29 @@ describe("remote mobile template catalog", () => {
   });
 
   it("uses the remote record exactly once when it replaces a bundled ID, while retaining offline fallbacks", () => {
-    const bundled = mobileTemplateGallery.find((template) => template.id === "wedding-classic");
-    if (!bundled) throw new Error("expected bundled template fixture");
-
     const remote = parseRemoteTemplateCatalog(validCatalog({
-      id: bundled.id,
-      category: bundled.category,
       name: "원격 로즈 프레임",
       badge: "원격 결혼식",
       desc: "원격 카탈로그가 번들 항목을 교체합니다.",
       tags: ["#원격"],
-      previewUrl: "https://invitation-platform-plum.vercel.app/images/custom/remote-replacement.png?v=v1-deadbeef"
+      previewUrl: validCatalog().templates[0].previewUrl.replace("/images/custom/", "/images/custom/replacement-")
     })).templates;
+    const remoteId = remote[0].id;
     const merged = mergeTemplateCatalog(mobileTemplateGallery, remote);
-    const replaced = merged.filter((template) => template.id === bundled.id);
+    const replaced = merged.filter((template) => template.id === remoteId);
 
     expect(merged[0].id).toBe(
-      templateCatalogContract.merge.remoteTemplatesAppearFirst ? bundled.id : mobileTemplateGallery[0].id
+      templateCatalogContract.merge.remoteTemplatesAppearFirst ? remoteId : mobileTemplateGallery[0].id
     );
     expect(replaced).toHaveLength(1);
     expect(replaced[0]).toMatchObject({
-      id: bundled.id,
+      id: remoteId,
       name: "원격 로즈 프레임",
       badge: "원격 결혼식",
       tags: ["#원격"],
-      previewUrl: "https://invitation-platform-plum.vercel.app/images/custom/remote-replacement.png?v=v1-deadbeef",
       remote: true
     });
-    expect(merged).toHaveLength(mobileTemplateGallery.length);
+    expect(merged).toHaveLength(templateCatalogContract.remoteTemplateCount);
     expect(merged.some((template) => template.id === mobileTemplateGallery[0].id)).toBe(
       templateCatalogContract.merge.bundledTemplatesRemainAvailableOffline
     );

@@ -1,12 +1,13 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetch as expoFetch } from "expo/fetch";
-import { isTemplateTextSafeArea, resolveTemplateTextSafeArea } from "@invitehub/shared";
-import type { MobileTemplateGalleryItem } from "./template-gallery";
+import { resolveTemplateTextSafeArea } from "@invitehub/shared";
+import { mobileTemplateGallery, type MobileTemplateGalleryItem } from "./template-gallery";
 
 export const MOBILE_TEMPLATE_CATALOG_URL =
   "https://invitation-platform-plum.vercel.app/api/mobile/v1/templates";
 export const MOBILE_TEMPLATE_CATALOG_CACHE_KEY = "invitehub.mobile-template-catalog.v1";
 export const MOBILE_TEMPLATE_CATALOG_MAX_ITEMS = 250;
+export const MOBILE_TEMPLATE_CATALOG_EXPECTED_ITEMS = 180;
 export const MOBILE_TEMPLATE_CATALOG_MAX_BYTES = 192 * 1024;
 export const MOBILE_TEMPLATE_CATALOG_TIMEOUT_MS = 4_000;
 export const MOBILE_TEMPLATE_CATALOG_STORAGE_TIMEOUT_MS = 750;
@@ -23,6 +24,7 @@ const allowedCategories = new Set([
   "business"
 ]);
 const canonicalAssetOrigin = new URL(MOBILE_TEMPLATE_CATALOG_URL).origin;
+const requiredBundledTemplateIds = new Set(mobileTemplateGallery.map((template) => template.id));
 
 type Storage = Pick<typeof AsyncStorage, "getItem" | "setItem">;
 type Fetcher = typeof fetch;
@@ -46,6 +48,9 @@ export type RemoteMobileTemplateCatalog = {
   schemaVersion: 1;
   catalogVersion: string;
   templates: MobileTemplateGalleryItem[];
+  meta: {
+    count: typeof MOBILE_TEMPLATE_CATALOG_EXPECTED_ITEMS;
+  };
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -111,8 +116,7 @@ function normalizeTemplate(value: unknown): MobileTemplateGalleryItem | null {
     !tags.every((tag) => isBoundedString(tag, 24)) ||
     !previewUrl ||
     typeof value.sampleTextOverlay !== "boolean" ||
-    (value.textPlacement !== undefined && !["top", "center", "bottom"].includes(String(value.textPlacement))) ||
-    (value.textSafeArea !== undefined && !isTemplateTextSafeArea(value.textSafeArea))
+    (value.textPlacement !== undefined && !["top", "center", "bottom"].includes(String(value.textPlacement)))
   ) {
     return null;
   }
@@ -129,7 +133,7 @@ function normalizeTemplate(value: unknown): MobileTemplateGalleryItem | null {
     previewUrl,
     sampleTextOverlay: value.sampleTextOverlay,
     textPlacement,
-    textSafeArea: value.textSafeArea ?? resolveTemplateTextSafeArea({
+    textSafeArea: resolveTemplateTextSafeArea({
       templateId: value.id,
       category: value.category,
       textPlacement
@@ -145,7 +149,10 @@ export function parseRemoteTemplateCatalog(value: unknown): RemoteMobileTemplate
     !isBoundedString(value.catalogVersion, 80, 3) ||
     !/^v1-[a-f0-9]{8}$/.test(value.catalogVersion) ||
     !Array.isArray(value.templates) ||
-    value.templates.length > MOBILE_TEMPLATE_CATALOG_MAX_ITEMS
+    value.templates.length !== MOBILE_TEMPLATE_CATALOG_EXPECTED_ITEMS ||
+    !isRecord(value.meta) ||
+    value.meta.count !== MOBILE_TEMPLATE_CATALOG_EXPECTED_ITEMS ||
+    value.meta.count !== value.templates.length
   ) {
     throw new Error("원격 템플릿 카탈로그 형식이 올바르지 않습니다.");
   }
@@ -171,10 +178,15 @@ export function parseRemoteTemplateCatalog(value: unknown): RemoteMobileTemplate
     }
   }
 
+  if ([...requiredBundledTemplateIds].some((id) => !ids.has(id))) {
+    throw new Error("원격 템플릿 카탈로그가 필수 번들 템플릿을 포함하지 않습니다.");
+  }
+
   return {
     schemaVersion: 1,
     catalogVersion: value.catalogVersion,
-    templates: templates as MobileTemplateGalleryItem[]
+    templates: templates as MobileTemplateGalleryItem[],
+    meta: { count: MOBILE_TEMPLATE_CATALOG_EXPECTED_ITEMS }
   };
 }
 
@@ -237,7 +249,7 @@ export async function writeCachedTemplateCatalog(
   catalog: RemoteMobileTemplateCatalog,
   storage: Storage = AsyncStorage
 ) {
-  const serialized = JSON.stringify(catalog);
+  const serialized = JSON.stringify(parseRemoteTemplateCatalog(catalog));
   if (utf8ByteLength(serialized) > MOBILE_TEMPLATE_CATALOG_MAX_BYTES) return;
 
   await settleStorageWithin(

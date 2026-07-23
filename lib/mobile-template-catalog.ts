@@ -1,5 +1,4 @@
 import { getTemplateDefaultTextPlacement, type TemplatePreset } from "./templates";
-import { resolveTemplateTextSafeArea, type TemplateTextSafeArea } from "@invitehub/shared";
 
 export const MOBILE_TEMPLATE_CATALOG_SCHEMA_VERSION = 1 as const;
 export const MOBILE_TEMPLATE_CATALOG_MAX_ITEMS = 250;
@@ -28,7 +27,6 @@ export type PublicMobileTemplateCatalogItem = {
   previewUrl: string;
   sampleTextOverlay: boolean;
   textPlacement: "top" | "center" | "bottom";
-  textSafeArea: TemplateTextSafeArea;
 };
 
 export type PublicMobileTemplateCatalog = {
@@ -99,12 +97,7 @@ export function toPublicMobileTemplate(template: TemplatePreset): PublicMobileTe
     tags: template.tags.slice(0, 5),
     previewUrl,
     sampleTextOverlay: true,
-    textPlacement,
-    textSafeArea: resolveTemplateTextSafeArea({
-      templateId: template.id,
-      category: template.category,
-      textPlacement
-    })
+    textPlacement
   };
 }
 
