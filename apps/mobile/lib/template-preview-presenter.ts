@@ -17,8 +17,9 @@ export type TemplatePreviewActionStatus = "idle" | "creating" | "failed" | "succ
 
 export function getTemplatePreviewActionAccessibility(status: TemplatePreviewActionStatus) {
   const busy = status === "creating";
+  const disabled = busy || status === "success";
   return {
-    accessibilityState: { busy, disabled: busy },
+    accessibilityState: { busy, disabled },
     errorLiveRegion: status === "failed" ? "assertive" as const : "none" as const
   };
 }

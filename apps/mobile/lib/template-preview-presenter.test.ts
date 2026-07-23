@@ -99,5 +99,9 @@ describe("template preview fail-closed presenter", () => {
       accessibilityState: { busy: false, disabled: false },
       errorLiveRegion: "assertive"
     });
+    expect(getTemplatePreviewActionAccessibility("success")).toEqual({
+      accessibilityState: { busy: false, disabled: true },
+      errorLiveRegion: "none"
+    });
   });
 });

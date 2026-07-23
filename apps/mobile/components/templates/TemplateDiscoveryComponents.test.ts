@@ -4,6 +4,10 @@ import { describe, expect, it } from "vitest";
 
 const cardSource = readFileSync(join(process.cwd(), "apps/mobile/components/templates/TemplateCard.tsx"), "utf8");
 const filtersSource = readFileSync(join(process.cwd(), "apps/mobile/components/templates/TemplateFilters.tsx"), "utf8");
+const sampleOverlaySource = readFileSync(
+  join(process.cwd(), "apps/mobile/components/templates/TemplateSampleTextOverlay.tsx"),
+  "utf8"
+);
 
 describe("template discovery components", () => {
   it("makes the whole card one accessible 44pt preview button without router or draft ownership", () => {
@@ -16,7 +20,17 @@ describe("template discovery components", () => {
 
   it("keeps an image failure local to the card and preserves preview selection", () => {
     expect(cardSource).toContain("onError={() => setImageFailed(true)}");
+    expect(cardSource).toContain("미리보기 이미지를 표시할 수 없어요");
     expect(cardSource).toContain("onOpenPreview(template)");
+  });
+
+  it("keeps card layout stable, copy readable at large text, and descendants out of the focus order", () => {
+    expect(cardSource).toContain("const previewHeight");
+    expect(cardSource).toContain("height: previewHeight");
+    expect(cardSource).not.toContain("numberOfLines={1}");
+    expect(cardSource).toContain("memo(function TemplateCard");
+    expect(cardSource).not.toContain("theme.colors.textLight");
+    expect(sampleOverlaySource).toContain('importantForAccessibility="no-hide-descendants"');
   });
 
   it("exposes controlled search, selected states, the required copy hierarchy, and one reset callback", () => {
@@ -34,5 +48,7 @@ describe("template discovery components", () => {
     expect(filtersSource).toContain("onReset()");
     expect(filtersSource).not.toContain("moods?:");
     expect(filtersSource).toContain("templateDiscoveryMoods.map");
+    expect(filtersSource).toContain('placeholderTextColor={theme.colors.muted}');
+    expect(filtersSource).not.toContain("theme.colors.textLight");
   });
 });

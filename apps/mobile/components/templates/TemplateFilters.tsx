@@ -18,7 +18,8 @@ type TemplateFiltersProps = {
 function FilterChip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
   return (
     <Pressable
-      accessibilityLabel={`${label} ${active ? "선택됨" : "선택"}`}
+      accessibilityLabel={label}
+      accessibilityHint="디자인 결과에 이 필터를 적용하거나 해제합니다."
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
       onPress={onPress}
@@ -33,7 +34,7 @@ function FilterChip({ label, active, onPress }: { label: string; active: boolean
         opacity: pressed ? 0.82 : 1
       })}
     >
-      <Text style={{ color: active ? theme.colors.primaryDark : theme.colors.accent, fontSize: 13, fontWeight: active ? "800" : "700" }}>
+      <Text style={{ color: theme.colors.ink, fontSize: 13, fontWeight: active ? "800" : "700" }}>
         {active ? `✓ ${label}` : label}
       </Text>
     </Pressable>
@@ -60,8 +61,9 @@ export function TemplateFilters({ filters, categories, onFiltersChange, onReset 
         maxLength={TEMPLATE_DISCOVERY_QUERY_MAX_LENGTH}
         onChangeText={(query) => onFiltersChange({ ...filters, query })}
         placeholder="디자인을 검색해 보세요"
-        placeholderTextColor={theme.colors.textLight}
-        style={{ minHeight: 44, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, backgroundColor: theme.colors.surface, color: theme.colors.text, paddingHorizontal: 14 }}
+        placeholderTextColor={theme.colors.muted}
+        returnKeyType="search"
+        style={{ minHeight: 44, borderWidth: 1, borderColor: theme.colors.border, borderRadius: theme.radius.md, backgroundColor: theme.colors.surface, color: theme.colors.text, fontSize: 16, paddingHorizontal: 14, paddingVertical: 10 }}
         value={filters.query}
       />
 
@@ -88,11 +90,12 @@ export function TemplateFilters({ filters, categories, onFiltersChange, onReset 
         </Text>
         <Pressable
           accessibilityLabel="전체 필터 초기화"
+          accessibilityHint="행사, 형식, 검색어 필터를 모두 지웁니다."
           accessibilityRole="button"
           onPress={() => onReset()}
           style={({ pressed }) => ({ minHeight: 44, justifyContent: "center", paddingHorizontal: 10, opacity: pressed ? 0.78 : 1 })}
         >
-          <Text style={{ color: theme.colors.primaryDark, fontSize: 13, fontWeight: "800" }}>초기화</Text>
+          <Text style={{ color: theme.colors.ink, fontSize: 13, fontWeight: "800" }}>초기화</Text>
         </Pressable>
       </View>
     </View>

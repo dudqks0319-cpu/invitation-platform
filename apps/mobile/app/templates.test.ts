@@ -9,6 +9,7 @@ const filtersSource = readFileSync(
   "utf8"
 );
 const homeSource = readFileSync(join(process.cwd(), "apps/mobile/app/(tabs)/index.tsx"), "utf8");
+const reducedMotionSource = readFileSync(join(process.cwd(), "apps/mobile/hooks/useReducedMotion.ts"), "utf8");
 
 describe("template selection flow", () => {
   it("creates exactly one draft before pushing the selected card to basic editing", async () => {
@@ -62,6 +63,8 @@ describe("template discovery screen", () => {
     expect(screenSource).toContain("기본 디자인 150개를 보여드려요");
     expect(screenSource).toContain("필터 초기화");
     expect(screenSource).toContain("announceForAccessibility");
+    expect(screenSource).toContain('Platform.OS !== "ios"');
+    expect(screenSource).toContain("최신 디자인을 확인하고 있어요");
     expect(screenSource).toContain("useDebouncedValue");
     expect(screenSource.match(/announceForAccessibility/g)).toHaveLength(1);
     expect(filtersSource).not.toContain("accessibilityLiveRegion");
@@ -73,5 +76,14 @@ describe("template discovery screen", () => {
     expect(homeSource).toContain("params: { category, entryKey }");
     expect(screenSource).toContain("entryKey");
     expect(screenSource).toContain("enterDiscovery");
+  });
+
+  it("supports reduced motion and fast scrolling without clipped persistent blanks", () => {
+    expect(reducedMotionSource).toContain("AccessibilityInfo.isReduceMotionEnabled()");
+    expect(reducedMotionSource).toContain('addEventListener("reduceMotionChanged"');
+    expect(screenSource).toContain("reduceMotionEnabled ? null : <ActivityIndicator");
+    expect(screenSource).toContain("removeClippedSubviews={false}");
+    expect(screenSource).toContain("maxToRenderPerBatch={8}");
+    expect(screenSource).toContain("windowSize={7}");
   });
 });

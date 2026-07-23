@@ -83,6 +83,8 @@ export function TemplateSampleTextOverlay({
 
   return (
     <View
+      accessible={false}
+      importantForAccessibility="no-hide-descendants"
       pointerEvents="none"
       style={{
         position: "absolute",

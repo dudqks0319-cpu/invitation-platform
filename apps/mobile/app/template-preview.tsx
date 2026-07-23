@@ -6,6 +6,7 @@ import { InvitationPreviewCard } from "@/components/invitation/InvitationPreview
 import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
 import { theme } from "@/components/ui/theme";
 import { useAuth } from "@/hooks/useAuth";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTemplateCatalog } from "@/hooks/useTemplateCatalog";
 import { getDraftOwnerId } from "@/lib/auth-access";
 import { createOrReuseTemplatePreviewDraft, inspectDraftsForTemplatePreview } from "@/lib/drafts";
@@ -27,6 +28,55 @@ import {
 import { recordRecentlyViewedTemplate } from "@/lib/template-preview-recent";
 
 type CreationStatus = "idle" | "creating" | "failed" | "success";
+
+function TemplatePreviewImage({ template }: { template: MobileTemplateGalleryItem }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const previewSource = imageFailed ? null : getTemplatePreviewSource(template);
+
+  return (
+    <View
+      accessible
+      accessibilityLabel={`예시 초대장 미리보기, ${template.name}${imageFailed ? ", 이미지를 표시할 수 없어 대체 안내를 표시합니다" : ""}`}
+      accessibilityRole="image"
+      style={{
+        alignSelf: "center",
+        width: "100%",
+        maxWidth: 420,
+        aspectRatio: 941 / 1672,
+        borderRadius: theme.radius.lg,
+        overflow: "hidden",
+        backgroundColor: theme.colors.surfaceSoft,
+        ...theme.shadow.card
+      }}
+    >
+      {previewSource ? (
+        <>
+          <Image
+            alt=""
+            accessible={false}
+            accessibilityElementsHidden
+            accessibilityIgnoresInvertColors
+            importantForAccessibility="no-hide-descendants"
+            onError={() => setImageFailed(true)}
+            resizeMode="cover"
+            source={previewSource}
+            style={{ width: "100%", height: "100%" }}
+          />
+          <TemplateSampleTextOverlay template={template} />
+        </>
+      ) : (
+        <View accessible={false} importantForAccessibility="no-hide-descendants" style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <Text style={{ color: theme.colors.ink, fontSize: 15, fontWeight: "800", textAlign: "center" }}>
+            미리보기 이미지를 표시할 수 없어요
+          </Text>
+          <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 20, marginTop: 8, textAlign: "center" }}>
+            아래 예시 행사 정보는 계속 확인할 수 있어요.
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+}
 
 function TemplatePreviewActions({
   ownerId,
@@ -54,6 +104,7 @@ function TemplatePreviewActions({
     }
   }));
   const isCreating = creationStatus === "creating";
+  const isActionDisabled = isCreating || creationStatus === "success";
   const actionAccessibility = getTemplatePreviewActionAccessibility(creationStatus);
 
   useEffect(() => () => {
@@ -82,25 +133,29 @@ function TemplatePreviewActions({
           <Text style={{ color: theme.colors.muted, fontSize: 14, lineHeight: 22 }}>
             이어서 편집하면 기존 내용을 그대로 열고, 새로 시작하면 기존 초안을 덮어쓰지 않고 이 디자인으로 별도 초안을 만듭니다.
           </Text>
-          <Text style={{ color: theme.colors.textLight, fontSize: 12, lineHeight: 18 }}>
+          <Text style={{ color: theme.colors.ink, fontSize: 12, lineHeight: 18 }}>
             로그인한 계정의 초안만 확인합니다. 로그인 전 로컬 초안은 계정으로 자동 이전하지 않습니다.
           </Text>
           <View style={{ gap: 10 }}>
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel={isCreating ? "기존 초안을 여는 중" : "기존 초안 이어서 편집"}
+              accessibilityHint="이 계정에서 편집하던 초안을 엽니다."
               accessibilityState={actionAccessibility.accessibilityState}
-              disabled={isCreating}
+              disabled={isActionDisabled}
               onPress={() => void runAction(() => controller.resume(recoverableDraft.localId))}
-              style={{ minHeight: 48, borderRadius: theme.radius.pill, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.primary, alignItems: "center", justifyContent: "center", opacity: isCreating ? 0.64 : 1 }}
+              style={{ minHeight: 48, borderRadius: theme.radius.pill, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.primary, alignItems: "center", justifyContent: "center", opacity: isActionDisabled ? 0.64 : 1 }}
             >
-              <Text style={{ color: theme.colors.primaryDark, fontSize: 15, fontWeight: "800" }}>이어서 편집</Text>
+              <Text style={{ color: theme.colors.ink, fontSize: 15, fontWeight: "800" }}>이어서 편집</Text>
             </Pressable>
             <Pressable
               accessibilityRole="button"
+              accessibilityLabel={isCreating ? "새 초대장을 만드는 중" : "이 디자인으로 새 초대장 시작"}
+              accessibilityHint="기존 초안을 유지하고 새 초안을 만듭니다."
               accessibilityState={actionAccessibility.accessibilityState}
-              disabled={isCreating}
+              disabled={isActionDisabled}
               onPress={() => void runAction(() => controller.start(template))}
-              style={{ minHeight: 48, borderRadius: theme.radius.pill, backgroundColor: theme.colors.primary, alignItems: "center", justifyContent: "center", opacity: isCreating ? 0.64 : 1 }}
+              style={{ minHeight: 48, borderRadius: theme.radius.pill, backgroundColor: theme.colors.ink, alignItems: "center", justifyContent: "center", opacity: isActionDisabled ? 0.64 : 1 }}
             >
               <Text style={{ color: "#fff", fontSize: 15, fontWeight: "800" }}>{isCreating ? "초대장을 만드는 중" : "새로 시작"}</Text>
             </Pressable>
@@ -109,10 +164,12 @@ function TemplatePreviewActions({
       ) : (
         <Pressable
           accessibilityRole="button"
+          accessibilityLabel={isCreating ? "초대장을 만드는 중" : "이 디자인으로 시작하기"}
+          accessibilityHint="선택한 디자인으로 편집 가능한 새 초안을 만듭니다."
           accessibilityState={actionAccessibility.accessibilityState}
-          disabled={isCreating}
+          disabled={isActionDisabled}
           onPress={() => void runAction(() => controller.start(template))}
-          style={{ minHeight: 54, borderRadius: theme.radius.pill, backgroundColor: theme.colors.primary, alignItems: "center", justifyContent: "center", opacity: isCreating ? 0.64 : 1, ...theme.shadow.heroButton }}
+          style={{ minHeight: 54, borderRadius: theme.radius.pill, backgroundColor: theme.colors.ink, alignItems: "center", justifyContent: "center", opacity: isActionDisabled ? 0.64 : 1, ...theme.shadow.heroButton }}
         >
           <Text style={{ color: "#fff", fontSize: 16, fontWeight: "900" }}>{isCreating ? "초대장을 만드는 중" : "이 디자인으로 시작하기"}</Text>
         </Pressable>
@@ -121,11 +178,11 @@ function TemplatePreviewActions({
       {creationStatus === "failed" ? (
         <View accessibilityLiveRegion={actionAccessibility.errorLiveRegion} style={{ borderRadius: theme.radius.md, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, padding: 16, gap: 10 }}>
           <Text style={{ color: theme.colors.ink, fontSize: 14, fontWeight: "800" }}>{creationError}</Text>
-          <Pressable accessibilityRole="button" onPress={() => void runAction(() => controller.retry())} style={{ minHeight: 44, justifyContent: "center" }}>
-            <Text style={{ color: theme.colors.primaryDark, fontSize: 14, fontWeight: "800" }}>다시 시도</Text>
+          <Pressable accessibilityHint="실패한 초안 작업을 다시 시도합니다." accessibilityRole="button" onPress={() => void runAction(() => controller.retry())} style={{ minHeight: 44, justifyContent: "center" }}>
+            <Text style={{ color: theme.colors.ink, fontSize: 14, fontWeight: "800" }}>다시 시도</Text>
           </Pressable>
-          <Pressable accessibilityRole="button" onPress={() => router.dismissTo("/templates")} style={{ minHeight: 44, justifyContent: "center" }}>
-            <Text style={{ color: theme.colors.muted, fontSize: 14, fontWeight: "800" }}>디자인 목록으로 돌아가기</Text>
+          <Pressable accessibilityHint="초안 작업을 중단하고 디자인 목록을 엽니다." accessibilityRole="button" onPress={() => router.dismissTo("/templates")} style={{ minHeight: 44, justifyContent: "center" }}>
+            <Text style={{ color: theme.colors.ink, fontSize: 14, fontWeight: "800" }}>디자인 목록으로 돌아가기</Text>
           </Pressable>
         </View>
       ) : null}
@@ -136,6 +193,7 @@ function TemplatePreviewActions({
 export default function TemplatePreviewScreen() {
   const router = useRouter();
   const { status: authStatus, user } = useAuth();
+  const reduceMotionEnabled = useReducedMotion();
   const { templateId: templateIdParam, previewIntentKey: previewIntentKeyParam } = useLocalSearchParams<{
     templateId?: string | string[];
     previewIntentKey?: string | string[];
@@ -206,9 +264,10 @@ export default function TemplatePreviewScreen() {
           안전한 디자인 목록에서 다시 선택해 주세요.
         </Text>
         <Pressable
+          accessibilityHint="안전한 디자인 목록으로 이동합니다."
           accessibilityRole="button"
           onPress={() => router.replace("/templates")}
-          style={{ minHeight: 48, borderRadius: theme.radius.pill, backgroundColor: theme.colors.primary, alignItems: "center", justifyContent: "center" }}
+          style={{ minHeight: 48, borderRadius: theme.radius.pill, backgroundColor: theme.colors.ink, alignItems: "center", justifyContent: "center" }}
         >
           <Text style={{ color: "#fff", fontSize: 15, fontWeight: "800" }}>디자인 목록으로 돌아가기</Text>
         </Pressable>
@@ -216,13 +275,13 @@ export default function TemplatePreviewScreen() {
     );
   }
 
-  const previewSource = getTemplatePreviewSource(template);
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 48, gap: 22 }} showsVerticalScrollIndicator={false}>
         <View style={{ minHeight: 64, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <Pressable
             accessibilityLabel="미리보기 닫기"
+            accessibilityHint="디자인 목록으로 돌아갑니다."
             accessibilityRole="button"
             onPress={returnToList}
             style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, alignItems: "center", justifyContent: "center" }}
@@ -236,27 +295,19 @@ export default function TemplatePreviewScreen() {
         </View>
 
         <View style={{ gap: 8 }}>
-          <Text style={{ color: theme.colors.primaryDark, fontSize: 13, fontWeight: "800" }}>예시 · {template.badge}</Text>
+          <Text style={{ color: theme.colors.ink, fontSize: 13, fontWeight: "800" }}>예시 · {template.badge}</Text>
           <Text style={{ color: theme.colors.ink, fontSize: 28, fontWeight: "900", lineHeight: 36 }}>{template.name}</Text>
           <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 23 }}>{template.desc}</Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 7 }}>
             {template.tags.map((tag) => (
               <View key={tag} style={{ borderRadius: theme.radius.pill, backgroundColor: theme.colors.surfaceSoft, paddingHorizontal: 10, paddingVertical: 6 }}>
-                <Text style={{ color: theme.colors.textLight, fontSize: 12, fontWeight: "700" }}>{tag}</Text>
+                <Text style={{ color: theme.colors.ink, fontSize: 12, fontWeight: "700" }}>{tag}</Text>
               </View>
             ))}
           </View>
         </View>
 
-        {previewSource ? (
-          <View
-            accessibilityLabel={`예시 초대장 미리보기, ${template.name}`}
-            style={{ alignSelf: "center", width: "100%", maxWidth: 420, aspectRatio: 941 / 1672, borderRadius: theme.radius.lg, overflow: "hidden", backgroundColor: theme.colors.surfaceSoft, ...theme.shadow.card }}
-          >
-            <Image alt={`${template.name} 예시 디자인`} accessibilityIgnoresInvertColors resizeMode="cover" source={previewSource} style={{ width: "100%", height: "100%" }} />
-            <TemplateSampleTextOverlay template={template} />
-          </View>
-        ) : null}
+        <TemplatePreviewImage key={template.id} template={template} />
 
         <View accessible accessibilityLabel={`예시 초대장 미리보기 상세, ${example.title}`} style={{ width: "100%", maxWidth: 420, alignSelf: "center" }}>
           <InvitationPreviewCard compact payload={payload} />
@@ -264,7 +315,7 @@ export default function TemplatePreviewScreen() {
 
         <View style={{ borderRadius: theme.radius.lg, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, padding: 18, gap: 12 }}>
           <Text style={{ color: theme.colors.ink, fontSize: 18, fontWeight: "800" }}>예시 행사 정보</Text>
-          <Text style={{ color: theme.colors.textLight, fontSize: 12, lineHeight: 18 }}>
+          <Text style={{ color: theme.colors.ink, fontSize: 12, lineHeight: 18 }}>
             아래 이름, 일정, 장소, 설명은 모두 디자인 확인용 가상 예시이며 저장되지 않습니다.
           </Text>
           {[
@@ -275,26 +326,26 @@ export default function TemplatePreviewScreen() {
             ["설명", example.message]
           ].map(([label, value]) => (
             <View key={label} style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-              <Text style={{ width: 48, color: theme.colors.primaryDark, fontSize: 13, fontWeight: "800", lineHeight: 21 }}>{label}</Text>
+              <Text style={{ minWidth: 48, color: theme.colors.ink, fontSize: 13, fontWeight: "800", lineHeight: 21 }}>{label}</Text>
               <Text style={{ flex: 1, minWidth: 190, color: theme.colors.ink, fontSize: 14, lineHeight: 22 }}>{value}</Text>
             </View>
           ))}
         </View>
 
         {gate.status === "auth-loading" || gate.status === "checking" ? (
-          <View accessibilityLiveRegion="polite" style={{ minHeight: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 }}>
-            <ActivityIndicator color={theme.colors.primaryDark} size="small" />
+          <View accessibilityLabel={gate.message} accessibilityLiveRegion="polite" accessibilityRole="progressbar" accessibilityState={{ busy: true }} style={{ minHeight: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 }}>
+            {reduceMotionEnabled ? null : <ActivityIndicator color={theme.colors.primaryDark} size="small" />}
             <Text style={{ color: theme.colors.muted, fontSize: 14 }}>{gate.message}</Text>
           </View>
         ) : gate.status === "load-error" ? (
           <View accessibilityLiveRegion="assertive" style={{ borderRadius: theme.radius.md, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, padding: 16, gap: 10 }}>
             <Text style={{ color: theme.colors.ink, fontSize: 14, fontWeight: "800" }}>{gate.message}</Text>
             <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 20 }}>안전을 위해 초안을 확인하기 전에는 새 초대장을 만들거나 기존 초안을 열 수 없어요.</Text>
-            <Pressable accessibilityRole="button" onPress={retryInspection} style={{ minHeight: 44, justifyContent: "center" }}>
-              <Text style={{ color: theme.colors.primaryDark, fontSize: 14, fontWeight: "800" }}>다시 확인</Text>
+            <Pressable accessibilityHint="이 계정의 기존 초안을 다시 확인합니다." accessibilityRole="button" onPress={retryInspection} style={{ minHeight: 44, justifyContent: "center" }}>
+              <Text style={{ color: theme.colors.ink, fontSize: 14, fontWeight: "800" }}>다시 확인</Text>
             </Pressable>
-            <Pressable accessibilityRole="button" onPress={() => router.dismissTo("/templates")} style={{ minHeight: 44, justifyContent: "center" }}>
-              <Text style={{ color: theme.colors.muted, fontSize: 14, fontWeight: "800" }}>디자인 목록으로 돌아가기</Text>
+            <Pressable accessibilityHint="초안 확인을 중단하고 디자인 목록을 엽니다." accessibilityRole="button" onPress={() => router.dismissTo("/templates")} style={{ minHeight: 44, justifyContent: "center" }}>
+              <Text style={{ color: theme.colors.ink, fontSize: 14, fontWeight: "800" }}>디자인 목록으로 돌아가기</Text>
             </Pressable>
           </View>
         ) : gate.status === "ready" && previewIntentKey ? (

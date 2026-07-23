@@ -12,5 +12,5 @@ export function getTemplateDiscoveryCardWidth(contentWidth: number, fontScale: n
   const columnCount = getTemplateDiscoveryColumnCount(fontScale);
 
   if (columnCount === 1) return Math.floor(innerWidth);
-  return Math.floor((innerWidth - TEMPLATE_DISCOVERY_COLUMN_GAP) / 2);
+  return Math.max(0, Math.floor((innerWidth - TEMPLATE_DISCOVERY_COLUMN_GAP) / 2));
 }

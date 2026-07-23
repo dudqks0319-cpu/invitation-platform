@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   AccessibilityInfo,
   ActivityIndicator,
   FlatList,
+  Platform,
   Pressable,
   Text,
   useWindowDimensions,
@@ -17,6 +18,7 @@ import { TemplateFilters } from "@/components/templates/TemplateFilters";
 import { theme } from "@/components/ui/theme";
 import { useTemplateCatalog } from "@/hooks/useTemplateCatalog";
 import { useTemplateDiscoveryState } from "@/hooks/useTemplateDiscoveryState";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import {
   emptyTemplateDiscoveryFilters,
   filterTemplateDiscoveryItems,
@@ -54,12 +56,14 @@ function CatalogStatus({
   refreshing,
   error,
   canRetry,
+  reduceMotionEnabled,
   onRetry
 }: {
   source: "loading" | "remote" | "cache" | "bundled-fallback";
   refreshing: boolean;
   error: string | null;
   canRetry: boolean;
+  reduceMotionEnabled: boolean;
   onRetry: () => void;
 }) {
   if (source === "loading") return null;
@@ -74,7 +78,7 @@ function CatalogStatus({
 
   return (
     <View
-      accessibilityLiveRegion="polite"
+      accessibilityLiveRegion={error ? "assertive" : "polite"}
       style={{
         gap: 8,
         borderRadius: theme.radius.md,
@@ -89,7 +93,7 @@ function CatalogStatus({
       ) : null}
       {refreshing ? (
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <ActivityIndicator color={theme.colors.primaryDark} size="small" />
+          {reduceMotionEnabled ? null : <ActivityIndicator color={theme.colors.primaryDark} size="small" />}
           <Text style={{ color: theme.colors.muted, fontSize: 13 }}>최신 디자인을 확인하고 있어요</Text>
         </View>
       ) : null}
@@ -101,6 +105,7 @@ function CatalogStatus({
           {canRetry ? (
             <Pressable
               accessibilityRole="button"
+              accessibilityHint="최신 디자인 목록을 다시 확인합니다."
               onPress={onRetry}
               style={({ pressed }) => ({
                 alignSelf: "flex-start",
@@ -110,7 +115,7 @@ function CatalogStatus({
                 opacity: pressed ? 0.76 : 1
               })}
             >
-              <Text style={{ color: theme.colors.primaryDark, fontSize: 14, fontWeight: "800" }}>다시 시도</Text>
+              <Text style={{ color: theme.colors.ink, fontSize: 14, fontWeight: "800" }}>다시 시도</Text>
             </Pressable>
           ) : null}
         </View>
@@ -135,15 +140,15 @@ export default function TemplatesScreen() {
     setScrollOffset
   } = useTemplateDiscoveryState();
   const { width, fontScale } = useWindowDimensions();
+  const reduceMotionEnabled = useReducedMotion();
   const [listWidth, setListWidth] = useState(width);
   const currentScrollOffsetRef = useRef(scrollOffset);
   const announcedOnceRef = useRef(false);
-  const resultAnnouncer = useMemo(
-    () => createTemplateResultAnnouncer((message) => {
-      AccessibilityInfo.announceForAccessibility(message);
-    }),
-    []
-  );
+  const announceAccessibility = useCallback((message: string) => {
+    AccessibilityInfo.announceForAccessibility(message);
+  }, []);
+  const resultAnnouncer = useMemo(() => createTemplateResultAnnouncer(announceAccessibility), [announceAccessibility]);
+  const statusAnnouncer = useMemo(() => createTemplateResultAnnouncer(announceAccessibility), [announceAccessibility]);
   const initialCategory = Array.isArray(initialCategoryParam) ? initialCategoryParam[0] : initialCategoryParam;
   const entryKey = Array.isArray(entryKeyParam) ? entryKeyParam[0] : entryKeyParam;
   const normalizedEntryKey = normalizeTemplateDiscoveryEntryKey(entryKey);
@@ -181,21 +186,32 @@ export default function TemplatesScreen() {
     return () => resultAnnouncer.cancel();
   }, [activeFilterSummary, filteredTemplates.length, resultAnnouncer, resultsAreReady]);
 
-  function handleBack() {
+  useEffect(() => {
+    if (Platform.OS !== "ios") return;
+    const message = source === "loading"
+      ? "디자인을 불러오고 있어요"
+      : error ?? (refreshing ? "최신 디자인을 확인하고 있어요" : null);
+    if (!message) return;
+
+    statusAnnouncer.schedule(message);
+    return () => statusAnnouncer.cancel();
+  }, [error, refreshing, source, statusAnnouncer]);
+
+  const handleBack = useCallback(() => {
     setScrollOffset(currentScrollOffsetRef.current);
     if (router.canGoBack()) {
       router.back();
       return;
     }
     router.replace("/");
-  }
+  }, [router, setScrollOffset]);
 
-  function handleOpenPreview(template: MobileTemplateGalleryItem) {
+  const handleOpenPreview = useCallback((template: MobileTemplateGalleryItem) => {
     const destination = createTemplatePreviewDestination(template.id);
     if (!destination) return;
     setScrollOffset(currentScrollOffsetRef.current);
     router.push(destination);
-  }
+  }, [router, setScrollOffset]);
 
   function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
     currentScrollOffsetRef.current = Math.max(0, event.nativeEvent.contentOffset.y);
@@ -211,9 +227,10 @@ export default function TemplatesScreen() {
 
   const listHeader = (
     <View style={{ gap: 18, paddingBottom: 20 }}>
-      <View style={{ height: 68, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+      <View style={{ minHeight: 68, flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 12 }}>
         <Pressable
           accessibilityLabel="뒤로가기"
+          accessibilityHint="이전 화면으로 돌아갑니다."
           accessibilityRole="button"
           onPress={handleBack}
           style={({ pressed }) => ({
@@ -240,7 +257,14 @@ export default function TemplatesScreen() {
         행사와 분위기에 맞는 예시 디자인을 찾고, 카드를 눌러 먼저 미리보세요.
       </Text>
 
-      <CatalogStatus source={source} refreshing={refreshing} error={error} canRetry={canRetry} onRetry={retry} />
+      <CatalogStatus
+        source={source}
+        refreshing={refreshing}
+        error={error}
+        canRetry={canRetry}
+        reduceMotionEnabled={reduceMotionEnabled}
+        onRetry={retry}
+      />
 
       <TemplateFilters
         categories={mobileTemplateCategories}
@@ -272,8 +296,13 @@ export default function TemplatesScreen() {
         keyExtractor={(template) => template.id}
         ListEmptyComponent={
           source === "loading" ? (
-            <View accessibilityRole="progressbar" style={{ minHeight: 220, alignItems: "center", justifyContent: "center", gap: 12 }}>
-              <ActivityIndicator color={theme.colors.primaryDark} />
+            <View
+              accessibilityLabel="디자인을 불러오고 있어요"
+              accessibilityRole="progressbar"
+              accessibilityState={{ busy: true }}
+              style={{ minHeight: 220, alignItems: "center", justifyContent: "center", gap: 12 }}
+            >
+              {reduceMotionEnabled ? null : <ActivityIndicator color={theme.colors.primaryDark} />}
               <Text style={{ color: theme.colors.muted, fontSize: 14 }}>디자인을 불러오고 있어요</Text>
             </View>
           ) : (
@@ -286,6 +315,7 @@ export default function TemplatesScreen() {
               </Text>
               <Pressable
                 accessibilityLabel="필터 초기화"
+                accessibilityHint="모든 검색 조건을 지우고 전체 디자인을 표시합니다."
                 accessibilityRole="button"
                 onPress={resetFilters}
                 style={({ pressed }) => ({
@@ -297,7 +327,7 @@ export default function TemplatesScreen() {
                   opacity: pressed ? 0.78 : 1
                 })}
               >
-                <Text style={{ color: theme.colors.primaryDark, fontSize: 14, fontWeight: "800" }}>필터 초기화</Text>
+                <Text style={{ color: theme.colors.ink, fontSize: 14, fontWeight: "800" }}>필터 초기화</Text>
               </Pressable>
             </View>
           )
@@ -309,7 +339,7 @@ export default function TemplatesScreen() {
         onMomentumScrollEnd={commitScrollOffset}
         onScroll={handleScroll}
         onScrollEndDrag={commitScrollOffset}
-        removeClippedSubviews
+        removeClippedSubviews={false}
         renderItem={({ item }) => (
           <TemplateCard template={item} onOpenPreview={handleOpenPreview} width={cardWidth} />
         )}

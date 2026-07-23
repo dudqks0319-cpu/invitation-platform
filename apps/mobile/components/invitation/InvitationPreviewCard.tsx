@@ -74,18 +74,21 @@ function LiveMapPanel({
         <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 19, textAlign: "center" }}>
           {venueAddress || "주소를 입력하면 지도 검색 링크가 표시됩니다."}
         </Text>
-        <Text style={{ color: theme.colors.textLight, fontSize: 11, lineHeight: 16, textAlign: "center" }}>
+        <Text style={{ color: theme.colors.muted, fontSize: 11, lineHeight: 16, textAlign: "center" }}>
           지도는 카카오맵과 네이버지도 검색으로 열립니다.
         </Text>
       </View>
       <View style={{ flexDirection: "row", gap: 8 }}>
         <Pressable
+          accessibilityHint="카카오맵에서 예시 장소를 검색합니다."
           accessibilityLabel="초대장에서 카카오 지도 열기"
           accessibilityRole="button"
+          accessibilityState={{ disabled: !hasMapTarget || !links.kakaoUrl }}
+          disabled={!hasMapTarget || !links.kakaoUrl}
           onPress={hasMapTarget && links.kakaoUrl ? () => void openMapUrl(links.kakaoUrl, links.kakaoFallbackUrl) : undefined}
           style={{
             flex: 1,
-            minHeight: 40,
+            minHeight: 44,
             borderRadius: 999,
             backgroundColor: hasMapTarget ? "#FEE500" : theme.colors.surfaceSoft,
             alignItems: "center",
@@ -93,17 +96,20 @@ function LiveMapPanel({
             paddingHorizontal: 10
           }}
         >
-          <Text style={{ color: hasMapTarget ? "#332800" : theme.colors.textLight, fontSize: 12, fontWeight: "800" }}>
+          <Text style={{ color: hasMapTarget ? "#332800" : theme.colors.muted, fontSize: 12, fontWeight: "800" }}>
             카카오
           </Text>
         </Pressable>
         <Pressable
+          accessibilityHint="네이버 지도에서 예시 장소를 검색합니다."
           accessibilityLabel="초대장에서 네이버 지도 열기"
           accessibilityRole="button"
+          accessibilityState={{ disabled: !hasMapTarget || !links.naverUrl }}
+          disabled={!hasMapTarget || !links.naverUrl}
           onPress={hasMapTarget && links.naverUrl ? () => void openMapUrl(links.naverUrl, links.naverFallbackUrl) : undefined}
           style={{
             flex: 1,
-            minHeight: 40,
+            minHeight: 44,
             borderRadius: 999,
             backgroundColor: hasMapTarget ? "#03C75A" : theme.colors.surfaceSoft,
             alignItems: "center",
@@ -111,7 +117,7 @@ function LiveMapPanel({
             paddingHorizontal: 10
           }}
         >
-          <Text style={{ color: hasMapTarget ? "#fff" : theme.colors.textLight, fontSize: 12, fontWeight: "800" }}>
+          <Text style={{ color: hasMapTarget ? theme.colors.ink : theme.colors.muted, fontSize: 12, fontWeight: "800" }}>
             네이버
           </Text>
         </Pressable>
@@ -192,10 +198,10 @@ export function InvitationPreviewCard({
             paddingVertical: textSafeArea.backdrop === "light" ? 7 : 0
           }}
         >
-          <Text numberOfLines={1} adjustsFontSizeToFit style={{ color: accent.accent, fontSize: compressedOverlay ? 10 : scaled ? 13 : 14, fontStyle: "italic", lineHeight: compressedOverlay ? 13 : 20, textAlign: "center", width: "100%" }}>
+          <Text numberOfLines={1} adjustsFontSizeToFit style={{ color: theme.colors.ink, fontSize: compressedOverlay ? 10 : scaled ? 13 : 14, fontStyle: "italic", lineHeight: compressedOverlay ? 13 : 20, textAlign: "center", width: "100%" }}>
             {accent.headline}
           </Text>
-          <Text numberOfLines={1} adjustsFontSizeToFit style={{ color: accent.accent, fontSize: compressedOverlay ? 9 : 12, fontWeight: "800", textAlign: "center", width: "100%" }}>
+          <Text numberOfLines={1} adjustsFontSizeToFit style={{ color: theme.colors.ink, fontSize: compressedOverlay ? 9 : 12, fontWeight: "800", textAlign: "center", width: "100%" }}>
             {selectedTemplate?.badge || "초대장"}
           </Text>
           <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.56} style={{ color: theme.colors.text, fontSize: compressedOverlay ? 18 : scaled ? 24 : 28, fontWeight: "900", lineHeight: compressedOverlay ? 22 : scaled ? 33 : 38, textAlign: "center", width: "100%" }}>

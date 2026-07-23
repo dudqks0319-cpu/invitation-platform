@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Image, Pressable, Text, View } from "react-native";
 import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
 import { getTemplatePreviewSource } from "@/lib/template-image-source";
@@ -11,14 +11,15 @@ type TemplateCardProps = {
   width?: number;
 };
 
-export function TemplateCard({ template, onOpenPreview, width }: TemplateCardProps) {
+export const TemplateCard = memo(function TemplateCard({ template, onOpenPreview, width }: TemplateCardProps) {
   const [imageFailed, setImageFailed] = useState(false);
   const previewSource = imageFailed ? null : getTemplatePreviewSource(template);
   const previewHeight = width ? Math.max(220, Math.min(420, Math.round(width * 1.3))) : 220;
 
   return (
     <Pressable
-      accessibilityLabel={`예시, ${template.name}, ${template.badge}, ${template.desc}, 미리보기 열기`}
+      accessibilityLabel={`예시, ${template.name}, ${template.badge}, ${template.desc}${imageFailed ? ", 이미지 표시 실패" : ""}, 미리보기 열기`}
+      accessibilityHint="선택한 디자인의 가상 행사 예시를 엽니다."
       accessibilityRole="button"
       onPress={() => onOpenPreview(template)}
       style={({ pressed }) => ({
@@ -64,27 +65,29 @@ export function TemplateCard({ template, onOpenPreview, width }: TemplateCardPro
             accessible={false}
             style={{ flex: 1, alignItems: "center", justifyContent: "center", borderRadius: theme.radius.md, backgroundColor: theme.colors.blush }}
           >
-            <Text style={{ color: theme.colors.accent, fontSize: 13, fontWeight: "700" }}>미리보기 준비 중</Text>
+            <Text style={{ color: theme.colors.ink, fontSize: 13, fontWeight: "700", textAlign: "center" }}>
+              {imageFailed ? "미리보기 이미지를 표시할 수 없어요" : "미리보기 준비 중"}
+            </Text>
           </View>
         )}
       </View>
 
       <View accessible={false} style={{ padding: 14, gap: 8 }}>
-        <Text style={{ color: theme.colors.primaryDark, fontSize: 12, fontWeight: "800" }}>{template.badge}</Text>
-        <Text numberOfLines={1} style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "800", lineHeight: 23 }}>
+        <Text style={{ color: theme.colors.ink, fontSize: 12, fontWeight: "800" }}>{template.badge}</Text>
+        <Text style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "800", lineHeight: 23 }}>
           {template.name}
         </Text>
-        <Text numberOfLines={1} style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 19 }}>
+        <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 19 }}>
           {template.desc}
         </Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6 }}>
           {template.tags.slice(0, 3).map((tag) => (
             <View key={tag} style={{ borderRadius: theme.radius.pill, backgroundColor: theme.colors.surfaceSoft, paddingHorizontal: 9, paddingVertical: 5 }}>
-              <Text style={{ color: theme.colors.textLight, fontSize: 11, fontWeight: "700" }}>{tag}</Text>
+              <Text style={{ color: theme.colors.ink, fontSize: 11, fontWeight: "700" }}>{tag}</Text>
             </View>
           ))}
         </View>
       </View>
     </Pressable>
   );
-}
+});

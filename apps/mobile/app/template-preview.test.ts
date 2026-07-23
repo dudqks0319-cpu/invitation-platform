@@ -6,6 +6,10 @@ const routeSource = readFileSync(join(process.cwd(), "apps/mobile/app/template-p
 const templatesSource = readFileSync(join(process.cwd(), "apps/mobile/app/templates.tsx"), "utf8");
 const homeSource = readFileSync(join(process.cwd(), "apps/mobile/app/(tabs)/index.tsx"), "utf8");
 const heroSource = readFileSync(join(process.cwd(), "apps/mobile/components/home/HeroSection.tsx"), "utf8");
+const invitationPreviewSource = readFileSync(
+  join(process.cwd(), "apps/mobile/components/invitation/InvitationPreviewCard.tsx"),
+  "utf8"
+);
 
 describe("template preview route", () => {
   it("resolves catalog IDs and records only a recent template ID without draft mutation on open", () => {
@@ -35,6 +39,25 @@ describe("template preview route", () => {
     expect(routeSource).toContain("예시 초대장 미리보기");
     expect(routeSource).toContain("예시 행사 정보");
     expect(routeSource).toContain("flexWrap: \"wrap\"");
+  });
+
+  it("keeps the image slot stable on failure and exposes one image focus", () => {
+    expect(routeSource).toContain("function TemplatePreviewImage");
+    expect(routeSource).toContain('accessibilityRole="image"');
+    expect(routeSource).toContain("aspectRatio: 941 / 1672");
+    expect(routeSource).toContain("onError={() => setImageFailed(true)}");
+    expect(routeSource).toContain("미리보기 이미지를 표시할 수 없어요");
+    expect(routeSource).toContain('importantForAccessibility="no-hide-descendants"');
+  });
+
+  it("announces busy and error states, honors reduced motion, and keeps actions at least 44pt", () => {
+    expect(routeSource).toContain('accessibilityRole="progressbar"');
+    expect(routeSource).toContain("accessibilityState={{ busy: true }}");
+    expect(routeSource).toContain('accessibilityLiveRegion="assertive"');
+    expect(routeSource).toContain("reduceMotionEnabled ? null : <ActivityIndicator");
+    expect(routeSource).not.toContain("theme.colors.textLight");
+    expect(invitationPreviewSource).toContain("minHeight: 44");
+    expect(invitationPreviewSource).toContain("accessibilityState={{ disabled:");
   });
 });
 
