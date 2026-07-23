@@ -19,30 +19,18 @@ const invitationPreviewSource = readFileSync(
 
 describe("template card sample overlay", () => {
   it("uses the measured title-only presentation contract instead of shrinking copy", () => {
-    expect(sampleOverlaySource).toContain("getTemplateSampleOverlayPresentation({ safeAreaHeight, fontScale })");
+    expect(sampleOverlaySource).toContain("getTemplateSampleOverlayPresentation({");
     expect(sampleOverlaySource).toContain("onLayout=");
     expect(sampleOverlaySource).toContain("allowFontScaling={presentation.allowFontScaling}");
     expect(sampleOverlaySource).not.toContain("minimumFontScale={0.56}");
     expect(sampleOverlaySource).not.toContain("adjustsFontSizeToFit");
   });
 
-  it("uses event-specific sample copy instead of wedding copy for every category", () => {
+  it("gets reviewed category labels from the shared pure helper", () => {
     expect(sampleOverlaySource).toContain("export function TemplateSampleTextOverlay({");
     expect(templateCardSource).toContain("<TemplateSampleTextOverlay template={template} />");
-
-    for (const category of [
-      "wedding",
-      "dol",
-      "hwangap",
-      "bridal",
-      "birthday",
-      "housewarming",
-      "baby",
-      "graduation",
-      "business"
-    ]) {
-      expect(sampleOverlaySource).toContain(`${category}:`);
-    }
+    expect(sampleOverlaySource).toContain("getTemplateSampleLabel(template.category)");
+    expect(sampleOverlaySource).toContain("if (!label) return null");
   });
 
   it("keeps sample copy inside category-specific blank-space safe zones", () => {
@@ -60,7 +48,7 @@ describe("template card sample overlay", () => {
 
     expect(heroStackSource).toContain("<TemplateSampleTextOverlay template={template} />");
     expect(heroStackSource).not.toMatch(/>\s*\{template\.name\}\s*<\/Text>/);
-    expect(sampleOverlaySource).toContain("우리 결혼합니다");
+    expect(sampleOverlaySource).toContain("getTemplateSampleLabel");
     expect(sampleOverlaySource).not.toMatch(/headline:|badge:|date:|venue:/);
   });
 

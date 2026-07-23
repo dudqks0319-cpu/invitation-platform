@@ -2,42 +2,44 @@ import { useState } from "react";
 import { Text, View, useWindowDimensions } from "react-native";
 import { resolveTemplateTextSafeArea } from "@invitehub/shared";
 import type { MobileTemplateGalleryItem } from "@/lib/template-gallery";
-import { getTemplateSampleOverlayPresentation } from "@/lib/template-sample-overlay-presentation";
-
-const templateSampleTitle = {
-  wedding: "우리 결혼합니다",
-  dol: "도윤이의 첫돌",
-  hwangap: "아버지의 환갑",
-  bridal: "브라이덜샤워",
-  birthday: "생일을 축하해요",
-  housewarming: "새집에 초대합니다",
-  baby: "아기를 기다려요",
-  graduation: "졸업을 축하해요",
-  business: "OPENING DAY"
-} as const;
+import {
+  getTemplateSampleLabel,
+  getTemplateSampleOverlayPresentation
+} from "@/lib/template-sample-overlay-presentation";
 
 export function TemplateSampleTextOverlay({
   template
 }: {
   template: MobileTemplateGalleryItem;
 }) {
-  const [safeAreaHeight, setSafeAreaHeight] = useState(0);
+  const [safeAreaSize, setSafeAreaSize] = useState({ width: 0, height: 0 });
   const { fontScale } = useWindowDimensions();
-  const title = templateSampleTitle[template.category as keyof typeof templateSampleTitle] ?? templateSampleTitle.wedding;
+  const label = getTemplateSampleLabel(template.category);
   const safeArea = template.textSafeArea ?? resolveTemplateTextSafeArea({
     templateId: template.id,
     category: template.category,
     textPlacement: template.textPlacement
   });
-  const presentation = getTemplateSampleOverlayPresentation({ safeAreaHeight, fontScale });
+  const presentation = getTemplateSampleOverlayPresentation({
+    safeAreaHeight: safeAreaSize.height,
+    safeAreaWidth: safeAreaSize.width,
+    fontScale,
+    label: label ?? ""
+  });
+
+  if (!label) return null;
 
   return (
     <View
       accessible={false}
       importantForAccessibility="no-hide-descendants"
       onLayout={({ nativeEvent }) => {
-        const nextHeight = nativeEvent.layout.height;
-        setSafeAreaHeight((currentHeight) => Math.abs(currentHeight - nextHeight) < 0.5 ? currentHeight : nextHeight);
+        const { width, height } = nativeEvent.layout;
+        setSafeAreaSize((currentSize) => (
+          Math.abs(currentSize.width - width) < 0.5 && Math.abs(currentSize.height - height) < 0.5
+            ? currentSize
+            : { width, height }
+        ));
       }}
       pointerEvents="none"
       style={{
@@ -50,7 +52,7 @@ export function TemplateSampleTextOverlay({
         justifyContent: "center",
         backgroundColor: presentation.backgroundColor,
         borderRadius: 8,
-        paddingHorizontal: 5,
+        paddingHorizontal: presentation.paddingHorizontal,
         paddingVertical: presentation.paddingVertical
       }}
     >
@@ -67,7 +69,7 @@ export function TemplateSampleTextOverlay({
             width: "100%"
           }}
         >
-          {title}
+          {label}
         </Text>
       ) : null}
     </View>

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { getTemplateDiscoveryCardWidth } from "./template-discovery-layout";
 import {
   getTemplateCardExternalMetadata,
+  getTemplateSampleLabel,
+  getTemplateSampleLabelWidthBudget,
   getTemplateSampleOverlayPresentation
 } from "./template-sample-overlay-presentation";
 
@@ -24,12 +26,20 @@ describe("template sample overlay presentation", () => {
   it("fits one fixed title line in the narrowest reviewed 18% safe area at 375px", () => {
     const cardWidth = getTemplateDiscoveryCardWidth(375, 1);
     const artworkHeight = Math.max(220, Math.min(420, Math.round(cardWidth * 1.3)));
+    const artworkWidth = artworkHeight * 941 / 1672;
     const safeAreaHeight = artworkHeight * 0.18;
-    const presentation = getTemplateSampleOverlayPresentation({ safeAreaHeight, fontScale: 1 });
+    const safeAreaWidth = artworkWidth * 0.84;
+    const presentation = getTemplateSampleOverlayPresentation({
+      safeAreaHeight,
+      safeAreaWidth,
+      fontScale: 1,
+      label: "브라이덜"
+    });
 
     expect(cardWidth).toBe(165);
     expect(artworkHeight).toBe(220);
     expect(safeAreaHeight).toBeCloseTo(39.6);
+    expect(safeAreaWidth).toBeCloseTo(104.02, 1);
     expect(presentation.showTitle).toBe(true);
     expect(presentation.titleLineHeight + presentation.paddingVertical * 2)
       .toBeLessThanOrEqual(safeAreaHeight);
@@ -37,8 +47,9 @@ describe("template sample overlay presentation", () => {
 
   it("does not scale or overflow the decorative title at font scale 2", () => {
     const safeAreaHeight = 220 * 0.18;
-    const regular = getTemplateSampleOverlayPresentation({ safeAreaHeight, fontScale: 1 });
-    const largeText = getTemplateSampleOverlayPresentation({ safeAreaHeight, fontScale: 2 });
+    const input = { safeAreaHeight, safeAreaWidth: 104, label: "브라이덜" };
+    const regular = getTemplateSampleOverlayPresentation({ ...input, fontScale: 1 });
+    const largeText = getTemplateSampleOverlayPresentation({ ...input, fontScale: 2 });
 
     expect(largeText).toEqual(regular);
     expect(largeText.allowFontScaling).toBe(false);
@@ -46,17 +57,68 @@ describe("template sample overlay presentation", () => {
   });
 
   it("hides the decorative title when its measured safe area cannot contain it", () => {
-    const presentation = getTemplateSampleOverlayPresentation({ safeAreaHeight: 29, fontScale: 2 });
+    const presentation = getTemplateSampleOverlayPresentation({
+      safeAreaHeight: 29,
+      safeAreaWidth: 104,
+      fontScale: 2,
+      label: "브라이덜"
+    });
     expect(presentation.requiredHeight).toBe(30);
     expect(presentation.showTitle).toBe(false);
   });
 
+  it("hides rather than truncating when the measured safe area is too narrow", () => {
+    const presentation = getTemplateSampleOverlayPresentation({
+      safeAreaHeight: 40,
+      safeAreaWidth: 62,
+      fontScale: 2,
+      label: "브라이덜"
+    });
+
+    expect(presentation.requiredWidth).toBeCloseTo(62.8);
+    expect(presentation.showTitle).toBe(false);
+  });
+
   it("uses opaque high-contrast paper and ink tokens", () => {
-    const presentation = getTemplateSampleOverlayPresentation({ safeAreaHeight: 40, fontScale: 2 });
+    const presentation = getTemplateSampleOverlayPresentation({
+      safeAreaHeight: 40,
+      safeAreaWidth: 104,
+      fontScale: 2,
+      label: "브라이덜"
+    });
 
     expect(presentation.backgroundColor).toMatch(/^#[0-9A-F]{6}$/i);
     expect(presentation.textColor).toMatch(/^#[0-9A-F]{6}$/i);
     expect(contrastRatio(presentation.textColor, presentation.backgroundColor)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it.each([
+    ["wedding", "결혼식"],
+    ["dol", "돌잔치"],
+    ["hwangap", "환갑"],
+    ["bridal", "브라이덜"],
+    ["birthday", "생일"],
+    ["housewarming", "집들이"],
+    ["baby", "베이비"],
+    ["graduation", "졸업"],
+    ["business", "비즈니스"]
+  ])("fits the reviewed %s label inside the minimum safe width", (category, expectedLabel) => {
+    const artworkHeight = 220;
+    const minimumSafeWidth = artworkHeight * 941 / 1672 * 0.84;
+    const label = getTemplateSampleLabel(category);
+
+    expect(label).toBe(expectedLabel);
+    expect(getTemplateSampleLabelWidthBudget(label ?? "")).toBeLessThan(minimumSafeWidth - 10);
+    expect(getTemplateSampleOverlayPresentation({
+      safeAreaHeight: artworkHeight * 0.18,
+      safeAreaWidth: minimumSafeWidth,
+      fontScale: 2,
+      label: label ?? ""
+    }).showTitle).toBe(true);
+  });
+
+  it("does not guess a decorative label for an unknown category", () => {
+    expect(getTemplateSampleLabel("unknown-event")).toBeNull();
   });
 
   it("preserves complete external card metadata instead of shortening it for artwork", () => {
