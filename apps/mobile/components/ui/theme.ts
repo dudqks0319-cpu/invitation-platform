@@ -7,7 +7,7 @@ export const theme = {
     ink: "#29231D",
     rose: "#D9A69A",
     sage: "#7A8B6F",
-    gold: "#B88645",
+    gold: "#765B35",
     paper: "#FFFDF8",
     bgCream: "#FDF8F3",
     bgLight: "#FAF7F4",

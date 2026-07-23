@@ -106,8 +106,9 @@ function CatalogStatus({
           </Text>
           {canRetry ? (
             <Pressable
-              accessibilityRole="button"
               accessibilityHint="최신 디자인 목록을 다시 확인합니다."
+              accessibilityLabel="최신 디자인 다시 시도"
+              accessibilityRole="button"
               onPress={onRetry}
               style={({ pressed }) => ({
                 alignSelf: "flex-start",

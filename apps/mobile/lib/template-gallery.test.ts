@@ -62,6 +62,21 @@ describe("mobile template gallery", () => {
     ]);
   });
 
+  it("keeps audited bundled hero artwork ahead of remote catalog entries", () => {
+    const remoteWeddingTemplate = {
+      ...mobileTemplateGallery.find((template) => template.category === "wedding")!,
+      id: "remote-wedding-hero",
+      name: "원격 웨딩",
+      previewPath: undefined,
+      previewUrl: "https://example.com/remote-wedding.png",
+      remote: true
+    };
+
+    expect(getHomeHeroTemplates([remoteWeddingTemplate, ...mobileTemplateGallery]).map((template) => template.id)).toEqual([
+      ...homeHeroTemplateIds
+    ]);
+  });
+
   it("finds templates by id and category", () => {
     expect(getMobileTemplateById("wedding-modern")?.category).toBe("wedding");
     expect(getMobileTemplatesByCategory("wedding").length).toBeGreaterThan(1);

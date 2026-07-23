@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { selectTemplateAndOpenBuilder } from "../lib/template-selection";
+import { selectTemplateAndOpenBuilder } from "./template-selection";
 
 const screenSource = readFileSync(join(process.cwd(), "apps/mobile/app/templates.tsx"), "utf8");
 const filtersSource = readFileSync(

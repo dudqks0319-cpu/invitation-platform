@@ -215,10 +215,10 @@ function TemplatePreviewActions({
       {creationStatus === "failed" ? (
         <View accessibilityLiveRegion={actionAccessibility.errorLiveRegion} style={{ borderRadius: theme.radius.md, backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, padding: 16, gap: 10 }}>
           <Text style={{ color: theme.colors.ink, fontSize: 14, fontWeight: "800" }}>{creationError}</Text>
-          <Pressable accessibilityHint="실패한 초안 작업을 다시 시도합니다." accessibilityRole="button" onPress={() => void runAction(() => controller.retry())} style={{ minHeight: 44, justifyContent: "center" }}>
+          <Pressable accessibilityHint="실패한 초안 작업을 다시 시도합니다." accessibilityLabel="초안 작업 다시 시도" accessibilityRole="button" onPress={() => void runAction(() => controller.retry())} style={{ minHeight: 44, justifyContent: "center" }}>
             <Text style={{ color: theme.colors.ink, fontSize: 14, fontWeight: "800" }}>다시 시도</Text>
           </Pressable>
-          <Pressable accessibilityHint="초안 작업을 중단하고 디자인 목록을 엽니다." accessibilityRole="button" onPress={() => router.dismissTo("/templates")} style={{ minHeight: 44, justifyContent: "center" }}>
+          <Pressable accessibilityHint="초안 작업을 중단하고 디자인 목록을 엽니다." accessibilityLabel="초안 작업 중단하고 목록으로 돌아가기" accessibilityRole="button" onPress={() => router.dismissTo("/templates")} style={{ minHeight: 44, justifyContent: "center" }}>
             <Text style={{ color: theme.colors.ink, fontSize: 14, fontWeight: "800" }}>디자인 목록으로 돌아가기</Text>
           </Pressable>
         </View>
@@ -381,6 +381,7 @@ export default function TemplatePreviewScreen() {
         </Text>
         <Pressable
           accessibilityHint="안전한 디자인 목록으로 이동합니다."
+          accessibilityLabel="디자인 목록에서 다시 선택"
           accessibilityRole="button"
           onPress={() => router.replace("/templates")}
           style={{ minHeight: 48, borderRadius: theme.radius.pill, backgroundColor: theme.colors.ink, alignItems: "center", justifyContent: "center" }}
@@ -464,6 +465,7 @@ export default function TemplatePreviewScreen() {
                 </Text>
                 <Pressable
                   accessibilityHint="확인 창을 열어 손상된 원본을 백업한 뒤 현재 초안 저장소를 초기화합니다."
+                  accessibilityLabel="손상된 초안 저장소 복구"
                   accessibilityRole="button"
                   accessibilityState={{ disabled: recoveryStatus === "recovering", busy: recoveryStatus === "recovering" }}
                   disabled={recoveryStatus === "recovering"}
@@ -479,10 +481,10 @@ export default function TemplatePreviewScreen() {
             {recoveryStatus === "failed" && recoveryError ? (
               <Text accessibilityLiveRegion="assertive" style={{ color: theme.colors.ink, fontSize: 13, lineHeight: 20 }}>{recoveryError}</Text>
             ) : null}
-            <Pressable accessibilityHint="이 계정의 기존 초안을 다시 확인합니다." accessibilityRole="button" onPress={retryInspection} style={{ minHeight: 44, justifyContent: "center" }}>
+            <Pressable accessibilityHint="이 계정의 기존 초안을 다시 확인합니다." accessibilityLabel="기존 초안 다시 확인" accessibilityRole="button" onPress={retryInspection} style={{ minHeight: 44, justifyContent: "center" }}>
               <Text style={{ color: theme.colors.ink, fontSize: 14, fontWeight: "800" }}>다시 확인</Text>
             </Pressable>
-            <Pressable accessibilityHint="초안 확인을 중단하고 디자인 목록을 엽니다." accessibilityRole="button" onPress={() => router.dismissTo("/templates")} style={{ minHeight: 44, justifyContent: "center" }}>
+            <Pressable accessibilityHint="초안 확인을 중단하고 디자인 목록을 엽니다." accessibilityLabel="초안 확인 중단하고 목록으로 돌아가기" accessibilityRole="button" onPress={() => router.dismissTo("/templates")} style={{ minHeight: 44, justifyContent: "center" }}>
               <Text style={{ color: theme.colors.ink, fontSize: 14, fontWeight: "800" }}>디자인 목록으로 돌아가기</Text>
             </Pressable>
           </View>

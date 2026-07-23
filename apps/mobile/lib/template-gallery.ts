@@ -285,7 +285,7 @@ export function getHomeHeroTemplates(gallery = mobileTemplateGallery) {
   const remoteWeddingTemplates = gallery.filter((template) => template.remote && template.category === "wedding");
   const seen = new Set<string>();
 
-  return [...remoteWeddingTemplates, ...preferredTemplates]
+  return [...preferredTemplates, ...remoteWeddingTemplates]
     .filter((template) => {
       if (seen.has(template.id)) return false;
       seen.add(template.id);

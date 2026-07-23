@@ -1,5 +1,6 @@
 /* eslint-disable jsx-a11y/alt-text */
 
+import { useState } from "react";
 import { Image, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
 import { theme } from "@/components/ui/theme";
@@ -9,12 +10,37 @@ import {
   getHomeTemplateSections,
   type MobileTemplateGalleryItem
 } from "@/lib/template-gallery";
+import {
+  createTemplateImageRecoveryState,
+  resolveRecoverableTemplateImage,
+  synchronizeTemplateImageRecoveryState
+} from "@/lib/template-image-recovery";
 import { getTemplatePreviewSource } from "@/lib/template-image-source";
 
 type HeroSectionProps = {
   onOpenCategory: (categoryKey: string) => void;
   onOpenPreview: (template: MobileTemplateGalleryItem) => void;
 };
+
+function useRecoverablePreview(template: MobileTemplateGalleryItem) {
+  const resolvedSource = getTemplatePreviewSource(template);
+  const [imageState, setImageState] = useState(() => createTemplateImageRecoveryState(resolvedSource));
+  const synchronizedImageState = synchronizeTemplateImageRecoveryState(imageState, resolvedSource);
+  if (imageState !== synchronizedImageState) {
+    setImageState(synchronizedImageState);
+  }
+  const { sourceIdentity, visibleSource } = resolveRecoverableTemplateImage(
+    resolvedSource,
+    synchronizedImageState.failed ? synchronizedImageState.sourceIdentity : null
+  );
+
+  return {
+    imageFailed: synchronizedImageState.failed && synchronizedImageState.sourceIdentity === sourceIdentity,
+    onImageError: () => setImageState({ sourceIdentity, failed: true }),
+    previewSource: visibleSource,
+    sourceIdentity
+  };
+}
 
 function TemplateCard({
   cardWidth,
@@ -25,12 +51,12 @@ function TemplateCard({
   onOpenPreview: (template: MobileTemplateGalleryItem) => void;
   template: MobileTemplateGalleryItem;
 }) {
-  const previewSource = getTemplatePreviewSource(template);
+  const { imageFailed, onImageError, previewSource, sourceIdentity } = useRecoverablePreview(template);
 
   return (
     <Pressable
       accessibilityHint="선택하면 예시 미리보기로 이동합니다."
-      accessibilityLabel={`${template.name} 디자인 미리보기`}
+      accessibilityLabel={`${template.name} 디자인 미리보기${imageFailed ? ", 이미지 표시 실패" : ""}`}
       accessibilityRole="button"
       onPress={() => onOpenPreview(template)}
       style={{
@@ -78,6 +104,8 @@ function TemplateCard({
             <Image
               accessibilityIgnoresInvertColors
               accessibilityLabel={`${template.name} 초대장 완성 예시`}
+              key={sourceIdentity}
+              onError={onImageError}
               resizeMode="cover"
               source={previewSource}
               style={{ width: "100%", height: "100%" }}
@@ -101,7 +129,7 @@ function TemplateCard({
             }}
           >
             <Text style={{ color: theme.colors.gold, fontSize: 12, fontWeight: "800", textAlign: "center" }}>
-              INVITATION
+              {imageFailed ? "이미지를 표시할 수 없어요" : "INVITATION"}
             </Text>
             <Text style={{ color: theme.colors.ink, fontSize: 24, fontWeight: "800", lineHeight: 31, marginTop: 12, textAlign: "center" }}>
               {template.name}
@@ -135,7 +163,7 @@ function HeroStackCard({
   onOpenPreview: (template: MobileTemplateGalleryItem) => void;
   template: MobileTemplateGalleryItem;
 }) {
-  const previewSource = getTemplatePreviewSource(template);
+  const { imageFailed, onImageError, previewSource, sourceIdentity } = useRecoverablePreview(template);
   const isCenter = position === "center";
   const cardWidth = isCenter ? Math.min(190, stackWidth * 0.54) : Math.min(160, stackWidth * 0.45);
   const cardHeight = cardWidth / (941 / 1672);
@@ -145,7 +173,7 @@ function HeroStackCard({
   return (
     <Pressable
       accessibilityHint="선택하면 예시 미리보기로 이동합니다."
-      accessibilityLabel={`${template.name} 메인 디자인 미리보기`}
+      accessibilityLabel={`${template.name} 메인 디자인 미리보기${imageFailed ? ", 이미지 표시 실패" : ""}`}
       accessibilityRole="button"
       onPress={() => onOpenPreview(template)}
       style={{
@@ -172,11 +200,18 @@ function HeroStackCard({
         <Image
           accessibilityIgnoresInvertColors
           accessibilityLabel={`${template.name} 웨딩 이미지`}
+          key={sourceIdentity}
+          onError={onImageError}
           resizeMode="cover"
           source={previewSource}
           style={{ width: "100%", height: "100%" }}
         />
-      ) : null}
+      ) : (
+        <View
+          accessible={false}
+          style={{ position: "absolute", top: 0, right: 0, bottom: 0, left: 0 }}
+        />
+      )}
       <TemplateSampleTextOverlay template={template} />
     </Pressable>
   );
@@ -267,6 +302,7 @@ export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps)
               }}
             >
               <Pressable
+                accessibilityHint="선택한 종류의 전체 디자인 목록을 엽니다."
                 accessibilityLabel={`${section.title} 전체 보기`}
                 accessibilityRole="button"
                 onPress={() => onOpenCategory(section.categoryKeys[0])}
@@ -277,6 +313,7 @@ export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps)
                 </Text>
               </Pressable>
               <Pressable
+                accessibilityHint="선택한 종류의 전체 디자인 목록을 엽니다."
                 accessibilityLabel={`${section.title} 전체 보기`}
                 accessibilityRole="button"
                 onPress={() => onOpenCategory(section.categoryKeys[0])}
