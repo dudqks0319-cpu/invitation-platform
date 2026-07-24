@@ -39,7 +39,8 @@ describe("template card sample overlay", () => {
     expect(sampleOverlaySource).toContain("top: `${safeArea.topPct}%`");
     expect(sampleOverlaySource).toContain("bottom: `${100 - safeArea.bottomPct}%`");
     expect(sampleOverlaySource).toContain('backgroundColor: "transparent"');
-    expect(sampleOverlaySource).toContain("backgroundColor: presentation.backgroundColor");
+    expect(sampleOverlaySource).not.toContain("backgroundColor: presentation.backgroundColor");
+    expect(sampleOverlaySource).not.toContain("paddingHorizontal: presentation.paddingHorizontal");
     expect(templateCardSource).toContain("aspectRatio: 941 / 1672");
   });
 

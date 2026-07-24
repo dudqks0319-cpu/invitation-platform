@@ -2,53 +2,43 @@ import { describe, expect, it } from "vitest";
 import { getTemplateDiscoveryCardWidth } from "./template-discovery-layout";
 import {
   getTemplateCardExternalMetadata,
-  getTemplateSampleLabel,
-  getTemplateSampleLabelWidthBudget,
   getTemplateSampleOverlayContent,
   getTemplateSampleOverlayPresentation
 } from "./template-sample-overlay-presentation";
 
-function channel(value: string, offset: number) {
-  const component = Number.parseInt(value.slice(offset, offset + 2), 16) / 255;
-  return component <= 0.04045 ? component / 12.92 : ((component + 0.055) / 1.055) ** 2.4;
-}
-
-function luminance(value: string) {
-  return channel(value, 1) * 0.2126 + channel(value, 3) * 0.7152 + channel(value, 5) * 0.0722;
-}
-
-function contrastRatio(foreground: string, background: string) {
-  const light = Math.max(luminance(foreground), luminance(background));
-  const dark = Math.min(luminance(foreground), luminance(background));
-  return (light + 0.05) / (dark + 0.05);
-}
-
 describe("template sample overlay presentation", () => {
-  it("fits one fixed title line in the narrowest reviewed 18% safe area at 375px", () => {
+  it("fits real two-line invitation copy in the narrowest reviewed 18% safe area at 375px", () => {
     const cardWidth = getTemplateDiscoveryCardWidth(375, 1);
     const artworkHeight = Math.max(220, Math.min(420, Math.round(cardWidth * 1.3)));
     const artworkWidth = artworkHeight * 941 / 1672;
+    const [content] = getTemplateSampleOverlayContent({
+      arrangement: "top-and-bottom",
+      category: "wedding"
+    });
     const safeAreaHeight = artworkHeight * 0.18;
     const safeAreaWidth = artworkWidth * 0.84;
     const presentation = getTemplateSampleOverlayPresentation({
       safeAreaHeight,
       safeAreaWidth,
       fontScale: 1,
-      label: "브라이덜"
+      content
     });
 
     expect(cardWidth).toBe(165);
     expect(artworkHeight).toBe(220);
     expect(safeAreaHeight).toBeCloseTo(39.6);
     expect(safeAreaWidth).toBeCloseTo(104.02, 1);
-    expect(presentation.showTitle).toBe(true);
-    expect(presentation.titleLineHeight + presentation.paddingVertical * 2)
-      .toBeLessThanOrEqual(safeAreaHeight);
+    expect(presentation.showContent).toBe(true);
+    expect(presentation.requiredHeight).toBeLessThanOrEqual(safeAreaHeight);
   });
 
   it("does not scale or overflow the decorative title at font scale 2", () => {
     const safeAreaHeight = 220 * 0.18;
-    const input = { safeAreaHeight, safeAreaWidth: 104, label: "브라이덜" };
+    const [content] = getTemplateSampleOverlayContent({
+      arrangement: "top-and-bottom",
+      category: "wedding"
+    });
+    const input = { safeAreaHeight, safeAreaWidth: 104, content };
     const regular = getTemplateSampleOverlayPresentation({ ...input, fontScale: 1 });
     const largeText = getTemplateSampleOverlayPresentation({ ...input, fontScale: 2 });
 
@@ -58,68 +48,82 @@ describe("template sample overlay presentation", () => {
   });
 
   it("hides the decorative title when its measured safe area cannot contain it", () => {
+    const [content] = getTemplateSampleOverlayContent({
+      arrangement: "top-and-bottom",
+      category: "wedding"
+    });
     const presentation = getTemplateSampleOverlayPresentation({
-      safeAreaHeight: 29,
+      safeAreaHeight: 10,
       safeAreaWidth: 104,
       fontScale: 2,
-      label: "브라이덜"
+      content
     });
-    expect(presentation.requiredHeight).toBe(30);
-    expect(presentation.showTitle).toBe(false);
+    expect(presentation.requiredHeight).toBeGreaterThan(10);
+    expect(presentation.showContent).toBe(false);
   });
 
   it("hides rather than truncating when the measured safe area is too narrow", () => {
+    const [content] = getTemplateSampleOverlayContent({
+      arrangement: "top-and-bottom",
+      category: "wedding"
+    });
     const presentation = getTemplateSampleOverlayPresentation({
       safeAreaHeight: 40,
-      safeAreaWidth: 62,
+      safeAreaWidth: 55,
       fontScale: 2,
-      label: "브라이덜"
+      content
     });
 
-    expect(presentation.requiredWidth).toBeCloseTo(62.8);
-    expect(presentation.showTitle).toBe(false);
+    expect(presentation.requiredWidth).toBe(64);
+    expect(presentation.showContent).toBe(false);
   });
 
-  it("uses opaque high-contrast paper and ink tokens", () => {
+  it("renders text directly on the reviewed blank area without a paper chip", () => {
+    const [content] = getTemplateSampleOverlayContent({
+      arrangement: "top-and-bottom",
+      category: "wedding"
+    });
     const presentation = getTemplateSampleOverlayPresentation({
       safeAreaHeight: 40,
       safeAreaWidth: 104,
       fontScale: 2,
-      label: "브라이덜"
+      content
     });
 
-    expect(presentation.backgroundColor).toMatch(/^#[0-9A-F]{6}$/i);
     expect(presentation.textColor).toMatch(/^#[0-9A-F]{6}$/i);
-    expect(contrastRatio(presentation.textColor, presentation.backgroundColor)).toBeGreaterThanOrEqual(4.5);
-  });
-
-  it.each([
-    ["wedding", "결혼식"],
-    ["dol", "돌잔치"],
-    ["hwangap", "환갑"],
-    ["bridal", "브라이덜"],
-    ["birthday", "생일"],
-    ["housewarming", "집들이"],
-    ["baby", "베이비"],
-    ["graduation", "졸업"],
-    ["business", "비즈니스"]
-  ])("fits the reviewed %s label inside the minimum safe width", (category, expectedLabel) => {
-    const artworkHeight = 220;
-    const minimumSafeWidth = artworkHeight * 941 / 1672 * 0.84;
-    const label = getTemplateSampleLabel(category);
-
-    expect(label).toBe(expectedLabel);
-    expect(getTemplateSampleLabelWidthBudget(label ?? "")).toBeLessThan(minimumSafeWidth - 10);
-    expect(getTemplateSampleOverlayPresentation({
-      safeAreaHeight: artworkHeight * 0.18,
-      safeAreaWidth: minimumSafeWidth,
-      fontScale: 2,
-      label: label ?? ""
-    }).showTitle).toBe(true);
+    expect(presentation).not.toHaveProperty("backgroundColor");
+    expect(presentation).not.toHaveProperty("paddingHorizontal");
+    expect(presentation).not.toHaveProperty("paddingVertical");
   });
 
   it("does not guess a decorative label for an unknown category", () => {
-    expect(getTemplateSampleLabel("unknown-event")).toBeNull();
+    expect(getTemplateSampleOverlayContent({
+      arrangement: "single",
+      category: "unknown-event"
+    })).toEqual([]);
+  });
+
+  it.each([
+    ["wedding", "WE ARE GETTING MARRIED"],
+    ["dol", "FIRST BIRTHDAY"],
+    ["hwangap", "WITH GRATITUDE"],
+    ["bridal", "BRIDAL SHOWER"],
+    ["birthday", "HAPPY BIRTHDAY"],
+    ["housewarming", "WELCOME HOME"],
+    ["baby", "BABY SHOWER"],
+    ["graduation", "GRADUATION"],
+    ["business", "YOU ARE INVITED"]
+  ])("uses real preview copy instead of a category placeholder for %s", (category, expectedEyebrow) => {
+    const [content] = getTemplateSampleOverlayContent({
+      arrangement: "single",
+      category
+    });
+
+    expect(content?.eyebrow).toBe(expectedEyebrow);
+    expect(content?.title.length).toBeGreaterThan(4);
+    expect(content?.detail).toMatch(/^\d{4}\. \d{2}\. \d{2}\. \d{2}:\d{2}$/);
+    expect(content?.venue).toBeTruthy();
+    expect(content?.venue).not.toContain("예시");
   });
 
   it("preserves complete external card metadata instead of shortening it for artwork", () => {
@@ -129,17 +133,33 @@ describe("template sample overlay presentation", () => {
     expect(getTemplateCardExternalMetadata({ name, desc })).toEqual({ name, description: desc });
   });
 
-  it("uses separate short sample copy above and below centered artwork", () => {
+  it("uses the real preview names, date, and venue above and below centered artwork", () => {
     expect(getTemplateSampleOverlayContent({
       arrangement: "top-and-bottom",
       category: "wedding"
-    })).toEqual(["결혼합니다", "10월 24일"]);
+    })).toEqual([
+      {
+        eyebrow: "WE ARE GETTING MARRIED",
+        title: "이도담 ♡ 김해온"
+      },
+      {
+        title: "2026. 09. 20. 12:30",
+        detail: "라비에별 가든홀 그랜드룸"
+      }
+    ]);
   });
 
-  it("keeps one category label in the middle gap for framed artwork", () => {
+  it("uses the same example copy as the real preview in a single middle gap", () => {
     expect(getTemplateSampleOverlayContent({
       arrangement: "single",
-      category: "wedding"
-    })).toEqual(["결혼식"]);
+      category: "dol"
+    })).toEqual([
+      {
+        eyebrow: "FIRST BIRTHDAY",
+        title: "하람이의 반짝이는 첫 번째 생일",
+        detail: "2026. 10. 11. 12:00",
+        venue: "구름정원 패밀리홀"
+      }
+    ]);
   });
 });

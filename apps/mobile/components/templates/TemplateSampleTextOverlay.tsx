@@ -30,19 +30,19 @@ export function TemplateSampleTextOverlay({
       safeAreaHeight: safeAreaSize.height,
       safeAreaWidth: safeAreaSize.width,
       fontScale,
-      label: content[index] ?? ""
+      content: content[index]
     });
   });
   const showContent = content.length === layout.areas.length
-    && presentations.every((presentation) => presentation.showTitle);
+    && presentations.every((presentation) => presentation.showContent);
 
   if (content.length === 0) return null;
 
   return (
     <>
       {layout.areas.map((safeArea, index) => {
-        const label = content[index];
-        if (!label) return null;
+        const zoneContent = content[index];
+        if (!zoneContent) return null;
         const presentation = presentations[index];
         if (!presentation) return null;
 
@@ -78,25 +78,68 @@ export function TemplateSampleTextOverlay({
               <View
                 style={{
                   maxWidth: "100%",
-                  borderRadius: 6,
-                  backgroundColor: presentation.backgroundColor,
-                  paddingHorizontal: presentation.paddingHorizontal,
-                  paddingVertical: presentation.paddingVertical
+                  alignItems: "center",
+                  gap: presentation.lineGap
                 }}
               >
+                {presentation.showEyebrow ? (
+                  <Text
+                    allowFontScaling={presentation.allowFontScaling}
+                    numberOfLines={1}
+                    style={{
+                      color: presentation.textColor,
+                      fontSize: presentation.eyebrowFontSize,
+                      fontWeight: "600",
+                      letterSpacing: 1.1,
+                      lineHeight: presentation.eyebrowLineHeight,
+                      textAlign: "center"
+                    }}
+                  >
+                    {zoneContent.eyebrow}
+                  </Text>
+                ) : null}
                 <Text
                   allowFontScaling={presentation.allowFontScaling}
-                  numberOfLines={1}
+                  numberOfLines={presentation.titleNumberOfLines}
                   style={{
                     color: presentation.textColor,
                     fontSize: presentation.titleFontSize,
-                    fontWeight: "900",
+                    fontWeight: "800",
                     lineHeight: presentation.titleLineHeight,
                     textAlign: "center"
                   }}
                 >
-                  {label}
+                  {zoneContent.title}
                 </Text>
+                {presentation.showDetail ? (
+                  <Text
+                    allowFontScaling={presentation.allowFontScaling}
+                    numberOfLines={1}
+                    style={{
+                      color: presentation.textColor,
+                      fontSize: presentation.detailFontSize,
+                      fontWeight: "700",
+                      lineHeight: presentation.detailLineHeight,
+                      textAlign: "center"
+                    }}
+                  >
+                    {zoneContent.detail}
+                  </Text>
+                ) : null}
+                {presentation.showVenue ? (
+                  <Text
+                    allowFontScaling={presentation.allowFontScaling}
+                    numberOfLines={1}
+                    style={{
+                      color: presentation.textColor,
+                      fontSize: presentation.detailFontSize,
+                      lineHeight: presentation.detailLineHeight,
+                      textAlign: "center"
+                    }}
+                  >
+                    {zoneContent.venue}
+                  </Text>
+                ) : null}
               </View>
             ) : null}
           </View>
