@@ -10,7 +10,8 @@ import {
   homeTemplateSections,
   homeHeroTemplateIds,
   latestGeneratedInvitationTemplates,
-  mobileTemplateGallery
+  mobileTemplateGallery,
+  sortMobileTemplatesForDisplay
 } from "./template-gallery";
 import { templateCatalogContract } from "./template-catalog.contract.fixture";
 
@@ -123,6 +124,9 @@ describe("mobile template gallery", () => {
     expect(sections[0].title).toBe("청첩장 템플릿");
     expect(sections.every((section) => section.templates.length >= 3)).toBe(true);
     expect(sections[0].templates).toHaveLength(weddingTemplates.length);
+    expect(sections[0].templates.slice(0, 3).map((template) => template.id)).toEqual([
+      ...homeHeroTemplateIds
+    ]);
     expect(sections.find((section) => section.key === "party")?.templates).toHaveLength(partyTemplateCount);
     expect(sections.flatMap((section) => section.templates).map((template) => template.id).sort()).toEqual(
       mobileTemplateGallery.map((template) => template.id).sort()
@@ -146,7 +150,7 @@ describe("mobile template gallery", () => {
     }
   });
 
-  it("places all 60 newly generated templates first in their categories", () => {
+  it("places the newest animated templates first in every discovery surface", () => {
     expect(latestGeneratedInvitationTemplates).toHaveLength(60);
     expect(mobileTemplateGallery.slice(0, 60).map((template) => template.id)).toEqual(
       latestGeneratedInvitationTemplates.map((template) => template.id)
@@ -156,9 +160,22 @@ describe("mobile template gallery", () => {
       const expectedIds = Array.from({ length: end - start + 1 }, (_, index) =>
         `${category}-barunson-anime-${String(start + index).padStart(2, "0")}`
       );
+      const expectedLeadingIds = category === "wedding"
+        ? [...homeHeroTemplateIds, ...expectedIds]
+        : expectedIds;
 
-      expect(getMobileTemplatesByCategory(category).slice(0, 10).map((template) => template.id)).toEqual(expectedIds);
+      expect(
+        getMobileTemplatesByCategory(category)
+          .slice(0, expectedLeadingIds.length)
+          .map((template) => template.id)
+      ).toEqual(expectedLeadingIds);
     }
+
+    expect(
+      sortMobileTemplatesForDisplay([...mobileTemplateGallery].reverse())
+        .slice(0, 3)
+        .map((template) => template.id)
+    ).toEqual([...homeHeroTemplateIds]);
 
     const latestIds = new Set(latestGeneratedInvitationTemplates.map((template) => template.id));
     expect(getFeaturedMobileTemplates().every((template) => latestIds.has(template.id))).toBe(true);

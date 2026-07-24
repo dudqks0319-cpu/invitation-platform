@@ -3,7 +3,7 @@ PODS:
   - DoubleConversion (1.1.6)
   - EXConstants (55.0.15):
     - ExpoModulesCore
-  - Expo (55.0.24):
+  - Expo (55.0.28):
     - boost
     - DoubleConversion
     - ExpoModulesCore
@@ -36,15 +36,15 @@ PODS:
     - Yoga
   - ExpoAppleAuthentication (8.0.8):
     - ExpoModulesCore
-  - ExpoAsset (55.0.17):
+  - ExpoAsset (55.0.18):
     - ExpoModulesCore
   - ExpoCrypto (55.0.10):
     - ExpoModulesCore
   - ExpoDomWebView (55.0.6):
     - ExpoModulesCore
-  - ExpoFileSystem (55.0.20):
+  - ExpoFileSystem (55.0.24):
     - ExpoModulesCore
-  - ExpoFont (55.0.7):
+  - ExpoFont (55.0.8):
     - ExpoModulesCore
   - ExpoHead (6.0.23):
     - ExpoModulesCore
@@ -58,7 +58,7 @@ PODS:
     - ExpoModulesCore
   - ExpoLinking (8.0.12):
     - ExpoModulesCore
-  - ExpoLogBox (55.0.12):
+  - ExpoLogBox (55.0.13):
     - React-Core
   - ExpoModulesCore (55.0.25):
     - boost
@@ -3109,19 +3109,19 @@ SPEC CHECKSUMS:
   boost: 7e761d76ca2ce687f7cc98e698152abd03a18f90
   DoubleConversion: cb417026b2400c8f53ae97020b2be961b59470cb
   EXConstants: 5caf448ff399f60be9d1053e77aed32e39411900
-  Expo: ced324f4c15e057504b98110006d674b6bf08f84
+  Expo: ba630628a148476632cec47ad022e2b05174e235
   ExpoAppleAuthentication: 9413ae9a5e631a424cc04c1b13b0694dbab7d594
-  ExpoAsset: 7721c5c4ae2a7c3c8147a046727ac6c020b05648
+  ExpoAsset: 42278ae3d585ab9bf5a223e7979d5365c348cffc
   ExpoCrypto: 33a6c4fb9ccac7a4d784954d0db6c3ba292123e9
   ExpoDomWebView: b2e9d601f9cb77d3c97da73234e175b64be91928
-  ExpoFileSystem: 5d01aa6678ccde01172351aad5720ee16845ae82
-  ExpoFont: a95606f106a6394df8edf6d0d87aab9020af5ad4
+  ExpoFileSystem: b16ad358dff1dd561f561d8ca0bf22cf00ddad40
+  ExpoFont: a7e34a75bdfb703fa07a0e87807f836236608c76
   ExpoHead: 7e19b2272edf492262acf8afb391a295198a6b23
   ExpoImageManipulator: f66e63e30deefe23be1eaf3c7133d369fe2e5684
   ExpoImagePicker: 6d8e97db8aa1fcdd357c0ed1e7365cf30100a0fe
   ExpoKeepAwake: d0eb7a0719500d2a43fbf29b6f79e84d70c75ebf
   ExpoLinking: 2ef632ad5013e3f1568fae9408d56ab9af5efc55
-  ExpoLogBox: a678d36477ab9544fe63e0b5328a0716539b6774
+  ExpoLogBox: 4bb2f041d3281b8c27ed494fae3b6f217ba79857
   ExpoModulesCore: 604798b3c018ba24fb399581087cca68f218f272
   ExpoModulesJSI: 964334271fc77832736f66ee1785761cdc778dbe
   ExpoWebBrowser: 04fdc3b0619d6708f931a9d0f8850903cc38d896
@@ -3129,7 +3129,7 @@ SPEC CHECKSUMS:
   FBLazyVector: f1200e6ef6cf24885501668bdbb9eff4cf48843f
   fmt: a40bb5bd0294ea969aaaba240a927bd33d878cdd
   glog: 5683914934d5b6e4240e497e0f4a3b42d1854183
-  hermes-engine: 9f480569f7a6a956c6a4acc72cf64af890c6c5fb
+  hermes-engine: cb8b269b3046c0679a513216be4b000814dc28ae
   libwebp: 02b23773aedb6ff1fd38cec7a77b81414c6842a8
   RCT-Folly: 846fda9475e61ec7bcbf8a3fe81edfcaeb090669
   RCTDeprecation: 3b915a7b166f7d04eaeb4ae30aaf24236a016551

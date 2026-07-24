@@ -230,6 +230,25 @@ export const homeHeroTemplateIds = [
   "wedding-barunson-anime-10"
 ] as const;
 
+const templateDisplayPriorityIds = [
+  ...homeHeroTemplateIds,
+  ...latestGeneratedInvitationTemplates.map((template) => template.id)
+];
+const templateDisplayPriority = new Map(
+  templateDisplayPriorityIds.map((templateId, index) => [templateId, index])
+);
+
+export function sortMobileTemplatesForDisplay(gallery: MobileTemplateGalleryItem[]) {
+  return gallery
+    .map((template, index) => ({ template, index }))
+    .sort((left, right) => {
+      const leftPriority = templateDisplayPriority.get(left.template.id) ?? Number.MAX_SAFE_INTEGER;
+      const rightPriority = templateDisplayPriority.get(right.template.id) ?? Number.MAX_SAFE_INTEGER;
+      return leftPriority - rightPriority || left.index - right.index;
+    })
+    .map(({ template }) => template);
+}
+
 export const homeTemplateSections: HomeTemplateSection[] = [
   {
     key: "wedding",
@@ -268,7 +287,9 @@ export function getMobileTemplateById(templateId: string, gallery = mobileTempla
 }
 
 export function getMobileTemplatesByCategory(category: string, gallery = mobileTemplateGallery) {
-  return gallery.filter((template) => template.category === category);
+  return sortMobileTemplatesForDisplay(
+    gallery.filter((template) => template.category === category)
+  );
 }
 
 export function getFeaturedMobileTemplates(limit = featuredMobileTemplateIds.length, gallery = mobileTemplateGallery) {
@@ -297,6 +318,8 @@ export function getHomeHeroTemplates(gallery = mobileTemplateGallery) {
 export function getHomeTemplateSections(gallery = mobileTemplateGallery) {
   return homeTemplateSections.map((section) => ({
     ...section,
-    templates: gallery.filter((template) => section.categoryKeys.includes(template.category))
+    templates: sortMobileTemplatesForDisplay(
+      gallery.filter((template) => section.categoryKeys.includes(template.category))
+    )
   }));
 }

@@ -33,7 +33,11 @@ import {
 } from "@/lib/template-discovery-layout";
 import { createTemplatePreviewDestination } from "@/lib/template-discovery-navigation";
 import { normalizeTemplateDiscoveryEntryKey } from "@/lib/template-discovery-state";
-import { mobileTemplateCategories, type MobileTemplateGalleryItem } from "@/lib/template-gallery";
+import {
+  mobileTemplateCategories,
+  sortMobileTemplatesForDisplay,
+  type MobileTemplateGalleryItem
+} from "@/lib/template-gallery";
 import { loadRecentlyViewedTemplates } from "@/lib/template-preview-recent";
 import {
   createTemplateResultAnnouncer,
@@ -164,7 +168,9 @@ export default function TemplatesScreen() {
     [debouncedQuery, filters.category, filters.moods]
   );
   const filteredTemplates = useMemo(
-    () => filterTemplateDiscoveryItems(templates, committedFilters, mobileTemplateCategories),
+    () => sortMobileTemplatesForDisplay(
+      filterTemplateDiscoveryItems(templates, committedFilters, mobileTemplateCategories)
+    ),
     [committedFilters, templates]
   );
   const activeFilterSummary = getTemplateDiscoveryActiveFilterSummary(committedFilters, mobileTemplateCategories);

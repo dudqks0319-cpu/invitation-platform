@@ -65,6 +65,7 @@ function TemplateCard({
   const { imageFailed, onImageError, previewSource, sourceIdentity } = useRecoverablePreview(
     getTemplatePreviewSource(template)
   );
+  const previewHeight = Math.min(240, Math.max(196, Math.round(cardWidth * 1.35)));
 
   return (
     <Pressable
@@ -74,43 +75,43 @@ function TemplateCard({
       onPress={() => onOpenPreview(template)}
       style={{
         width: cardWidth,
-        borderRadius: 8,
+        borderRadius: 14,
         backgroundColor: theme.colors.surface,
         borderWidth: 1,
         borderColor: "rgba(139,115,85,0.16)",
         overflow: "hidden",
-        shadowColor: "rgba(79,55,36,0.12)",
-        shadowOffset: { width: 0, height: 10 },
-        shadowOpacity: 1,
-        shadowRadius: 18,
-        elevation: 4
+        shadowColor: "#6E5548",
+        shadowOffset: { width: 0, height: 7 },
+        shadowOpacity: 0.11,
+        shadowRadius: 12,
+        elevation: 2
       }}
     >
       <View
         style={{
-          height: 244,
+          height: previewHeight,
           backgroundColor: "#F7EFE6",
           alignItems: "center",
           justifyContent: "center",
-          padding: 10
+          padding: 8
         }}
       >
         <View
           pointerEvents="none"
           style={{
             position: "absolute",
-            top: 10,
-            right: 10,
+            top: 8,
+            right: 8,
             zIndex: 1,
-            minHeight: 32,
-            borderRadius: 8,
-            backgroundColor: "rgba(41,35,29,0.84)",
+            minHeight: 28,
+            borderRadius: 999,
+            backgroundColor: "rgba(41,35,29,0.76)",
             alignItems: "center",
             justifyContent: "center",
-            paddingHorizontal: 12
+            paddingHorizontal: 9
           }}
         >
-          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "800" }}>미리보기</Text>
+          <Text style={{ color: "#fff", fontSize: 11, fontWeight: "800" }}>보기</Text>
         </View>
         {previewSource ? (
           <View style={{ height: "100%", aspectRatio: 941 / 1672, borderRadius: 6, overflow: "hidden" }}>
@@ -151,12 +152,12 @@ function TemplateCard({
         )}
       </View>
 
-      <View style={{ padding: 13, gap: 7 }}>
-        <Text style={{ color: theme.colors.gold, fontSize: 12, fontWeight: "800" }}>{template.badge}</Text>
-        <Text numberOfLines={1} style={{ color: theme.colors.ink, fontSize: 18, fontWeight: "800", lineHeight: 24 }}>
+      <View style={{ padding: 11, gap: 5 }}>
+        <Text style={{ color: theme.colors.gold, fontSize: 11, fontWeight: "800" }}>{template.badge}</Text>
+        <Text numberOfLines={1} style={{ color: theme.colors.ink, fontSize: 15, fontWeight: "800", lineHeight: 20 }}>
           {template.name}
         </Text>
-        <Text numberOfLines={2} style={{ color: theme.colors.muted, fontSize: 14, lineHeight: 21 }}>
+        <Text numberOfLines={2} style={{ color: theme.colors.muted, fontSize: 12, lineHeight: 18 }}>
           {template.desc}
         </Text>
       </View>
@@ -250,7 +251,8 @@ export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps)
   const { width } = useWindowDimensions();
   const { templates } = useTemplateCatalog();
   const [finishedHeroCompositeFailed, setFinishedHeroCompositeFailed] = useState(false);
-  const cardWidth = Math.min(224, Math.max(176, width * 0.52));
+  const carouselViewportWidth = Math.max(280, width - 36);
+  const cardWidth = Math.min(188, Math.max(134, (carouselViewportWidth - 12) / 2));
   const heroStackWidth = Math.min(360, Math.max(284, width - 36));
   const heroStackHeight = heroStackWidth * 1.02;
   const heroTemplates = getHomeHeroTemplates(templates);

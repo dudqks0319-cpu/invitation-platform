@@ -38,6 +38,8 @@ describe("template card sample overlay", () => {
     expect(sampleOverlaySource).toContain("layout.areas.map((safeArea, index)");
     expect(sampleOverlaySource).toContain("top: `${safeArea.topPct}%`");
     expect(sampleOverlaySource).toContain("bottom: `${100 - safeArea.bottomPct}%`");
+    expect(sampleOverlaySource).toContain('backgroundColor: "transparent"');
+    expect(sampleOverlaySource).toContain("backgroundColor: presentation.backgroundColor");
     expect(templateCardSource).toContain("aspectRatio: 941 / 1672");
   });
 
@@ -60,6 +62,13 @@ describe("template card sample overlay", () => {
   it("adds real invitation copy to the front wedding cards on home", () => {
     expect(heroSectionSource).toContain("template.sampleTextOverlay ? (");
     expect(heroSectionSource).toContain("<TemplateSampleTextOverlay template={template} />");
+  });
+
+  it("shows two complete compact cards and applies the shared newest-first order on home", () => {
+    expect(heroSectionSource).toContain("const carouselViewportWidth");
+    expect(heroSectionSource).toContain("(carouselViewportWidth - 12) / 2");
+    expect(heroSectionSource).toContain('>보기</Text>');
+    expect(templatesScreenSource).toContain("sortMobileTemplatesForDisplay(");
   });
 
   it("uses one shared overlay and keeps complete scalable details below decorative artwork", () => {

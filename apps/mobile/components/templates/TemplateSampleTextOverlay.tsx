@@ -71,27 +71,33 @@ export function TemplateSampleTextOverlay({
               bottom: `${100 - safeArea.bottomPct}%`,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: showContent ? presentation.backgroundColor : "transparent",
-              borderRadius: 8,
-              paddingHorizontal: presentation.paddingHorizontal,
-              paddingVertical: presentation.paddingVertical
+              backgroundColor: "transparent"
             }}
           >
             {showContent ? (
-              <Text
-                allowFontScaling={presentation.allowFontScaling}
-                numberOfLines={1}
+              <View
                 style={{
-                  color: presentation.textColor,
-                  fontSize: presentation.titleFontSize,
-                  fontWeight: "900",
-                  lineHeight: presentation.titleLineHeight,
-                  textAlign: "center",
-                  width: "100%"
+                  maxWidth: "100%",
+                  borderRadius: 6,
+                  backgroundColor: presentation.backgroundColor,
+                  paddingHorizontal: presentation.paddingHorizontal,
+                  paddingVertical: presentation.paddingVertical
                 }}
               >
-                {label}
-              </Text>
+                <Text
+                  allowFontScaling={presentation.allowFontScaling}
+                  numberOfLines={1}
+                  style={{
+                    color: presentation.textColor,
+                    fontSize: presentation.titleFontSize,
+                    fontWeight: "900",
+                    lineHeight: presentation.titleLineHeight,
+                    textAlign: "center"
+                  }}
+                >
+                  {label}
+                </Text>
+              </View>
             ) : null}
           </View>
         );
