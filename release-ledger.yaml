@@ -1,145 +1,67 @@
-updated_at: "2026-07-22T13:56:00+09:00"
+updated_at: "2026-07-24T10:53:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
 project:
   name: osamosam
-  release_workspace: "/Users/jyb-m3max/Desktop/codex/invitation-platform/.worktrees/osamosam-appstore-v103"
-phase: apple_processing
+  release_workspace: "/private/tmp/osamosam-appstore-submit-20260724"
+phase: real_device_smoke
 version: "1.0.3"
-build_number: 61
-git_sha: "1ee33a4b477bcee4d550076be3dadea165ea76e6"
-branch: "agent/osamosam-appstore-v103"
+build_number: 64
+git_sha: "a95bca723632743f8135edbd7c7ffb6181c1cddc"
+branch: "agent/osamosam-appstore-submit-20260724"
 public:
   version: "1.0.2"
-  released_at: "2026-06-29T06:55:38Z"
+  state: released
 candidate:
   version: "1.0.3"
-  git_sha: "1ee33a4b477bcee4d550076be3dadea165ea76e6"
-  branch: "agent/osamosam-appstore-v103"
-  native_local_build_number: 52
-  eas_remote_build_number_before_increment: 60
-  eas_build_number: 61
-  signed_ipa_state: produced_verified_and_uploaded_to_app_store_connect
-  distribution_certificate_serial: "65FE7FE2EED7B54C24F3C811A0028AB1"
-  distribution_certificate_changed: true
-  eas_distribution_certificate_association_changed: true
-  provisioning_profile_id: "Q9U792B5HK"
-  provisioning_profile_refreshed_at: "2026-07-22T06:38:00+09:00"
-  provisioning_profile_certificate_id: new_eas_managed_certificate
-  apple_portal_login_verified: true
-  eas_apple_login_verified: true
-  eas_credential_validation: ready_and_exact_profile_certificate_sha1_used
-  alternate_existing_certificate_id: "Q5L5FYUDB3"
-  alternate_existing_certificate_serial: "1000663C2896A072792619D856B214DB"
-  alternate_certificate_selected: true
-  alternate_certificate_build_result: failed_same_signing_identity_mismatch
-  local_valid_codesigning_identities: 0
-  apple_profile_edit_state: "rejected_missing_app_id_and_profile_name_parameters"
-  apple_certificate_or_profile_change_applied: true
-  revoked_certificate_id: "9MV8MJ4Z93"
-  revoked_certificate_serial: "9D393964730772CF3E23F745A8A349B"
-  revoked_at: "2026-07-22T06:27:00+09:00"
-  protected_shared_certificate_id: "Q5L5FYUDB3"
-  protected_shared_certificate_modified: false
-  apple_certificate_created_deleted_or_revoked: true
-  new_certificate_and_profile_apple_validation: passed
-  previous_local_build_cli_version: "18.4.0"
-  local_build_cli_version: "21.0.2"
-  latest_cli_one_time_execution_approved: true
-  latest_cli_build_result: passed_with_exact_sha1_for_archive_and_export
-  xcode_signing_settings_audit: no_pinned_certificate_fingerprint_or_profile_id
-  xcode_release_default_identity: iPhone_Developer_overridden_by_eas_archive
-  eas_credential_download_inspection_approved: true
-  eas_credential_temp_directory_mode: "700"
-  eas_credential_file_mode: "600"
-  p12_certificate_sha256: "BE5F8A78CCDFC881A2792925FD124169B0EE73E80EC3E852AA876E8463A69256"
-  profile_certificate_sha256: "BE5F8A78CCDFC881A2792925FD124169B0EE73E80EC3E852AA876E8463A69256"
-  p12_profile_serial_match: true
-  p12_profile_sha256_match: true
-  p12_profile_mismatch_hypothesis: falsified
-  p12_certificate_common_name: "iPhone Distribution: Youngbeen Jung (3FG9QJC8WC)"
-  xcode_error_identity_name: "Apple Distribution: Youngbeen Jung (3FG9QJC8WC)"
-  local_build_ephemeral_keychain_identity_proof: "C54290CF0E787B62F68BD1D5DB8701604CC78EB9"
-  xcode_generic_identity_root_cause: "Xcode_26_3_resolved_generic_iPhone_Distribution_and_automatic_export_selector_to_Apple_Distribution"
-  archive_code_sign_identity_sha1: "C54290CF0E787B62F68BD1D5DB8701604CC78EB9"
-  export_signing_certificate_sha1: "C54290CF0E787B62F68BD1D5DB8701604CC78EB9"
-  fastlane_compatible_export_method: app-store
-  archive_result: passed
-  ipa_export_result: passed
-  sensitive_credential_temp_files_deleted: true
-  repository_credential_files_created: false
-  signing_validation_report: "/private/tmp/codex-security-scans/invitation-platform/b775337_20260722T112414+0900/artifacts/05_findings/CRED-SIGN-001/validation_report.md"
-  source_security_report: "/private/var/folders/dx/2zprs00s3050gd97w54748700000gn/T/codex-security-scans-wVOiPG/osamosam-appstore-v103/e0b788d4371fe6262e5dc14d2fa30899a55645a9_20260722T041222Z_kfdnmzt5/report.md"
-  ipa_path: "/tmp/osamosam-v103-build61.ipa"
-  ipa_bytes: 149394623
-  ipa_sha256: "9e961c3e9952724a5ace770d7c08efe628deba9a83075e6a132388e750df40a2"
-  successful_xcode_archive: "/Users/jyb-m3max/Library/Developer/Xcode/Archives/2026-07-22/InviteHub 2026-07-22 13.47.28.xcarchive"
-  successful_xcode_archive_retained_for_dsym: true
-  ipa_bundle_id: "com.invitehub.app"
-  ipa_version: "1.0.3"
-  ipa_build_number: 61
-  ipa_display_name: "오삼오삼"
-  ipa_profile_uuid: "c97260e7-df1b-4276-b738-3760918998b1"
-  ipa_profile_app_id: "3FG9QJC8WC.com.invitehub.app"
-  ipa_profile_get_task_allow: false
-  bundled_home_asset_sha256_match: true
-  bundled_new_template_assets_sha256_match: "60/60"
-  ipa_local_strict_codesign_check: "certificate_chain_not_locally_trusted_after_ephemeral_keychain_cleanup"
-  xcode_export_signing_validation: passed
-  eas_build_id: not_applicable_source_private_local_build
-  eas_submit_id: "6f876ba8-be5e-4d52-bdf5-b7440d69bc5d"
+  build_number: 64
+  git_sha: "a95bca723632743f8135edbd7c7ffb6181c1cddc"
+  branch: "agent/osamosam-appstore-submit-20260724"
+  eas_build_id: "1f103d1b-f328-4702-b3a1-5f4847a6afa4"
+  eas_build_state: finished
+  eas_submit_id: "747d357c-d4b9-4302-8a32-a62c741a98f7"
   eas_submit_state: uploaded_to_app_store_connect
-  app_store_connect_uploaded_at: "2026-07-22T13:55:00+09:00"
-  app_store_connect_state: uploaded_processing
-  testflight_state: apple_processing
-  real_device_result: pending_exact_build_61
+  app_store_connect_state: build_64_processed
+  testflight_state: submission_ready
+  real_device_result: pending_exact_build_64
   app_review_state: not_submitted
+  superseded_builds:
+    - 62
+    - 63
+  selected_for_review: false
 verification:
-  mobile_focused_tests: "5 files / 29 tests passed"
-  full_tests: "69 files / 249 tests passed"
+  full_tests: "99 files / 457 tests passed"
   lint: passed
-  typecheck: passed
+  root_typecheck: passed
+  mobile_typecheck: passed
   ios_release_simulator_build: passed
   ios_release_simulator_launch: passed
-  simulator_screenshots: "/tmp/osamosam-build61-home-final.png, /tmp/osamosam-build61-home-wedding-final.png, /tmp/osamosam-build61-wedding-safezone.png"
-  bundled_home_assets: passed
-  free_only_release_gate: passed
+  simulator_device: "iPhone 17 Pro / iOS 26.2"
+  visual_verdict: "96/100 pass"
+  store_screenshots: "2 files / 1206x2622 / passed"
   runtime_critical_dependency_advisories: 0
-  clean_build_full_tree_critical_advisories: 1
-  clean_build_full_tree_advisories: "18 total: 1 low, 12 moderate, 4 high, 1 critical"
-  expo_doctor: "15/19 passed; 4 failed"
-  expo_sdk_package_version_mismatches: 12
-  ipa_metadata: passed
-  ipa_profile_certificate_match: passed
-  bundled_home_asset_hashes: passed
-  bundled_new_template_asset_hashes: "60/60 passed"
-  codex_security_diff_scan: "12/12 files covered, 0 findings"
-  codex_security_scan_id: "84e0e9d3-34ce-4a02-860e-de93d7ea907e"
-  app_store_connect_binary_upload: passed
+  clean_build_full_tree_advisories: "18 total including 1 critical in development tooling tree"
 local_checks:
-  tests: "249/249 passed"
+  tests: "457/457 passed"
   lint: passed
   typecheck: passed
-  signed_ipa: passed
 runtime_checks:
   simulator_release_launch: passed
-  real_iphone_testflight_build_61: pending
+  real_iphone_installed_build: 63
+  real_iphone_testflight_build_64: pending_update
 external_checks:
+  eas_build: finished
   app_store_connect_upload: passed
-  apple_processing: pending
+  apple_processing: passed
+  testflight: build_64_submission_ready
   app_review: not_submitted
+  public_release: "1.0.2"
 security:
   repository_credential_files_created: false
-  temporary_p12_files_deleted: true
-  temporary_keychains_destroyed: true
-  unresolved_critical_advisories: 1
+  runtime_dependency_vulnerabilities: 0
+  unresolved_dev_tool_critical_advisories: 1
 blockers:
-  - id: apple-processing
-    severity: P1
-    status: open
-    owner: release-owner
-    due: before-testflight-install
   - id: dependency-advisories
     severity: P1
     status: open
@@ -151,5 +73,5 @@ blockers:
     owner: release-owner
     due: before-app-review-build-selection
 next_action:
-  summary: "Sign in to App Store Connect in Chrome if needed, confirm Build 61 finishes Apple processing, then run the required real-iPhone smoke test before selecting any build for App Review."
-  command: "open 'https://appstoreconnect.apple.com/apps/6763630299/testflight/ios'"
+  summary: "On the connected iPhone 12 Pro, update 오삼오삼 from TestFlight Build 63 to Build 64, then verify launch, login, latest-template order, preview, and free publish before App Review build selection."
+  command: "/usr/bin/xcrun devicectl device info apps --device 6A2491AB-17ED-57B5-951B-9EAA346DF486 --bundle-id com.invitehub.app --include-all-apps --columns '*'"
