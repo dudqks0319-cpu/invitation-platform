@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { AccessibilityInfo, ActivityIndicator, Alert, Image, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { InvitationPreviewCard } from "@/components/invitation/InvitationPreviewCard";
 import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
 import { theme } from "@/components/ui/theme";
 import { useAuth } from "@/hooks/useAuth";
@@ -425,10 +424,6 @@ export default function TemplatePreviewScreen() {
         </View>
 
         <TemplatePreviewImage key={template.id} template={template} />
-
-        <View style={{ width: "100%", maxWidth: 420, alignSelf: "center" }}>
-          <InvitationPreviewCard compact payload={payload} />
-        </View>
 
         <View style={{ borderRadius: theme.radius.lg, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, padding: 18, gap: 12 }}>
           <Text style={{ color: theme.colors.ink, fontSize: 18, fontWeight: "800" }}>예시 행사 정보</Text>

@@ -14,13 +14,15 @@ const TEMPLATE_SAMPLE_HEADLINES = {
   business: "YOU ARE INVITED"
 } as const;
 
-const EYEBROW_FONT_SIZE = 5.5;
-const EYEBROW_LINE_HEIGHT = 8;
-const TITLE_FONT_SIZE = 8;
-const TITLE_LINE_HEIGHT = 11;
-const DETAIL_FONT_SIZE = 6;
-const DETAIL_LINE_HEIGHT = 9;
-const LINE_GAP = 1;
+export const templateOverlayTypography = {
+  eyebrowFontSize: 10,
+  eyebrowLineHeight: 13,
+  titleFontSize: 14,
+  titleLineHeight: 18,
+  detailFontSize: 11,
+  detailLineHeight: 15,
+  lineGap: 2
+} as const;
 const MINIMUM_SAFE_WIDTH = 64;
 
 export type TemplateSampleOverlayContent = {
@@ -42,16 +44,22 @@ export function getTemplateSampleOverlayPresentation({
   safeAreaWidth,
   content
 }: TemplateSampleOverlayPresentationInput) {
+  const {
+    eyebrowLineHeight,
+    titleLineHeight,
+    detailLineHeight,
+    lineGap
+  } = templateOverlayTypography;
   const titleNumberOfLines = content && Array.from(content.title).length > 14 ? 2 : 1;
   const textLineHeights = [
-    content?.eyebrow ? EYEBROW_LINE_HEIGHT : 0,
-    content?.title ? TITLE_LINE_HEIGHT * titleNumberOfLines : 0,
-    content?.detail ? DETAIL_LINE_HEIGHT : 0,
-    content?.venue ? DETAIL_LINE_HEIGHT : 0
+    content?.eyebrow ? eyebrowLineHeight : 0,
+    content?.title ? titleLineHeight * titleNumberOfLines : 0,
+    content?.detail ? detailLineHeight : 0,
+    content?.venue ? detailLineHeight : 0
   ].filter((height) => height > 0);
   const requiredHeight = textLineHeights.reduce((total, height) => total + height, 0)
-    + Math.max(0, textLineHeights.length - 1) * LINE_GAP;
-  const titleRequiredHeight = content?.title ? TITLE_LINE_HEIGHT * titleNumberOfLines : 0;
+    + Math.max(0, textLineHeights.length - 1) * lineGap;
+  const titleRequiredHeight = content?.title ? titleLineHeight * titleNumberOfLines : 0;
   const hasMeasuredRoom = Boolean(content)
     && Number.isFinite(safeAreaHeight)
     && safeAreaHeight >= titleRequiredHeight
@@ -62,14 +70,14 @@ export function getTemplateSampleOverlayPresentation({
   return {
     allowFontScaling: false as const,
     textColor: theme.colors.ink,
-    eyebrowFontSize: EYEBROW_FONT_SIZE,
-    eyebrowLineHeight: EYEBROW_LINE_HEIGHT,
-    titleFontSize: TITLE_FONT_SIZE,
-    titleLineHeight: TITLE_LINE_HEIGHT,
+    eyebrowFontSize: templateOverlayTypography.eyebrowFontSize,
+    eyebrowLineHeight,
+    titleFontSize: templateOverlayTypography.titleFontSize,
+    titleLineHeight,
     titleNumberOfLines,
-    detailFontSize: DETAIL_FONT_SIZE,
-    detailLineHeight: DETAIL_LINE_HEIGHT,
-    lineGap: LINE_GAP,
+    detailFontSize: templateOverlayTypography.detailFontSize,
+    detailLineHeight,
+    lineGap,
     requiredHeight,
     requiredWidth: MINIMUM_SAFE_WIDTH,
     showContent: hasMeasuredRoom,
@@ -77,6 +85,12 @@ export function getTemplateSampleOverlayPresentation({
     showDetail: showFullContent && Boolean(content?.detail),
     showVenue: showFullContent && Boolean(content?.venue)
   };
+}
+
+export function getTemplateSampleHeadline(category: string) {
+  return Object.prototype.hasOwnProperty.call(TEMPLATE_SAMPLE_HEADLINES, category)
+    ? TEMPLATE_SAMPLE_HEADLINES[category as keyof typeof TEMPLATE_SAMPLE_HEADLINES]
+    : null;
 }
 
 function formatTemplateSampleDate(value: string) {
@@ -97,16 +111,10 @@ export function getTemplateSampleOverlayContent({
   category: string;
 }): TemplateSampleOverlayContent[] {
   const example = getTemplatePreviewExample(category);
-  if (
-    !example
-    || !Object.prototype.hasOwnProperty.call(TEMPLATE_SAMPLE_HEADLINES, category)
-  ) {
+  const eyebrow = getTemplateSampleHeadline(category);
+  if (!example || !eyebrow) {
     return [];
   }
-
-  const eyebrow = TEMPLATE_SAMPLE_HEADLINES[
-    category as keyof typeof TEMPLATE_SAMPLE_HEADLINES
-  ];
   const date = formatTemplateSampleDate(example.dateTime);
   const venue = removeExamplePrefix(example.venueName);
   const title = category === "wedding"

@@ -50,8 +50,8 @@ describe("template preview route", () => {
     expect(routeSource).toContain("retainedTemplateSelection !== selectedTemplateSnapshot");
   });
 
-  it("renders an example-labelled safe preview plus a readable wrapping information region", () => {
-    expect(routeSource).toContain("InvitationPreviewCard");
+  it("renders exactly one example-labelled template image plus a readable wrapping information region", () => {
+    expect(routeSource).not.toContain("InvitationPreviewCard");
     expect(routeSource).toContain("TemplateSampleTextOverlay");
     expect(routeSource).toContain("예시 초대장 미리보기");
     expect(routeSource).toContain("예시 행사 정보");

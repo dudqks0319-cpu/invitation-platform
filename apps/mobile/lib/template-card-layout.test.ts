@@ -79,6 +79,10 @@ describe("template card sample overlay", () => {
     expect(invitationPreviewSource).toContain("resolveTemplateTextLayout({");
     expect(invitationPreviewSource).toContain("artworkPresentation.zones.map((zone, index)");
     expect(invitationPreviewSource).toContain("backgroundColor: theme.colors.paper");
+    expect(invitationPreviewSource).toContain("templateOverlayTypography.titleFontSize");
+    expect(invitationPreviewSource).toContain("templateOverlayTypography.detailFontSize");
+    expect(invitationPreviewSource).toContain('backgroundColor: "transparent"');
+    expect(invitationPreviewSource).not.toContain("backgroundColor: artworkPresentation.backgroundColor");
     expect(invitationPreviewSource).toContain("allowFontScaling={false}");
     expect(invitationPreviewSource).not.toContain("adjustsFontSizeToFit");
     expect(invitationPreviewSource).not.toContain("minimumFontScale");

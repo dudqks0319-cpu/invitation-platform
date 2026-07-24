@@ -12,23 +12,26 @@ import {
   getInvitationPreviewDetails
 } from "@/lib/invitation-preview-accessibility";
 import { getInvitationArtworkPresentation } from "@/lib/invitation-artwork-presentation";
+import {
+  getTemplateSampleHeadline,
+  templateOverlayTypography
+} from "@/lib/template-sample-overlay-presentation";
 
 type TemplateAccent = {
   background: string;
   border: string;
-  headline: string;
 };
 
 const templateAccents: Record<string, TemplateAccent> = {
-  wedding: { background: "#fff7f2", border: "#ead6cb", headline: "We are getting married" },
-  dol: { background: "#fff9dd", border: "#eadb9f", headline: "First Birthday" },
-  hwangap: { background: "#fbf6ed", border: "#d9c4a0", headline: "With gratitude" },
-  bridal: { background: "#fff7fb", border: "#efd3dc", headline: "Bridal Shower" },
-  birthday: { background: "#f0fbff", border: "#b9dceb", headline: "Happy Birthday" },
-  housewarming: { background: "#fbfaf5", border: "#d8dfc8", headline: "Welcome home" },
-  baby: { background: "#f7fbff", border: "#cfddf3", headline: "Baby Shower" },
-  graduation: { background: "#f8f9fc", border: "#ccd6e8", headline: "Graduation" },
-  business: { background: "#f5f7ff", border: "#cbd8f5", headline: "You are invited" }
+  wedding: { background: "#fff7f2", border: "#ead6cb" },
+  dol: { background: "#fff9dd", border: "#eadb9f" },
+  hwangap: { background: "#fbf6ed", border: "#d9c4a0" },
+  bridal: { background: "#fff7fb", border: "#efd3dc" },
+  birthday: { background: "#f0fbff", border: "#b9dceb" },
+  housewarming: { background: "#fbfaf5", border: "#d8dfc8" },
+  baby: { background: "#f7fbff", border: "#cfddf3" },
+  graduation: { background: "#f8f9fc", border: "#ccd6e8" },
+  business: { background: "#f5f7ff", border: "#cbd8f5" }
 };
 
 async function openMapUrl(url: string, fallbackUrl?: string) {
@@ -150,7 +153,9 @@ export function InvitationPreviewCard({
   const [artworkHeight, setArtworkHeight] = useState(0);
   const { findById } = useTemplateCatalog();
   const selectedTemplate = findById(payload.templateId);
-  const accent = templateAccents[selectedTemplate?.category ?? "wedding"] ?? templateAccents.wedding;
+  const previewCategory = selectedTemplate?.category ?? payload.eventType;
+  const accent = templateAccents[previewCategory] ?? templateAccents.wedding;
+  const previewHeadline = getTemplateSampleHeadline(previewCategory) ?? "YOU ARE INVITED";
   const mapLinks = getInvitationMapLinks(payload);
   const templateCanvasSource = getTemplateCanvasSource(selectedTemplate);
   const displayDateTime = formatInviteDateTime(payload.eventDateTime) || payload.eventDateTime || "행사 일시를 입력해 주세요.";
@@ -223,7 +228,7 @@ export function InvitationPreviewCard({
         >
           {artworkPresentation.zones.map((zone, index) => {
             const safeArea = textLayout.areas[index];
-            const visible = zone.showHeadline || zone.showBadge || zone.showTitle || zone.showDateTime || zone.showVenue;
+            const visible = zone.showHeadline || zone.showTitle || zone.showDateTime || zone.showVenue;
             if (!safeArea || !visible) return null;
 
             return (
@@ -237,37 +242,27 @@ export function InvitationPreviewCard({
                   bottom: `${100 - safeArea.bottomPct}%`,
                   alignItems: "center",
                   justifyContent: "center",
-                  backgroundColor: artworkPresentation.backgroundColor,
-                  borderRadius: 12,
-                  paddingHorizontal: 8,
-                  paddingVertical: artworkPresentation.paddingVertical
+                  backgroundColor: "transparent",
+                  gap: templateOverlayTypography.lineGap
                 }}
               >
                 {zone.showHeadline ? (
-                  <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: 11, fontStyle: "italic", lineHeight: 14, textAlign: "center", width: "100%" }}>
-                    {accent.headline}
-                  </Text>
-                ) : null}
-                {zone.showBadge ? (
-                  <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: 11, fontWeight: "800", lineHeight: 14, marginTop: 2, textAlign: "center", width: "100%" }}>
-                    {selectedTemplate?.badge || "초대장"}
+                  <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: templateOverlayTypography.eyebrowFontSize, fontWeight: "600", letterSpacing: 1.1, lineHeight: templateOverlayTypography.eyebrowLineHeight, textAlign: "center", width: "100%" }}>
+                    {previewHeadline}
                   </Text>
                 ) : null}
                 {zone.showTitle ? (
-                  <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: 16, fontWeight: "900", lineHeight: 20, marginTop: zone.showHeadline || zone.showBadge ? 2 : 0, textAlign: "center", width: "100%" }}>
+                  <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: templateOverlayTypography.titleFontSize, fontWeight: "800", lineHeight: templateOverlayTypography.titleLineHeight, textAlign: "center", width: "100%" }}>
                     {primaryTitle}
                   </Text>
                 ) : null}
-                {zone.content === "combined" && zone.showDateTime ? (
-                  <View style={{ width: 64, height: 1, backgroundColor: artworkPresentation.textColor, marginVertical: 4 }} />
-                ) : null}
                 {zone.showDateTime ? (
-                  <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: 11, fontWeight: "800", lineHeight: 14, textAlign: "center", width: "100%" }}>
+                  <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: templateOverlayTypography.detailFontSize, fontWeight: "700", lineHeight: templateOverlayTypography.detailLineHeight, textAlign: "center", width: "100%" }}>
                     {displayDateTime}
                   </Text>
                 ) : null}
                 {zone.showVenue ? (
-                  <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: 11, fontWeight: "800", lineHeight: 14, marginTop: 2, textAlign: "center", width: "100%" }}>
+                  <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: templateOverlayTypography.detailFontSize, lineHeight: templateOverlayTypography.detailLineHeight, textAlign: "center", width: "100%" }}>
                     {payload.venueName || "장소를 입력해 주세요."}
                   </Text>
                 ) : null}

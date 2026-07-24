@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import { getTemplateDiscoveryCardWidth } from "./template-discovery-layout";
 import {
   getTemplateCardExternalMetadata,
+  getTemplateSampleHeadline,
   getTemplateSampleOverlayContent,
-  getTemplateSampleOverlayPresentation
+  getTemplateSampleOverlayPresentation,
+  templateOverlayTypography
 } from "./template-sample-overlay-presentation";
 
 describe("template sample overlay presentation", () => {
@@ -94,6 +96,20 @@ describe("template sample overlay presentation", () => {
     expect(presentation).not.toHaveProperty("backgroundColor");
     expect(presentation).not.toHaveProperty("paddingHorizontal");
     expect(presentation).not.toHaveProperty("paddingVertical");
+  });
+
+  it("shares one fixed typography scale and headline with every invitation preview renderer", () => {
+    expect(templateOverlayTypography).toEqual({
+      eyebrowFontSize: 10,
+      eyebrowLineHeight: 13,
+      titleFontSize: 14,
+      titleLineHeight: 18,
+      detailFontSize: 11,
+      detailLineHeight: 15,
+      lineGap: 2
+    });
+    expect(getTemplateSampleHeadline("wedding")).toBe("WE ARE GETTING MARRIED");
+    expect(getTemplateSampleHeadline("unknown")).toBeNull();
   });
 
   it("does not guess a decorative label for an unknown category", () => {
