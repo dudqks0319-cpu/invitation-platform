@@ -1,37 +1,48 @@
-updated_at: "2026-07-24T10:53:00+09:00"
+updated_at: "2026-07-24T14:07:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
 project:
   name: osamosam
-  release_workspace: "/private/tmp/osamosam-appstore-submit-20260724"
-phase: real_device_smoke
+  release_workspace: "/Users/jyb-m3max/Desktop/codex/invitation-platform/.worktrees/osamosam-appstore-submit-20260724"
+phase: build_required
 version: "1.0.3"
-build_number: 64
-git_sha: "a95bca723632743f8135edbd7c7ffb6181c1cddc"
+build_number: "unassigned (>64)"
+git_sha: "a59380d5434f28c7173e77714d4942de2744fb9f"
 branch: "agent/osamosam-appstore-submit-20260724"
 public:
   version: "1.0.2"
   state: released
 candidate:
   version: "1.0.3"
-  build_number: 64
-  git_sha: "a95bca723632743f8135edbd7c7ffb6181c1cddc"
+  build_number: "unassigned (>64)"
+  git_sha: "a59380d5434f28c7173e77714d4942de2744fb9f"
   branch: "agent/osamosam-appstore-submit-20260724"
-  eas_build_id: "1f103d1b-f328-4702-b3a1-5f4847a6afa4"
-  eas_build_state: finished
-  eas_submit_id: "747d357c-d4b9-4302-8a32-a62c741a98f7"
-  eas_submit_state: uploaded_to_app_store_connect
-  app_store_connect_state: build_64_processed
-  testflight_state: submission_ready
-  real_device_result: pending_exact_build_64
+  eas_build_id: null
+  eas_build_state: not_started
+  eas_submit_id: null
+  eas_submit_state: not_started
+  app_store_connect_state: not_uploaded
+  testflight_state: not_available
+  real_device_result: pending_new_exact_build
   app_review_state: not_submitted
   superseded_builds:
     - 62
     - 63
+    - 64
   selected_for_review: false
+superseded_testflight_candidate:
+  version: "1.0.3"
+  build_number: 64
+  git_sha: "a95bca723632743f8135edbd7c7ffb6181c1cddc"
+  eas_build_id: "1f103d1b-f328-4702-b3a1-5f4847a6afa4"
+  eas_submit_id: "747d357c-d4b9-4302-8a32-a62c741a98f7"
+  app_store_connect_state: processed
+  testflight_state: submission_ready
+  selected_for_review: false
+  reason: "Predates the final single-preview and enlarged-copy fix."
 verification:
-  full_tests: "99 files / 457 tests passed"
+  full_tests: "99 files / 458 tests passed"
   lint: passed
   root_typecheck: passed
   mobile_typecheck: passed
@@ -43,18 +54,18 @@ verification:
   runtime_critical_dependency_advisories: 0
   clean_build_full_tree_advisories: "18 total including 1 critical in development tooling tree"
 local_checks:
-  tests: "457/457 passed"
+  tests: "458/458 passed"
   lint: passed
   typecheck: passed
 runtime_checks:
   simulator_release_launch: passed
   real_iphone_installed_build: 63
-  real_iphone_testflight_build_64: pending_update
+  real_iphone_exact_new_build: pending_build
 external_checks:
-  eas_build: finished
-  app_store_connect_upload: passed
-  apple_processing: passed
-  testflight: build_64_submission_ready
+  eas_build: not_started_for_current_source
+  app_store_connect_upload: not_started_for_current_source
+  apple_processing: build_64_passed_but_superseded
+  testflight: build_64_submission_ready_but_superseded
   app_review: not_submitted
   public_release: "1.0.2"
 security:
@@ -72,6 +83,11 @@ blockers:
     status: open
     owner: release-owner
     due: before-app-review-build-selection
+  - id: new-build-required
+    severity: P1
+    status: open
+    owner: release-owner
+    due: before-testflight-smoke
 next_action:
-  summary: "On the connected iPhone 12 Pro, update 오삼오삼 from TestFlight Build 63 to Build 64, then verify launch, login, latest-template order, preview, and free publish before App Review build selection."
-  command: "/usr/bin/xcrun devicectl device info apps --device 6A2491AB-17ED-57B5-951B-9EAA346DF486 --bundle-id com.invitehub.app --include-all-apps --columns '*'"
+  summary: "Create a new iOS build greater than 64 from source a59380d, then process it through TestFlight and run exact-build iPhone smoke before any App Review selection."
+  command: "eas build -p ios --profile production --non-interactive"
