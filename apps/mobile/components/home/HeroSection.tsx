@@ -125,7 +125,7 @@ function TemplateCard({
               style={{ width: "100%", height: "100%" }}
             />
             {template.sampleTextOverlay ? (
-              <TemplateSampleTextOverlay template={template} />
+              <TemplateSampleTextOverlay compact template={template} />
             ) : null}
           </View>
         ) : (

@@ -28,6 +28,30 @@ describe("template text safe areas", () => {
     expect(resolveTemplateTextSafeArea({ templateId: "birthday-barunson-anime-03", category: "birthday" })).toMatchObject({
       backdrop: "light"
     });
+    expect(resolveTemplateTextSafeArea({
+      templateId: "business",
+      category: "business",
+      textPlacement: "bottom"
+    })).toMatchObject({
+      topPct: 20,
+      bottomPct: 44
+    });
+    expect(resolveTemplateTextSafeArea({
+      templateId: "graduation",
+      category: "graduation",
+      textPlacement: "bottom"
+    })).toMatchObject({
+      topPct: 24,
+      bottomPct: 50
+    });
+    expect(resolveTemplateTextSafeArea({
+      templateId: "house-warm",
+      category: "housewarming",
+      textPlacement: "bottom"
+    })).toMatchObject({
+      topPct: 42,
+      bottomPct: 66
+    });
   });
 
   it("keeps current placement and category-centered defaults for unreviewed templates", () => {

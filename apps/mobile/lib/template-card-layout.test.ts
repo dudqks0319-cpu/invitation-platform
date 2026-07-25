@@ -28,7 +28,7 @@ describe("template card sample overlay", () => {
 
   it("gets reviewed layout-aware sample copy from the shared pure helper", () => {
     expect(sampleOverlaySource).toContain("export function TemplateSampleTextOverlay({");
-    expect(templateCardSource).toContain("<TemplateSampleTextOverlay template={template} />");
+    expect(templateCardSource).toContain("<TemplateSampleTextOverlay compact template={template} />");
     expect(sampleOverlaySource).toContain("getTemplateSampleOverlayContent({");
     expect(sampleOverlaySource).toContain("if (content.length === 0) return null");
   });
@@ -62,7 +62,10 @@ describe("template card sample overlay", () => {
 
   it("adds real invitation copy to the front wedding cards on home", () => {
     expect(heroSectionSource).toContain("template.sampleTextOverlay ? (");
-    expect(heroSectionSource).toContain("<TemplateSampleTextOverlay template={template} />");
+    expect(heroSectionSource).toContain("<TemplateSampleTextOverlay compact template={template} />");
+    expect(sampleOverlaySource).toContain("compact = false");
+    expect(sampleOverlaySource).toContain("presentation.showEyebrow && !compact");
+    expect(sampleOverlaySource).toContain("numberOfLines={compact ? 3 : presentation.titleNumberOfLines}");
   });
 
   it("shows two complete compact cards and applies the shared newest-first order on home", () => {

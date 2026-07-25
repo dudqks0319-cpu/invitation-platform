@@ -76,7 +76,7 @@ export const TemplateCard = memo(function TemplateCard({ template, onOpenPreview
               source={previewSource}
               style={{ width: "100%", height: "100%" }}
             />
-            {template.sampleTextOverlay ? <TemplateSampleTextOverlay template={template} /> : null}
+            {template.sampleTextOverlay ? <TemplateSampleTextOverlay compact template={template} /> : null}
           </View>
         ) : (
           <View

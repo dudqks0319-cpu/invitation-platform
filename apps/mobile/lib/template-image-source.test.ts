@@ -29,6 +29,13 @@ describe("template image source", () => {
     expect(getTemplateCanvasSource(remoteOnlyTemplate)).toEqual(expected);
   });
 
+  it("keeps curated corrected artwork bundled even when the remote catalog is available", () => {
+    const curatedRemoteTemplate = { ...remoteOnlyTemplate, id: "house-warm" };
+
+    expect(getTemplatePreviewSource(curatedRemoteTemplate)).toBe(202);
+    expect(getTemplateCanvasSource(curatedRemoteTemplate)).toBe(101);
+  });
+
   it("keeps bundled assets as the local fallback", () => {
     const bundled = { ...remoteOnlyTemplate, id: "wedding-classic", remote: false, previewUrl: undefined };
 

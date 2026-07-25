@@ -117,7 +117,7 @@ const REVIEWED_TEMPLATE_SAFE_AREAS: Record<string, readonly [number, number, "li
   "housewarming-barunson-anime-06": [18, 43],
   "housewarming-barunson-anime-07": [18, 43],
   "housewarming-barunson-anime-08": [16, 42],
-  "house-warm": [42, 65],
+  "house-warm": [42, 66],
   "housewarming-anime-2026": [28, 56],
   "housewarming-barunson-anime-01": [10, 38],
   "housewarming-barunson-anime-02": [10, 38],
@@ -136,10 +136,12 @@ const REVIEWED_TEMPLATE_SAFE_AREAS: Record<string, readonly [number, number, "li
   "birthday-barunson-anime-01": [26, 48],
   "birthday-barunson-anime-02": [27, 49],
   "birthday-barunson-anime-03": [25, 46, "light"],
+  graduation: [24, 50],
   "graduation-anime-2026": [39, 61],
   "graduation-barunson-anime-01": [10, 28],
   "graduation-barunson-anime-02": [20, 42],
-  "graduation-barunson-anime-03": [18, 39]
+  "graduation-barunson-anime-03": [18, 39],
+  business: [20, 44]
 };
 
 function fromVerticalBounds(topPct: number, bottomPct: number, backdrop: "none" | "light" = "none") {

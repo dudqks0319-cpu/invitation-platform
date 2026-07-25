@@ -8,8 +8,10 @@ import {
 } from "@/lib/template-sample-overlay-presentation";
 
 export function TemplateSampleTextOverlay({
+  compact = false,
   template
 }: {
+  compact?: boolean;
   template: MobileTemplateGalleryItem;
 }) {
   const [safeAreaSizes, setSafeAreaSizes] = useState<Record<number, { width: number; height: number }>>({});
@@ -82,7 +84,7 @@ export function TemplateSampleTextOverlay({
                   gap: presentation.lineGap
                 }}
               >
-                {presentation.showEyebrow ? (
+                {presentation.showEyebrow && !compact ? (
                   <Text
                     allowFontScaling={presentation.allowFontScaling}
                     numberOfLines={1}
@@ -100,12 +102,12 @@ export function TemplateSampleTextOverlay({
                 ) : null}
                 <Text
                   allowFontScaling={presentation.allowFontScaling}
-                  numberOfLines={presentation.titleNumberOfLines}
+                  numberOfLines={compact ? 3 : presentation.titleNumberOfLines}
                   style={{
                     color: presentation.textColor,
                     fontSize: presentation.titleFontSize,
                     fontWeight: "800",
-                    lineHeight: presentation.titleLineHeight,
+                    lineHeight: compact ? 17 : presentation.titleLineHeight,
                     textAlign: "center"
                   }}
                 >
