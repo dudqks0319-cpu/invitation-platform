@@ -1,4 +1,4 @@
-updated_at: "2026-07-24T14:07:00+09:00"
+updated_at: "2026-07-26T08:02:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
@@ -8,7 +8,7 @@ project:
 phase: build_required
 version: "1.0.3"
 build_number: "unassigned (>64)"
-git_sha: "a59380d5434f28c7173e77714d4942de2744fb9f"
+git_sha: "51272629c70d50be99a75b82e8d028cc996be175"
 branch: "agent/osamosam-appstore-submit-20260724"
 public:
   version: "1.0.2"
@@ -16,7 +16,7 @@ public:
 candidate:
   version: "1.0.3"
   build_number: "unassigned (>64)"
-  git_sha: "a59380d5434f28c7173e77714d4942de2744fb9f"
+  git_sha: "51272629c70d50be99a75b82e8d028cc996be175"
   branch: "agent/osamosam-appstore-submit-20260724"
   eas_build_id: null
   eas_build_state: not_started
@@ -40,21 +40,21 @@ superseded_testflight_candidate:
   app_store_connect_state: processed
   testflight_state: submission_ready
   selected_for_review: false
-  reason: "Predates the final single-preview and enlarged-copy fix."
+  reason: "Predates the final single-preview, enlarged-copy, curated-artwork, and compact-title fixes."
 verification:
-  full_tests: "99 files / 458 tests passed"
+  full_tests: "99 files / 459 tests passed"
   lint: passed
   root_typecheck: passed
   mobile_typecheck: passed
   ios_release_simulator_build: passed
   ios_release_simulator_launch: passed
   simulator_device: "iPhone 17 Pro / iOS 26.2"
-  visual_verdict: "96/100 pass"
+  visual_verdict: "97/100 pass"
   store_screenshots: "2 files / 1206x2622 / passed"
   runtime_critical_dependency_advisories: 0
   clean_build_full_tree_advisories: "18 total including 1 critical in development tooling tree"
 local_checks:
-  tests: "458/458 passed"
+  tests: "459/459 passed"
   lint: passed
   typecheck: passed
 runtime_checks:
@@ -89,5 +89,5 @@ blockers:
     owner: release-owner
     due: before-testflight-smoke
 next_action:
-  summary: "Create a new iOS build greater than 64 from source a59380d, then process it through TestFlight and run exact-build iPhone smoke before any App Review selection."
+  summary: "Create a new iOS build greater than 64 from source 51272629c70d50be99a75b82e8d028cc996be175, then process it through TestFlight and run exact-build iPhone smoke before any App Review selection."
   command: "eas build -p ios --profile production --non-interactive"
