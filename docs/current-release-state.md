@@ -1,6 +1,6 @@
 # 오삼오삼 iOS 현재 릴리스 상태
 
-Last updated: 2026-07-26 16:46 KST
+Last updated: 2026-07-26 16:59 KST
 
 이 문서는 iOS App Store 릴리스의 단일 현재 상태 원장이다. 로컬 코드,
 EAS 빌드, App Store Connect 처리, TestFlight, 실기기 검증, 앱 심사를
@@ -28,13 +28,13 @@ EAS 빌드, App Store Connect 처리, TestFlight, 실기기 검증, 앱 심사�
 | EAS iOS build id | `b1a187d7-0776-4dd0-b648-9685edbb7760` |
 | EAS iOS build number | `66` |
 | EAS build state | `FINISHED`; exact commit `533aec3`; completed 2026-07-26 16:45 KST |
-| EAS submission id | None for Build 66; App Store upload has not started |
+| EAS submission id | `90000462-1a28-424d-a496-bef9ad8d7f41`; Build 66 upload completed |
 | Failed build | Build 65 (`945fad1a-f595-4472-9500-8ecc713b3663`) produced no IPA because four curated PNGs were excluded from the EAS archive; fixed in `533aec3` |
 | Superseded builds | Builds 62, 63, and 64 must not be selected for review; Build 64 predates the final single-preview, curated-artwork, balanced-preview typography, and bundled Gowun Batang/Pretendard fixes |
-| App Store Connect version | Last verified 2026-07-24: iOS `1.0.3`, `제출 준비 중`; App Store Connect was not changed during the 2026-07-26 visual fix |
+| App Store Connect version | iOS `1.0.3`; exact Build 66 was uploaded successfully on 2026-07-26 and is being processed by Apple |
 | App Store metadata | Release notes and review notes saved for Build 64; automatic release mode unchanged |
 | App Store build selection | No build selected; Builds 62, 63, and 64 remain excluded |
-| TestFlight result | Build 64 is `제출 준비 완료` in the `Team (Expo)` internal group but remains superseded; Build 66 has not been uploaded to App Store Connect or TestFlight |
+| TestFlight result | Build 64 is `제출 준비 완료` in the `Team (Expo)` internal group but remains superseded; Build 66 upload completed and is waiting for Apple processing before TestFlight availability |
 | Real-device result | Connected iPhone 12 Pro is paired and available but still has Build 63; the next exact-build smoke is pending |
 | App Review state | Not submitted; `심사에 추가` and final submission remain gated |
 | Public release state | Still `1.0.2`; no 1.0.3 public rollout |
@@ -62,9 +62,11 @@ Build 64 previously finished on EAS, uploaded to App Store Connect, completed
 Apple processing, and is `제출 준비 완료` in TestFlight. It does not contain the final
 single-preview, curated-artwork, balanced-preview typography, and bundled
 Gowun Batang/Pretendard fixes, so it is superseded and must not be selected. A
-Build 66 has not been uploaded to App Store Connect. User approval for that
-upload, exact-build physical-device smoke, and user preview approval are still
-required before App Review submission.
+Build 66 was uploaded successfully to App Store Connect under EAS submission
+`90000462-1a28-424d-a496-bef9ad8d7f41` and is now being processed by Apple.
+It has not been assigned to a TestFlight group, selected for App Review, or
+submitted for review. Apple processing, exact-build physical-device smoke, and
+user preview approval are still required before App Review submission.
 
 ## 1.0.3 release notes
 
@@ -77,8 +79,8 @@ required before App Review submission.
 
 ## Remaining release gates
 
-1. Show the finished Build 66 result to the user and obtain explicit approval before App Store upload.
-2. Upload exact Build 66, wait for App Store Connect processing, and assign it to the internal TestFlight group.
+1. Wait for Apple to finish processing exact Build 66.
+2. After explicit approval, assign Build 66 to the internal TestFlight group.
 3. Install exact Build 66 on the connected iPhone 12 Pro.
 4. Verify launch, login, latest-template ordering, one-template preview, enlarged text placement, and free publish/share.
 5. Select only exact verified Build 66. Do not select Builds 62, 63, or 64.

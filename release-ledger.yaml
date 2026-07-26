@@ -1,11 +1,11 @@
-updated_at: "2026-07-26T16:46:00+09:00"
+updated_at: "2026-07-26T16:59:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
 project:
   name: osamosam
   release_workspace: "/Users/jyb-m3max/Desktop/codex/invitation-platform/.worktrees/osamosam-appstore-submit-20260724"
-phase: build_finished_upload_gated
+phase: uploaded_apple_processing
 version: "1.0.3"
 build_number: "66"
 git_sha: "533aec35178b185b4ab04a76e2c2819b83208056"
@@ -20,11 +20,11 @@ candidate:
   branch: "agent/osamosam-appstore-submit-20260724"
   eas_build_id: "b1a187d7-0776-4dd0-b648-9685edbb7760"
   eas_build_state: finished
-  eas_submit_id: null
-  eas_submit_state: not_started
-  app_store_connect_state: not_uploaded
-  testflight_state: not_available
-  real_device_result: pending_testflight_upload
+  eas_submit_id: "90000462-1a28-424d-a496-bef9ad8d7f41"
+  eas_submit_state: finished
+  app_store_connect_state: uploaded_processing
+  testflight_state: apple_processing
+  real_device_result: pending_apple_processing
   app_review_state: not_submitted
   superseded_builds:
     - 62
@@ -76,9 +76,9 @@ runtime_checks:
   real_iphone_exact_new_build: pending_build
 external_checks:
   eas_build: finished_build_66
-  app_store_connect_upload: not_started_for_build_66
-  apple_processing: build_64_passed_but_superseded
-  testflight: build_64_submission_ready_but_superseded
+  app_store_connect_upload: completed_for_build_66
+  apple_processing: in_progress_for_build_66
+  testflight: pending_apple_processing_for_build_66
   app_review: not_submitted
   public_release: "1.0.2"
 security:
@@ -96,11 +96,11 @@ blockers:
     status: open
     owner: release-owner
     due: before-app-review-build-selection
-  - id: testflight-upload
+  - id: apple-processing
     severity: P1
     status: open
     owner: release-owner
-    due: before-real-device-smoke
+    due: before-testflight-assignment
 next_action:
-  summary: "Present finished Build 66 to the user and wait for explicit approval before any App Store upload. After approval, upload this exact build, process it through TestFlight, and run exact-build iPhone smoke before App Review selection."
-  command: "none (await explicit user approval before eas submit)"
+  summary: "Wait for Apple to finish processing exact Build 66. Do not submit it for App Review. After processing and explicit approval, assign Build 66 to the internal TestFlight group and run exact-build iPhone smoke."
+  command: "none (await Apple processing and explicit approval before TestFlight group assignment)"
