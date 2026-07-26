@@ -1,4 +1,4 @@
-updated_at: "2026-07-26T09:36:00+09:00"
+updated_at: "2026-07-26T16:06:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
@@ -8,7 +8,7 @@ project:
 phase: build_required
 version: "1.0.3"
 build_number: "unassigned (>64)"
-git_sha: "b5731c2cbb5e9f0cba933c8b2b4cbd44d0437b08"
+git_sha: "8fe9a652673fcd8446164ab523cc272e904c6c49"
 branch: "agent/osamosam-appstore-submit-20260724"
 public:
   version: "1.0.2"
@@ -16,7 +16,7 @@ public:
 candidate:
   version: "1.0.3"
   build_number: "unassigned (>64)"
-  git_sha: "b5731c2cbb5e9f0cba933c8b2b4cbd44d0437b08"
+  git_sha: "8fe9a652673fcd8446164ab523cc272e904c6c49"
   branch: "agent/osamosam-appstore-submit-20260724"
   eas_build_id: null
   eas_build_state: not_started
@@ -40,23 +40,26 @@ superseded_testflight_candidate:
   app_store_connect_state: processed
   testflight_state: submission_ready
   selected_for_review: false
-  reason: "Predates the final single-preview, curated-artwork, compact-title, and balanced-preview typography fixes."
+  reason: "Predates the final single-preview, curated-artwork, balanced-preview typography, and bundled Gowun Batang/Pretendard fixes."
 verification:
-  full_tests: "99 files / 459 tests passed"
+  full_tests: "101 files / 465 tests passed"
   lint: passed
   root_typecheck: passed
   mobile_typecheck: passed
   ios_release_simulator_build: passed
   ios_release_simulator_launch: passed
   simulator_device: "iPhone 17 Pro / iOS 26.2"
-  visual_verdict: "96/100 pass"
-  design_browse_typography: "compact title 12/15pt"
-  full_preview_typography: "title 16/21pt; detail 12/16pt"
+  visual_verdict: "94/100 pass"
+  typography: "Pretendard app UI/body/date/location; Gowun Batang invitation identity"
+  bundled_font_faces: "8 files plus 2 OFL license files"
+  design_browse_typography: "Gowun Batang compact invitation title; Pretendard UI and metadata"
+  full_preview_typography: "Gowun Batang invitation title; Pretendard date/location and UI"
+  font_qa_screenshots: "4 local simulator screenshots: Release home plus current-source dev-client browse and full-preview top/lower"
   store_screenshots: "2 files / 1206x2622 / passed"
   runtime_critical_dependency_advisories: 0
   clean_build_full_tree_advisories: "18 total including 1 critical in development tooling tree"
 local_checks:
-  tests: "459/459 passed"
+  tests: "465/465 passed"
   lint: passed
   typecheck: passed
 runtime_checks:
@@ -91,5 +94,5 @@ blockers:
     owner: release-owner
     due: before-testflight-smoke
 next_action:
-  summary: "Create a new iOS build greater than 64 from source b5731c2cbb5e9f0cba933c8b2b4cbd44d0437b08, then process it through TestFlight and run exact-build iPhone smoke before any App Review selection."
+  summary: "Create a new iOS build greater than 64 from source 8fe9a652673fcd8446164ab523cc272e904c6c49, then process it through TestFlight and run exact-build iPhone smoke before any App Review selection."
   command: "eas build -p ios --profile production --non-interactive"
