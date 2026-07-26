@@ -4,7 +4,8 @@ import { resolveTemplateTextLayout } from "@invitehub/shared";
 import type { MobileTemplateGalleryItem } from "@/lib/template-gallery";
 import {
   getTemplateSampleOverlayContent,
-  getTemplateSampleOverlayPresentation
+  getTemplateSampleOverlayPresentation,
+  templateOverlayTypography
 } from "@/lib/template-sample-overlay-presentation";
 
 export function TemplateSampleTextOverlay({
@@ -105,9 +106,13 @@ export function TemplateSampleTextOverlay({
                   numberOfLines={compact ? 3 : presentation.titleNumberOfLines}
                   style={{
                     color: presentation.textColor,
-                    fontSize: presentation.titleFontSize,
+                    fontSize: compact
+                      ? templateOverlayTypography.compactTitleFontSize
+                      : presentation.titleFontSize,
                     fontWeight: "800",
-                    lineHeight: compact ? 17 : presentation.titleLineHeight,
+                    lineHeight: compact
+                      ? templateOverlayTypography.compactTitleLineHeight
+                      : presentation.titleLineHeight,
                     textAlign: "center"
                   }}
                 >

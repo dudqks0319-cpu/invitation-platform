@@ -4,13 +4,13 @@ export const INVITATION_ARTWORK_LARGE_TEXT_SCALE = 1.6;
 export const INVITATION_ARTWORK_COMPRESSED_SPAN_PCT = 22;
 
 const ARTWORK_VERTICAL_PADDING = 6;
-const MINIMAL_TITLE_LINE_HEIGHT = 20;
-const FULL_LINE_HEIGHTS = [14, 14, 20, 14, 14] as const;
+const MINIMAL_TITLE_LINE_HEIGHT = 21;
+const FULL_LINE_HEIGHTS = [15, 15, 21, 16, 16] as const;
 const FULL_GAPS_AND_DIVIDER = 17;
-const IDENTITY_LINE_HEIGHTS = [14, 14, 20] as const;
-const IDENTITY_GAPS = 4;
-const EVENT_LINE_HEIGHTS = [14, 14] as const;
-const EVENT_GAPS = 2;
+const IDENTITY_LINE_HEIGHTS = [15, 15, 21] as const;
+const IDENTITY_GAPS = 6;
+const EVENT_LINE_HEIGHTS = [16, 16] as const;
+const EVENT_GAPS = 3;
 
 type SafeAreaBounds = {
   topPct: number;

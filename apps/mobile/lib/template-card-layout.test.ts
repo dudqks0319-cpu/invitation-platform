@@ -66,6 +66,8 @@ describe("template card sample overlay", () => {
     expect(sampleOverlaySource).toContain("compact = false");
     expect(sampleOverlaySource).toContain("presentation.showEyebrow && !compact");
     expect(sampleOverlaySource).toContain("numberOfLines={compact ? 3 : presentation.titleNumberOfLines}");
+    expect(sampleOverlaySource).toContain("templateOverlayTypography.compactTitleFontSize");
+    expect(sampleOverlaySource).toContain("templateOverlayTypography.compactTitleLineHeight");
   });
 
   it("shows two complete compact cards and applies the shared newest-first order on home", () => {

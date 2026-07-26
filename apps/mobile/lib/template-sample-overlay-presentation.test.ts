@@ -100,13 +100,15 @@ describe("template sample overlay presentation", () => {
 
   it("shares one fixed typography scale and headline with every invitation preview renderer", () => {
     expect(templateOverlayTypography).toEqual({
-      eyebrowFontSize: 10,
-      eyebrowLineHeight: 13,
-      titleFontSize: 14,
-      titleLineHeight: 18,
-      detailFontSize: 11,
-      detailLineHeight: 15,
-      lineGap: 2
+      eyebrowFontSize: 11,
+      eyebrowLineHeight: 15,
+      titleFontSize: 16,
+      titleLineHeight: 21,
+      detailFontSize: 12,
+      detailLineHeight: 16,
+      lineGap: 3,
+      compactTitleFontSize: 12,
+      compactTitleLineHeight: 15
     });
     expect(getTemplateSampleHeadline("wedding")).toBe("WE ARE GETTING MARRIED");
     expect(getTemplateSampleHeadline("unknown")).toBeNull();
