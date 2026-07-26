@@ -1,36 +1,42 @@
-updated_at: "2026-07-26T16:06:00+09:00"
+updated_at: "2026-07-26T16:46:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
 project:
   name: osamosam
   release_workspace: "/Users/jyb-m3max/Desktop/codex/invitation-platform/.worktrees/osamosam-appstore-submit-20260724"
-phase: build_required
+phase: build_finished_upload_gated
 version: "1.0.3"
-build_number: "unassigned (>64)"
-git_sha: "b9153c494dee7effc75a49e6563626c9fbb59389"
+build_number: "66"
+git_sha: "533aec35178b185b4ab04a76e2c2819b83208056"
 branch: "agent/osamosam-appstore-submit-20260724"
 public:
   version: "1.0.2"
   state: released
 candidate:
   version: "1.0.3"
-  build_number: "unassigned (>64)"
-  git_sha: "b9153c494dee7effc75a49e6563626c9fbb59389"
+  build_number: "66"
+  git_sha: "533aec35178b185b4ab04a76e2c2819b83208056"
   branch: "agent/osamosam-appstore-submit-20260724"
-  eas_build_id: null
-  eas_build_state: not_started
+  eas_build_id: "b1a187d7-0776-4dd0-b648-9685edbb7760"
+  eas_build_state: finished
   eas_submit_id: null
   eas_submit_state: not_started
   app_store_connect_state: not_uploaded
   testflight_state: not_available
-  real_device_result: pending_new_exact_build
+  real_device_result: pending_testflight_upload
   app_review_state: not_submitted
   superseded_builds:
     - 62
     - 63
     - 64
   selected_for_review: false
+failed_builds:
+  - build_number: 65
+    eas_build_id: "945fad1a-f595-4472-9500-8ecc713b3663"
+    git_sha: "1be7b83ef4a28aba65e32dbc5bca95362144a0c9"
+    state: errored
+    reason: "The EAS archive excluded four curated custom PNG files; the first missing reference was house-warm-v2.png. No IPA was produced or uploaded."
 superseded_testflight_candidate:
   version: "1.0.3"
   build_number: 64
@@ -42,7 +48,7 @@ superseded_testflight_candidate:
   selected_for_review: false
   reason: "Predates the final single-preview, curated-artwork, balanced-preview typography, and bundled Gowun Batang/Pretendard fixes."
 verification:
-  full_tests: "101 files / 465 tests passed"
+  full_tests: "101 files / 466 tests passed"
   lint: passed
   root_typecheck: passed
   mobile_typecheck: passed
@@ -55,11 +61,13 @@ verification:
   design_browse_typography: "Gowun Batang compact invitation title; Pretendard UI and metadata"
   full_preview_typography: "Gowun Batang invitation title; Pretendard date/location and UI"
   font_qa_screenshots: "4 local simulator screenshots: Release home plus current-source dev-client browse and full-preview top/lower"
+  eas_archive_assets: "150/150 static template asset references present"
+  production_ios_metro_bundle: "1,445 modules / 204 assets / passed"
   store_screenshots: "2 files / 1206x2622 / passed"
   runtime_critical_dependency_advisories: 0
   clean_build_full_tree_advisories: "18 total including 1 critical in development tooling tree"
 local_checks:
-  tests: "465/465 passed"
+  tests: "466/466 passed"
   lint: passed
   typecheck: passed
 runtime_checks:
@@ -67,8 +75,8 @@ runtime_checks:
   real_iphone_installed_build: 63
   real_iphone_exact_new_build: pending_build
 external_checks:
-  eas_build: not_started_for_current_source
-  app_store_connect_upload: not_started_for_current_source
+  eas_build: finished_build_66
+  app_store_connect_upload: not_started_for_build_66
   apple_processing: build_64_passed_but_superseded
   testflight: build_64_submission_ready_but_superseded
   app_review: not_submitted
@@ -88,11 +96,11 @@ blockers:
     status: open
     owner: release-owner
     due: before-app-review-build-selection
-  - id: new-build-required
+  - id: testflight-upload
     severity: P1
     status: open
     owner: release-owner
-    due: before-testflight-smoke
+    due: before-real-device-smoke
 next_action:
-  summary: "Create a new iOS build greater than 64 from source b9153c494dee7effc75a49e6563626c9fbb59389, then process it through TestFlight and run exact-build iPhone smoke before any App Review selection."
-  command: "eas build -p ios --profile production --non-interactive"
+  summary: "Present finished Build 66 to the user and wait for explicit approval before any App Store upload. After approval, upload this exact build, process it through TestFlight, and run exact-build iPhone smoke before App Review selection."
+  command: "none (await explicit user approval before eas submit)"
