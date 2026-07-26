@@ -50,6 +50,33 @@ describe("mobile entry", () => {
     expect(existsSync(join(mobileRoot, "lib/drafts.ts"))).toBe(true);
   });
 
+  it("keeps every curated PNG used by release previews in the EAS archive", () => {
+    const rootEasIgnore = readFileSync(join(process.cwd(), ".easignore"), "utf8");
+    const mobileEasIgnore = readFileSync(join(mobileRoot, ".easignore"), "utf8");
+    const curatedPngs = [
+      "house-warm-v2.png",
+      "baby-pink-v2.png",
+      "graduation-v2.png",
+      "business-v2.png",
+    ];
+
+    for (const fileName of curatedPngs) {
+      expect(rootEasIgnore).toContain(
+        `!apps/mobile/assets/template-previews/custom/other/${fileName}`
+      );
+      expect(mobileEasIgnore).toContain(
+        `!assets/template-previews/custom/other/${fileName}`
+      );
+    }
+
+    expect(rootEasIgnore).toContain(
+      "!apps/mobile/assets/template-previews/custom/barunson-category-anime-2026/*.png"
+    );
+    expect(mobileEasIgnore).toContain(
+      "!assets/template-previews/custom/barunson-category-anime-2026/*.png"
+    );
+  });
+
   it("uses the Korean app name for iOS crash dialogs and TestFlight metadata", () => {
     const infoPlist = readFileSync(join(mobileRoot, "ios/InviteHub/Info.plist"), "utf8");
 

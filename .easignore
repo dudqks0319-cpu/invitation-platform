@@ -61,6 +61,10 @@ apps/mobile/assets/template-previews/genspark/
 apps/mobile/assets/template-previews/generated/
 apps/mobile/assets/template-previews/generated/**
 apps/mobile/assets/template-previews/custom/**/*.png
+!apps/mobile/assets/template-previews/custom/other/house-warm-v2.png
+!apps/mobile/assets/template-previews/custom/other/baby-pink-v2.png
+!apps/mobile/assets/template-previews/custom/other/graduation-v2.png
+!apps/mobile/assets/template-previews/custom/other/business-v2.png
 !apps/mobile/assets/template-previews/custom/barunson-category-anime-2026/*.png
 apps/mobile/assets/template-previews/custom/birthday/birthday-04.jpeg
 apps/mobile/assets/template-previews/custom/birthday/birthday-05.jpeg
