@@ -8,7 +8,7 @@ project:
 phase: build_required
 version: "1.0.3"
 build_number: "unassigned (>64)"
-git_sha: "8fe9a652673fcd8446164ab523cc272e904c6c49"
+git_sha: "b9153c494dee7effc75a49e6563626c9fbb59389"
 branch: "agent/osamosam-appstore-submit-20260724"
 public:
   version: "1.0.2"
@@ -16,7 +16,7 @@ public:
 candidate:
   version: "1.0.3"
   build_number: "unassigned (>64)"
-  git_sha: "8fe9a652673fcd8446164ab523cc272e904c6c49"
+  git_sha: "b9153c494dee7effc75a49e6563626c9fbb59389"
   branch: "agent/osamosam-appstore-submit-20260724"
   eas_build_id: null
   eas_build_state: not_started
@@ -94,5 +94,5 @@ blockers:
     owner: release-owner
     due: before-testflight-smoke
 next_action:
-  summary: "Create a new iOS build greater than 64 from source 8fe9a652673fcd8446164ab523cc272e904c6c49, then process it through TestFlight and run exact-build iPhone smoke before any App Review selection."
+  summary: "Create a new iOS build greater than 64 from source b9153c494dee7effc75a49e6563626c9fbb59389, then process it through TestFlight and run exact-build iPhone smoke before any App Review selection."
   command: "eas build -p ios --profile production --non-interactive"
