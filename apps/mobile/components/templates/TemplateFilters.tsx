@@ -1,4 +1,5 @@
-import { Pressable, ScrollView, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
+import { AppText as Text, AppTextInput as TextInput } from "@/components/ui/AppText";
 import type { MobileTemplateCategory } from "@/lib/template-gallery";
 import {
   getTemplateDiscoveryActiveFilterSummary,

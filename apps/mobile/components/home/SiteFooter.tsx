@@ -1,4 +1,5 @@
-import { Pressable, Text, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import * as ExpoLinking from "expo-linking";
 import { getPrivacyUrl, getSupportUrl, getTermsUrl } from "@/lib/web-links";
 

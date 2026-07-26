@@ -1,4 +1,4 @@
-import { Text } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { theme } from "@/components/ui/theme";

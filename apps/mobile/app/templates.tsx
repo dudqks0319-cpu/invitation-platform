@@ -6,12 +6,12 @@ import {
   FlatList,
   Platform,
   Pressable,
-  Text,
   useWindowDimensions,
   View,
   type NativeScrollEvent,
   type NativeSyntheticEvent
 } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TemplateCard } from "@/components/templates/TemplateCard";
 import { TemplateFilters } from "@/components/templates/TemplateFilters";

@@ -1,4 +1,5 @@
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { theme } from "@/components/ui/theme";
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useRouter } from "expo-router";
-import { Pressable, Text, TextInput, View } from "react-native";
+import { Pressable, View } from "react-native";
+import { AppText as Text, AppTextInput as TextInput } from "@/components/ui/AppText";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ErrorView } from "@/components/ui/ErrorView";

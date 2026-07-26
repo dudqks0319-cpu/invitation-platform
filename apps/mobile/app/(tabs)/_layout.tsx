@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
+import { appFonts } from "@/components/ui/typography";
 
 function renderTabIcon(name: keyof typeof Ionicons.glyphMap) {
   const TabIcon = ({ color, size }: { color: string; size: number }) => (
@@ -30,6 +31,7 @@ export default function TabsLayout() {
           shadowRadius: 12
         },
         tabBarLabelStyle: {
+          fontFamily: appFonts.bodySemiBold,
           fontSize: 12,
           fontWeight: "600",
           letterSpacing: 0.5

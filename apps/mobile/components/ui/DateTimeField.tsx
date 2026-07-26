@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import DateTimePicker, { type DateTimePickerEvent } from "@react-native-community/datetimepicker";
-import { Platform, Pressable, Text, View } from "react-native";
+import { Platform, Pressable, View } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { formatInviteDateTime, mergeInviteDateTimePart, parseInviteDateTime } from "@/lib/date-time";
 import { theme } from "./theme";
 

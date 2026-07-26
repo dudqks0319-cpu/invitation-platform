@@ -1,5 +1,6 @@
 import { memo, useState } from "react";
-import { Image, Pressable, Text, View } from "react-native";
+import { Image, Pressable, View } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
 import { getTemplatePreviewSource } from "@/lib/template-image-source";
 import {

@@ -1,5 +1,6 @@
 import { useRouter } from "expo-router";
-import { Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
+import { Pressable, ScrollView, useWindowDimensions, View } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { HeroSection } from "@/components/home/HeroSection";
 import { theme } from "@/components/ui/theme";

@@ -6,10 +6,10 @@ import {
   type ImageSourcePropType,
   Pressable,
   ScrollView,
-  Text,
   useWindowDimensions,
   View
 } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
 import { theme } from "@/components/ui/theme";
 import { useTemplateCatalog } from "@/hooks/useTemplateCatalog";

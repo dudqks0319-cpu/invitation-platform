@@ -1,5 +1,6 @@
 import { PropsWithChildren } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { theme } from "./theme";
 
 type CardProps = PropsWithChildren<{

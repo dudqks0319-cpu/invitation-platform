@@ -1,5 +1,6 @@
 import { PropsWithChildren } from "react";
-import { Pressable, Text } from "react-native";
+import { Pressable } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { getButtonStyleConfig, type ButtonVariant } from "./button-styles";
 import { theme } from "./theme";
 

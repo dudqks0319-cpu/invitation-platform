@@ -1,7 +1,9 @@
 import { useState } from "react";
-import { ImageBackground, Linking, Pressable, Text, useWindowDimensions, View } from "react-native";
+import { ImageBackground, Linking, Pressable, useWindowDimensions, View } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { resolveTemplateTextLayout } from "@invitehub/shared";
 import { theme } from "@/components/ui/theme";
+import { appFonts } from "@/components/ui/typography";
 import { useTemplateCatalog } from "@/hooks/useTemplateCatalog";
 import { formatInviteDateTime } from "@/lib/date-time";
 import type { InvitationPayload } from "@/lib/invitation-shared";
@@ -252,7 +254,7 @@ export function InvitationPreviewCard({
                   </Text>
                 ) : null}
                 {zone.showTitle ? (
-                  <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontSize: templateOverlayTypography.titleFontSize, fontWeight: "800", lineHeight: templateOverlayTypography.titleLineHeight, textAlign: "center", width: "100%" }}>
+                  <Text allowFontScaling={false} numberOfLines={1} style={{ color: artworkPresentation.textColor, fontFamily: appFonts.invitationBold, fontSize: templateOverlayTypography.titleFontSize, fontWeight: "800", lineHeight: templateOverlayTypography.titleLineHeight, textAlign: "center", width: "100%" }}>
                     {primaryTitle}
                   </Text>
                 ) : null}

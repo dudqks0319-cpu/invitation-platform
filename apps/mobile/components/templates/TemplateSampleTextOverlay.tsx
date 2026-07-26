@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { Text, View, useWindowDimensions } from "react-native";
+import { View, useWindowDimensions } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { resolveTemplateTextLayout } from "@invitehub/shared";
+import { appFonts } from "@/components/ui/typography";
 import type { MobileTemplateGalleryItem } from "@/lib/template-gallery";
 import {
   getTemplateSampleOverlayContent,
@@ -109,6 +111,7 @@ export function TemplateSampleTextOverlay({
                     fontSize: compact
                       ? templateOverlayTypography.compactTitleFontSize
                       : presentation.titleFontSize,
+                    fontFamily: appFonts.invitationBold,
                     fontWeight: "800",
                     lineHeight: compact
                       ? templateOverlayTypography.compactTitleLineHeight

@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { TextInput, type TextInputProps } from "react-native";
+import { type TextInputProps } from "react-native";
+import { AppTextInput as TextInput } from "@/components/ui/AppText";
 import { theme } from "./theme";
 
 export function FocusInput(props: TextInputProps) {

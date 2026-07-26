@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useRouter } from "expo-router";
-import { Alert, Pressable, Text, View } from "react-native";
+import { Alert, Pressable, View } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";

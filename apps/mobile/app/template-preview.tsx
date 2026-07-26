@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { AccessibilityInfo, ActivityIndicator, Alert, Image, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { AccessibilityInfo, ActivityIndicator, Alert, Image, Platform, Pressable, ScrollView, View } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
 import { theme } from "@/components/ui/theme";
@@ -393,7 +394,10 @@ export default function TemplatePreviewScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <ScrollView contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 48, gap: 22 }} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: 18, paddingBottom: 48, gap: 22 }}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={{ minHeight: 64, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
           <Pressable
             accessibilityLabel="미리보기 닫기"

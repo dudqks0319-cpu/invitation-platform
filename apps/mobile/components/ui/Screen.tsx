@@ -1,6 +1,7 @@
 import { PropsWithChildren } from "react";
 import { type Href, usePathname, useRouter } from "expo-router";
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { OfflineBanner } from "./OfflineBanner";
 import { theme } from "./theme";

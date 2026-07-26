@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useRouter, useGlobalSearchParams } from "expo-router";
 import { Link } from "expo-router";
-import { Pressable, Text } from "react-native";
+import { Pressable } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { ErrorView } from "@/components/ui/ErrorView";
 import { Loading } from "@/components/ui/Loading";
 import { Screen } from "@/components/ui/Screen";

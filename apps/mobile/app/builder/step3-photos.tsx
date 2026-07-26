@@ -2,7 +2,8 @@
 
 import { Link, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { Image, Pressable, Text, View } from "react-native";
+import { Image, Pressable, View } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import * as ImagePicker from "expo-image-picker";
 import { manipulateAsync, SaveFormat } from "expo-image-manipulator";
 import { StepIndicator } from "@/components/builder/StepIndicator";

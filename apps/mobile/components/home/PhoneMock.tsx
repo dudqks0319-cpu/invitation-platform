@@ -1,5 +1,7 @@
-import { ImageBackground, Text, View } from "react-native";
+import { ImageBackground, View } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { theme } from "@/components/ui/theme";
+import { appFonts } from "@/components/ui/typography";
 import heroPreview from "@/assets/web-hero-preview.jpg";
 
 export function PhoneMock() {
@@ -55,6 +57,7 @@ export function PhoneMock() {
           <Text
             style={{
               color: theme.colors.accent,
+              fontFamily: appFonts.invitationBold,
               fontSize: 28,
               fontWeight: "500",
               fontStyle: "italic",
@@ -65,7 +68,7 @@ export function PhoneMock() {
           >
             Minjun &amp; Sua
           </Text>
-          <Text style={{ color: theme.colors.muted, fontSize: 14, lineHeight: 22, marginTop: 12, textAlign: "center" }}>
+          <Text style={{ color: theme.colors.muted, fontFamily: appFonts.invitationRegular, fontSize: 14, lineHeight: 22, marginTop: 12, textAlign: "center" }}>
             소중한 분들을 초대합니다
           </Text>
           <View style={{ flexDirection: "row", justifyContent: "center", gap: 8, flexWrap: "wrap", marginTop: 18 }}>

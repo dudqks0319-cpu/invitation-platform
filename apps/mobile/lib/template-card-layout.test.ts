@@ -68,6 +68,7 @@ describe("template card sample overlay", () => {
     expect(sampleOverlaySource).toContain("numberOfLines={compact ? 3 : presentation.titleNumberOfLines}");
     expect(sampleOverlaySource).toContain("templateOverlayTypography.compactTitleFontSize");
     expect(sampleOverlaySource).toContain("templateOverlayTypography.compactTitleLineHeight");
+    expect(sampleOverlaySource).toContain("fontFamily: appFonts.invitationBold");
   });
 
   it("shows two complete compact cards and applies the shared newest-first order on home", () => {
@@ -86,6 +87,7 @@ describe("template card sample overlay", () => {
     expect(invitationPreviewSource).toContain("backgroundColor: theme.colors.paper");
     expect(invitationPreviewSource).toContain("templateOverlayTypography.titleFontSize");
     expect(invitationPreviewSource).toContain("templateOverlayTypography.detailFontSize");
+    expect(invitationPreviewSource).toContain("fontFamily: appFonts.invitationBold");
     expect(invitationPreviewSource).toContain('backgroundColor: "transparent"');
     expect(invitationPreviewSource).not.toContain("backgroundColor: artworkPresentation.backgroundColor");
     expect(invitationPreviewSource).toContain("allowFontScaling={false}");

@@ -1,6 +1,7 @@
 import { Link, useLocalSearchParams } from "expo-router";
 import { type ComponentType, useEffect, useState } from "react";
-import { Text, View } from "react-native";
+import { View } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { Button } from "@/components/ui/Button";
 import { InvitationPreviewCard } from "@/components/invitation/InvitationPreviewCard";
 import { Card } from "@/components/ui/Card";

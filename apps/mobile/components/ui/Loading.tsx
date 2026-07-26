@@ -1,4 +1,5 @@
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { theme } from "./theme";
 
 export function Loading({

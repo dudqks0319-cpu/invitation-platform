@@ -1,5 +1,6 @@
 import { Link, useLocalSearchParams } from "expo-router";
-import { Linking, Pressable, Text, View } from "react-native";
+import { Linking, Pressable, View } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import { StepIndicator } from "@/components/builder/StepIndicator";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";

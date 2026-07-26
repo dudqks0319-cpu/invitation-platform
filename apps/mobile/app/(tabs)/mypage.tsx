@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "expo-router";
-import { Alert, Text, View } from "react-native";
+import { Alert, View } from "react-native";
+import { AppText as Text } from "@/components/ui/AppText";
 import * as ExpoLinking from "expo-linking";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
