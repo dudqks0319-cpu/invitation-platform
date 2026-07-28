@@ -40,9 +40,9 @@ export function StorePurchaseCard({
           ? `상품: ${product.displayName ?? product.id}${product.displayPrice ? ` · ${product.displayPrice}` : ""}`
           : productIds.length > 0
             ? connected
-              ? "RevenueCat 상품을 불러오는 중입니다."
+              ? "발행권 상품을 불러오는 중입니다."
               : "스토어 연결을 준비 중입니다."
-            : "환경변수에 RevenueCat 키와 스토어 상품 ID를 설정하면 실제 구매 버튼이 활성화됩니다."}
+            : "현재 결제 기능을 준비하고 있습니다. 준비가 끝나면 이 화면에서 바로 구매할 수 있습니다."}
       </Text>
       {message ? (
         <Text style={{ color: theme.colors.success, lineHeight: 22, marginTop: 10 }}>{message}</Text>
@@ -54,7 +54,7 @@ export function StorePurchaseCard({
         <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginTop: 10 }}>{disabledReason}</Text>
       ) : null}
       <Text style={{ color: theme.colors.textLight, lineHeight: 20, marginTop: 10 }}>
-        프리미엄 발행권은 초대장 1개 최종 발행, 공유 링크, RSVP, 방명록, 지도와 계좌 표시를 포함합니다.
+        프리미엄 발행권은 초대장 1개 최종 발행, 공유 링크, 참석 여부, 방명록, 지도와 계좌 표시를 포함합니다.
       </Text>
       <Button
         accessibilityLabel="발행권 구매"
@@ -67,7 +67,7 @@ export function StorePurchaseCard({
             ? "결제 전 준비 필요"
             : canPurchase
               ? "발행권 구매하기"
-              : "RevenueCat 상품 설정 필요"}
+              : "결제 준비 중"}
       </Button>
       <Button
         accessibilityLabel="구매 복원"

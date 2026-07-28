@@ -101,7 +101,7 @@ export default function InvitationStatsScreen() {
         setSummary(nextSummary);
         setMessage("통계를 새로고침했습니다.");
       } else {
-        setMessage("로컬 초안 상태에서는 서버 통계를 불러올 수 없습니다.");
+        setMessage("온라인에 저장된 초대장에서 방문과 참석 현황을 확인할 수 있습니다.");
       }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "통계를 새로고침하지 못했습니다.");
@@ -110,7 +110,7 @@ export default function InvitationStatsScreen() {
   }
 
   return (
-    <Screen subtitle="공유, 방문, RSVP 총계를 운영 관점에서 확인합니다." title="통계">
+    <Screen subtitle="공유, 방문, 참석 현황을 한눈에 확인합니다." title="통계">
       {loading ? <Loading label="통계 화면을 준비하는 중..." /> : null}
       {error ? <ErrorView description={error} title="통계 불러오기 실패" /> : null}
       {message ? (
@@ -120,7 +120,7 @@ export default function InvitationStatsScreen() {
       ) : null}
       <Card eyebrow="초안 기준" title={draft?.payload.title || "초대장"}>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 }}>
-          <Pill active={Boolean(draft?.serverId)} label={draft?.serverId ? "원격 연결" : "로컬 전용"} />
+          <Pill active={Boolean(draft?.serverId)} label={draft?.serverId ? "온라인 저장됨" : "이 기기 저장"} />
           <Pill active={Boolean(draft?.isDirty)} label={draft?.isDirty ? "동기화 필요" : "동기화 안정"} />
         </View>
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
@@ -136,7 +136,7 @@ export default function InvitationStatsScreen() {
           방문 수: {visitCount}
         </Text>
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
-          RSVP 총계: {summary.totalResponses} / 참석 {summary.attending}
+          참석 응답: {summary.totalResponses} / 참석 {summary.attending}
         </Text>
         <View style={{ marginTop: 12 }}>
           <Button accessibilityLabel="통계 새로고침" onPress={() => void refresh()} variant="outline">

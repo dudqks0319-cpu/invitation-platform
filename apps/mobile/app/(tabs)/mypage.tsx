@@ -16,7 +16,7 @@ export default function MyPageScreen() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
   const [pendingAction, setPendingAction] = useState<"" | "support" | "faq" | "privacy" | "terms" | "delete" | "logout">("");
-  const { configMessage, configMissingKeys, configured, session, signOut, status, user } = useAuth();
+  const { configMessage, configured, session, signOut, status, user } = useAuth();
   const isAuthenticated = hasFullAccount(status === "authenticated" ? user : null);
   const isGuestMode = status === "authenticated" && !isAuthenticated;
   const paidPublishingEnabled = isPaidPublishingEnabled();
@@ -51,7 +51,7 @@ export default function MyPageScreen() {
           style: "destructive",
           onPress: () => {
             if (!session?.access_token) {
-              setError("로그인 세션을 확인할 수 없습니다.");
+              setError("로그인 정보를 확인할 수 없습니다. 다시 로그인해 주세요.");
               return;
             }
 
@@ -99,26 +99,22 @@ export default function MyPageScreen() {
           {isAuthenticated ? user?.email ?? "이메일 정보 없음" : isGuestMode ? "무료 기능을 게스트 모드로 사용 중입니다." : "아직 연결된 계정이 없습니다."}
         </Text>
         <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>
-          Supabase 설정: {configured ? "활성" : "비활성"}
-        </Text>
-        <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>
-          계정 상태: {isAuthenticated ? "원격 저장 · RSVP · 방명록 관리 가능" : isGuestMode ? "무료 초대장 저장 · 발행 가능" : "로컬 초안만 관리"}
+          계정 상태: {isAuthenticated ? "온라인 저장 · 참석 여부 · 방명록 관리 가능" : isGuestMode ? "무료 초대장 저장 · 발행 가능" : "이 기기에서 초대장 작성 가능"}
         </Text>
         <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>
           {isAuthenticated
-            ? "지금은 서버 저장본을 불러오고 공개 링크를 발행할 수 있습니다."
+            ? "지금은 온라인 저장본을 불러오고 공개 링크를 발행할 수 있습니다."
             : isGuestMode
               ? paidPublishingEnabled
                 ? "사진 포함 발행과 계정 삭제는 이메일 또는 소셜 로그인 후 사용할 수 있습니다."
-                : "계정 삭제와 원격 저장 관리는 이메일 또는 소셜 로그인 후 사용할 수 있습니다."
+                : "계정 삭제와 온라인 저장 관리는 이메일 또는 소셜 로그인 후 사용할 수 있습니다."
               : paidPublishingEnabled
                 ? "로그인하면 사진 포함 발행과 계정 관리를 사용할 수 있습니다."
-                : "로그인하면 원격 저장과 계정 관리를 사용할 수 있습니다."}
+                : "로그인하면 온라인 저장과 계정 관리를 사용할 수 있습니다."}
         </Text>
-        <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>{configMessage}</Text>
-        {!configured && configMissingKeys.length > 0 ? (
+        {!configured ? (
           <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginTop: 8 }}>
-            누락된 환경변수: {configMissingKeys.join(", ")}
+            {configMessage}
           </Text>
         ) : null}
       </Card>

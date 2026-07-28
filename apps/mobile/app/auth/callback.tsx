@@ -12,7 +12,7 @@ export default function AuthCallbackScreen() {
   const router = useRouter();
   const params = useGlobalSearchParams<{ code?: string; error?: string }>();
   const initialError = !supabase
-    ? "Supabase 환경 변수가 없어 인증 콜백을 처리할 수 없습니다."
+    ? "온라인 연결을 확인하지 못해 로그인을 완료할 수 없습니다."
     : params.error
       ? String(params.error)
       : !params.code
@@ -44,7 +44,7 @@ export default function AuthCallbackScreen() {
   }, [initialError, params.code, router]);
 
   return (
-    <Screen subtitle="브라우저 인증 결과를 앱 세션으로 바꾸는 중입니다." title="로그인 연결">
+    <Screen subtitle="로그인 정보를 확인하고 있습니다." title="로그인 연결">
       {error ? (
         <>
           <ErrorView description={error} title="인증을 완료하지 못했습니다" />
@@ -63,7 +63,7 @@ export default function AuthCallbackScreen() {
         </>
       ) : (
         <>
-          <Loading label="로그인 세션을 연결하는 중..." />
+          <Loading label="로그인 정보를 확인하는 중..." />
           <Text style={{ color: "#6a5645", lineHeight: 22 }}>
             잠시만 기다리면 내 초대장 화면으로 이동합니다.
           </Text>

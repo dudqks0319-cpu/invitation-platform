@@ -90,7 +90,7 @@ export default function InvitationGuestbookScreen() {
         setEntries(nextEntries);
         setMessage("방명록 목록을 새로고침했습니다.");
       } else {
-        setMessage("로컬 초안 상태에서는 서버 방명록을 불러올 수 없습니다.");
+        setMessage("온라인에 저장된 초대장에서 방명록을 확인할 수 있습니다.");
       }
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "방명록 목록을 새로고침하지 못했습니다.");

@@ -1,19 +1,14 @@
 import { Share } from "react-native";
+import { createInvitationShareMessage } from "./share-content";
 import { getPublicInvitationUrl, getWebBuilderUrl, getWebTemplatesUrl } from "./web-links";
 
 export { getPublicInvitationUrl } from "./web-links";
-
-export function createInvitationShareMessage(slug: string, title: string) {
-  const url = getPublicInvitationUrl(slug);
-  return {
-    title,
-    url,
-    message: `${title}\n${url}`
-  };
-}
+export { createInvitationShareMessage } from "./share-content";
 
 export async function shareInvitationLink(slug: string, title: string) {
-  return Share.share(createInvitationShareMessage(slug, title));
+  return Share.share(createInvitationShareMessage(slug, title), {
+    dialogTitle: "카카오톡으로 초대장 보내기"
+  });
 }
 
 export async function openInviteHubUrl(url: string) {

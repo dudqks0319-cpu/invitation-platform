@@ -42,7 +42,7 @@ async function ensureRevenueCatIdentity(Purchases: RevenueCatPurchases, apiKey: 
   }
 
   if (configuredRevenueCatApiKey && configuredRevenueCatApiKey !== apiKey) {
-    throw new Error("RevenueCat SDK가 다른 API 키로 이미 설정되었습니다. 앱을 다시 실행한 뒤 결제를 시도해 주세요.");
+    throw new Error("결제 연결을 새로 시작해야 합니다. 앱을 다시 연 뒤 시도해 주세요.");
   }
 
   configuredRevenueCatApiKey = configuredRevenueCatApiKey || apiKey;
@@ -110,7 +110,7 @@ export function useStorePurchase(options: StorePurchaseOptions = {}) {
 
       setStorePackage(matchingPackage);
       if (!matchingPackage) {
-        setError("RevenueCat Offering에서 발행권 상품을 찾지 못했습니다. publish_credit_1 패키지와 스토어 상품 연결을 확인해 주세요.");
+        setError("구매할 수 있는 발행권을 준비 중입니다. 잠시 후 다시 시도해 주세요.");
       }
     }
 
@@ -121,7 +121,7 @@ export function useStorePurchase(options: StorePurchaseOptions = {}) {
         }
 
         setStorePackage(null);
-        setError(caught instanceof Error ? caught.message : "RevenueCat 상품 정보를 불러오지 못했습니다.");
+        setError(caught instanceof Error ? caught.message : "발행권 정보를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.");
       })
       .finally(() => {
         if (mounted) {
@@ -149,7 +149,7 @@ export function useStorePurchase(options: StorePurchaseOptions = {}) {
 
   async function publishWithCredit(invitationId: string) {
     if (!accessTokenRef.current) {
-      throw new Error("발행권 사용에는 로그인 세션이 필요합니다.");
+      throw new Error("발행권을 사용하려면 먼저 로그인해 주세요.");
     }
 
     const response = await fetch(`${getInviteHubBaseUrl()}/api/payments/revenuecat/publish`, {
@@ -190,12 +190,12 @@ export function useStorePurchase(options: StorePurchaseOptions = {}) {
       }
     }
 
-    throw lastError ?? new Error("RevenueCat 웹훅 확인이 지연되고 있습니다.");
+    throw lastError ?? new Error("결제 확인이 지연되고 있습니다. 잠시 후 다시 시도해 주세요.");
   }
 
   async function fetchCreditBalance() {
     if (!accessTokenRef.current) {
-      throw new Error("발행권 조회에는 로그인 세션이 필요합니다.");
+      throw new Error("발행권을 확인하려면 먼저 로그인해 주세요.");
     }
 
     const response = await fetch(`${getInviteHubBaseUrl()}/api/payments/revenuecat/credits`, {
@@ -223,39 +223,39 @@ export function useStorePurchase(options: StorePurchaseOptions = {}) {
     }
 
     if (!revenueCatApiKey) {
-      setError("RevenueCat 공개 API 키가 설정되지 않았습니다.");
+      setError("현재 결제 기능을 준비하고 있습니다.");
       return;
     }
 
     if (!userIdRef.current) {
-      setError("RevenueCat 구매에는 로그인 계정이 필요합니다.");
+      setError("발행권을 구매하려면 먼저 로그인해 주세요.");
       return;
     }
 
     if (!accessTokenRef.current) {
-      setError("발행권 구매에는 로그인 세션이 필요합니다.");
+      setError("발행권을 구매하려면 다시 로그인해 주세요.");
       return;
     }
 
     if (!storePackage) {
       setError(
         productLookupCompleted
-          ? "RevenueCat에서 발행권 상품을 찾지 못했습니다. Offering 설정을 확인해 주세요."
-          : "RevenueCat 상품 정보를 확인하는 중입니다. 잠시 후 다시 시도해 주세요."
+          ? "구매할 수 있는 발행권을 준비 중입니다. 잠시 후 다시 시도해 주세요."
+          : "발행권 정보를 확인하고 있습니다. 잠시 후 다시 시도해 주세요."
       );
       return;
     }
 
     setPendingPurchase(true);
     setError("");
-    setMessage("초대장 정보를 저장한 뒤 스토어 결제를 시작합니다.");
+    setMessage("초대장 정보를 저장한 뒤 결제를 시작합니다.");
 
     try {
       const prepared = await options.onBeforePurchase?.();
       const invitationId = prepared?.invitationId ?? options.invitationId ?? invitationIdRef.current;
 
       if (!invitationId) {
-        throw new Error("결제 전 초대장을 서버에 저장하지 못했습니다.");
+        throw new Error("결제 전 초대장을 저장하지 못했습니다.");
       }
 
       invitationIdRef.current = invitationId;
@@ -263,7 +263,7 @@ export function useStorePurchase(options: StorePurchaseOptions = {}) {
       const Purchases = (await import("react-native-purchases")).default;
       await ensureRevenueCatIdentity(Purchases, revenueCatApiKey, userIdRef.current);
       await Purchases.purchasePackage(storePackage);
-      setMessage("결제가 완료되었습니다. RevenueCat 웹훅으로 발행권을 확인하는 중입니다.");
+      setMessage("결제가 완료되었습니다. 발행권을 확인하고 있습니다.");
 
       const result = await publishWhenWebhookArrives(invitationId);
       setMessage(`발행권을 사용해 공개 링크를 발행했습니다. 남은 발행권: ${result.remainingCredits ?? 0}`);
@@ -272,7 +272,7 @@ export function useStorePurchase(options: StorePurchaseOptions = {}) {
         slug: result.slug
       });
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "RevenueCat 결제를 완료하지 못했습니다.");
+      setError(caught instanceof Error ? caught.message : "결제를 완료하지 못했습니다. 잠시 후 다시 시도해 주세요.");
     } finally {
       setPendingPurchase(false);
     }
@@ -280,7 +280,7 @@ export function useStorePurchase(options: StorePurchaseOptions = {}) {
 
   async function restore() {
     if (!provider || !revenueCatApiKey || !userIdRef.current || !accessTokenRef.current) {
-      setError("구매 복원에는 로그인 계정, 로그인 세션, RevenueCat 설정이 필요합니다.");
+      setError("구매 내역을 복원하려면 먼저 로그인해 주세요.");
       return;
     }
 
@@ -293,7 +293,7 @@ export function useStorePurchase(options: StorePurchaseOptions = {}) {
       await ensureRevenueCatIdentity(Purchases, revenueCatApiKey, userIdRef.current);
       await Purchases.restorePurchases();
       const credits = await fetchCreditBalance();
-      setMessage(`구매 복원을 요청했습니다. 서버에서 확인된 미사용 발행권: ${credits}`);
+      setMessage(`구매 내역을 확인했습니다. 미사용 발행권: ${credits}`);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "구매 복원에 실패했습니다.");
     } finally {

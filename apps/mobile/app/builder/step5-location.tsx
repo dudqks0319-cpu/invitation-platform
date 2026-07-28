@@ -100,7 +100,7 @@ export default function BuilderStep5LocationScreen() {
                 paddingVertical: 6
               }}
             >
-              카카오 API {mapApi.config?.kakao.enabled ? "연동" : "대기"}
+              카카오 지도 {mapApi.config?.kakao.enabled ? "준비됨" : "주소로 연결"}
             </Text>
             <Text
               style={{
@@ -114,7 +114,7 @@ export default function BuilderStep5LocationScreen() {
                 paddingVertical: 6
               }}
             >
-              네이버 API {mapApi.config?.naver.enabled ? "연동" : "대기"}
+              네이버 지도 {mapApi.config?.naver.enabled ? "준비됨" : "주소로 연결"}
             </Text>
           </View>
           <View

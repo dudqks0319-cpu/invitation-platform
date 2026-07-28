@@ -60,7 +60,7 @@ describe("store purchase helpers", () => {
     expect(hookSource).toContain("Purchases.restorePurchases");
     expect(hookSource).toContain("/api/payments/revenuecat/publish");
     expect(hookSource).toContain("/api/payments/revenuecat/credits");
-    expect(hookSource).toContain("서버에서 확인된 미사용 발행권");
+    expect(hookSource).toContain("구매 내역을 확인했습니다. 미사용 발행권");
     expect(hookSource).not.toContain("/api/payments/store/verify");
     expect(hookSource).not.toContain("requestPurchase");
   });
@@ -68,7 +68,7 @@ describe("store purchase helpers", () => {
   it("does not treat the client purchase result as publish authority", () => {
     const hookSource = readFileSync(join(process.cwd(), "apps/mobile/hooks/useStorePurchase.ts"), "utf8");
     const purchaseFunctionIndex = hookSource.indexOf("async function purchase()");
-    const tokenGuardIndex = hookSource.indexOf("발행권 구매에는 로그인 세션이 필요합니다.");
+    const tokenGuardIndex = hookSource.indexOf("발행권을 구매하려면 다시 로그인해 주세요.");
     const purchaseIndex = hookSource.indexOf("await Purchases.purchasePackage(storePackage)");
     const publishIndex = hookSource.indexOf("const result = await publishWhenWebhookArrives(invitationId)");
     const verifiedIndex = hookSource.indexOf("onVerifiedRef.current?.({");
@@ -81,7 +81,7 @@ describe("store purchase helpers", () => {
     expect(verifiedIndex).toBeGreaterThan(publishIndex);
     expect(hookSource).toContain("provider && revenueCatApiKey && userId && options.accessToken && storePackage");
     expect(hookSource).toContain("await ensureRevenueCatIdentity(Purchases, revenueCatApiKey, userIdRef.current)");
-    expect(hookSource).toContain("결제가 완료되었습니다. RevenueCat 웹훅으로 발행권을 확인하는 중입니다.");
+    expect(hookSource).toContain("결제가 완료되었습니다. 발행권을 확인하고 있습니다.");
     expect(hookSource).toContain("발행권을 사용해 공개 링크를 발행했습니다.");
     expect(hookSource).toContain("publishWhenWebhookArrives(invitationId)");
     expect(hookSource).toContain("publishWithCredit(invitationId)");
@@ -99,7 +99,7 @@ describe("store purchase helpers", () => {
     expect(cardSource).toContain("발행권 구매하기");
     expect(cardSource).toContain("구매 복원");
     expect(cardSource).toContain("초대장 1개 최종 발행");
-    expect(cardSource).toContain("RSVP");
+    expect(cardSource).toContain("참석 여부");
     expect(cardSource).toContain("방명록");
     expect(cardSource).toContain("지도와 계좌 표시");
     expect(cardSource).not.toMatch(/웹\s*결제|웹결제|외부\s*결제|카카오페이|토스(?:페이)?|계좌이체|PortOne|포트원|PG\s*결제/);

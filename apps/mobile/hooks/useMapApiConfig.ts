@@ -21,7 +21,7 @@ export function useMapApiConfig() {
       .catch((caught) => {
         if (!mounted) return;
         setConfig(null);
-        setError(caught instanceof Error ? caught.message : "지도 API 설정을 확인하지 못했습니다.");
+        setError(caught instanceof Error ? caught.message : "지도 연결 상태를 확인하지 못했습니다.");
       });
 
     return () => {

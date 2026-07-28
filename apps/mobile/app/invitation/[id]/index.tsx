@@ -14,7 +14,6 @@ import { deleteDraft, loadDraft, saveDraft } from "@/lib/drafts";
 import { deleteRemoteInvitation, loadRemoteInvitation, saveDraftToSupabase } from "@/lib/invitations";
 import { getPublicInvitationUrl, openInvitationPublicPage, openWebBuilder, shareInvitationLink } from "@/lib/share";
 import { useAuth } from "@/hooks/useAuth";
-import { useMapApiConfig } from "@/hooks/useMapApiConfig";
 import { getInvitationMapLinks } from "@/lib/map-links";
 
 async function openMapUrl(url: string, fallbackUrl?: string) {
@@ -37,8 +36,7 @@ export default function InvitationDetailScreen() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
-  const { configMessage, configured, status, user } = useAuth();
-  const mapApi = useMapApiConfig();
+  const { configured, status, user } = useAuth();
   const publicUrl = draft?.payload.share.slug ? getPublicInvitationUrl(draft.payload.share.slug) : "";
   const shareSlug = draft?.payload.share.slug ?? "";
   const mapLinks = draft ? getInvitationMapLinks(draft.payload) : null;
@@ -73,7 +71,7 @@ export default function InvitationDetailScreen() {
 
     Alert.alert(
       "초대장 삭제",
-      "삭제하면 이 기기의 초안이 제거되고, 로그인된 서버 저장본도 함께 삭제될 수 있습니다. 이 작업은 되돌릴 수 없습니다.",
+      "삭제하면 이 기기와 로그인한 계정에 저장된 초대장이 함께 삭제될 수 있습니다. 이 작업은 되돌릴 수 없습니다.",
       [
         { text: "취소", style: "cancel" },
         {
@@ -144,7 +142,7 @@ export default function InvitationDetailScreen() {
           <InvitationPreviewCard fitToViewport payload={draft.payload} />
         </Card>
       ) : null}
-      <Card eyebrow={draft?.syncStatus || "draft"} title={title}>
+      <Card eyebrow={draft?.payload.isPublished ? "공개 초대장" : "작성 중"} title={title}>
         <Text style={{ color: "#5b4a3b", lineHeight: 22 }}>{names}</Text>
         <Text style={{ color: "#6a5645", lineHeight: 22, marginTop: 6 }}>
           {draft?.payload.eventDateTime || "행사 일시 미입력"}
@@ -153,8 +151,8 @@ export default function InvitationDetailScreen() {
           {[draft?.payload.venueName, draft?.payload.venueAddress].filter(Boolean).join(" · ") || "장소 미입력"}
         </Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
-          <Pill active={Boolean(draft?.serverId)} label={draft?.serverId ? "원격 저장됨" : "로컬 초안"} />
-          <Pill active={Boolean(draft?.isDirty)} label={draft?.isDirty ? "미저장 변경" : "동기화 안정"} />
+          <Pill active={Boolean(draft?.serverId)} label={draft?.serverId ? "온라인 저장됨" : "이 기기 저장"} />
+          {draft?.isDirty ? <Pill active label="수정 내용 저장 중" /> : null}
           <Pill active={Boolean(draft?.payload.isPublished)} label={draft?.payload.isPublished ? "공개 중" : "비공개"} />
         </View>
       </Card>
@@ -171,13 +169,6 @@ export default function InvitationDetailScreen() {
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
           지도: {draft?.payload.location.kakaoMapUrl || draft?.payload.location.naverMapUrl || (mapLinks?.query ? "주소 검색 링크 자동 생성" : "미입력")}
         </Text>
-        <Text style={{ color: "#6a5645", lineHeight: 22 }}>
-          지도 API: {mapApi.label}
-        </Text>
-        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
-          <Pill active={Boolean(mapApi.config?.kakao.enabled)} label={`카카오 API ${mapApi.config?.kakao.enabled ? "연동" : "대기"}`} />
-          <Pill active={Boolean(mapApi.config?.naver.enabled)} label={`네이버 API ${mapApi.config?.naver.enabled ? "연동" : "대기"}`} />
-        </View>
         <View style={{ flexDirection: "row", gap: 10, marginTop: 10 }}>
           <Pressable
             accessibilityLabel="카카오 지도 열기"
@@ -217,28 +208,23 @@ export default function InvitationDetailScreen() {
           </Pressable>
         </View>
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
-          업로드 대기 사진: {draft?.pendingPhotos.length ?? 0}장
+          저장 중인 사진: {draft?.pendingPhotos.length ?? 0}장
         </Text>
-        {!configured ? (
-          <Text style={{ color: "#8d5a2b", lineHeight: 22 }}>
-            원격 기능 안내: {configMessage}
-          </Text>
-        ) : null}
       </Card>
       <Card eyebrow="빠른 작업" title="자주 쓰는 작업">
         <View style={{ gap: 10 }}>
           {draft?.payload.isPublished && draft.payload.share.slug ? (
             <Button
-              accessibilityLabel="공개 링크 공유"
+              accessibilityLabel="카카오톡으로 초대장 보내기"
               onPress={() => {
                 setError("");
                 setMessage("");
                 void shareInvitationLink(draft.payload.share.slug, draft.payload.title || "오삼오삼 초대장")
-                  .then(() => setMessage("공유 시트를 열었습니다."))
+                  .then(() => setMessage("보낼 앱 선택 화면을 열었습니다."))
                   .catch((caught) => setError(caught instanceof Error ? caught.message : "공유에 실패했습니다."));
               }}
             >
-              공개 링크 공유
+              카카오톡으로 보내기
             </Button>
           ) : draft?.serverId ? (
             <Button
@@ -256,8 +242,8 @@ export default function InvitationDetailScreen() {
               웹에서 이어서 편집
             </Button>
           ) : (
-            <Button accessibilityLabel="운영 화면에서 서버 저장" onPress={undefined}>
-              서버 저장 후 사용 가능
+            <Button accessibilityLabel="온라인 저장 후 사용 가능" onPress={undefined}>
+              온라인 저장 후 사용 가능
             </Button>
           )}
           <View style={{ flexDirection: "row", gap: 10 }}>
@@ -317,7 +303,7 @@ export default function InvitationDetailScreen() {
                       if (id) {
                         const local = await loadDraft(id);
                         setDraft(local);
-                        setMessage("로컬 초안을 다시 불러왔습니다.");
+                        setMessage("이 기기에 저장된 초대장을 다시 불러왔습니다.");
                       }
                     } catch (caught) {
                       setError(caught instanceof Error ? caught.message : "새로고침에 실패했습니다.");
@@ -337,7 +323,7 @@ export default function InvitationDetailScreen() {
       <Card eyebrow="운영 도구" title="관리 메뉴">
         <View style={{ gap: 10 }}>
           <Button
-            accessibilityLabel="운영 화면에서 서버 저장"
+            accessibilityLabel="초대장을 온라인에 저장"
             onPress={
               configured && status === "authenticated" && user?.id && draft
                 ? () => {
@@ -356,10 +342,10 @@ export default function InvitationDetailScreen() {
                         };
                         await saveDraft(nextDraft);
                         setDraft(nextDraft);
-                        setMessage(result.payload.isPublished ? "공개 상태를 서버에 동기화했습니다." : "운영 화면에서 서버 초안을 저장했습니다.");
+                        setMessage(result.payload.isPublished ? "공개 상태를 온라인에 저장했습니다." : "초대장을 온라인에 저장했습니다.");
                       })
                       .catch((caught) => {
-                        setError(caught instanceof Error ? caught.message : "서버 저장에 실패했습니다.");
+                        setError(caught instanceof Error ? caught.message : "온라인 저장에 실패했습니다.");
                       });
                   }
                 : undefined
@@ -367,15 +353,15 @@ export default function InvitationDetailScreen() {
             variant="outline"
           >
             {!configured
-              ? "Supabase 설정 필요"
+              ? "온라인 연결 후 이용 가능"
               : configured && status === "authenticated"
-                ? "서버 저장"
-                : "로그인 후 서버 저장"}
+                ? "온라인 저장"
+                : "로그인 후 온라인 저장"}
           </Button>
           <View style={{ flexDirection: "row", gap: 10 }}>
             <View style={{ flex: 1 }}>
               <Link asChild href={`/invitation/${id ?? "demo"}/rsvp`}>
-                <Button accessibilityLabel="RSVP 관리 화면으로 이동" variant="outline">RSVP 관리</Button>
+                <Button accessibilityLabel="참석 여부 화면으로 이동" variant="outline">참석 여부</Button>
               </Link>
             </View>
             <View style={{ flex: 1 }}>
@@ -391,7 +377,7 @@ export default function InvitationDetailScreen() {
       </Card>
       <Card eyebrow="주의" title="위험 작업">
         <Text style={{ color: "#6a5645", lineHeight: 22 }}>
-          초대장을 삭제하면 로컬 초안과 서버 저장본이 함께 제거될 수 있습니다.
+          초대장을 삭제하면 이 기기와 로그인한 계정에 저장된 내용이 함께 제거될 수 있습니다.
         </Text>
         <View style={{ marginTop: 10 }}>
           <Button
@@ -405,7 +391,7 @@ export default function InvitationDetailScreen() {
       </Card>
       <View style={{ gap: 12 }}>
         <Link asChild href={`/invitation/${id ?? "demo"}/rsvp`}>
-          <Button accessibilityLabel="RSVP 관리 화면으로 이동">RSVP 관리 바로가기</Button>
+          <Button accessibilityLabel="참석 여부 화면으로 이동">참석 여부 바로가기</Button>
         </Link>
       </View>
     </Screen>

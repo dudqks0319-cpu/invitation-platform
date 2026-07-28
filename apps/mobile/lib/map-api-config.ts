@@ -79,7 +79,7 @@ export async function fetchMapApiConfig(baseUrl?: string, fetcher: Fetcher = fet
   });
 
   if (!response.ok) {
-    throw new Error("지도 API 설정을 불러오지 못했습니다.");
+    throw new Error("지도 연결 정보를 불러오지 못했습니다.");
   }
 
   return mergeMapApiConfig(normalizeMapApiConfig(await response.json()));
@@ -87,20 +87,20 @@ export async function fetchMapApiConfig(baseUrl?: string, fetcher: Fetcher = fet
 
 export function getMapApiStatusLabel(config: MapApiConfig | null) {
   if (!config) {
-    return "지도 API 상태 확인 중";
+    return "지도 연결 상태 확인 중";
   }
 
   if (config.kakao.enabled && config.naver.enabled) {
-    return "카카오 · 네이버 지도 API 연동됨";
+    return "카카오 · 네이버 지도 연결됨";
   }
 
   if (config.kakao.enabled) {
-    return "카카오 지도 API 연동됨 · 네이버 지도는 외부 링크로 열림";
+    return "카카오 지도 연결됨 · 네이버 지도는 주소로 열림";
   }
 
   if (config.naver.enabled) {
-    return "네이버 지도 API 연동됨 · 카카오 지도 API 키 필요";
+    return "네이버 지도 연결됨 · 카카오 지도는 주소로 열림";
   }
 
-  return "지도 API 키 설정 필요";
+  return "주소로 지도를 열 수 있습니다.";
 }

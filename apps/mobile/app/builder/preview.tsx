@@ -77,7 +77,7 @@ export default function BuilderPreviewScreen() {
       : requiresPurchase
       ? "유료 옵션이 포함되어 있어 이메일 또는 소셜 로그인 후 앱 스토어 결제를 완료해야 발행됩니다."
       : "필수 정보만 채우면 로그인 없이 게스트로 공개 링크를 발행할 수 있습니다.";
-  const urlGuide = publicUrl || (paidPublishUnavailable ? "사진 제거 후 무료 발행 가능" : requiresPurchase ? "스토어 결제 완료 후 자동 생성" : "서버 저장 후 자동 생성");
+  const urlGuide = publicUrl || (paidPublishUnavailable ? "사진 제거 후 무료 발행 가능" : requiresPurchase ? "스토어 결제 완료 후 자동 생성" : "온라인 저장 후 자동 생성");
   const missingItemsText = publishReadiness.missingFields.join(" · ");
 
   useEffect(() => {
@@ -131,7 +131,7 @@ export default function BuilderPreviewScreen() {
 
     const guestSession = await ensureAnonymousSession();
     if (guestSession.error || !guestSession.data?.user?.id) {
-      throw new Error(guestSession.error?.message || "게스트 세션을 시작하지 못했습니다.");
+      throw new Error(guestSession.error?.message || "게스트 모드를 시작하지 못했습니다.");
     }
 
     if (requireFullAccount) {
@@ -187,10 +187,10 @@ export default function BuilderPreviewScreen() {
       setMessage(
         nextStatus === "published"
           ? `공개 링크를 발행했습니다.\n${nextDraft.payload.share.slug ? getPublicInvitationUrl(nextDraft.payload.share.slug) : ""}`
-          : "서버에 초안을 저장했습니다."
+          : "초대장을 온라인에 저장했습니다."
       );
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "서버 저장에 실패했습니다.");
+      setError(caught instanceof Error ? caught.message : "온라인 저장에 실패했습니다.");
     } finally {
       setPending("");
     }
@@ -471,11 +471,6 @@ export default function BuilderPreviewScreen() {
           </View>
         ) : null}
       </Card>
-      {!configured ? (
-        <Card eyebrow="원격 기능 안내" title="현재는 로컬 프리뷰 모드">
-          <Text style={{ color: theme.colors.primaryDark, lineHeight: 22 }}>{configMessage}</Text>
-        </Card>
-      ) : null}
       <View style={{ gap: 12 }}>
         {requiresPurchase ? (
           paidPublishUnavailable ? (
@@ -534,9 +529,9 @@ export default function BuilderPreviewScreen() {
               {pending === "publish"
                 ? "발행 중..."
                 : !configured
-                  ? "Supabase 설정 필요"
+                  ? "온라인 연결 후 이용 가능"
                   : remoteAccessMode === "loading"
-                    ? "세션 확인 중..."
+                    ? "로그인 확인 중..."
                   : draft?.payload.isPublished
                     ? "공개 상태 다시 저장"
                     : "공개 링크 발행"}
@@ -551,7 +546,7 @@ export default function BuilderPreviewScreen() {
           </View>
           <View style={{ flex: 1.3 }}>
             <Button
-              accessibilityLabel="서버에 초안 저장"
+              accessibilityLabel="초대장을 온라인에 저장"
               onPress={remoteAccessMode === "loading" ? undefined : () => void handleSave("draft")}
               variant="outline"
             >
@@ -560,7 +555,7 @@ export default function BuilderPreviewScreen() {
                 : !configured
                   ? "설정 필요"
                   : remoteAccessMode === "loading"
-                    ? "세션 확인 중..."
+                    ? "로그인 확인 중..."
                   : "초안 저장"}
             </Button>
           </View>

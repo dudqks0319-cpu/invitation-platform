@@ -157,7 +157,7 @@ async function uploadPendingPhoto(
   localId: string
 ) {
   if (!supabase) {
-    throw new Error("Supabase 환경 변수가 없어 사진 업로드를 할 수 없습니다.");
+    throw new Error("사진 저장 기능을 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.");
   }
 
   const response = await fetch(photo.localUri);
@@ -199,7 +199,7 @@ export async function saveDraftToSupabase(
   status: "draft" | "published" = "draft"
 ) {
   if (!supabase) {
-    throw new Error("Supabase 환경 변수가 없어 서버 저장을 할 수 없습니다.");
+    throw new Error("초대장을 안전하게 저장할 수 없습니다. 잠시 후 다시 시도해 주세요.");
   }
 
   let payloadWithUploads = draft.payload;
@@ -300,7 +300,7 @@ export async function saveDraftToSupabase(
 
   const { data, error } = await query;
   if (error || !data) {
-    throw new Error(error?.message || "서버 저장에 실패했습니다.");
+    throw new Error(error?.message || "초대장을 저장하지 못했습니다.");
   }
 
   return {
@@ -570,7 +570,7 @@ export async function getRemoteVisitCount(invitationId: string) {
 
 export async function updateRemoteGuestbookApproval(entryId: string, approved: boolean) {
   if (!supabase) {
-    throw new Error("Supabase 환경 변수가 없어 방명록 상태를 바꿀 수 없습니다.");
+    throw new Error("방명록 상태를 변경할 수 없습니다. 잠시 후 다시 시도해 주세요.");
   }
 
   const { error } = await supabase
@@ -585,7 +585,7 @@ export async function updateRemoteGuestbookApproval(entryId: string, approved: b
 
 export async function deleteRemoteInvitation(serverId: string, userId: string) {
   if (!supabase) {
-    throw new Error("Supabase 환경 변수가 없어 서버 삭제를 할 수 없습니다.");
+    throw new Error("초대장을 삭제할 수 없습니다. 잠시 후 다시 시도해 주세요.");
   }
 
   const { error } = await supabase

@@ -32,7 +32,6 @@ export default function LoginScreen() {
   const router = useRouter();
   const {
     configMessage,
-    configMissingKeys,
     configured,
     hasFullAccount,
     isAnonymousSession,
@@ -54,7 +53,6 @@ export default function LoginScreen() {
   const [pendingAction, setPendingAction] = useState<"" | ActionKey>("");
   const [passwordVisible, setPasswordVisible] = useState(false);
   const hasEmailCredentials = email.trim().length > 0 && password.trim().length > 0;
-  const showDebugInfo = __DEV__;
 
   useEffect(() => {
     if (!shouldLeaveLoginScreen({ hasSession: Boolean(session), status, user })) {
@@ -114,7 +112,7 @@ export default function LoginScreen() {
       subtitle="작성자는 앱에서 초대장을 만들고 관리합니다. 공개 초대장은 웹 링크로 공유됩니다."
       title="로그인"
     >
-      {status === "loading" ? <Loading label="세션 상태를 확인하는 중..." /> : null}
+      {status === "loading" ? <Loading label="로그인 상태를 확인하는 중..." /> : null}
       {!configured ? (
         <ErrorView description={configMessage} />
       ) : null}
@@ -124,7 +122,7 @@ export default function LoginScreen() {
           <Text style={{ color: "#6a5645", lineHeight: 22 }}>{message}</Text>
         </Card>
       ) : null}
-      <Card eyebrow="현재 세션" title={hasFullAccount ? "로그인됨" : isAnonymousSession ? "게스트 모드" : "로그인이 필요합니다"}>
+      <Card eyebrow="로그인 상태" title={hasFullAccount ? "로그인됨" : isAnonymousSession ? "게스트 모드" : "로그인이 필요합니다"}>
         <Text style={{ color: "#5b4a3b", lineHeight: 22 }}>
           {hasFullAccount
             ? user?.email ?? "사용자 정보 없음"
@@ -132,27 +130,17 @@ export default function LoginScreen() {
               ? "무료 기능은 게스트 모드로 사용할 수 있습니다."
             : configured
               ? "아직 연결된 계정이 없습니다. 이메일 또는 Apple 로그인을 선택해 주세요."
-              : "Supabase 설정이 없어서 현재는 둘러보기 전용 상태입니다."}
+              : "현재는 초대장 둘러보기와 이 기기 저장만 사용할 수 있습니다."}
         </Text>
         <Text style={{ color: "#766452", lineHeight: 22, marginTop: 8 }}>
-          현재 상태: {hasFullAccount ? "원격 저장 가능" : "무료 작성과 게스트 저장 가능"}
+          현재 상태: {hasFullAccount ? "온라인 저장 가능" : "무료 작성과 이 기기 저장 가능"}
         </Text>
-        {showDebugInfo ? (
-          <Text style={{ color: "#8d5a2b", lineHeight: 22, marginTop: 8 }}>
-            Native auth: Google {nativeGoogleConfigured ? "on" : "off"} / Kakao {nativeKakaoConfigured ? "on" : "off"}
-          </Text>
-        ) : null}
-        {showDebugInfo && !configured && configMissingKeys.length > 0 ? (
-          <Text style={{ color: "#8d5a2b", lineHeight: 22, marginTop: 8 }}>
-            누락된 환경변수: {configMissingKeys.join(", ")}
-          </Text>
-        ) : null}
       </Card>
 
       {hasFullAccount ? (
         <Card eyebrow="다음 단계" title="이제 내 초대장을 관리할 수 있습니다">
           <Text style={{ color: "#6a5645", lineHeight: 22 }}>
-            로그인 세션이 연결되었습니다. 내 초대장 화면에서 저장본과 RSVP, 방명록, 통계를 확인할 수 있습니다.
+            로그인이 완료되었습니다. 내 초대장 화면에서 저장본과 참석 여부, 방명록, 통계를 확인할 수 있습니다.
           </Text>
           <View style={{ marginTop: 12 }}>
             <Link asChild href={POST_LOGIN_ROUTE}>

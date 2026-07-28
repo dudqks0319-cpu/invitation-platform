@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useMemo, useState, type ReactNode } from "react";
 import {
+  Alert,
   Image,
   Pressable,
   ScrollView,
@@ -19,6 +20,7 @@ import { theme } from "@/components/ui/theme";
 import { useTemplateCatalog } from "@/hooks/useTemplateCatalog";
 import { getTemplatePreviewSource } from "@/lib/template-image-source";
 import type { MobileTemplateGalleryItem } from "@/lib/template-gallery";
+import { shareInvitationLink } from "@/lib/share";
 import {
   clampUiuxPreviewStep,
   getUiuxEventTemplates,
@@ -32,6 +34,7 @@ const invitationFixture = {
   date: "2026. 09. 12 토요일 12:00",
   venue: "라비에벨 가든홀"
 } as const;
+const invitationFixtureSlug = "kim-lee-demo";
 
 const eventIcons: Record<UiuxEventKey, keyof typeof Ionicons.glyphMap> = {
   dol: "balloon-outline",
@@ -272,7 +275,7 @@ function BuilderScreen({
         title="초대장 만들기"
       />
       <View style={styles.progressRow}>
-        {["기본 정보", "초대 문구", "사진", "장소·RSVP", "공개 설정"].map((label, index) => (
+        {["기본 정보", "초대 문구", "사진", "장소·참석 여부", "공개 설정"].map((label, index) => (
           <View key={label} style={styles.progressItem}>
             <View style={[styles.progressDot, index === 0 ? styles.progressDotActive : null]}>
               <Text style={[styles.progressNumber, index === 0 ? styles.progressNumberActive : null]}>
@@ -449,12 +452,27 @@ function ShareScreen({
   template: MobileTemplateGalleryItem | null;
   onContinue: () => void;
 }) {
+  const [sharing, setSharing] = useState(false);
   const shareActions = [
     ["chatbubble-outline", "카카오톡"],
     ["link-outline", "링크 복사"],
     ["chatbox-outline", "문자"],
     ["qr-code-outline", "QR 저장"]
   ] as const;
+
+  async function shareToKakao() {
+    if (sharing) return;
+
+    setSharing(true);
+
+    try {
+      await shareInvitationLink(invitationFixtureSlug, invitationFixture.title);
+    } catch {
+      Alert.alert("보내기 실패", "카카오톡 보내기 화면을 열지 못했습니다. 잠시 후 다시 시도해 주세요.");
+    } finally {
+      setSharing(false);
+    }
+  }
 
   return (
     <View style={styles.screenBody}>
@@ -490,12 +508,18 @@ function ShareScreen({
           <Pressable
             accessibilityLabel={label}
             accessibilityRole="button"
+            accessibilityState={{ disabled: label !== "카카오톡" || sharing }}
+            disabled={label !== "카카오톡" || sharing}
             key={label}
-            onPress={() => {}}
-            style={({ pressed }) => [styles.shareAction, pressed ? styles.pressed : null]}
+            onPress={() => void shareToKakao()}
+            style={({ pressed }) => [
+              styles.shareAction,
+              label !== "카카오톡" ? styles.shareActionDisabled : null,
+              pressed ? styles.pressed : null
+            ]}
           >
             <Ionicons color={theme.colors.primaryDark} name={icon} size={26} />
-            <Text style={styles.shareActionLabel}>{label}</Text>
+            <Text style={styles.shareActionLabel}>{label === "카카오톡" && sharing ? "여는 중..." : label}</Text>
           </Pressable>
         ))}
       </View>
@@ -531,7 +555,7 @@ function ManageScreen({
   return (
     <View style={styles.screenBody}>
       <ScreenHeading
-        description="저장한 초대장과 RSVP 현황을 한곳에서 관리합니다."
+        description="저장한 초대장과 참석 현황을 한곳에서 관리합니다."
         eyebrow="오삼오삼"
         title="내 초대장"
       />
@@ -557,7 +581,7 @@ function ManageScreen({
         ))}
       </SectionCard>
       <SectionCard>
-        <Text style={styles.fieldLabel}>RSVP 현황</Text>
+        <Text style={styles.fieldLabel}>참석 현황</Text>
         <View style={styles.rsvpBar}>
           <View style={styles.rsvpBarAttend} />
           <View style={styles.rsvpBarMaybe} />
@@ -740,7 +764,7 @@ export default function UiuxPreviewScreen() {
           <Ionicons color={theme.colors.ink} name="chevron-back" size={22} />
         </Pressable>
         <View style={styles.topBarTitle}>
-          <Text style={styles.topBarEyebrow}>새 UI 미리보기</Text>
+          <Text style={styles.topBarEyebrow}>오삼오삼</Text>
           <Text numberOfLines={1} style={styles.topBarText}>{step.title}</Text>
         </View>
         <View style={styles.stepCounter}>
@@ -1221,6 +1245,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 7
+  },
+  shareActionDisabled: {
+    opacity: 0.45
   },
   shareActionLabel: {
     color: theme.colors.ink,

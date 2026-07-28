@@ -123,7 +123,7 @@ export default function BuilderStep3PhotosScreen() {
     <Screen
       subtitle={
         paidPublishingEnabled
-          ? "메인, 배경, 갤러리 사진을 로컬 초안에 연결합니다."
+          ? "메인, 배경, 갤러리 사진을 이 기기에 저장합니다."
           : "현재 제출 버전에서는 사진 없는 무료 발행을 먼저 제공합니다."
       }
       title="초대장 만들기"

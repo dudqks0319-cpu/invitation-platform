@@ -171,7 +171,7 @@ function TemplatePreviewActions({
             이어서 편집하면 기존 내용을 그대로 열고, 새로 시작하면 기존 초안을 덮어쓰지 않고 이 디자인으로 별도 초안을 만듭니다.
           </Text>
           <Text style={{ color: theme.colors.ink, fontSize: 12, lineHeight: 18 }}>
-            로그인한 계정의 초안만 확인합니다. 로그인 전 로컬 초안은 계정으로 자동 이전하지 않습니다.
+            로그인한 계정에 저장된 초대장만 확인합니다. 로그인 전에 이 기기에 저장한 내용은 자동으로 옮겨지지 않습니다.
           </Text>
           <View style={{ gap: 10 }}>
             <Pressable

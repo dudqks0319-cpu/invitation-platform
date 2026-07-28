@@ -37,7 +37,7 @@ export default function BuilderStep1Screen() {
   return (
     <Screen subtitle="행사 제목, 날짜, 장소를 먼저 정리합니다." title="초대장 만들기">
       <StepIndicator current={1} title="기본 정보" />
-      {loading ? <Loading label="로컬 초안을 준비하는 중..." /> : null}
+      {loading ? <Loading label="초대장을 준비하는 중..." /> : null}
       <Card eyebrow="입력 항목" title="제목 · 날짜 · 장소">
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>행사 제목</Text>

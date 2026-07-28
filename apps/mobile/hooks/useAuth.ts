@@ -3,7 +3,6 @@ import type { CryptoDigestAlgorithm } from "expo-crypto";
 import type { Session, User } from "@supabase/supabase-js";
 import {
   getAuthRedirectUrl,
-  getSupabaseConfigMessage,
   isSupabaseConfigured,
   supabase,
   supabaseConfigMissingKeys
@@ -79,7 +78,7 @@ export function useAuth() {
       },
       signInWithApple: async () => {
         if (!supabase) {
-          return { error: new Error("Supabase 환경 변수가 없어 Apple 로그인을 시작할 수 없습니다.") };
+          return { error: new Error("온라인 연결을 확인하지 못해 Apple 로그인을 시작할 수 없습니다.") };
         }
 
         const AppleAuthentication = await import("expo-apple-authentication");
@@ -98,7 +97,7 @@ export function useAuth() {
         });
 
         if (!credential.identityToken) {
-          return { error: new Error("Apple identity token을 받지 못했습니다.") };
+          return { error: new Error("Apple 로그인 정보를 확인하지 못했습니다.") };
         }
 
         const result = await supabase.auth.signInWithIdToken({
@@ -118,7 +117,7 @@ export function useAuth() {
       },
       ensureAnonymousSession: async () => {
         if (!supabase) {
-          return { error: new Error("Supabase 환경 변수가 없어 게스트 세션을 시작할 수 없습니다.") };
+          return { error: new Error("온라인 연결을 확인하지 못해 게스트 모드를 시작할 수 없습니다.") };
         }
 
         const currentSession = await supabase.auth.getSession();
@@ -136,7 +135,7 @@ export function useAuth() {
       },
       signInWithPassword: async (email: string, password: string) => {
         if (!supabase) {
-          return { error: new Error("Supabase 환경 변수가 없어 이메일 로그인을 시작할 수 없습니다.") };
+          return { error: new Error("온라인 연결을 확인하지 못해 이메일 로그인을 시작할 수 없습니다.") };
         }
 
         const result = await supabase.auth.signInWithPassword({ email, password });
@@ -149,7 +148,7 @@ export function useAuth() {
       },
       signUpWithPassword: async (email: string, password: string) => {
         if (!supabase) {
-          return { error: new Error("Supabase 환경 변수가 없어 이메일 가입을 시작할 수 없습니다.") };
+          return { error: new Error("온라인 연결을 확인하지 못해 이메일 가입을 시작할 수 없습니다.") };
         }
 
         const normalizedEmail = email.trim();
@@ -195,7 +194,9 @@ export function useAuth() {
 
         return supabase.auth.signOut();
       },
-      configMessage: getSupabaseConfigMessage(),
+      configMessage: isSupabaseConfigured
+        ? ""
+        : "온라인 저장 기능에 연결하지 못했습니다. 이 기기에 저장된 초대장은 계속 사용할 수 있습니다.",
       configMissingKeys: supabaseConfigMissingKeys,
       hasFullAccount: status === "authenticated" && userHasFullAccount(user),
       isAnonymousSession: status === "authenticated" && isAnonymousUser(user),

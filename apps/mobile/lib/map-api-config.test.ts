@@ -74,12 +74,12 @@ describe("mobile map API config", () => {
   });
 
   it("summarizes the provider connection state", () => {
-    expect(getMapApiStatusLabel(null)).toBe("지도 API 상태 확인 중");
+    expect(getMapApiStatusLabel(null)).toBe("지도 연결 상태 확인 중");
     expect(getMapApiStatusLabel({ kakao: { enabled: true }, naver: { enabled: false } })).toBe(
-      "카카오 지도 API 연동됨 · 네이버 지도는 외부 링크로 열림"
+      "카카오 지도 연결됨 · 네이버 지도는 주소로 열림"
     );
     expect(getMapApiStatusLabel({ kakao: { enabled: true }, naver: { enabled: true } })).toBe(
-      "카카오 · 네이버 지도 API 연동됨"
+      "카카오 · 네이버 지도 연결됨"
     );
   });
 });

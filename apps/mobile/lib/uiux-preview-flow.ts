@@ -8,7 +8,7 @@ export const uiuxPreviewSteps = [
   { id: "safety", title: "게시 전 안심 점검" },
   { id: "share", title: "게시 완료·공유" },
   { id: "manage", title: "초대장 관리" },
-  { id: "guest", title: "무가입 게스트 RSVP" }
+  { id: "guest", title: "회원가입 없이 참석 응답" }
 ] as const;
 
 export type UiuxPreviewStepId = (typeof uiuxPreviewSteps)[number]["id"];

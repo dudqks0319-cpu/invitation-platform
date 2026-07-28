@@ -65,8 +65,8 @@ export default function HomeScreen() {
 
         <View style={{ paddingHorizontal: 18, paddingTop: 24 }}>
           <Pressable
-            accessibilityHint="개발계획서의 8개 새 화면을 실제 템플릿으로 순서대로 확인합니다."
-            accessibilityLabel="새 UI 전체 흐름 보기"
+            accessibilityHint="초대장을 고르고 만들고 공유하는 과정을 순서대로 확인합니다."
+            accessibilityLabel="초대장 만들기 과정 둘러보기"
             accessibilityRole="button"
             onPress={() => router.push("/uiux-preview")}
             style={({ pressed }) => ({
@@ -84,7 +84,7 @@ export default function HomeScreen() {
             })}
           >
             <Text style={{ color: theme.colors.primaryDark, fontSize: 15, fontWeight: "800" }}>
-              새 UI 8개 화면 전체 보기
+              초대장 만들기 과정 둘러보기
             </Text>
           </Pressable>
           <HeroSection
