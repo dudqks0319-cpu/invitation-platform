@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-set -u
+set -uo pipefail
+umask 077
 
-DEVICE_ID="${DEVICE_ID:-8CCEF0FF-05C7-5A6F-BF68-38DF12FA83C4}"
+DEVICE_ID="${DEVICE_ID:-iPhone 12 Pro}"
 BUNDLE_ID="${BUNDLE_ID:-com.invitehub.app}"
 TESTFLIGHT_BUNDLE_ID="${TESTFLIGHT_BUNDLE_ID:-com.apple.TestFlight}"
 OUT_ROOT="${OUT_ROOT:-output/testflight-device-evidence}"
@@ -9,6 +10,7 @@ STAMP="$(date '+%Y%m%d-%H%M%S')"
 OUT_DIR="${OUT_DIR:-$OUT_ROOT/$STAMP}"
 LAUNCH=0
 OPEN_TESTFLIGHT=0
+CAPTURE_FAILED=0
 
 usage() {
   cat <<EOF
@@ -53,7 +55,12 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-mkdir -p "$OUT_DIR"
+if [[ -L "$OUT_DIR" ]]; then
+  echo "Refusing symlink evidence directory: $OUT_DIR" >&2
+  exit 1
+fi
+mkdir -p -- "$OUT_DIR"
+DEVICE_LABEL="redacted target"
 
 run_json_capture() {
   local name="$1"
@@ -65,16 +72,29 @@ run_json_capture() {
   local status=$?
   echo "$status" > "$OUT_DIR/$name.exit-code.txt"
   if [[ $status -ne 0 ]]; then
-    echo "WARN: $name exited with $status. See $OUT_DIR/$name.txt"
+    echo "ERROR: $name exited with $status. See $OUT_DIR/$name.txt" >&2
+    return "$status"
   fi
   return 0
 }
 
-run_json_capture devices xcrun devicectl list devices
-run_json_capture lock-state xcrun devicectl device info lockState --device "$DEVICE_ID"
-run_json_capture testflight-app xcrun devicectl device info apps --device "$DEVICE_ID" --bundle-id "$TESTFLIGHT_BUNDLE_ID" --columns '*'
-run_json_capture invitehub-app xcrun devicectl device info apps --device "$DEVICE_ID" --bundle-id "$BUNDLE_ID" --columns '*'
-run_json_capture invitehub-processes xcrun devicectl device info processes --device "$DEVICE_ID" --filter "Name CONTAINS 'InviteHub'" --columns '*'
+run_json_capture devices xcrun devicectl list devices --filter "Name == '$DEVICE_ID' OR identifier == '$DEVICE_ID'" || CAPTURE_FAILED=1
+run_json_capture lock-state xcrun devicectl device info lockState --device "$DEVICE_ID" || CAPTURE_FAILED=1
+run_json_capture testflight-app xcrun devicectl device info apps --device "$DEVICE_ID" --bundle-id "$TESTFLIGHT_BUNDLE_ID" --columns '*' || CAPTURE_FAILED=1
+run_json_capture invitehub-app xcrun devicectl device info apps --device "$DEVICE_ID" --bundle-id "$BUNDLE_ID" --columns '*' || CAPTURE_FAILED=1
+run_json_capture invitehub-processes xcrun devicectl device info processes --device "$DEVICE_ID" --filter "Name CONTAINS 'InviteHub'" --columns '*' || CAPTURE_FAILED=1
+
+if [[ "$CAPTURE_FAILED" -ne 0 ]]; then
+  echo "TESTFLIGHT DEVICE EVIDENCE RESULT" >&2
+  echo "- Output: $OUT_DIR" >&2
+  echo "- Status: fail (one or more device commands failed)" >&2
+  exit 1
+fi
+
+if ! node scripts/verify-testflight-build66-evidence.mjs "$OUT_DIR"; then
+  echo "- Status: fail (installed app metadata does not match 1.0.3 (66))" >&2
+  exit 1
+fi
 
 if [[ "$OPEN_TESTFLIGHT" -eq 1 ]]; then
   echo "== open-testflight =="
@@ -83,7 +103,8 @@ if [[ "$OPEN_TESTFLIGHT" -eq 1 ]]; then
   open_testflight_status=$?
   echo "$open_testflight_status" > "$OUT_DIR/open-testflight.exit-code.txt"
   if [[ $open_testflight_status -ne 0 ]]; then
-    echo "WARN: open-testflight exited with $open_testflight_status. See $OUT_DIR/open-testflight.txt"
+    echo "ERROR: open-testflight exited with $open_testflight_status. See $OUT_DIR/open-testflight.txt" >&2
+    CAPTURE_FAILED=1
   fi
 
   sleep 2
@@ -96,18 +117,23 @@ if [[ "$LAUNCH" -eq 1 ]]; then
   launch_status=$?
   echo "$launch_status" > "$OUT_DIR/launch.exit-code.txt"
   if [[ $launch_status -ne 0 ]]; then
-    echo "WARN: launch exited with $launch_status. See $OUT_DIR/launch.txt"
+    echo "ERROR: launch exited with $launch_status. See $OUT_DIR/launch.txt" >&2
+    CAPTURE_FAILED=1
   fi
 
   sleep 3
-  run_json_capture invitehub-processes-after-launch xcrun devicectl device info processes --device "$DEVICE_ID" --filter "Name CONTAINS 'InviteHub'" --columns '*'
+  run_json_capture invitehub-processes-after-launch xcrun devicectl device info processes --device "$DEVICE_ID" --filter "Name CONTAINS 'InviteHub'" --columns '*' || CAPTURE_FAILED=1
+  if ! node scripts/verify-testflight-build66-evidence.mjs "$OUT_DIR" --require-launch; then
+    echo "ERROR: launch evidence did not prove a running metadata-matching process." >&2
+    CAPTURE_FAILED=1
+  fi
 fi
 
 cat > "$OUT_DIR/summary.md" <<EOF
 # TestFlight Device Evidence
 
 - Captured at: $(date '+%Y-%m-%d %H:%M:%S %Z')
-- Device: \`$DEVICE_ID\`
+- Device: \`$DEVICE_LABEL\` (redacted)
 - Bundle id: \`$BUNDLE_ID\`
 - TestFlight bundle id: \`$TESTFLIGHT_BUNDLE_ID\`
 - TestFlight launch attempted: \`$OPEN_TESTFLIGHT\`
@@ -129,8 +155,13 @@ EOF
 
 echo "TESTFLIGHT DEVICE EVIDENCE RESULT"
 echo "- Output: $OUT_DIR"
-echo "- Device: $DEVICE_ID"
+echo "- Device: $DEVICE_LABEL (redacted)"
 echo "- Bundle: $BUNDLE_ID"
 echo "- TestFlight bundle: $TESTFLIGHT_BUNDLE_ID"
 echo "- TestFlight launch attempted: $OPEN_TESTFLIGHT"
 echo "- Launch attempted: $LAUNCH"
+
+if [[ "$CAPTURE_FAILED" -ne 0 ]]; then
+  echo "- Status: fail (one or more device commands failed)" >&2
+  exit 1
+fi

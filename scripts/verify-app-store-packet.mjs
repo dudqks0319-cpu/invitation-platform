@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { existsSync, readFileSync, statSync } from "node:fs";
-import { join } from "node:path";
+import { resolve } from "node:path";
 
 const root = process.cwd();
 const expected = {
@@ -13,7 +13,7 @@ const expected = {
   commit: "0655ced",
   liveBaseUrl: "https://invitation-platform-youngbeens-projects.vercel.app"
 };
-const currentNativeBuildNumber = "49";
+const currentNativeBuildNumber = "52";
 const expectedBuild42 = {
   appId: "6763630299",
   bundleId: "com.invitehub.app",
@@ -90,12 +90,29 @@ const expectedBuild49 = {
   submissionId: "fe4a28ea-1467-44ed-a498-d7ace915dd6f",
   artifact: "https://expo.dev/artifacts/eas/9pKXtn9zy9nJVfFhEtFcKD.ipa"
 };
+const expectedCurrentCandidate = {
+  appVersion: "1.0.3",
+  buildNumber: "66",
+  sourceCommit: "533aec35178b185b4ab04a76e2c2819b83208056",
+  buildId: "b1a187d7-0776-4dd0-b648-9685edbb7760",
+  submissionId: "90000462-1a28-424d-a496-bef9ad8d7f41",
+  artifactBytes: "176900378",
+  artifactBytesFormatted: "176,900,378",
+  artifactSha256:
+    "b065a732e3c51963bad999c9acd248c34ec1c5b7f43b816d643e588dcace4854",
+  displayName: "오삼오삼"
+};
 
 const checks = [];
 const failures = [];
 
+function fatal(message) {
+  console.error(`APP STORE PACKET VERIFY FAILED: ${message}`);
+  process.exit(1);
+}
+
 function read(relativePath) {
-  const path = join(root, relativePath);
+  const path = resolve(root, relativePath);
 
   if (!existsSync(path)) {
     failures.push(`${relativePath}: missing file`);
@@ -122,7 +139,7 @@ function notIncludes(file, content, value, detail) {
 }
 
 function isExecutable(relativePath) {
-  const path = join(root, relativePath);
+  const path = resolve(root, relativePath);
 
   return existsSync(path) && (statSync(path).mode & 0o111) !== 0;
 }
@@ -136,7 +153,32 @@ const build47Packet = read("docs/app-store-connect-build47-packet.md");
 const build48Packet = read("docs/app-store-connect-build48-packet.md");
 const build49Packet = read("docs/app-store-connect-build49-packet.md");
 const build46InputPacket = read("docs/app-store-connect-input-packet-build46.md");
-const currentReleaseState = read("docs/current-release-state.md");
+const fixturePathsAllowed =
+  process.env.NODE_ENV === "test" &&
+  process.env.ALLOW_RELEASE_FIXTURE_PATHS === "1";
+
+function canonicalEvidencePath(environmentName, defaultPath) {
+  const override = process.env[environmentName];
+  if (override && !fixturePathsAllowed) {
+    fatal(
+      `${environmentName} is test-only and requires NODE_ENV=test with ALLOW_RELEASE_FIXTURE_PATHS=1`
+    );
+  }
+  return override ?? defaultPath;
+}
+
+const releaseStatus = read(
+  canonicalEvidencePath("RELEASE_STATUS_PATH", "RELEASE_STATUS.md")
+);
+const currentReleaseState = read(
+  canonicalEvidencePath(
+    "CURRENT_RELEASE_STATE_PATH",
+    "docs/current-release-state.md"
+  )
+);
+const releaseLedger = read(
+  canonicalEvidencePath("RELEASE_LEDGER_PATH", "release-ledger.yaml")
+);
 const readiness = read("docs/app-store-readiness-90.md");
 const audit = read("docs/goal-completion-audit-90.md");
 const security = read("docs/security-gate-90.md");
@@ -168,6 +210,7 @@ const iosPodfileProperties = read("apps/mobile/ios/Podfile.properties.json");
 const iosPodfileLock = read("apps/mobile/ios/Podfile.lock");
 const nativeStartupSafetyTest = read("apps/mobile/lib/native-startup-safety.test.ts");
 const collectDeviceEvidence = read("scripts/collect-testflight-device-evidence.sh");
+const releaseGate = read("scripts/invitehub-release-gate.sh");
 const awaitDevice = read("scripts/await-testflight-device.sh");
 const diagnoseDeviceConnection = read("scripts/diagnose-ios-device-connection.sh");
 
@@ -353,16 +396,77 @@ includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "사진 포함 유료 발행 및 인앱 결제 기능은 현재 제출 빌드에서 비활성화");
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "TestFlight에서 다음 빌드를 설치");
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "currentReleaseBuildSelectedForVersion");
-includes("docs/current-release-state.md", currentReleaseState, "Current candidate | iOS Build `1.0.1 (49)` is processed in App Store Connect");
-includes("docs/current-release-state.md", currentReleaseState, "Native local build number | `49`");
-includes("docs/current-release-state.md", currentReleaseState, expectedBuild49.buildId);
-includes("docs/current-release-state.md", currentReleaseState, expectedBuild49.submissionId);
-includes("docs/current-release-state.md", currentReleaseState, expectedBuild49.artifact);
-includes("docs/current-release-state.md", currentReleaseState, "Real-device result | Failed for installed `com.invitehub.app` `1.0.1 (46)`");
-includes("docs/current-release-state.md", currentReleaseState, "Do not select build 42");
-includes("docs/current-release-state.md", currentReleaseState, "Do not select build 42, 46, or 47");
-includes("docs/current-release-state.md", currentReleaseState, "Do not select build 49 for App Store review until");
-includes("docs/current-release-state.md", currentReleaseState, "Unhandled JS Exception: Error: No routes found");
+includes("docs/current-release-state.md", currentReleaseState, `Local candidate | \`${expectedCurrentCandidate.appVersion} (${expectedCurrentCandidate.buildNumber})\``);
+includes("docs/current-release-state.md", currentReleaseState, expectedCurrentCandidate.sourceCommit);
+includes("docs/current-release-state.md", currentReleaseState, expectedCurrentCandidate.buildId);
+includes("docs/current-release-state.md", currentReleaseState, expectedCurrentCandidate.submissionId);
+includes("docs/current-release-state.md", currentReleaseState, expectedCurrentCandidate.artifactBytesFormatted);
+includes("docs/current-release-state.md", currentReleaseState, expectedCurrentCandidate.artifactSha256);
+includes("docs/current-release-state.md", currentReleaseState, "EAS build state | 2026-07-28 live 재조회 `FINISHED`");
+includes("docs/current-release-state.md", currentReleaseState, "live 재조회 `FINISHED`, error 없음");
+includes("docs/current-release-state.md", currentReleaseState, "Apple processing live 상태는 미확인");
+includes("docs/current-release-state.md", currentReleaseState, "Build 66의 현재 internal-group 배정은 ASC signed-out 상태라 미확인");
+includes("docs/current-release-state.md", currentReleaseState, "`com.invitehub.app` `1.0.3 (66)` 설치 확인");
+includes("docs/current-release-state.md", currentReleaseState, "`builtByDeveloper=true`라 TestFlight 설치 증거는 아님");
+includes("docs/current-release-state.md", currentReleaseState, "EAS IPA와 동일 바이너리라는 증거도 아님");
+includes("docs/current-release-state.md", currentReleaseState, "launch는 기기 잠금으로 거절되어 smoke 미완");
+includes("docs/current-release-state.md", currentReleaseState, "Do not select Builds 62, 63, or 64");
+includes("docs/current-release-state.md", currentReleaseState, "App Review state | Not submitted");
+includes("docs/current-release-state.md", currentReleaseState, "Public release state | Still `1.0.2`; no 1.0.3 public rollout");
+includes("RELEASE_STATUS.md", releaseStatus, "`1.0.3 (66)`");
+includes("RELEASE_STATUS.md", releaseStatus, expectedCurrentCandidate.sourceCommit.slice(0, 7));
+includes("RELEASE_STATUS.md", releaseStatus, expectedCurrentCandidate.buildId);
+includes("RELEASE_STATUS.md", releaseStatus, expectedCurrentCandidate.submissionId);
+includes("RELEASE_STATUS.md", releaseStatus, expectedCurrentCandidate.artifactBytesFormatted);
+includes("RELEASE_STATUS.md", releaseStatus, expectedCurrentCandidate.artifactSha256);
+includes("RELEASE_STATUS.md", releaseStatus, "not proof of the EAS IPA binary");
+includes("RELEASE_STATUS.md", releaseStatus, "App Review: not submitted");
+includes("RELEASE_STATUS.md", releaseStatus, "Public App Store: still `1.0.2`");
+includes("release-ledger.yaml", releaseLedger, `version: "${expectedCurrentCandidate.appVersion}"`);
+includes("release-ledger.yaml", releaseLedger, `build_number: "${expectedCurrentCandidate.buildNumber}"`);
+includes("release-ledger.yaml", releaseLedger, expectedCurrentCandidate.sourceCommit);
+includes("release-ledger.yaml", releaseLedger, expectedCurrentCandidate.buildId);
+includes("release-ledger.yaml", releaseLedger, expectedCurrentCandidate.submissionId);
+includes("release-ledger.yaml", releaseLedger, `artifact_bytes: ${expectedCurrentCandidate.artifactBytes}`);
+includes("release-ledger.yaml", releaseLedger, `artifact_sha256: "${expectedCurrentCandidate.artifactSha256}"`);
+includes("release-ledger.yaml", releaseLedger, "eas_build_state: finished");
+includes("release-ledger.yaml", releaseLedger, "eas_submit_state: finished");
+includes("release-ledger.yaml", releaseLedger, "app_store_connect_state: uploaded_live_state_unverified_signed_out");
+includes("release-ledger.yaml", releaseLedger, "testflight_state: internal_group_state_unverified_signed_out");
+includes(
+  "release-ledger.yaml",
+  releaseLedger,
+  "phase: developer_install_metadata_match_device_smoke_blocked"
+);
+includes(
+  "release-ledger.yaml",
+  releaseLedger,
+  "real_device_result: metadata_match_1_0_3_66_artifact_unproven_launch_blocked_device_locked"
+);
+includes("release-ledger.yaml", releaseLedger, "real_iphone_install_provenance: developer_app_not_testflight");
+includes("release-ledger.yaml", releaseLedger, "real_iphone_artifact_identity: unproven_developer_install");
+includes("release-ledger.yaml", releaseLedger, "app_review_state: not_submitted");
+includes("release-ledger.yaml", releaseLedger, "public_release: \"1.0.2\"");
+notIncludes(
+  "scripts/invitehub-release-gate.sh",
+  releaseGate,
+  "ROOT:-",
+  "Release gate trust root must not accept an environment override"
+);
+includes("scripts/invitehub-release-gate.sh", releaseGate, 'typeset -r ROOT="${SCRIPT_DIR:h}"');
+includes("scripts/invitehub-release-gate.sh", releaseGate, "git -C \"$ROOT\" rev-parse --show-toplevel");
+includes("scripts/invitehub-release-gate.sh", releaseGate, "ALLOW_RELEASE_FIXTURE_PATHS");
+includes(
+  "scripts/invitehub-release-gate.sh",
+  releaseGate,
+  "ALLOW_ONLINE_AUDIT"
+);
+includes(
+  "scripts/invitehub-release-gate.sh",
+  releaseGate,
+  "- Status: blocked"
+);
+includes("scripts/invitehub-release-gate.sh", releaseGate, "exit 2");
 includes("docs/app-store-connect-build46-packet.md", build46Packet, "Build 46 is not a valid App Store candidate");
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "Do not use it to select build 46");
 
@@ -404,7 +508,9 @@ includes("docs/testflight-crash-triage-2026-05-07.md", crashTriageBuild42Failed,
 includes("docs/testflight-crash-triage-2026-05-07.md", crashTriageBuild42Failed, "embedded frameworks: `hermesvm.framework` only");
 includes("docs/testflight-crash-triage-2026-05-07.md", crashTriageBuild42Failed, "TurboModule startup");
 includes("apps/mobile/package.json", mobilePackage, "\"main\": \"expo-router/entry\"");
-includes("apps/mobile/app.json", mobileAppConfig, "\"CFBundleName\": \"초대장허브\"");
+includes("apps/mobile/app.json", mobileAppConfig, `"name": "${expectedCurrentCandidate.displayName}"`);
+includes("apps/mobile/app.json", mobileAppConfig, `"version": "${expectedCurrentCandidate.appVersion}"`);
+includes("apps/mobile/app.json", mobileAppConfig, `"CFBundleName": "${expectedCurrentCandidate.displayName}"`);
 includes("apps/mobile/index.js", mobileEntry, "expo-router/entry");
 notIncludes("apps/mobile/index.js", mobileEntry, "require.context");
 notIncludes("apps/mobile/index.js", mobileEntry, "ExpoRoot");
@@ -419,7 +525,8 @@ includes(
   `CURRENT_PROJECT_VERSION = ${currentNativeBuildNumber}`
 );
 includes("apps/mobile/ios/InviteHub/Info.plist", iosInfoPlist, "<key>CFBundleName</key>");
-includes("apps/mobile/ios/InviteHub/Info.plist", iosInfoPlist, "<string>초대장허브</string>");
+includes("apps/mobile/ios/InviteHub/Info.plist", iosInfoPlist, `<string>${expectedCurrentCandidate.displayName}</string>`);
+includes("apps/mobile/ios/InviteHub/Info.plist", iosInfoPlist, `<string>${expectedCurrentCandidate.appVersion}</string>`);
 includes("apps/mobile/ios/Podfile.properties.json", iosPodfileProperties, "\"ios.buildReactNativeFromSource\": \"true\"");
 notIncludes(
   "apps/mobile/ios/Podfile.lock",
@@ -501,7 +608,8 @@ if (failures.length > 0) {
 console.log("APP STORE PACKET VERIFY RESULT");
 console.log("- Status: pass");
 console.log(`- Checks: ${checks.length}`);
-console.log(`- Latest Built Candidate: ${expectedBuild49.appVersion} (${expectedBuild49.buildNumber})`);
-console.log(`- Latest EAS Build: ${expectedBuild49.buildId}`);
-console.log("- Device Verdict: builds 42 and 46 failed real iPhone launch evidence; build 49 still needs TestFlight real-device smoke proof.");
-console.log("- Required follow-up: pass the build 49 real iPhone smoke test, then finish Apple-side metadata/build selection evidence. Android remains blocked on Play Console account creation and service-account setup.");
+console.log(`- Latest Built Candidate: ${expectedCurrentCandidate.appVersion} (${expectedCurrentCandidate.buildNumber})`);
+console.log(`- Latest EAS Build: ${expectedCurrentCandidate.buildId}`);
+console.log("- External Verdict: EAS build and submission are FINISHED; current App Store Connect and TestFlight-group state is unverified while signed out without API credentials.");
+console.log("- Device Verdict: a developer app with matching 1.0.3 (66) metadata is installed, but launch smoke is blocked and neither EAS artifact identity nor TestFlight provenance is proven.");
+console.log("- Required follow-up: unlock the cabled iPhone and sign in to App Store Connect, then install through TestFlight and refresh live state and candidate smoke evidence. Do not submit for App Review.");

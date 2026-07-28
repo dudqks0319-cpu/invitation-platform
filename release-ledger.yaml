@@ -1,11 +1,11 @@
-updated_at: "2026-07-26T16:59:00+09:00"
+updated_at: "2026-07-28T17:52:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
 project:
   name: osamosam
   release_workspace: "/Users/jyb-m3max/Desktop/codex/invitation-platform/.worktrees/osamosam-appstore-submit-20260724"
-phase: uploaded_apple_processing
+phase: developer_install_metadata_match_device_smoke_blocked
 version: "1.0.3"
 build_number: "66"
 git_sha: "533aec35178b185b4ab04a76e2c2819b83208056"
@@ -22,9 +22,13 @@ candidate:
   eas_build_state: finished
   eas_submit_id: "90000462-1a28-424d-a496-bef9ad8d7f41"
   eas_submit_state: finished
-  app_store_connect_state: uploaded_processing
-  testflight_state: apple_processing
-  real_device_result: pending_apple_processing
+  artifact_bytes: 176900378
+  artifact_sha256: "b065a732e3c51963bad999c9acd248c34ec1c5b7f43b816d643e588dcace4854"
+  artifact_frameworks: "hermesvm.framework only; RevenueCat/Purchases absent"
+  eas_paid_publish_flag: absent_defaults_false
+  app_store_connect_state: uploaded_live_state_unverified_signed_out
+  testflight_state: internal_group_state_unverified_signed_out
+  real_device_result: metadata_match_1_0_3_66_artifact_unproven_launch_blocked_device_locked
   app_review_state: not_submitted
   superseded_builds:
     - 62
@@ -48,7 +52,7 @@ superseded_testflight_candidate:
   selected_for_review: false
   reason: "Predates the final single-preview, curated-artwork, balanced-preview typography, and bundled Gowun Batang/Pretendard fixes."
 verification:
-  full_tests: "101 files / 466 tests passed"
+  full_tests: "105 files / 485 tests passed on 2026-07-28"
   lint: passed
   root_typecheck: passed
   mobile_typecheck: passed
@@ -64,43 +68,61 @@ verification:
   eas_archive_assets: "150/150 static template asset references present"
   production_ios_metro_bundle: "1,445 modules / 204 assets / passed"
   store_screenshots: "2 files / 1206x2622 / passed"
+  app_store_packet_verifier: "322 checks passed"
+  build66_device_evidence_verifier: "passed for connected physical iPhone 12 Pro / metadata match 1.0.3 (66); artifact identity unproven"
   runtime_critical_dependency_advisories: 0
-  clean_build_full_tree_advisories: "18 total including 1 critical in development tooling tree"
+  offline_full_tree_advisories: "0 as of 2026-07-28; fresh online registry audit not authorized"
+  previous_recorded_full_tree_advisories: "18 total including 1 critical; remains open until authorized live registry audit or evidence-backed closure"
 local_checks:
-  tests: "466/466 passed"
+  tests: "485/485 passed"
   lint: passed
   typecheck: passed
+  release_harness_strict: "pass for document shape; shared harness phase output remains unknown"
+  repository_release_gate: "blocked as designed when online audit and iOS build are skipped; readonly worktree trust root, canonical evidence override rejection, and behavioral fail-closed tests pass"
 runtime_checks:
   simulator_release_launch: passed
-  real_iphone_installed_build: 63
-  real_iphone_exact_new_build: pending_build
+  real_iphone_device: "iPhone 12 Pro / iOS 26.5.2 / wired"
+  real_iphone_installed_build: 66
+  real_iphone_installed_version: "1.0.3"
+  real_iphone_install_provenance: developer_app_not_testflight
+  real_iphone_artifact_identity: unproven_developer_install
+  real_iphone_metadata_match: installed_1_0_3_66_launch_blocked_device_locked
+  real_iphone_evidence: "output/testflight-device-evidence/20260728-iphone12pro-readonly"
 external_checks:
-  eas_build: finished_build_66
+  eas_build: live_verified_finished_build_66_2026_07_28
+  eas_submission: live_verified_finished_no_error_2026_07_28
+  eas_artifact_identity: "Info.plist 오삼오삼 / com.invitehub.app / 1.0.3 (66)"
+  eas_free_only_artifact: "paid publish flag absent/default false; RevenueCat/Purchases frameworks absent"
   app_store_connect_upload: completed_for_build_66
-  apple_processing: in_progress_for_build_66
-  testflight: pending_apple_processing_for_build_66
+  apple_processing: live_unverified_missing_credentials_and_signed_out
+  testflight: internal_group_live_unverified_signed_out
   app_review: not_submitted
   public_release: "1.0.2"
 security:
   repository_credential_files_created: false
-  runtime_dependency_vulnerabilities: 0
-  unresolved_dev_tool_critical_advisories: 1
+  runtime_dependency_vulnerabilities_offline: 0
+  full_tree_dependency_vulnerabilities_offline: 0
+  previous_recorded_dev_tool_critical_advisories_open: 1
+  online_registry_audit: blocked_pending_explicit_dependency_graph_transmission_authorization
 blockers:
   - id: dependency-advisories
     severity: P1
-    status: open
+    status: blocked_external_authorization
     owner: engineering-owner
-    due: before-app-review
+    due: "2026-07-29"
+    evidence: "offline runtime/full-tree audit 0; online audit not authorized"
   - id: real-device-smoke
     severity: P1
-    status: open
+    status: blocked_device_locked
     owner: release-owner
-    due: before-app-review-build-selection
-  - id: apple-processing
+    due: "2026-07-28"
+    evidence: "developer app metadata matches 1.0.3 (66), but artifact identity is unproven and launch request was denied because device was locked"
+  - id: apple-live-state
     severity: P1
-    status: open
+    status: blocked_external_login
     owner: release-owner
-    due: before-testflight-assignment
+    due: "2026-07-28"
+    evidence: "ASC API credential absent; Chrome and in-app browser signed out"
 next_action:
-  summary: "Wait for Apple to finish processing exact Build 66. Do not submit it for App Review. After processing and explicit approval, assign Build 66 to the internal TestFlight group and run exact-build iPhone smoke."
-  command: "none (await Apple processing and explicit approval before TestFlight group assignment)"
+  summary: "Unlock the cabled iPhone 12 Pro and sign in to App Store Connect. Rerun the developer-build launch, then install Build 66 through TestFlight and verify candidate provenance and smoke. Do not submit for App Review."
+  command: "OUT_DIR=output/testflight-device-evidence/next-build66-launch bash scripts/collect-testflight-device-evidence.sh --launch"
