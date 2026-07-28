@@ -92,15 +92,19 @@ const expectedBuild49 = {
 };
 const expectedCurrentCandidate = {
   appVersion: "1.0.3",
+  buildNumber: "67",
+  sourceCommit: "0196fb4a337e1b894af93d3c9b1374d0cfd30783",
+  buildId: "616d9c95-7189-4a76-8751-9d8ed947c833",
+  artifactBytes: "176900384",
+  artifactBytesFormatted: "176,900,384",
+  artifactSha256:
+    "356de45d57c46bbf31f88a63cc743a193c5dd29490da310d3dce1409f8f0482e",
+  displayName: "오삼오삼"
+};
+const expectedUploadedCandidate = {
   buildNumber: "66",
-  sourceCommit: "533aec35178b185b4ab04a76e2c2819b83208056",
   buildId: "b1a187d7-0776-4dd0-b648-9685edbb7760",
   submissionId: "90000462-1a28-424d-a496-bef9ad8d7f41",
-  artifactBytes: "176900378",
-  artifactBytesFormatted: "176,900,378",
-  artifactSha256:
-    "b065a732e3c51963bad999c9acd248c34ec1c5b7f43b816d643e588dcace4854",
-  displayName: "오삼오삼"
 };
 
 const checks = [];
@@ -407,11 +411,11 @@ includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "
 includes("docs/current-release-state.md", currentReleaseState, `Local candidate | \`${expectedCurrentCandidate.appVersion} (${expectedCurrentCandidate.buildNumber})\``);
 includes("docs/current-release-state.md", currentReleaseState, expectedCurrentCandidate.sourceCommit);
 includes("docs/current-release-state.md", currentReleaseState, expectedCurrentCandidate.buildId);
-includes("docs/current-release-state.md", currentReleaseState, expectedCurrentCandidate.submissionId);
 includes("docs/current-release-state.md", currentReleaseState, expectedCurrentCandidate.artifactBytesFormatted);
 includes("docs/current-release-state.md", currentReleaseState, expectedCurrentCandidate.artifactSha256);
-includes("docs/current-release-state.md", currentReleaseState, "EAS build state | 2026-07-28 live 재조회 `FINISHED`");
-includes("docs/current-release-state.md", currentReleaseState, "live 재조회 `FINISHED`, error 없음");
+includes("docs/current-release-state.md", currentReleaseState, expectedUploadedCandidate.submissionId);
+includes("docs/current-release-state.md", currentReleaseState, "Build 67 `FINISHED`");
+includes("docs/current-release-state.md", currentReleaseState, "Build 67은 아직 App Store Connect에 업로드하지 않음");
 includes("docs/current-release-state.md", currentReleaseState, "Chrome authenticated live 확인");
 includes("docs/current-release-state.md", currentReleaseState, "Build 66 `제출 준비 완료`");
 includes("docs/current-release-state.md", currentReleaseState, "`Team (Expo)` 그룹 1개·테스터 1명");
@@ -424,26 +428,28 @@ includes("docs/current-release-state.md", currentReleaseState, "`InviteHub.app/I
 includes("docs/current-release-state.md", currentReleaseState, "Do not select Builds 62, 63, or 64");
 includes("docs/current-release-state.md", currentReleaseState, "App Review state | Not submitted");
 includes("docs/current-release-state.md", currentReleaseState, "Public release state | Still `1.0.2`; no 1.0.3 public rollout");
-includes("RELEASE_STATUS.md", releaseStatus, "`1.0.3 (66)`");
+includes("RELEASE_STATUS.md", releaseStatus, `\`${expectedCurrentCandidate.appVersion} (${expectedCurrentCandidate.buildNumber})\``);
 includes("RELEASE_STATUS.md", releaseStatus, expectedCurrentCandidate.sourceCommit.slice(0, 7));
 includes("RELEASE_STATUS.md", releaseStatus, expectedCurrentCandidate.buildId);
-includes("RELEASE_STATUS.md", releaseStatus, expectedCurrentCandidate.submissionId);
 includes("RELEASE_STATUS.md", releaseStatus, expectedCurrentCandidate.artifactBytesFormatted);
 includes("RELEASE_STATUS.md", releaseStatus, expectedCurrentCandidate.artifactSha256);
+includes("RELEASE_STATUS.md", releaseStatus, expectedUploadedCandidate.submissionId);
 includes("RELEASE_STATUS.md", releaseStatus, "not proof of the EAS IPA binary");
 includes("RELEASE_STATUS.md", releaseStatus, "App Review: not submitted");
 includes("RELEASE_STATUS.md", releaseStatus, "Public App Store: still `1.0.2`");
+includes("RELEASE_STATUS.md", releaseStatus, "`com.invitehub.app.dev` was moved to deleted apps");
 includes("release-ledger.yaml", releaseLedger, `version: "${expectedCurrentCandidate.appVersion}"`);
 includes("release-ledger.yaml", releaseLedger, `build_number: "${expectedCurrentCandidate.buildNumber}"`);
 includes("release-ledger.yaml", releaseLedger, expectedCurrentCandidate.sourceCommit);
 includes("release-ledger.yaml", releaseLedger, expectedCurrentCandidate.buildId);
-includes("release-ledger.yaml", releaseLedger, expectedCurrentCandidate.submissionId);
 includes("release-ledger.yaml", releaseLedger, `artifact_bytes: ${expectedCurrentCandidate.artifactBytes}`);
 includes("release-ledger.yaml", releaseLedger, `artifact_sha256: "${expectedCurrentCandidate.artifactSha256}"`);
 includes("release-ledger.yaml", releaseLedger, "eas_build_state: finished");
-includes("release-ledger.yaml", releaseLedger, "eas_submit_state: finished");
-includes("release-ledger.yaml", releaseLedger, "app_store_connect_state: live_verified_1_0_3_prepare_for_submission_no_build_selected");
-includes("release-ledger.yaml", releaseLedger, "testflight_state: build_66_ready_to_submit_internal_group_1_tester_installs_2");
+includes("release-ledger.yaml", releaseLedger, "eas_submit_state: not_started");
+includes("release-ledger.yaml", releaseLedger, "app_store_connect_state: build_67_not_uploaded_build_66_ready_to_submit");
+includes("release-ledger.yaml", releaseLedger, "testflight_state: build_67_not_uploaded_build_66_internal_group");
+includes("release-ledger.yaml", releaseLedger, expectedUploadedCandidate.submissionId);
+includes("release-ledger.yaml", releaseLedger, "eas_submission: not_started_for_build_67");
 includes(
   "release-ledger.yaml",
   releaseLedger,
@@ -629,6 +635,6 @@ console.log("- Status: pass");
 console.log(`- Checks: ${checks.length}`);
 console.log(`- Latest Built Candidate: ${expectedCurrentCandidate.appVersion} (${expectedCurrentCandidate.buildNumber})`);
 console.log(`- Latest EAS Build: ${expectedCurrentCandidate.buildId}`);
-console.log("- External Verdict: EAS build and submission are FINISHED; authenticated App Store Connect confirms Build 66 ready to submit and assigned to Team (Expo), while App Review has no build selected.");
-console.log("- Device Verdict: the metadata-matching developer app 1.0.3 (66) launched and remained running on the cabled iPhone; EAS artifact identity and TestFlight provenance are still unproven.");
-console.log("- Required follow-up: install/confirm Build 66 through TestFlight and collect exact-build on-screen smoke evidence. Update the stale Build 64 review note only with explicit approval; do not submit for App Review.");
+console.log("- External Verdict: EAS Build 67 is FINISHED and its IPA identity is verified; it has not been uploaded to App Store Connect. Build 66 remains the latest uploaded TestFlight build.");
+console.log("- Device Verdict: the installed developer app is still 1.0.3 (66); Build 67 has not been installed or smoke-tested.");
+console.log("- Required follow-up: submit Build 67 to App Store Connect only with explicit approval, then install it through TestFlight and collect exact-build on-screen smoke evidence. Do not submit for App Review.");
