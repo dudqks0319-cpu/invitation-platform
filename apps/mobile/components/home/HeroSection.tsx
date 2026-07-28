@@ -250,7 +250,9 @@ function HeroStackCard({
 export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps) {
   const { width } = useWindowDimensions();
   const { templates } = useTemplateCatalog();
-  const [selectedEventKey, setSelectedEventKey] = useState<"dol" | "hwangap" | "housewarming">("dol");
+  const [selectedEventKey, setSelectedEventKey] = useState<
+    "wedding" | "dol" | "hwangap" | "housewarming"
+  >("wedding");
   const [finishedHeroCompositeFailed, setFinishedHeroCompositeFailed] = useState(false);
   const carouselViewportWidth = Math.max(280, width - 36);
   const cardWidth = Math.min(188, Math.max(134, (carouselViewportWidth - 12) / 2));
@@ -262,24 +264,46 @@ export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps)
   const sections = getHomeTemplateSections(templates);
   const eventEntries = [
     {
+      key: "wedding" as const,
+      label: "청첩장",
+      description: "두 사람의 사진과 예식 정보를 담는 디자인",
+      preferredTemplateId: "wedding-barunson-anime-09"
+    },
+    {
       key: "dol" as const,
       label: "돌잔치",
-      description: "아이 사진과 첫돌 문구에 맞는 디자인"
+      description: "아이 사진과 첫돌 문구에 맞는 디자인",
+      preferredTemplateId: "dol-cute"
     },
     {
       key: "hwangap" as const,
       label: "환갑·칠순",
-      description: "가족 호칭과 큰 글자가 편안한 디자인"
+      description: "가족 호칭과 큰 글자가 편안한 디자인",
+      preferredTemplateId: "hwangap-anime-2026"
     },
     {
       key: "housewarming" as const,
       label: "집들이",
-      description: "주소와 일정이 또렷한 따뜻한 디자인"
+      description: "주소와 일정이 또렷한 따뜻한 디자인",
+      preferredTemplateId: "house-warm"
     }
-  ].map((entry) => ({
-    ...entry,
-    template: templates.find((template) => template.category === entry.key) ?? null
-  }));
+  ].map((entry) => {
+    const template =
+      templates.find((template) => template.id === entry.preferredTemplateId) ??
+      templates.find((template) => template.category === entry.key) ??
+      null;
+
+    return {
+      ...entry,
+      template,
+      previewSource:
+      entry.key === "wedding"
+        ? finishedHeroCompositeSource
+        : template
+          ? getTemplatePreviewSource(template)
+          : null
+    };
+  });
 
   return (
     <View
@@ -312,7 +336,6 @@ export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps)
       <View style={{ gap: 12 }}>
         {eventEntries.map((entry) => {
           const selected = selectedEventKey === entry.key;
-          const previewSource = entry.template ? getTemplatePreviewSource(entry.template) : null;
 
           return (
             <Pressable
@@ -341,12 +364,23 @@ export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps)
                 </Text>
               </View>
               <View style={{ flex: 0.85, backgroundColor: theme.colors.surfaceSoft }}>
-                {previewSource ? (
+                {entry.previewSource ? (
                   <Image
                     accessibilityIgnoresInvertColors
                     resizeMode="cover"
-                    source={previewSource}
-                    style={{ width: "100%", height: "100%" }}
+                    source={entry.previewSource}
+                    style={
+                      entry.key === "wedding"
+                        ? { width: "100%", height: "100%" }
+                        : {
+                            position: "absolute",
+                            right: 0,
+                            bottom: 0,
+                            left: 0,
+                            width: "100%",
+                            height: 244
+                          }
+                    }
                   />
                 ) : null}
               </View>
