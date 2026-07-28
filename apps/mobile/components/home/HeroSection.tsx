@@ -250,6 +250,7 @@ function HeroStackCard({
 export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps) {
   const { width } = useWindowDimensions();
   const { templates } = useTemplateCatalog();
+  const [selectedEventKey, setSelectedEventKey] = useState<"dol" | "hwangap" | "housewarming">("dol");
   const [finishedHeroCompositeFailed, setFinishedHeroCompositeFailed] = useState(false);
   const carouselViewportWidth = Math.max(280, width - 36);
   const cardWidth = Math.min(188, Math.max(134, (carouselViewportWidth - 12) / 2));
@@ -259,6 +260,26 @@ export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps)
   const heroFeaturedTemplate = heroTemplates[1] ?? heroTemplates[0];
   const finishedHeroCompositeSource = getFinishedHomeHeroCompositeSource();
   const sections = getHomeTemplateSections(templates);
+  const eventEntries = [
+    {
+      key: "dol" as const,
+      label: "돌잔치",
+      description: "아이 사진과 첫돌 문구에 맞는 디자인"
+    },
+    {
+      key: "hwangap" as const,
+      label: "환갑·칠순",
+      description: "가족 호칭과 큰 글자가 편안한 디자인"
+    },
+    {
+      key: "housewarming" as const,
+      label: "집들이",
+      description: "주소와 일정이 또렷한 따뜻한 디자인"
+    }
+  ].map((entry) => ({
+    ...entry,
+    template: templates.find((template) => template.category === entry.key) ?? null
+  }));
 
   return (
     <View
@@ -279,13 +300,76 @@ export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps)
             letterSpacing: 0
           }}
         >
-          디자인 고르고
+          어떤 초대를
           {"\n"}
-          바로 제작하세요
+          만드시나요?
         </Text>
         <Text style={{ color: theme.colors.muted, fontSize: 16, lineHeight: 26 }}>
-          청첩장부터 돌잔치, 브라이덜샤워, 환갑잔치까지.
+          행사를 고르면 문구와 기존 디자인을 추천해드려요.
         </Text>
+      </View>
+
+      <View style={{ gap: 12 }}>
+        {eventEntries.map((entry) => {
+          const selected = selectedEventKey === entry.key;
+          const previewSource = entry.template ? getTemplatePreviewSource(entry.template) : null;
+
+          return (
+            <Pressable
+              accessibilityHint="선택한 행사에 맞는 추천 디자인을 준비합니다."
+              accessibilityLabel={`${entry.label} 선택`}
+              accessibilityRole="button"
+              accessibilityState={{ selected }}
+              key={entry.key}
+              onPress={() => setSelectedEventKey(entry.key)}
+              style={({ pressed }) => ({
+                height: 132,
+                flexDirection: "row",
+                borderRadius: 20,
+                borderWidth: selected ? 2 : 1,
+                borderColor: selected ? theme.colors.primary : theme.colors.border,
+                backgroundColor: theme.colors.surface,
+                overflow: "hidden",
+                opacity: pressed ? 0.8 : 1,
+                ...theme.shadow.card
+              })}
+            >
+              <View style={{ flex: 1.15, padding: 18, gap: 7, justifyContent: "center" }}>
+                <Text style={{ color: theme.colors.ink, fontSize: 22, fontWeight: "800" }}>{entry.label}</Text>
+                <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 19 }}>
+                  {entry.description}
+                </Text>
+              </View>
+              <View style={{ flex: 0.85, backgroundColor: theme.colors.surfaceSoft }}>
+                {previewSource ? (
+                  <Image
+                    accessibilityIgnoresInvertColors
+                    resizeMode="cover"
+                    source={previewSource}
+                    style={{ width: "100%", height: "100%" }}
+                  />
+                ) : null}
+              </View>
+            </Pressable>
+          );
+        })}
+        <Pressable
+          accessibilityHint="선택한 행사에 맞는 전체 디자인 목록을 엽니다."
+          accessibilityLabel="추천 디자인 보기"
+          accessibilityRole="button"
+          onPress={() => onOpenCategory(selectedEventKey)}
+          style={({ pressed }) => ({
+            minHeight: 52,
+            borderRadius: 16,
+            backgroundColor: theme.colors.primary,
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: pressed ? 0.8 : 1,
+            ...theme.shadow.heroButton
+          })}
+        >
+          <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800" }}>추천 디자인 보기</Text>
+        </Pressable>
       </View>
 
       <View

@@ -64,6 +64,29 @@ export default function HomeScreen() {
         </View>
 
         <View style={{ paddingHorizontal: 18, paddingTop: 24 }}>
+          <Pressable
+            accessibilityHint="개발계획서의 8개 새 화면을 실제 템플릿으로 순서대로 확인합니다."
+            accessibilityLabel="새 UI 전체 흐름 보기"
+            accessibilityRole="button"
+            onPress={() => router.push("/uiux-preview")}
+            style={({ pressed }) => ({
+              minHeight: 52,
+              marginBottom: 18,
+              borderRadius: 18,
+              borderWidth: 1,
+              borderColor: theme.colors.primary,
+              backgroundColor: theme.colors.primaryLight,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: pressed ? 0.78 : 1
+            })}
+          >
+            <Text style={{ color: theme.colors.primaryDark, fontSize: 15, fontWeight: "800" }}>
+              새 UI 8개 화면 전체 보기
+            </Text>
+          </Pressable>
           <HeroSection
             onOpenCategory={(category) => {
               const entryKey = createTemplateDiscoveryEntryKey();

@@ -174,6 +174,11 @@ export default function TemplatesScreen() {
     [committedFilters, templates]
   );
   const activeFilterSummary = getTemplateDiscoveryActiveFilterSummary(committedFilters, mobileTemplateCategories);
+  const activeCategory = mobileTemplateCategories.find((category) => category.key === committedFilters.category);
+  const discoveryTitle = activeCategory ? `${activeCategory.label} 디자인` : "디자인 둘러보기";
+  const discoveryDescription = activeCategory
+    ? `${activeCategory.label}에 어울리는 기존 템플릿을 먼저 미리보고 시작하세요.`
+    : "행사와 분위기에 맞는 예시 디자인을 찾고, 카드를 눌러 먼저 미리보세요.";
   const columnCount = getTemplateDiscoveryColumnCount(fontScale);
   const cardWidth = getTemplateDiscoveryCardWidth(listWidth, fontScale);
   const resultsAreReady = source !== "loading";
@@ -283,13 +288,13 @@ export default function TemplatesScreen() {
           <Text style={{ color: theme.colors.text, fontSize: 18, fontWeight: "700" }}>‹</Text>
         </Pressable>
         <Text style={{ flexShrink: 1, color: theme.colors.text, fontSize: 24, fontWeight: "800", textAlign: "center" }}>
-          디자인 둘러보기
+          {discoveryTitle}
         </Text>
         <View style={{ width: 44 }} />
       </View>
 
       <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24 }}>
-        행사와 분위기에 맞는 예시 디자인을 찾고, 카드를 눌러 먼저 미리보세요.
+        {discoveryDescription}
       </Text>
 
       <CatalogStatus
