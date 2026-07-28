@@ -1,11 +1,12 @@
-updated_at: "2026-07-28T17:56:00+09:00"
+updated_at: "2026-07-28T18:02:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
 project:
   name: osamosam
   release_workspace: "/Users/jyb-m3max/Desktop/codex/invitation-platform/.worktrees/osamosam-appstore-submit-20260724"
-phase: developer_install_metadata_match_device_smoke_blocked
+phase: blocked_external_user_action_required
+goal_status: blocked_external_user_action_required
 version: "1.0.3"
 build_number: "66"
 git_sha: "533aec35178b185b4ab04a76e2c2819b83208056"
@@ -28,7 +29,7 @@ candidate:
   eas_paid_publish_flag: absent_defaults_false
   app_store_connect_state: uploaded_live_state_unverified_signed_out
   testflight_state: internal_group_state_unverified_signed_out
-  real_device_result: metadata_match_1_0_3_66_artifact_unproven_launch_blocked_device_locked
+  real_device_result: metadata_match_1_0_3_66_artifact_unproven_coredevice_unavailable
   app_review_state: not_submitted
   superseded_builds:
     - 62
@@ -68,7 +69,7 @@ verification:
   eas_archive_assets: "150/150 static template asset references present"
   production_ios_metro_bundle: "1,445 modules / 204 assets / passed"
   store_screenshots: "2 files / 1206x2622 / passed"
-  app_store_packet_verifier: "323 checks passed"
+  app_store_packet_verifier: "324 checks passed"
   build66_device_evidence_verifier: "passed for connected physical iPhone 12 Pro / metadata match 1.0.3 (66); artifact identity unproven"
   runtime_critical_dependency_advisories: 0
   offline_full_tree_advisories: "0 as of 2026-07-28; fresh online registry audit not authorized"
@@ -86,7 +87,7 @@ runtime_checks:
   real_iphone_installed_version: "1.0.3"
   real_iphone_install_provenance: developer_app_not_testflight
   real_iphone_artifact_identity: unproven_developer_install
-  real_iphone_metadata_match: installed_1_0_3_66_launch_blocked_device_locked
+  real_iphone_metadata_match: installed_1_0_3_66_coredevice_unavailable_prior_launch_locked
   real_iphone_evidence: "output/testflight-device-evidence/20260728-iphone12pro-readonly"
 external_checks:
   eas_build: live_verified_finished_build_66_2026_07_28
@@ -113,16 +114,16 @@ blockers:
     evidence: "offline runtime/full-tree audit 0; online audit not authorized"
   - id: real-device-smoke
     severity: P1
-    status: blocked_device_locked
+    status: blocked_coredevice_service_and_user_unlock
     owner: release-owner
     due: "2026-07-28"
-    evidence: "developer app metadata matches 1.0.3 (66), but artifact identity is unproven; last launch was denied because the device was locked, and two later lock-state queries failed during CoreDeviceService initialization"
+    evidence: "developer app metadata matches 1.0.3 (66), but artifact identity is unproven; last launch was denied because the device was locked, and three consecutive continuation turns ended with CoreDeviceService initialization timeout before current lock-state could be read"
   - id: apple-live-state
     severity: P1
     status: blocked_external_login
     owner: release-owner
     due: "2026-07-28"
-    evidence: "ASC API credential absent; Chrome and in-app browser signed out"
+    evidence: "2026-07-28 18:02 KST: all checked ASC API credential variables absent; in-app browser remains at https://appstoreconnect.apple.com/login"
 next_action:
   summary: "Unlock the cabled iPhone 12 Pro and sign in to App Store Connect. Rerun the developer-build launch, then install Build 66 through TestFlight and verify candidate provenance and smoke. Do not submit for App Review."
   command: "OUT_DIR=output/testflight-device-evidence/next-build66-launch bash scripts/collect-testflight-device-evidence.sh --launch"

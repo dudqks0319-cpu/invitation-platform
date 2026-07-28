@@ -437,12 +437,17 @@ includes("release-ledger.yaml", releaseLedger, "testflight_state: internal_group
 includes(
   "release-ledger.yaml",
   releaseLedger,
-  "phase: developer_install_metadata_match_device_smoke_blocked"
+  "phase: blocked_external_user_action_required"
 );
 includes(
   "release-ledger.yaml",
   releaseLedger,
-  "real_device_result: metadata_match_1_0_3_66_artifact_unproven_launch_blocked_device_locked"
+  "goal_status: blocked_external_user_action_required"
+);
+includes(
+  "release-ledger.yaml",
+  releaseLedger,
+  "real_device_result: metadata_match_1_0_3_66_artifact_unproven_coredevice_unavailable"
 );
 includes("release-ledger.yaml", releaseLedger, "real_iphone_install_provenance: developer_app_not_testflight");
 includes("release-ledger.yaml", releaseLedger, "real_iphone_artifact_identity: unproven_developer_install");

@@ -115,7 +115,7 @@ describe("App Store packet verifier", () => {
   it("rejects an exact-build-installed claim without artifact provenance", () => {
     const path = mutatedCopy(
       "release-ledger.yaml",
-      "phase: developer_install_metadata_match_device_smoke_blocked",
+      "phase: blocked_external_user_action_required",
       "phase: exact_build_installed_device_smoke_blocked"
     );
 
@@ -123,7 +123,7 @@ describe("App Store packet verifier", () => {
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain(
-      "release-ledger.yaml: expected to include phase: developer_install_metadata_match_device_smoke_blocked"
+      "release-ledger.yaml: expected to include phase: blocked_external_user_action_required"
     );
   });
 
