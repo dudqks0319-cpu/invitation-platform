@@ -409,7 +409,8 @@ includes("docs/current-release-state.md", currentReleaseState, "Build 66의 현�
 includes("docs/current-release-state.md", currentReleaseState, "`com.invitehub.app` `1.0.3 (66)` 설치 확인");
 includes("docs/current-release-state.md", currentReleaseState, "`builtByDeveloper=true`라 TestFlight 설치 증거는 아님");
 includes("docs/current-release-state.md", currentReleaseState, "EAS IPA와 동일 바이너리라는 증거도 아님");
-includes("docs/current-release-state.md", currentReleaseState, "launch는 기기 잠금으로 거절되어 smoke 미완");
+includes("docs/current-release-state.md", currentReleaseState, "마지막 launch는 기기 잠금으로 거절됨");
+includes("docs/current-release-state.md", currentReleaseState, "CoreDeviceService 초기화 timeout");
 includes("docs/current-release-state.md", currentReleaseState, "Do not select Builds 62, 63, or 64");
 includes("docs/current-release-state.md", currentReleaseState, "App Review state | Not submitted");
 includes("docs/current-release-state.md", currentReleaseState, "Public release state | Still `1.0.2`; no 1.0.3 public rollout");

@@ -22,7 +22,7 @@ Canonical status: [docs/current-release-state.md](docs/current-release-state.md)
   online advisory lookup was not authorized, so registry-current CVE coverage
   remains open
 - Local release controls: `105/105` test files and `485/485` tests pass;
-  root/mobile lint and typecheck pass; Build 66 packet verifier passes 322 checks.
+  root/mobile lint and typecheck pass; Build 66 packet verifier passes 323 checks.
   The repository release gate now defaults to the active worktree and reports
   `blocked` when the online audit or iOS build is skipped instead of returning
   a false pass. It rejects alternate trust-root and canonical-evidence path

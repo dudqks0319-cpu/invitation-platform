@@ -1,4 +1,4 @@
-updated_at: "2026-07-28T17:52:00+09:00"
+updated_at: "2026-07-28T17:56:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
@@ -68,7 +68,7 @@ verification:
   eas_archive_assets: "150/150 static template asset references present"
   production_ios_metro_bundle: "1,445 modules / 204 assets / passed"
   store_screenshots: "2 files / 1206x2622 / passed"
-  app_store_packet_verifier: "322 checks passed"
+  app_store_packet_verifier: "323 checks passed"
   build66_device_evidence_verifier: "passed for connected physical iPhone 12 Pro / metadata match 1.0.3 (66); artifact identity unproven"
   runtime_critical_dependency_advisories: 0
   offline_full_tree_advisories: "0 as of 2026-07-28; fresh online registry audit not authorized"
@@ -116,7 +116,7 @@ blockers:
     status: blocked_device_locked
     owner: release-owner
     due: "2026-07-28"
-    evidence: "developer app metadata matches 1.0.3 (66), but artifact identity is unproven and launch request was denied because device was locked"
+    evidence: "developer app metadata matches 1.0.3 (66), but artifact identity is unproven; last launch was denied because the device was locked, and two later lock-state queries failed during CoreDeviceService initialization"
   - id: apple-live-state
     severity: P1
     status: blocked_external_login
