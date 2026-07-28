@@ -412,8 +412,10 @@ includes("docs/current-release-state.md", currentReleaseState, expectedCurrentCa
 includes("docs/current-release-state.md", currentReleaseState, expectedCurrentCandidate.artifactSha256);
 includes("docs/current-release-state.md", currentReleaseState, "EAS build state | 2026-07-28 live 재조회 `FINISHED`");
 includes("docs/current-release-state.md", currentReleaseState, "live 재조회 `FINISHED`, error 없음");
-includes("docs/current-release-state.md", currentReleaseState, "Apple processing live 상태는 미확인");
-includes("docs/current-release-state.md", currentReleaseState, "Build 66의 현재 internal-group 배정은 ASC signed-out 상태라 미확인");
+includes("docs/current-release-state.md", currentReleaseState, "Chrome authenticated live 확인");
+includes("docs/current-release-state.md", currentReleaseState, "Build 66 `제출 준비 완료`");
+includes("docs/current-release-state.md", currentReleaseState, "`Team (Expo)` 그룹 1개·테스터 1명");
+includes("docs/current-release-state.md", currentReleaseState, "심사 메모는 아직 Build 64로 표기");
 includes("docs/current-release-state.md", currentReleaseState, "`com.invitehub.app` `1.0.3 (66)` 설치 확인");
 includes("docs/current-release-state.md", currentReleaseState, "`builtByDeveloper=true`라 TestFlight 설치 증거는 아님");
 includes("docs/current-release-state.md", currentReleaseState, "EAS IPA와 동일 바이너리라는 증거도 아님");
@@ -440,8 +442,8 @@ includes("release-ledger.yaml", releaseLedger, `artifact_bytes: ${expectedCurren
 includes("release-ledger.yaml", releaseLedger, `artifact_sha256: "${expectedCurrentCandidate.artifactSha256}"`);
 includes("release-ledger.yaml", releaseLedger, "eas_build_state: finished");
 includes("release-ledger.yaml", releaseLedger, "eas_submit_state: finished");
-includes("release-ledger.yaml", releaseLedger, "app_store_connect_state: uploaded_live_state_unverified_signed_out");
-includes("release-ledger.yaml", releaseLedger, "testflight_state: internal_group_state_unverified_signed_out");
+includes("release-ledger.yaml", releaseLedger, "app_store_connect_state: live_verified_1_0_3_prepare_for_submission_no_build_selected");
+includes("release-ledger.yaml", releaseLedger, "testflight_state: build_66_ready_to_submit_internal_group_1_tester_installs_2");
 includes(
   "release-ledger.yaml",
   releaseLedger,
@@ -627,6 +629,6 @@ console.log("- Status: pass");
 console.log(`- Checks: ${checks.length}`);
 console.log(`- Latest Built Candidate: ${expectedCurrentCandidate.appVersion} (${expectedCurrentCandidate.buildNumber})`);
 console.log(`- Latest EAS Build: ${expectedCurrentCandidate.buildId}`);
-console.log("- External Verdict: EAS build and submission are FINISHED; current App Store Connect and TestFlight-group state is unverified while signed out without API credentials.");
+console.log("- External Verdict: EAS build and submission are FINISHED; authenticated App Store Connect confirms Build 66 ready to submit and assigned to Team (Expo), while App Review has no build selected.");
 console.log("- Device Verdict: a developer app with matching 1.0.3 (66) metadata is installed, but launch smoke is blocked and neither EAS artifact identity nor TestFlight provenance is proven.");
-console.log("- Required follow-up: unlock the cabled iPhone and sign in to App Store Connect, then install through TestFlight and refresh live state and candidate smoke evidence. Do not submit for App Review.");
+console.log("- Required follow-up: unlock the cabled iPhone, install/confirm Build 66 through TestFlight, and collect exact-build smoke evidence. Update the stale Build 64 review note only with explicit approval; do not submit for App Review.");

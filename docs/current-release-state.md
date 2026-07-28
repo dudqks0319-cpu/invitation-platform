@@ -1,6 +1,6 @@
 # 오삼오삼 iOS 현재 릴리스 상태
 
-Last updated: 2026-07-28 18:09 KST
+Last updated: 2026-07-28 18:18 KST
 
 이 문서는 iOS App Store 릴리스의 단일 현재 상태 원장이다. 로컬 코드,
 EAS 빌드, App Store Connect 처리, TestFlight, 실기기 검증, 앱 심사를
@@ -33,15 +33,15 @@ EAS 빌드, App Store Connect 처리, TestFlight, 실기기 검증, 앱 심사�
 | Free-only artifact check | EAS production env에 `EXPO_PUBLIC_ENABLE_PAID_PUBLISH`가 없어 default false. IPA Frameworks에는 `hermesvm.framework`만 있고 RevenueCat/Purchases framework 없음 |
 | Failed build | Build 65 (`945fad1a-f595-4472-9500-8ecc713b3663`) produced no IPA because four curated PNGs were excluded from the EAS archive; fixed in `533aec3` |
 | Superseded builds | Builds 62, 63, and 64 must not be selected for review; Build 64 predates the final single-preview, curated-artwork, balanced-preview typography, and bundled Gowun Batang/Pretendard fixes |
-| App Store Connect version | iOS `1.0.3`; Build 66 upload는 EAS에서 확인. API credential 부재와 Chrome/in-app browser 모두 signed-out 상태라 2026-07-28 Apple processing live 상태는 미확인 |
-| App Store metadata | Release notes and review notes saved for Build 64; automatic release mode unchanged |
+| App Store Connect version | 2026-07-28 18:18 KST Chrome authenticated live 확인: iOS `1.0.3` `제출 준비 중`. Build 66은 Apple processing 완료 후 TestFlight에서 `제출 준비 완료` |
+| App Store metadata | 릴리스 노트는 1.0.3 후보 내용을 포함하지만 심사 메모는 아직 Build 64로 표기. 자동 출시가 선택되어 있으므로 심사 제출 전 Build 66 기준 메모 수정과 출시 방식 재확인 필요 |
 | App Store build selection | No build selected; Builds 62, 63, and 64 remain excluded |
-| TestFlight result | 과거 Build 64 `제출 준비 완료` 기록은 superseded. Build 66의 현재 internal-group 배정은 ASC signed-out 상태라 미확인. 연결 iPhone에는 TestFlight 앱이 설치되어 있지 않음 |
+| TestFlight result | Chrome authenticated live 확인: Build 66 `제출 준비 완료`, 내부 `Team (Expo)` 그룹 1개·테스터 1명에 배정, 초대 1·설치 2 표시. 연결 iPhone에서 해당 TestFlight 설치 provenance는 아직 미확인 |
 | Real-device result | 케이블 연결 iPhone 12 Pro(iOS 26.5.2)에 `com.invitehub.app` `1.0.3 (66)` 설치 확인. `builtByDeveloper=true`라 TestFlight 설치 증거는 아님. EAS IPA와 동일 바이너리라는 증거도 아님. 마지막 launch는 기기 잠금으로 거절됨. 18:09 재개 시 Xcode `xctrace`는 iOS 26.5.2 iPhone을 online device로 확인했지만 `devicectl`은 CoreDeviceService 정상 종료·자동 재시작 후에도 `CoreDeviceService 초기화 timeout`. Mobile MCP에는 simulator만 표시되어 current lock/app/launch smoke는 계속 미완 |
-| Release-control tooling | App Store packet verifier 324 checks가 상태 문서·원장·IPA SHA/크기를 교차 확인. repo release gate는 script가 속한 active worktree를 readonly trust root로 사용하고 alternate root/canonical-evidence env override를 거부하며, online audit 또는 iOS build skip 시 false pass 대신 `blocked`/exit 2. current real-iPhone verifier는 connected physical device와 `1.0.3 (66)` 메타데이터 일치만 확인하며, stale capture, 수집·launch 실패, 실패 outcome, launch 후 빈 process를 fail-closed 처리 |
+| Release-control tooling | App Store packet verifier 326 checks가 상태 문서·원장·IPA SHA/크기를 교차 확인. repo release gate는 script가 속한 active worktree를 readonly trust root로 사용하고 alternate root/canonical-evidence env override를 거부하며, online audit 또는 iOS build skip 시 false pass 대신 `blocked`/exit 2. current real-iPhone verifier는 connected physical device와 `1.0.3 (66)` 메타데이터 일치만 확인하며, stale capture, 수집·launch 실패, 실패 outcome, launch 후 빈 process를 fail-closed 처리 |
 | App Review state | Not submitted; `심사에 추가` and final submission remain gated |
 | Public release state | Still `1.0.2`; no 1.0.3 public rollout |
-| Goal continuation state | 사용자 재개 후 blocked audit turn 1. 2026-07-28 18:09 KST에도 ASC credential 없음, in-app browser가 Apple 계정 이메일 입력 화면, CoreDeviceService timeout 반복. 브라우저 로그인·CoreDevice 연결 복구·online audit 명시 승인 필요 |
+| Goal continuation state | 사용자 재개 후 blocked audit turn 1. Chrome 로그인으로 Apple/TestFlight live 상태는 확인 완료. 남은 차단은 CoreDevice 연결 복구, Build 66 실기기 TestFlight smoke, online audit 명시 승인, App Review 전 Build 선택·심사 메모 갱신 |
 
 ## Current verdict
 
@@ -68,10 +68,11 @@ single-preview, curated-artwork, balanced-preview typography, and bundled
 Gowun Batang/Pretendard fixes, so it is superseded and must not be selected. A
 Build 66 was uploaded successfully to App Store Connect under EAS submission
 `90000462-1a28-424d-a496-bef9ad8d7f41`. A 2026-07-28 EAS live lookup reconfirmed
-the build and submission as `FINISHED`, with no submission error. The current
-Apple processing and internal TestFlight-group state could not be refreshed:
-the repository has no App Store Connect API credential and both browser
-sessions are signed out.
+the build and submission as `FINISHED`, with no submission error. A
+2026-07-28 18:18 KST authenticated Chrome check confirmed Build 66 as
+`제출 준비 완료` in TestFlight and assigned to the internal `Team (Expo)` group
+with one tester. App Store version 1.0.3 is still `제출 준비 중`; no build is
+selected for App Review, and the review note still identifies Build 64.
 
 The same live EAS build record exposed the Build 66 IPA. Its SHA-256 is
 `b065a732e3c51963bad999c9acd248c34ec1c5b7f43b816d643e588dcace4854`;
@@ -102,12 +103,11 @@ remain open.
 ## Remaining release gates
 
 1. Unlock the connected iPhone 12 Pro, keep the cable attached, and rerun the metadata-matching developer build launch.
-2. Sign in to App Store Connect or provide approved read-only API credentials, then refresh Build 66 processing and internal-group state.
-3. If Build 66 is not in the internal group, assign it only after explicit approval; do not use Builds 62, 63, or 64.
-4. Install/confirm Build 66 through TestFlight and preserve provenance evidence.
-5. Install the EAS candidate through TestFlight, then verify launch, login, latest-template ordering, one-template preview, enlarged text placement, free publish/share, relaunch, network recovery, and deep link.
-6. Run a fresh online dependency advisory lookup only after explicit authorization to send the dependency graph to the registry.
-7. Add the version to App Review and submit only after the exact-build smoke and a separate explicit user approval.
+2. Install/confirm Build 66 through TestFlight on the connected iPhone and preserve provenance evidence.
+3. Verify launch, login, latest-template ordering, one-template preview, enlarged text placement, free publish/share, relaunch, network recovery, and deep link.
+4. Run a fresh online dependency advisory lookup only after explicit authorization to send the dependency graph to the registry.
+5. Before App Review, select only Build 66, update the review note from Build 64 to Build 66, and reconfirm the currently selected automatic release mode.
+6. Add the version to App Review and submit only after the exact-build smoke and a separate explicit user approval.
 
 ## Stop conditions
 
