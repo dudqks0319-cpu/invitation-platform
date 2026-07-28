@@ -1,4 +1,4 @@
-updated_at: "2026-07-28T18:02:00+09:00"
+updated_at: "2026-07-28T18:09:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
@@ -6,7 +6,7 @@ project:
   name: osamosam
   release_workspace: "/Users/jyb-m3max/Desktop/codex/invitation-platform/.worktrees/osamosam-appstore-submit-20260724"
 phase: blocked_external_user_action_required
-goal_status: blocked_external_user_action_required
+goal_status: resumed_blocked_audit_turn_1
 version: "1.0.3"
 build_number: "66"
 git_sha: "533aec35178b185b4ab04a76e2c2819b83208056"
@@ -117,13 +117,13 @@ blockers:
     status: blocked_coredevice_service_and_user_unlock
     owner: release-owner
     due: "2026-07-28"
-    evidence: "developer app metadata matches 1.0.3 (66), but artifact identity is unproven; last launch was denied because the device was locked, and three consecutive continuation turns ended with CoreDeviceService initialization timeout before current lock-state could be read"
+    evidence: "18:09 resumed audit: xctrace sees an online iOS 26.5.2 iPhone, but devicectl still times out during CoreDeviceService initialization after a targeted service restart; Mobile MCP exposes simulators only"
   - id: apple-live-state
     severity: P1
     status: blocked_external_login
     owner: release-owner
     due: "2026-07-28"
-    evidence: "2026-07-28 18:02 KST: all checked ASC API credential variables absent; in-app browser remains at https://appstoreconnect.apple.com/login"
+    evidence: "2026-07-28 18:09 KST: all checked ASC API credential variables absent; in-app browser DOM still shows Apple account email/password login form at https://appstoreconnect.apple.com/login"
 next_action:
   summary: "Unlock the cabled iPhone 12 Pro and sign in to App Store Connect. Rerun the developer-build launch, then install Build 66 through TestFlight and verify candidate provenance and smoke. Do not submit for App Review."
   command: "OUT_DIR=output/testflight-device-evidence/next-build66-launch bash scripts/collect-testflight-device-evidence.sh --launch"

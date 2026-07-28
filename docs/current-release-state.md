@@ -1,6 +1,6 @@
 # 오삼오삼 iOS 현재 릴리스 상태
 
-Last updated: 2026-07-28 18:02 KST
+Last updated: 2026-07-28 18:09 KST
 
 이 문서는 iOS App Store 릴리스의 단일 현재 상태 원장이다. 로컬 코드,
 EAS 빌드, App Store Connect 처리, TestFlight, 실기기 검증, 앱 심사를
@@ -37,11 +37,11 @@ EAS 빌드, App Store Connect 처리, TestFlight, 실기기 검증, 앱 심사�
 | App Store metadata | Release notes and review notes saved for Build 64; automatic release mode unchanged |
 | App Store build selection | No build selected; Builds 62, 63, and 64 remain excluded |
 | TestFlight result | 과거 Build 64 `제출 준비 완료` 기록은 superseded. Build 66의 현재 internal-group 배정은 ASC signed-out 상태라 미확인. 연결 iPhone에는 TestFlight 앱이 설치되어 있지 않음 |
-| Real-device result | 케이블 연결 iPhone 12 Pro(iOS 26.5.2)에 `com.invitehub.app` `1.0.3 (66)` 설치 확인. `builtByDeveloper=true`라 TestFlight 설치 증거는 아님. EAS IPA와 동일 바이너리라는 증거도 아님. 마지막 launch는 기기 잠금으로 거절됨. 이후 세 번의 연속 목표 턴에서 lock-state 재조회가 모두 CoreDeviceService 초기화 timeout으로 실패해 현재 잠금 여부를 새로 확인하지 못했으며 smoke는 계속 미완 |
+| Real-device result | 케이블 연결 iPhone 12 Pro(iOS 26.5.2)에 `com.invitehub.app` `1.0.3 (66)` 설치 확인. `builtByDeveloper=true`라 TestFlight 설치 증거는 아님. EAS IPA와 동일 바이너리라는 증거도 아님. 마지막 launch는 기기 잠금으로 거절됨. 18:09 재개 시 Xcode `xctrace`는 iOS 26.5.2 iPhone을 online device로 확인했지만 `devicectl`은 CoreDeviceService 정상 종료·자동 재시작 후에도 `CoreDeviceService 초기화 timeout`. Mobile MCP에는 simulator만 표시되어 current lock/app/launch smoke는 계속 미완 |
 | Release-control tooling | App Store packet verifier 324 checks가 상태 문서·원장·IPA SHA/크기를 교차 확인. repo release gate는 script가 속한 active worktree를 readonly trust root로 사용하고 alternate root/canonical-evidence env override를 거부하며, online audit 또는 iOS build skip 시 false pass 대신 `blocked`/exit 2. current real-iPhone verifier는 connected physical device와 `1.0.3 (66)` 메타데이터 일치만 확인하며, stale capture, 수집·launch 실패, 실패 outcome, launch 후 빈 process를 fail-closed 처리 |
 | App Review state | Not submitted; `심사에 추가` and final submission remain gated |
 | Public release state | Still `1.0.2`; no 1.0.3 public rollout |
-| Goal continuation state | `blocked_external_user_action_required`: 2026-07-28 18:02 KST에도 ASC credential 없음, in-app browser login 화면, CoreDeviceService timeout 반복. 로그인·기기 복구·online audit 승인 없이는 추가 안전 진행 불가 |
+| Goal continuation state | 사용자 재개 후 blocked audit turn 1. 2026-07-28 18:09 KST에도 ASC credential 없음, in-app browser가 Apple 계정 이메일 입력 화면, CoreDeviceService timeout 반복. 브라우저 로그인·CoreDevice 연결 복구·online audit 명시 승인 필요 |
 
 ## Current verdict
 

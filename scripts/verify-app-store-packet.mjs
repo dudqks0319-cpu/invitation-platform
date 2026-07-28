@@ -134,6 +134,14 @@ function includes(file, content, value) {
   check(`${file} includes ${value}`, content.includes(value), `${file}: expected to include ${value}`);
 }
 
+function includesOneOf(file, content, values) {
+  check(
+    `${file} includes one of ${values.join(", ")}`,
+    values.some((value) => content.includes(value)),
+    `${file}: expected to include one of ${values.join(", ")}`
+  );
+}
+
 function notIncludes(file, content, value, detail) {
   check(`${file} excludes ${value}`, !content.includes(value), detail ?? `${file}: expected to exclude ${value}`);
 }
@@ -439,10 +447,13 @@ includes(
   releaseLedger,
   "phase: blocked_external_user_action_required"
 );
-includes(
+includesOneOf(
   "release-ledger.yaml",
   releaseLedger,
-  "goal_status: blocked_external_user_action_required"
+  [
+    "goal_status: blocked_external_user_action_required",
+    "goal_status: resumed_blocked_audit_turn_1"
+  ]
 );
 includes(
   "release-ledger.yaml",
