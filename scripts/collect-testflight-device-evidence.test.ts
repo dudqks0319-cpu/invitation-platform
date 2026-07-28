@@ -3,6 +3,7 @@ import {
   chmodSync,
   mkdtempSync,
   mkdirSync,
+  readFileSync,
   rmSync,
   writeFileSync
 } from "node:fs";
@@ -23,6 +24,15 @@ afterEach(() => {
 });
 
 describe("collect-testflight-device-evidence", () => {
+  it("filters the running app by executable URL path", () => {
+    const collector = readFileSync(collectorPath, "utf8");
+
+    expect(collector).toContain(
+      "executable.path ENDSWITH 'InviteHub.app/InviteHub'"
+    );
+    expect(collector).not.toContain("Name CONTAINS 'InviteHub'");
+  });
+
   it("returns failure when a device capture command fails", () => {
     const root = mkdtempSync(join(tmpdir(), "invitehub-device-collector-"));
     const binDir = join(root, "bin");

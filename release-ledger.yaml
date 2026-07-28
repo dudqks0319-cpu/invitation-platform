@@ -1,4 +1,4 @@
-updated_at: "2026-07-28T18:18:00+09:00"
+updated_at: "2026-07-28T18:26:00+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
@@ -29,7 +29,7 @@ candidate:
   eas_paid_publish_flag: absent_defaults_false
   app_store_connect_state: live_verified_1_0_3_prepare_for_submission_no_build_selected
   testflight_state: build_66_ready_to_submit_internal_group_1_tester_installs_2
-  real_device_result: metadata_match_1_0_3_66_artifact_unproven_coredevice_unavailable
+  real_device_result: developer_build_1_0_3_66_launch_running_artifact_unproven
   app_review_state: not_submitted
   superseded_builds:
     - 62
@@ -87,8 +87,8 @@ runtime_checks:
   real_iphone_installed_version: "1.0.3"
   real_iphone_install_provenance: developer_app_not_testflight
   real_iphone_artifact_identity: unproven_developer_install
-  real_iphone_metadata_match: installed_1_0_3_66_coredevice_unavailable_prior_launch_locked
-  real_iphone_evidence: "output/testflight-device-evidence/20260728-iphone12pro-readonly"
+  real_iphone_metadata_match: installed_1_0_3_66_launch_verified_developer_app
+  real_iphone_evidence: "output/testflight-device-evidence/20260728-1826-iphone-build66-launch-fixed"
 external_checks:
   eas_build: live_verified_finished_build_66_2026_07_28
   eas_submission: live_verified_finished_no_error_2026_07_28
@@ -114,10 +114,10 @@ blockers:
     evidence: "offline runtime/full-tree audit 0; online audit not authorized"
   - id: real-device-smoke
     severity: P1
-    status: blocked_coredevice_service_and_user_unlock
+    status: blocked_pending_testflight_install_and_surface_qa
     owner: release-owner
     due: "2026-07-28"
-    evidence: "18:09 resumed audit: xctrace sees an online iOS 26.5.2 iPhone, but devicectl still times out during CoreDeviceService initialization after a targeted service restart; Mobile MCP exposes simulators only"
+    evidence: "18:26 live: CoreDevice recovered, phone unlocked, developer-installed 1.0.3 (66) launch and running process verified; exact EAS/TestFlight provenance and on-screen scenario QA remain open"
   - id: app-review-preflight
     severity: P1
     status: blocked_pending_exact_build_smoke_and_user_approval
@@ -125,5 +125,5 @@ blockers:
     due: "2026-07-28"
     evidence: "2026-07-28 18:18 KST authenticated Chrome: 1.0.3 is prepare for submission, no App Review build is selected, review note still says Build 64, and automatic release is selected; no changes or submission performed"
 next_action:
-  summary: "Unlock the cabled iPhone 12 Pro, install/confirm Build 66 through TestFlight, and verify candidate provenance and smoke. After that, select Build 66 and update the stale Build 64 review note only with explicit approval. Do not submit for App Review."
+  summary: "Install/confirm Build 66 through TestFlight on the cabled iPhone and verify candidate provenance and on-screen smoke. After that, select Build 66 and update the stale Build 64 review note only with explicit approval. Do not submit for App Review."
   command: "OUT_DIR=output/testflight-device-evidence/next-build66-launch bash scripts/collect-testflight-device-evidence.sh --launch"

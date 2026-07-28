@@ -1,6 +1,6 @@
 # 오삼오삼 iOS 현재 릴리스 상태
 
-Last updated: 2026-07-28 18:18 KST
+Last updated: 2026-07-28 18:26 KST
 
 이 문서는 iOS App Store 릴리스의 단일 현재 상태 원장이다. 로컬 코드,
 EAS 빌드, App Store Connect 처리, TestFlight, 실기기 검증, 앱 심사를
@@ -37,11 +37,11 @@ EAS 빌드, App Store Connect 처리, TestFlight, 실기기 검증, 앱 심사�
 | App Store metadata | 릴리스 노트는 1.0.3 후보 내용을 포함하지만 심사 메모는 아직 Build 64로 표기. 자동 출시가 선택되어 있으므로 심사 제출 전 Build 66 기준 메모 수정과 출시 방식 재확인 필요 |
 | App Store build selection | No build selected; Builds 62, 63, and 64 remain excluded |
 | TestFlight result | Chrome authenticated live 확인: Build 66 `제출 준비 완료`, 내부 `Team (Expo)` 그룹 1개·테스터 1명에 배정, 초대 1·설치 2 표시. 연결 iPhone에서 해당 TestFlight 설치 provenance는 아직 미확인 |
-| Real-device result | 케이블 연결 iPhone 12 Pro(iOS 26.5.2)에 `com.invitehub.app` `1.0.3 (66)` 설치 확인. `builtByDeveloper=true`라 TestFlight 설치 증거는 아님. EAS IPA와 동일 바이너리라는 증거도 아님. 마지막 launch는 기기 잠금으로 거절됨. 18:09 재개 시 Xcode `xctrace`는 iOS 26.5.2 iPhone을 online device로 확인했지만 `devicectl`은 CoreDeviceService 정상 종료·자동 재시작 후에도 `CoreDeviceService 초기화 timeout`. Mobile MCP에는 simulator만 표시되어 current lock/app/launch smoke는 계속 미완 |
+| Real-device result | 2026-07-28 18:26 KST 케이블 연결 iPhone 12 Pro(iOS 26.5.2)의 잠금 해제와 CoreDevice 연결을 확인. `com.invitehub.app` `1.0.3 (66)` 개발자 설치본을 실행한 뒤 실제 `InviteHub.app/InviteHub` 프로세스가 유지되는 증거 수집 통과. `builtByDeveloper=true`라 TestFlight 설치 증거는 아니며 EAS IPA와 동일 바이너리라는 증거도 아님 |
 | Release-control tooling | App Store packet verifier 326 checks가 상태 문서·원장·IPA SHA/크기를 교차 확인. repo release gate는 script가 속한 active worktree를 readonly trust root로 사용하고 alternate root/canonical-evidence env override를 거부하며, online audit 또는 iOS build skip 시 false pass 대신 `blocked`/exit 2. current real-iPhone verifier는 connected physical device와 `1.0.3 (66)` 메타데이터 일치만 확인하며, stale capture, 수집·launch 실패, 실패 outcome, launch 후 빈 process를 fail-closed 처리 |
 | App Review state | Not submitted; `심사에 추가` and final submission remain gated |
 | Public release state | Still `1.0.2`; no 1.0.3 public rollout |
-| Goal continuation state | 사용자 재개 후 blocked audit turn 1. Chrome 로그인으로 Apple/TestFlight live 상태는 확인 완료. 남은 차단은 CoreDevice 연결 복구, Build 66 실기기 TestFlight smoke, online audit 명시 승인, App Review 전 Build 선택·심사 메모 갱신 |
+| Goal continuation state | 사용자 재개 후 blocked audit turn 1. Chrome 로그인과 CoreDevice 연결·개발자 설치본 launch는 해결. 남은 차단은 Build 66 실기기 TestFlight provenance·화면 smoke, online audit 명시 승인, App Review 전 Build 선택·심사 메모 갱신 |
 
 ## Current verdict
 
@@ -86,10 +86,12 @@ The cabled iPhone 12 Pro has an installed app whose metadata matches
 `1.0.3 (66)`, superseding the older Build 63 device note. The device inventory
 reports it as a developer app, and the TestFlight app is absent. It therefore
 does not prove that the installed binary is the EAS IPA or that internal-group
-distribution succeeded. The automated launch attempt was denied because the
-phone was locked. Login, template order, single-preview layout, free
-publish/share, relaunch, network recovery, and deep-link scenarios therefore
-remain open.
+distribution succeeded. On 2026-07-28 18:26 KST the phone was unlocked,
+CoreDevice access recovered, and the metadata-matching developer app remained
+running after launch. The evidence collector was corrected to match the
+executable URL path instead of a nonexistent process `Name` field. Login,
+template order, single-preview layout, free publish/share, relaunch, network
+recovery, and deep-link scenarios on the exact TestFlight binary remain open.
 
 ## 1.0.3 release notes
 
@@ -102,12 +104,11 @@ remain open.
 
 ## Remaining release gates
 
-1. Unlock the connected iPhone 12 Pro, keep the cable attached, and rerun the metadata-matching developer build launch.
-2. Install/confirm Build 66 through TestFlight on the connected iPhone and preserve provenance evidence.
-3. Verify launch, login, latest-template ordering, one-template preview, enlarged text placement, free publish/share, relaunch, network recovery, and deep link.
-4. Run a fresh online dependency advisory lookup only after explicit authorization to send the dependency graph to the registry.
-5. Before App Review, select only Build 66, update the review note from Build 64 to Build 66, and reconfirm the currently selected automatic release mode.
-6. Add the version to App Review and submit only after the exact-build smoke and a separate explicit user approval.
+1. Install/confirm Build 66 through TestFlight on the connected iPhone and preserve provenance evidence.
+2. Verify launch, login, latest-template ordering, one-template preview, enlarged text placement, free publish/share, relaunch, network recovery, and deep link.
+3. Run a fresh online dependency advisory lookup only after explicit authorization to send the dependency graph to the registry.
+4. Before App Review, select only Build 66, update the review note from Build 64 to Build 66, and reconfirm the currently selected automatic release mode.
+5. Add the version to App Review and submit only after the exact-build smoke and a separate explicit user approval.
 
 ## Stop conditions
 

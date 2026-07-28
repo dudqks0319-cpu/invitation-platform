@@ -416,11 +416,11 @@ includes("docs/current-release-state.md", currentReleaseState, "Chrome authentic
 includes("docs/current-release-state.md", currentReleaseState, "Build 66 `제출 준비 완료`");
 includes("docs/current-release-state.md", currentReleaseState, "`Team (Expo)` 그룹 1개·테스터 1명");
 includes("docs/current-release-state.md", currentReleaseState, "심사 메모는 아직 Build 64로 표기");
-includes("docs/current-release-state.md", currentReleaseState, "`com.invitehub.app` `1.0.3 (66)` 설치 확인");
-includes("docs/current-release-state.md", currentReleaseState, "`builtByDeveloper=true`라 TestFlight 설치 증거는 아님");
+includes("docs/current-release-state.md", currentReleaseState, "`com.invitehub.app` `1.0.3 (66)` 개발자 설치본");
+includes("docs/current-release-state.md", currentReleaseState, "`builtByDeveloper=true`라 TestFlight 설치 증거는 아니며");
 includes("docs/current-release-state.md", currentReleaseState, "EAS IPA와 동일 바이너리라는 증거도 아님");
-includes("docs/current-release-state.md", currentReleaseState, "마지막 launch는 기기 잠금으로 거절됨");
-includes("docs/current-release-state.md", currentReleaseState, "CoreDeviceService 초기화 timeout");
+includes("docs/current-release-state.md", currentReleaseState, "잠금 해제와 CoreDevice 연결을 확인");
+includes("docs/current-release-state.md", currentReleaseState, "`InviteHub.app/InviteHub` 프로세스가 유지되는 증거 수집 통과");
 includes("docs/current-release-state.md", currentReleaseState, "Do not select Builds 62, 63, or 64");
 includes("docs/current-release-state.md", currentReleaseState, "App Review state | Not submitted");
 includes("docs/current-release-state.md", currentReleaseState, "Public release state | Still `1.0.2`; no 1.0.3 public rollout");
@@ -460,7 +460,7 @@ includesOneOf(
 includes(
   "release-ledger.yaml",
   releaseLedger,
-  "real_device_result: metadata_match_1_0_3_66_artifact_unproven_coredevice_unavailable"
+  "real_device_result: developer_build_1_0_3_66_launch_running_artifact_unproven"
 );
 includes("release-ledger.yaml", releaseLedger, "real_iphone_install_provenance: developer_app_not_testflight");
 includes("release-ledger.yaml", releaseLedger, "real_iphone_artifact_identity: unproven_developer_install");
@@ -630,5 +630,5 @@ console.log(`- Checks: ${checks.length}`);
 console.log(`- Latest Built Candidate: ${expectedCurrentCandidate.appVersion} (${expectedCurrentCandidate.buildNumber})`);
 console.log(`- Latest EAS Build: ${expectedCurrentCandidate.buildId}`);
 console.log("- External Verdict: EAS build and submission are FINISHED; authenticated App Store Connect confirms Build 66 ready to submit and assigned to Team (Expo), while App Review has no build selected.");
-console.log("- Device Verdict: a developer app with matching 1.0.3 (66) metadata is installed, but launch smoke is blocked and neither EAS artifact identity nor TestFlight provenance is proven.");
-console.log("- Required follow-up: unlock the cabled iPhone, install/confirm Build 66 through TestFlight, and collect exact-build smoke evidence. Update the stale Build 64 review note only with explicit approval; do not submit for App Review.");
+console.log("- Device Verdict: the metadata-matching developer app 1.0.3 (66) launched and remained running on the cabled iPhone; EAS artifact identity and TestFlight provenance are still unproven.");
+console.log("- Required follow-up: install/confirm Build 66 through TestFlight and collect exact-build on-screen smoke evidence. Update the stale Build 64 review note only with explicit approval; do not submit for App Review.");

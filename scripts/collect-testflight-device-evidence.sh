@@ -5,6 +5,7 @@ umask 077
 DEVICE_ID="${DEVICE_ID:-iPhone 12 Pro}"
 BUNDLE_ID="${BUNDLE_ID:-com.invitehub.app}"
 TESTFLIGHT_BUNDLE_ID="${TESTFLIGHT_BUNDLE_ID:-com.apple.TestFlight}"
+INVITEHUB_PROCESS_FILTER="executable.path ENDSWITH 'InviteHub.app/InviteHub'"
 OUT_ROOT="${OUT_ROOT:-output/testflight-device-evidence}"
 STAMP="$(date '+%Y%m%d-%H%M%S')"
 OUT_DIR="${OUT_DIR:-$OUT_ROOT/$STAMP}"
@@ -82,7 +83,7 @@ run_json_capture devices xcrun devicectl list devices --filter "Name == '$DEVICE
 run_json_capture lock-state xcrun devicectl device info lockState --device "$DEVICE_ID" || CAPTURE_FAILED=1
 run_json_capture testflight-app xcrun devicectl device info apps --device "$DEVICE_ID" --bundle-id "$TESTFLIGHT_BUNDLE_ID" --columns '*' || CAPTURE_FAILED=1
 run_json_capture invitehub-app xcrun devicectl device info apps --device "$DEVICE_ID" --bundle-id "$BUNDLE_ID" --columns '*' || CAPTURE_FAILED=1
-run_json_capture invitehub-processes xcrun devicectl device info processes --device "$DEVICE_ID" --filter "Name CONTAINS 'InviteHub'" --columns '*' || CAPTURE_FAILED=1
+run_json_capture invitehub-processes xcrun devicectl device info processes --device "$DEVICE_ID" --filter "$INVITEHUB_PROCESS_FILTER" --columns '*' || CAPTURE_FAILED=1
 
 if [[ "$CAPTURE_FAILED" -ne 0 ]]; then
   echo "TESTFLIGHT DEVICE EVIDENCE RESULT" >&2
@@ -122,7 +123,7 @@ if [[ "$LAUNCH" -eq 1 ]]; then
   fi
 
   sleep 3
-  run_json_capture invitehub-processes-after-launch xcrun devicectl device info processes --device "$DEVICE_ID" --filter "Name CONTAINS 'InviteHub'" --columns '*' || CAPTURE_FAILED=1
+  run_json_capture invitehub-processes-after-launch xcrun devicectl device info processes --device "$DEVICE_ID" --filter "$INVITEHUB_PROCESS_FILTER" --columns '*' || CAPTURE_FAILED=1
   if ! node scripts/verify-testflight-build66-evidence.mjs "$OUT_DIR" --require-launch; then
     echo "ERROR: launch evidence did not prove a running metadata-matching process." >&2
     CAPTURE_FAILED=1
