@@ -20,6 +20,16 @@ const EVIDENCE_PATH = "docs/release-candidate-evidence.json";
 const STORE_BUNDLE_ID = "com.invitehub.app";
 const BLOCKED_STALE_BUILD = "52";
 const VALID_OPERATIONS = new Set(["build", "install", "upload"]);
+const EVIDENCE_COMMIT_PATHS = new Set([
+  "RELEASE_STATUS.md",
+  "docs/current-release-state.md",
+  "docs/release-candidate-evidence.template.json",
+  "release-ledger.yaml",
+  "scripts/verify-app-store-packet.mjs",
+  "scripts/verify-release-candidate.mjs",
+  "scripts/verify-release-candidate.test.ts",
+  "tests/verify-app-store-packet.test.ts"
+]);
 const IDENTITY_ENVIRONMENT_KEYS = [
   "APP_VARIANT",
   "APP_BUNDLE_ID",
@@ -118,6 +128,10 @@ export function validateReleaseCandidate({
     return blockers;
   }
 
+  if (ledger.phase === "candidate_selected_clean_verification_blocked") {
+    blockers.push("release ledger blocks native and external actions until clean verification passes");
+  }
+
   if (selected.selected !== true) {
     blockers.push("selected_candidate.selected must be true");
   }
@@ -182,7 +196,30 @@ export function validateReleaseCandidate({
     );
   }
 
-  requireEqual(blockers, repository.headSha, selected.git_sha, "HEAD SHA does not match the selected candidate");
+  if (repository.headSha === selected.git_sha) {
+    if (sourceEvidence.evidenceHeadSha && sourceEvidence.evidenceHeadSha !== repository.headSha) {
+      blockers.push("raw evidence HEAD does not match the source candidate HEAD");
+    }
+  } else {
+    requireEqual(
+      blockers,
+      sourceEvidence.evidenceHeadSha,
+      repository.headSha,
+      "raw evidence HEAD does not match the current evidence commit"
+    );
+    requireEqual(
+      blockers,
+      repository.parentSha,
+      selected.git_sha,
+      "evidence commit must directly follow the selected source commit"
+    );
+    const unexpectedEvidencePaths = (repository.evidenceChangedPaths ?? []).filter(
+      (path) => !EVIDENCE_COMMIT_PATHS.has(path)
+    );
+    if (unexpectedEvidencePaths.length > 0) {
+      blockers.push(`evidence commit changes non-evidence paths: ${unexpectedEvidencePaths.join(", ")}`);
+    }
+  }
   requireEqual(blockers, repository.branch, selected.branch, "current branch does not match the selected candidate");
   if (repository.statusPorcelain !== "") {
     blockers.push("release worktree is dirty");
@@ -351,8 +388,22 @@ function collectRepositoryState() {
   );
   const production = eas.build?.production ?? {};
 
+  const headSha = execFileSync("git", ["-C", ROOT, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+  let parentSha = "";
+  let evidenceChangedPaths = [];
+  try {
+    parentSha = execFileSync("git", ["-C", ROOT, "rev-parse", "HEAD^"], { encoding: "utf8" }).trim();
+    evidenceChangedPaths = execFileSync(
+      "git",
+      ["-C", ROOT, "diff", "--name-only", "HEAD^", "HEAD"],
+      { encoding: "utf8" }
+    ).trim().split(/\r?\n/).filter(Boolean);
+  } catch {}
+
   return {
-    headSha: execFileSync("git", ["-C", ROOT, "rev-parse", "HEAD"], { encoding: "utf8" }).trim(),
+    headSha,
+    parentSha,
+    evidenceChangedPaths,
     branch: execFileSync("git", ["-C", ROOT, "branch", "--show-current"], { encoding: "utf8" }).trim(),
     statusPorcelain: execFileSync(
       "git",

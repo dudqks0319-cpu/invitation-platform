@@ -1,35 +1,35 @@
-updated_at: "2026-08-04T00:08:38+09:00"
+updated_at: "2026-08-04T02:17:09+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
 project:
   name: osamosam
   release_workspace: "/Users/jyb-m3max/Desktop/codex/invitation-platform/.worktrees/osamosam-uiux-plan-v1"
-phase: blocked_pending_clean_candidate_sha
+phase: candidate_selected_clean_verification_blocked
 goal_status: active_release_requested
 version: "1.0.3"
 build_number: "69"
-git_sha: "UNBOUND/PENDING"
+git_sha: "902eefca50f6b305d429e5665d295c5e6db9e870"
 branch: "agent/osamosam-uiux-plan-v1"
 public:
   version: "1.0.2"
   state: released
 selected_candidate:
-  selected: false
-  version: ""
-  build_number: ""
-  bundle_id: ""
-  git_sha: ""
-  branch: ""
-  source_state: not_selected
+  selected: true
+  version: "1.0.3"
+  build_number: "69"
+  bundle_id: "com.invitehub.app"
+  git_sha: "902eefca50f6b305d429e5665d295c5e6db9e870"
+  branch: "agent/osamosam-uiux-plan-v1"
+  source_state: clean_committed
   evidence_path: "docs/release-candidate-evidence.json"
 candidate:
   version: "1.0.3"
   build_number: "69"
-  git_sha: "UNBOUND/PENDING"
+  git_sha: "902eefca50f6b305d429e5665d295c5e6db9e870"
   source_base_sha: "0538c5d4dfe56b7a3dd9aa41bbbee484f4a536e7"
   branch: "agent/osamosam-uiux-plan-v1"
-  source_state: dirty_assembly_build69_identity_bound_sha_unbound
+  source_state: clean_committed
   eas_build_id: not_created
   eas_build_state: not_started
   eas_submit_id: not_created
@@ -98,10 +98,10 @@ verification:
   production_ios_metro_bundle: "1,445 modules / 204 assets / passed"
   store_screenshots: "2 files / 1206x2622 / passed"
   app_store_packet_verifier: "328 checks passed"
-  build69_source_full_tests: "122 files / 650 tests passed on 2026-08-04"
-  build69_source_focused_contract: "5 files / 32 tests passed; assembly verifier 4/4 passed"
-  build69_source_packet: "334 checks passed"
-  build69_source_static_web: "web/mobile lint and typecheck passed; web production build passed with 27 routes; diff and targeted secret gates passed"
+  build69_source_full_tests: "HOLD: clean checkout 119/120 files and 646/647 tests; tests/supabase-schema-security.test.ts requires excluded untracked migration 202607300001_harden_database_security.sql"
+  build69_source_focused_contract: "5 files / 35 tests passed; assembly source postcommit verifier passed; release entrypoint preflight blocks while HOLD"
+  build69_source_packet: "335 checks passed"
+  build69_source_static_web: "lint passed with no errors; typecheck and web production build passed with 27 routes; diff and targeted secret gates passed"
   home_process_visual_match: "passed; same shared component, four event cards, imagery, typography, spacing, and wedding next-screen copy"
   local_build69_device_launch: "passed on cabled iPhone 12 Pro as com.invitehub.app.dev"
   store_build69_device_evidence_verifier: "blocked until EAS Store Build 69 is uploaded and installed from TestFlight"
@@ -109,18 +109,18 @@ verification:
   online_root_advisories: "15 total: 11 moderate, 4 high, 0 critical"
   online_mobile_advisories: "12 total: 11 moderate, 1 high, 0 critical; high is indirect brace-expansion in Expo/React Native build tooling"
 local_checks:
-  tests: "650/650 passed"
+  tests: "HOLD: clean checkout 646/647 passed; one missing required migration input"
   lint: passed
   typecheck: passed
-  release_candidate_preflight: "blocked as designed: no explicitly selected clean candidate and no raw candidate evidence; no native build/install/EAS upload started"
+  release_candidate_preflight: "selected clean source commit 902eefca50f6b305d429e5665d295c5e6db9e870; post-commit raw evidence binds source SHA; artifact remains absent and no native/EAS command started"
   release_slice_1_tests: "119 files / 594 tests passed on 2026-08-03; focused candidate and entrypoint suite 3 files / 20 tests; related release harness suite 9 files / 51 tests"
-  app_store_packet_verifier_current: "334 checks passed"
+  app_store_packet_verifier_current: "335 checks passed"
   web_production_build_current: passed
   native_release_build_current: "not run; source identity is com.invitehub.app 1.0.3 (69), but clean candidate SHA/raw evidence are unbound"
-  inv_ios_002_candidate_preflight: "BLOCKED-CANDIDATE; selected=false, raw evidence missing, dirty assembly, candidate Git SHA UNBOUND/PENDING, native Release 1.0.3 (69); no build/archive/install/launch"
+  inv_ios_002_candidate_preflight: "source candidate selected at 902eefca50f6b305d429e5665d295c5e6db9e870; evidence HEAD is a direct child limited to ledger/provenance controls; no build/archive/install/launch"
   inv_ios_002_build69_source_identity: "com.invitehub.app / 1.0.3 (69); Xcode Release source only; Debug remains com.invitehub.app.dev / 1.0.3 (52)"
   inv_ios_002_build69_number_binding: "2026-08-04 read-only EAS and user-confirmed ASC UI both show highest production Build 68 and Build 69 count 0"
-  inv_ios_002_build69_candidate_state: "BLOCKED-CANDIDATE; dirty source, selected=false, raw evidence absent, candidate Git SHA UNBOUND/PENDING, EAS/ASC Build 69 upload count 0"
+  inv_ios_002_build69_candidate_state: "SOURCE-SELECTED / CLEAN-VERIFICATION-BLOCKED; source SHA bound, but excluded untracked migration is required by a tracked full-regression test; EAS/ASC Build 69 upload count 0 and no IPA/archive/profile/device proof"
   inv_ios_002_build69_assembly: "80 included paths (58 tracked, 22 untracked), 22 excluded dirty paths, 200 tracked hunks; exact hashes stored in ignored candidate-assembly-plan.json"
   release_harness_strict: "pass for document shape; shared harness phase output remains unknown"
   repository_release_gate: "blocked as designed when online audit and iOS build are skipped; readonly worktree trust root, canonical evidence override rejection, and behavioral fail-closed tests pass"
@@ -208,5 +208,5 @@ blockers:
     due: "before clean candidate selection or Production asset access enablement"
     evidence: "Local code/tests only. Apply migration 202608030004 after 001-003 in staging, inventory legacy keys, prove direct authenticated Storage signing/read/delete is denied, observe owner/public TTL and quotas, test traversal/transform/batch/provider-failure paths, and enable provider egress caps/WAF/hot-object alerts before considering Production."
 next_action:
-  summary: "Assemble the exact Build 69 source allowlist into one clean commit, bind the resulting full SHA and raw source evidence, then rerun the fail-closed preflight before any native build, archive, upload, device, staging, or Production action."
+  summary: "Wait for the iPhone handoff before the separately approved development-profile refresh. Do not build, archive, upload, install, launch, or run XCTest until that handoff."
   command: "node scripts/verify-release-candidate.mjs build"

@@ -94,6 +94,7 @@ const expectedCurrentCandidate = {
   appVersion: "1.0.3",
   buildNumber: "69",
   sourceBaseCommit: "0538c5d4dfe56b7a3dd9aa41bbbee484f4a536e7",
+  sourceCommit: "902eefca50f6b305d429e5665d295c5e6db9e870",
   displayName: "오삼오삼"
 };
 const expectedUploadedCandidate = {
@@ -135,14 +136,6 @@ function check(name, condition, detail) {
 
 function includes(file, content, value) {
   check(`${file} includes ${value}`, content.includes(value), `${file}: expected to include ${value}`);
-}
-
-function includesOneOf(file, content, values) {
-  check(
-    `${file} includes one of ${values.join(", ")}`,
-    values.some((value) => content.includes(value)),
-    `${file}: expected to include one of ${values.join(", ")}`
-  );
 }
 
 function notIncludes(file, content, value, detail) {
@@ -412,7 +405,8 @@ includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "currentReleaseBuildSelectedForVersion");
 includes("docs/current-release-state.md", currentReleaseState, `Local source identity | Xcode Release \`com.invitehub.app\` \`${expectedCurrentCandidate.appVersion} (${expectedCurrentCandidate.buildNumber})\``);
 includes("docs/current-release-state.md", currentReleaseState, expectedCurrentCandidate.sourceBaseCommit);
-includes("docs/current-release-state.md", currentReleaseState, "Candidate Git SHA | `UNBOUND/PENDING`");
+includes("docs/current-release-state.md", currentReleaseState, `Candidate source Git SHA | \`${expectedCurrentCandidate.sourceCommit}\``);
+includes("docs/current-release-state.md", currentReleaseState, "Evidence HEAD | Direct child of the source commit");
 includes("docs/current-release-state.md", currentReleaseState, "highest production build `68`, Build `69` count `0`");
 includes("docs/current-release-state.md", currentReleaseState, expectedUploadedCandidate.buildId);
 includes("docs/current-release-state.md", currentReleaseState, expectedUploadedCandidate.artifactBytesFormatted);
@@ -431,7 +425,7 @@ includes("docs/current-release-state.md", currentReleaseState, "App Review state
 includes("docs/current-release-state.md", currentReleaseState, "Public release state | Still `1.0.2`; no 1.0.3 public rollout");
 includes("RELEASE_STATUS.md", releaseStatus, `\`${expectedCurrentCandidate.appVersion} (${expectedCurrentCandidate.buildNumber})\``);
 includes("RELEASE_STATUS.md", releaseStatus, expectedCurrentCandidate.sourceBaseCommit.slice(0, 7));
-includes("RELEASE_STATUS.md", releaseStatus, "candidate Git SHA remains `UNBOUND/PENDING`");
+includes("RELEASE_STATUS.md", releaseStatus, `clean source commit \`${expectedCurrentCandidate.sourceCommit}\``);
 includes("RELEASE_STATUS.md", releaseStatus, "production Build 68 as the highest build and Build 69 count `0`");
 includes("RELEASE_STATUS.md", releaseStatus, expectedUploadedCandidate.buildId);
 includes("RELEASE_STATUS.md", releaseStatus, expectedUploadedCandidate.artifactBytesFormatted);
@@ -443,7 +437,7 @@ includes("RELEASE_STATUS.md", releaseStatus, "cabled iPhone 12 Pro");
 includes("release-ledger.yaml", releaseLedger, `version: "${expectedCurrentCandidate.appVersion}"`);
 includes("release-ledger.yaml", releaseLedger, `build_number: "${expectedCurrentCandidate.buildNumber}"`);
 includes("release-ledger.yaml", releaseLedger, expectedCurrentCandidate.sourceBaseCommit);
-includes("release-ledger.yaml", releaseLedger, 'git_sha: "UNBOUND/PENDING"');
+includes("release-ledger.yaml", releaseLedger, `git_sha: "${expectedCurrentCandidate.sourceCommit}"`);
 includes("release-ledger.yaml", releaseLedger, "eas_production_highest_build: 68");
 includes("release-ledger.yaml", releaseLedger, "eas_production_build69_count: 0");
 includes("release-ledger.yaml", releaseLedger, "asc_production_highest_build: 68");
@@ -459,7 +453,7 @@ includes("release-ledger.yaml", releaseLedger, "eas_submission: live_verified_fi
 includes(
   "release-ledger.yaml",
   releaseLedger,
-  "phase: blocked_pending_clean_candidate_sha"
+  "phase: candidate_selected_clean_verification_blocked"
 );
 includes(
   "release-ledger.yaml",
@@ -631,9 +625,9 @@ if (failures.length > 0) {
 console.log("APP STORE PACKET VERIFY RESULT");
 console.log("- Status: pass");
 console.log(`- Checks: ${checks.length}`);
-console.log(`- Latest Source Identity: ${expectedCurrentCandidate.appVersion} (${expectedCurrentCandidate.buildNumber}) / com.invitehub.app / Git SHA UNBOUND/PENDING`);
+console.log(`- Latest Source Identity: ${expectedCurrentCandidate.appVersion} (${expectedCurrentCandidate.buildNumber}) / com.invitehub.app / source ${expectedCurrentCandidate.sourceCommit}`);
 console.log(`- Latest Uploaded EAS Build: ${expectedUploadedCandidate.buildId} (Build ${expectedUploadedCandidate.buildNumber})`);
 console.log("- Number Binding: read-only EAS and ASC both show highest production Build 68 and Build 69 count 0.");
-console.log("- External Verdict: Build 69 is source-bound only; EAS/ASC upload count is 0 and Build 68 remains superseded.");
+console.log("- Candidate Verdict: HOLD; Build 69 is source-bound, but clean full regression is blocked by a required migration omitted from the exact 80-path commit.");
 console.log("- Device Verdict: the installed development Build 69 is not production/TestFlight provenance.");
-console.log("- Required follow-up: create one approved clean Build 69 source commit, bind its full SHA/raw evidence, and rerun preflight before any separately approved build or upload.");
+console.log("- Required follow-up: obtain approval for a corrected clean assembly, then re-run all gates before any profile, device, build, or upload action.");

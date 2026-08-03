@@ -10,6 +10,7 @@ function makeLedger(overrides: Record<string, string | boolean> = {}) {
     bundleId: "com.invitehub.app",
     gitSha: sha,
     branch: "agent/release-candidate",
+    phase: "candidate_selected_pending_artifact",
     sourceState: "clean_committed",
     selected: true,
     evidencePath: "docs/release-candidate-evidence.json",
@@ -18,6 +19,7 @@ function makeLedger(overrides: Record<string, string | boolean> = {}) {
 
   return `
 bundle_id: "${values.bundleId}"
+phase: ${values.phase}
 version: "${values.version}"
 build_number: "${values.buildNumber}"
 git_sha: "${values.gitSha}"
@@ -74,6 +76,8 @@ function makeEvidence(overrides: Record<string, unknown> = {}) {
 function makeRepository(overrides: Record<string, unknown> = {}) {
   return {
     headSha: sha,
+    parentSha: "0000000000000000000000000000000000000000",
+    evidenceChangedPaths: [],
     branch: "agent/release-candidate",
     statusPorcelain: "",
     appVersion: "1.1.0",
@@ -117,6 +121,61 @@ function validate({
 describe("release candidate identity preflight", () => {
   it("allows an arbitrary clean, explicitly selected, evidence-bound candidate", () => {
     expect(validate()).toEqual([]);
+  });
+
+  it("blocks side-effecting release entrypoints while clean verification is on hold", () => {
+    expect(
+      validate({
+        ledgerText: makeLedger({
+          phase: "candidate_selected_clean_verification_blocked"
+        })
+      })
+    ).toContain(
+      "release ledger blocks native and external actions until clean verification passes"
+    );
+  });
+
+  it("allows a direct evidence commit that changes only fail-closed evidence paths", () => {
+    const evidenceHeadSha = "2222222222222222222222222222222222222222";
+    expect(validate({
+      evidence: makeEvidence({
+        ...makeEvidence(),
+        sourceEvidence: {
+          ...makeEvidence().sourceEvidence,
+          evidenceHeadSha
+        }
+      }),
+      repository: makeRepository({
+        headSha: evidenceHeadSha,
+        parentSha: sha,
+        evidenceChangedPaths: [
+          "release-ledger.yaml",
+          "scripts/verify-release-candidate.mjs"
+        ]
+      })
+    })).toEqual([]);
+  });
+
+  it("rejects a detached or source-changing evidence commit", () => {
+    const evidenceHeadSha = "2222222222222222222222222222222222222222";
+    const evidence = makeEvidence({
+      ...makeEvidence(),
+      sourceEvidence: {
+        ...makeEvidence().sourceEvidence,
+        evidenceHeadSha
+      }
+    });
+    const blockers = validate({
+      evidence,
+      repository: makeRepository({
+        headSha: evidenceHeadSha,
+        parentSha: "3333333333333333333333333333333333333333",
+        evidenceChangedPaths: ["apps/mobile/app.json"]
+      })
+    });
+
+    expect(blockers).toContain("evidence commit must directly follow the selected source commit");
+    expect(blockers).toContain("evidence commit changes non-evidence paths: apps/mobile/app.json");
   });
 
   it("rejects stale native Build 52 even when the surrounding claims agree", () => {
@@ -182,7 +241,8 @@ describe("release candidate identity preflight", () => {
       })
     });
 
-    expect(blockers).toContain("HEAD SHA does not match the selected candidate");
+    expect(blockers).toContain("raw evidence HEAD does not match the current evidence commit");
+    expect(blockers).toContain("evidence commit must directly follow the selected source commit");
     expect(blockers).toContain("release worktree is dirty");
   });
 

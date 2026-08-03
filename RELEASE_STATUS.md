@@ -3,7 +3,7 @@
 Canonical status: [docs/current-release-state.md](docs/current-release-state.md)
 
 - Local source identity: Release `com.invitehub.app` `1.0.3 (69)`, based on
-  dirty HEAD `0538c5d`; candidate Git SHA remains `UNBOUND/PENDING`
+  clean source commit `902eefca50f6b305d429e5665d295c5e6db9e870`
 - Device proof: separately signed `com.invitehub.app.dev` Build 69 was
   installed and launched on the cabled iPhone 12 Pro without replacing the
   store app
@@ -27,17 +27,20 @@ Canonical status: [docs/current-release-state.md](docs/current-release-state.md)
 - Dependency audit: online root audit 15 advisories (11 moderate, 4 high),
   mobile audit 12 (11 moderate, 1 high), and 0 critical. The mobile high is an
   indirect `brace-expansion` advisory in Expo/React Native build tooling.
-- Current Build 69 source verification: 122/122 test files and 650/650 tests
-  passed; focused identity/release contract 5/5 files and 32/32 tests passed;
-  web/mobile lint and typecheck, packet 334 checks, and web production build
-  passed. No native build/archive was run.
+- Current Build 69 clean-checkout verification: **HOLD**. The exact 80-path
+  source passed focused identity/release contracts (5/5 files, 35/35 tests),
+  packet verification (335 checks), lint, typecheck, and web production build,
+  but full regression stopped at 119/120 files and 646/647 tests. The tracked
+  schema-security test requires excluded untracked migration
+  `202607300001_harden_database_security.sql`, so the candidate is not build
+  eligible. No native build/archive was run.
 
-Do not press `심사에 추가` with Build 68. Build 69 is now bound only in the
-production Release source; its candidate Git SHA is unbound and no EAS/ASC
-Build 69 artifact exists. First produce one approved clean commit and raw source
-evidence. A later separately approved build/upload must then replace Build 68
-and pass exact TestFlight device smoke before App Review. Public release remains
-manual.
+Do not press `심사에 추가` with Build 68. Build 69 is selected at clean source
+commit `902eefca50f6b305d429e5665d295c5e6db9e870`; no EAS/ASC Build 69 artifact
+exists. The direct evidence commit may change only ledger/provenance controls,
+while ignored raw evidence binds both source SHA and evidence HEAD. A later
+separately approved build/upload must still replace Build 68 and pass exact
+TestFlight device smoke before App Review. Public release remains manual.
 
 ## 2026-08-04 Build 69 source binding
 
@@ -50,9 +53,12 @@ manual.
 - EAS and ASC read-only evidence both show highest production Build 68 and no
   Build 69. No build, archive, upload, submit, device, staging, or Production
   action was performed.
-- Candidate SHA remains `UNBOUND/PENDING`, `selected_candidate.selected` is
-  false, and raw candidate evidence/IPA/archive are absent. The release
-  candidate preflight therefore remains intentionally blocked.
+- Candidate source SHA is `902eefca50f6b305d429e5665d295c5e6db9e870` and
+  `selected_candidate.selected` is true. Ignored raw evidence binds that source
+  SHA to the direct evidence HEAD. IPA/archive/profile evidence remains absent.
+- Clean full regression is blocked because an excluded untracked migration is
+  still a required input of `tests/supabase-schema-security.test.ts`. Do not
+  build or upload until the assembly allowlist is re-approved and repaired.
 
 ## 2026-08-03 release candidate identity gate
 

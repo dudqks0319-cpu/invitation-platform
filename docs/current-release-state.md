@@ -10,11 +10,12 @@ EAS 빌드, App Store Connect 처리, TestFlight, 실기기 검증, 앱 심사�
 | --- | --- |
 | Release workspace | `/Users/jyb-m3max/Desktop/codex/invitation-platform/.worktrees/osamosam-uiux-plan-v1` |
 | Branch | `agent/osamosam-uiux-plan-v1` |
-| Candidate Git SHA | `UNBOUND/PENDING`; current dirty base HEAD is `0538c5d4dfe56b7a3dd9aa41bbbee484f4a536e7` |
+| Candidate source Git SHA | `902eefca50f6b305d429e5665d295c5e6db9e870`; exact 80-path Build 69 commit |
+| Evidence HEAD | Direct child of the source commit; limited to ledger/provenance controls and bound by ignored raw evidence |
 | Public App Store version | `1.0.2`; bundle `com.invitehub.app`; App Store id `6763630299` |
 | Local source identity | Xcode Release `com.invitehub.app` `1.0.3 (69)`; Xcode Debug remains `com.invitehub.app.dev` `1.0.3 (52)` |
 | Main visual | 완성된 웨딩 초대장 선택 화면, 최신 애니메이션 웨딩 템플릿, 화면 비율에 맞춘 템플릿 미리보기 |
-| Local checks | Build 69 source: 122/122 test files and 650/650 tests; focused release contract 5/5 files and 32/32 tests; packet 334 checks; web/mobile lint and typecheck plus web production build passed |
+| Local checks | **HOLD**: clean full regression 119/120 files and 646/647 tests; missing excluded untracked migration `202607300001_harden_database_security.sql`. Focused release contract 5/5 files and 35/35 tests, packet 335 checks, lint, typecheck, and web production build passed; release entrypoint preflight blocks while HOLD |
 | Dependency audit | 2026-07-29 online root audit: 15 advisories (11 moderate, 4 high, 0 critical). Mobile: 12 (11 moderate, 1 high, 0 critical). Mobile high is indirect `brace-expansion` in Expo/React Native build tooling |
 | EAS iOS build id | `47878231-5f1e-4a7f-b871-07adc9dfaa9e` |
 | EAS iOS build number | `68` |
@@ -44,24 +45,31 @@ component, and production Release identity is bound locally to
 still `com.invitehub.app.dev` `1.0.3 (69)` and is not production provenance.
 
 This is not yet a Store/TestFlight Build 69 or an App Review submission. The
-candidate Git SHA is `UNBOUND/PENDING`, the worktree is dirty, selection/raw
-evidence are absent, and EAS/ASC Build 69 upload count is zero. App Review
-remains gated until the exact source is committed and approved, production
+exact 80-path source is committed and selected at
+`902eefca50f6b305d429e5665d295c5e6db9e870`; a direct evidence commit and
+ignored raw packet bind provenance without changing production source. EAS/ASC
+Build 69 upload count remains zero. Clean verification is **HOLD** because the
+tracked schema-security suite reads an excluded untracked migration that is not
+present in the candidate commit. App Review remains gated until the assembly
+allowlist is explicitly repaired and re-verified, then a production
 Build 69 is generated and uploaded under separate approval, Build 68 is
 replaced, and exact TestFlight Build 69 smoke checks pass.
 
 ## Remaining release gates
 
-1. Assemble and approve one exact clean Build 69 source commit; bind its full
-   SHA and raw source evidence, then rerun candidate preflight.
-2. Under separate approval, generate the production EAS Store Build 69 and bind
+1. Re-approve an assembly correction for the missing required migration (or a
+   source/test change that removes the dependency), then create and verify a
+   new clean source candidate. Do not amend the exact 80-path source commit.
+2. Wait for the iPhone handoff before refreshing the approved development
+   profile; do not build/install/launch/XCTest while REAL-FE-002 owns the phone.
+3. Under separate approval, generate the production EAS Store Build 69 and bind
    its IPA identity, SHA-256, and profile to the clean source SHA.
-3. Upload and process Build 69 in App Store Connect under separate approval.
-4. Replace Build 68 with Build 69 in version 1.0.3 and update the review note.
-5. Install TestFlight Build 69 on the cabled iPhone 12 Pro and verify launch,
+4. Upload and process Build 69 in App Store Connect under separate approval.
+5. Replace Build 68 with Build 69 in version 1.0.3 and update the review note.
+6. Install TestFlight Build 69 on the cabled iPhone 12 Pro and verify launch,
    login, the home-to-process UI match, template ordering, invitation preview,
    free link/share entry point, relaunch, and basic recovery.
-6. Only then add version 1.0.3 to App Review; keep release mode manual.
+7. Only then add version 1.0.3 to App Review; keep release mode manual.
 
 ## Stop conditions
 
