@@ -41,6 +41,8 @@
     "record:real-iphone-build49-evidence": "node scripts/record-real-iphone-build49-evidence.mjs",
     "record:real-iphone-build50-evidence": "node scripts/record-real-iphone-build50-evidence.mjs",
     "record:real-iphone-build51-evidence": "node scripts/record-real-iphone-build51-evidence.mjs",
+    "release:ios:build": "zsh scripts/invitehub-eas-release.sh build",
+    "release:ios:upload": "zsh scripts/invitehub-eas-release.sh upload",
     "scaffold:app-store-free-submission-evidence": "node scripts/scaffold-app-store-free-submission-evidence.mjs",
     "scaffold:paid-activation-evidence": "node scripts/scaffold-paid-activation-evidence.mjs",
     "scaffold:real-iphone-build49-evidence": "node scripts/scaffold-real-iphone-build49-evidence.mjs",

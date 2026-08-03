@@ -176,7 +176,17 @@ export default function BuilderPreviewScreen() {
           throw new Error("발행할 초안이 없습니다.");
         }
 
-        const result = await publishGuestInvitation(draft);
+        const guestSession = await ensureAnonymousSession();
+        if (
+          guestSession.error ||
+          !("data" in guestSession) ||
+          !guestSession.data.session?.access_token
+        ) {
+          throw new Error(guestSession.error?.message || "게스트 세션을 시작하지 못했습니다.");
+        }
+        const accessToken = guestSession.data.session.access_token;
+
+        const result = await publishGuestInvitation(draft, accessToken);
         applyRemotePublish(result.invitationId, result.slug);
         setMessage(`공개 링크를 발행했습니다.\n${getPublicInvitationUrl(result.slug)}`);
         return;

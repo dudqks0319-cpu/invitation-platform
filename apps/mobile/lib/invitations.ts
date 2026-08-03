@@ -17,8 +17,7 @@ type RemoteInvitationRow = {
   payload: Record<string, unknown>;
 };
 
-const STORAGE_BUCKET = "invitation-assets";
-const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 7;
+const MAX_SIGNED_ASSET_PATHS_PER_INVITATION = 22;
 const PUBLIC_SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{2,30}[a-z0-9]$/i;
 const SHORT_SLUG_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
 const SHORT_SLUG_TOKEN_LENGTH = 10;
@@ -35,13 +34,10 @@ export function requiresPaymentBeforePublish(payload: InvitationPayload) {
 function createShortInvitationSlug() {
   const bytes = new Uint8Array(SHORT_SLUG_TOKEN_LENGTH);
 
-  if (globalThis.crypto?.getRandomValues) {
-    globalThis.crypto.getRandomValues(bytes);
-  } else {
-    for (let index = 0; index < bytes.length; index += 1) {
-      bytes[index] = Math.floor(Math.random() * 256);
-    }
+  if (!globalThis.crypto?.getRandomValues) {
+    throw new Error("안전한 초대장 주소를 만들 수 없습니다.");
   }
+  globalThis.crypto.getRandomValues(bytes);
 
   const token = Array.from(bytes, (byte) => SHORT_SLUG_ALPHABET[byte % SHORT_SLUG_ALPHABET.length]).join("");
   return `iv-${token}`;
@@ -112,7 +108,14 @@ export function toLegacyInvitationPayload(payload: InvitationPayload) {
   };
 }
 
-export async function publishGuestInvitation(draft: MobileInvitationDraft) {
+export async function publishGuestInvitation(
+  draft: MobileInvitationDraft,
+  accessToken: string
+) {
+  if (!accessToken) {
+    throw new Error("게스트 세션을 확인할 수 없습니다. 다시 시도해 주세요.");
+  }
+
   const slug = ensureSlug(draft.payload);
   const payload = toLegacyInvitationPayload({
     ...draft.payload,
@@ -126,7 +129,9 @@ export async function publishGuestInvitation(draft: MobileInvitationDraft) {
   const response = await fetch(`${getInviteHubBaseUrl()}/api/public/guest-publish`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": `guest-publish:${draft.localId}`
     },
     body: JSON.stringify({
       payload,
@@ -151,46 +156,97 @@ export async function publishGuestInvitation(draft: MobileInvitationDraft) {
   };
 }
 
-async function uploadPendingPhoto(
-  photo: PendingPhotoUpload,
-  userId: string,
-  localId: string
-) {
-  if (!supabase) {
-    throw new Error("사진 저장 기능을 사용할 수 없습니다. 잠시 후 다시 시도해 주세요.");
+async function publishOwnedInvitation(invitationId: string, accessToken: string) {
+  const response = await fetch(`${getInviteHubBaseUrl()}/api/payments/free-publish`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": `free-publish:${invitationId}`
+    },
+    body: JSON.stringify({ invitationId })
+  });
+  const result = (await response.json().catch(() => ({}))) as {
+    invitationId?: string;
+    message?: string;
+    slug?: string;
+    success?: boolean;
+  };
+
+  if (!response.ok || !result.success || !result.invitationId || !result.slug) {
+    throw new Error(result.message || "초대장 공개에 실패했습니다.");
   }
 
+  return {
+    invitationId: result.invitationId,
+    slug: result.slug
+  };
+}
+
+async function uploadPendingPhoto(
+  photo: PendingPhotoUpload,
+  accessToken: string
+) {
   const response = await fetch(photo.localUri);
   if (!response.ok) {
     throw new Error(`선택한 ${photo.slot} 사진을 읽지 못했습니다.`);
   }
   const arrayBuffer = await response.arrayBuffer();
   const extension = photo.localUri.toLowerCase().includes(".png") ? "png" : "jpg";
-  const path = `${userId}/${localId}/${photo.slot}-${photo.order ?? "single"}-${Date.now()}.${extension}`;
+  const contentType = extension === "png" ? "image/png" : "image/jpeg";
+  const formData = new FormData();
+  formData.append("file", new Blob([arrayBuffer], { type: contentType }), `invitation.${extension}`);
 
-  const { data, error } = await supabase.storage
-    .from(STORAGE_BUCKET)
-    .upload(path, arrayBuffer, {
-      contentType: extension === "png" ? "image/png" : "image/jpeg",
-      upsert: false
-    });
+  const uploadResponse = await fetch(`${getInviteHubBaseUrl()}/api/uploads`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    },
+    body: formData
+  });
+  const result = (await uploadResponse.json().catch(() => ({}))) as {
+    success?: boolean;
+    created?: boolean;
+    path?: string;
+    publicUrl?: string;
+    message?: string;
+  };
 
-  if (error || !data) {
-    throw new Error(error?.message || `${photo.slot} 사진 업로드에 실패했습니다.`);
-  }
-
-  const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-    .from(STORAGE_BUCKET)
-    .createSignedUrl(data.path, 60 * 60 * 24 * 7);
-
-  if (signedUrlError || !signedUrlData?.signedUrl) {
-    throw new Error("업로드한 사진의 미리보기 URL을 생성하지 못했습니다.");
+  if (
+    !uploadResponse.ok ||
+    !result.success ||
+    typeof result.created !== "boolean" ||
+    !result.path ||
+    !result.publicUrl
+  ) {
+    throw new Error(result.message || `${photo.slot} 사진 업로드에 실패했습니다.`);
   }
 
   return {
-    path: data.path,
-    signedUrl: signedUrlData.signedUrl
+    created: result.created,
+    path: result.path,
+    signedUrl: result.publicUrl
   };
+}
+
+async function deleteUploadedPhoto(path: string, accessToken: string) {
+  const response = await fetch(`${getInviteHubBaseUrl()}/api/uploads`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": `upload-delete:${path.split("/")[1] ?? "missing-path"}`
+    },
+    body: JSON.stringify({ path })
+  });
+  const result = (await response.json().catch(() => ({}))) as {
+    success?: boolean;
+    message?: string;
+  };
+
+  if (!response.ok || !result.success) {
+    throw new Error(result.message || "업로드한 사진을 정리하지 못했습니다.");
+  }
 }
 
 export async function saveDraftToSupabase(
@@ -210,105 +266,159 @@ export async function saveDraftToSupabase(
   let galleryImagePaths = Array.isArray(draft.sourcePayload?.galleryImagePaths)
     ? draft.sourcePayload.galleryImagePaths.filter((item): item is string => typeof item === "string")
     : [];
+  const newlyUploadedPaths: string[] = [];
+  let accessToken = "";
+  let rowPersisted = false;
 
-  if (draft.pendingPhotos.length > 0) {
-    for (const photo of draft.pendingPhotos) {
-      const uploaded = await uploadPendingPhoto(photo, userId, draft.localId);
+  try {
+    if (draft.pendingPhotos.length > 0) {
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      accessToken = sessionData.session?.access_token ?? "";
+      if (sessionError || !accessToken) {
+        throw new Error("사진을 안전하게 저장하려면 다시 로그인해 주세요.");
+      }
 
-      if (photo.slot === "main") {
-        mainImagePath = uploaded.path;
-        payloadWithUploads = {
-          ...payloadWithUploads,
-          photos: {
-            ...payloadWithUploads.photos,
-            mainUri: uploaded.signedUrl
-          }
-        };
-      } else if (photo.slot === "background") {
-        backgroundImagePath = uploaded.path;
-        payloadWithUploads = {
-          ...payloadWithUploads,
-          photos: {
-            ...payloadWithUploads.photos,
-            backgroundUri: uploaded.signedUrl
-          }
-        };
-      } else {
-        const nextGalleryPaths = [...galleryImagePaths];
-        nextGalleryPaths[photo.order ?? nextGalleryPaths.length] = uploaded.path;
-        galleryImagePaths = nextGalleryPaths;
-        payloadWithUploads = {
-          ...payloadWithUploads,
-          photos: {
-            ...payloadWithUploads.photos,
-            gallery: payloadWithUploads.photos.gallery.map((item) =>
-              item.order === photo.order
-                ? {
-                    ...item,
-                    uri: uploaded.signedUrl
-                  }
-                : item
-            )
-          }
-        };
+      for (const photo of draft.pendingPhotos) {
+        const uploaded = await uploadPendingPhoto(photo, accessToken);
+        if (uploaded.created) {
+          newlyUploadedPaths.push(uploaded.path);
+        }
+
+        if (photo.slot === "main") {
+          mainImagePath = uploaded.path;
+          payloadWithUploads = {
+            ...payloadWithUploads,
+            photos: {
+              ...payloadWithUploads.photos,
+              mainUri: uploaded.signedUrl
+            }
+          };
+        } else if (photo.slot === "background") {
+          backgroundImagePath = uploaded.path;
+          payloadWithUploads = {
+            ...payloadWithUploads,
+            photos: {
+              ...payloadWithUploads.photos,
+              backgroundUri: uploaded.signedUrl
+            }
+          };
+        } else {
+          const nextGalleryPaths = [...galleryImagePaths];
+          nextGalleryPaths[photo.order ?? nextGalleryPaths.length] = uploaded.path;
+          galleryImagePaths = nextGalleryPaths;
+          payloadWithUploads = {
+            ...payloadWithUploads,
+            photos: {
+              ...payloadWithUploads.photos,
+              gallery: payloadWithUploads.photos.gallery.map((item) =>
+                item.order === photo.order
+                  ? {
+                      ...item,
+                      uri: uploaded.signedUrl
+                    }
+                  : item
+              )
+            }
+          };
+        }
       }
     }
-  }
 
-  const slug = ensureSlug(payloadWithUploads);
-  const normalizedPayload: InvitationPayload = {
-    ...payloadWithUploads,
-    share: {
-      ...payloadWithUploads.share,
-      slug
-    },
-    isPublished: status === "published"
-  };
+    const slug = ensureSlug(payloadWithUploads);
+    const publishCandidate: InvitationPayload = {
+      ...payloadWithUploads,
+      share: {
+        ...payloadWithUploads.share,
+        slug
+      },
+      isPublished: status === "published"
+    };
 
-  if (status === "published") {
-    const readiness = getPublishReadiness(normalizedPayload);
+    if (status === "published") {
+      const readiness = getPublishReadiness(publishCandidate);
 
-    if (!readiness.canPublish) {
-      throw new Error(`공개 발행 전 입력이 필요한 항목: ${readiness.missingFields.join(", ")}`);
+      if (!readiness.canPublish) {
+        throw new Error(`공개 발행 전 입력이 필요한 항목: ${readiness.missingFields.join(", ")}`);
+      }
+
+      if (requiresPaymentBeforePublish(publishCandidate)) {
+        throw new Error("유료 옵션이 포함되어 있어 스토어 결제를 완료해야 공개할 수 있습니다.");
+      }
     }
 
-    if (requiresPaymentBeforePublish(normalizedPayload)) {
-      throw new Error("유료 옵션이 포함되어 있어 스토어 결제를 완료해야 공개할 수 있습니다.");
-    }
-  }
-
-  const row = {
-    user_id: userId,
-    slug,
-    title: normalizedPayload.title || "결혼식 초대장",
-    category: "wedding",
-    template_id: normalizedPayload.templateId,
-    status,
-    payload: {
+    const normalizedPayload: InvitationPayload = {
+      ...publishCandidate,
+      isPublished: false
+    };
+    const nextSourcePayload = {
       ...(draft.sourcePayload ?? {}),
       ...toLegacyInvitationPayload(normalizedPayload),
       mainImagePath,
       backgroundImagePath,
       galleryImagePaths
-    },
-    published_at: status === "published" ? new Date().toISOString() : null
-  };
+    };
+    const row = {
+      user_id: userId,
+      slug,
+      title: normalizedPayload.title || "결혼식 초대장",
+      category: "wedding",
+      template_id: normalizedPayload.templateId,
+      status: "draft",
+      payload: nextSourcePayload,
+      published_at: null
+    };
 
-  const query = draft.serverId
-    ? supabase.from("invitations").update(row).eq("id", draft.serverId).select().single()
-    : supabase.from("invitations").insert(row).select().single();
+    const query = draft.serverId
+      ? supabase.from("invitations").update(row).eq("id", draft.serverId).select().single()
+      : supabase.from("invitations").insert(row).select().single();
 
-  const { data, error } = await query;
-  if (error || !data) {
-    throw new Error(error?.message || "초대장을 저장하지 못했습니다.");
+    const { data, error } = await query;
+    if (error || !data) {
+      throw new Error(error?.message || "초대장을 저장하지 못했습니다.");
+    }
+    rowPersisted = true;
+
+    let resultPayload = normalizedPayload;
+    if (status === "published") {
+      if (!accessToken) {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        accessToken = sessionData.session?.access_token ?? "";
+        if (sessionError || !accessToken) {
+          throw new Error("초대장을 공개하려면 다시 로그인해 주세요.");
+        }
+      }
+
+      const published = await publishOwnedInvitation(data.id as string, accessToken);
+      resultPayload = {
+        ...normalizedPayload,
+        isPublished: true,
+        share: {
+          ...normalizedPayload.share,
+          slug: published.slug
+        }
+      };
+    }
+
+    return {
+      payload: resultPayload,
+      pendingPhotos: [],
+      publicUrl: getPublicInvitationUrl(resultPayload.share.slug),
+      serverId: data.id as string,
+      sourcePayload: nextSourcePayload
+    };
+  } catch (error) {
+    if (!rowPersisted && newlyUploadedPaths.length > 0 && accessToken) {
+      const cleanupResults = await Promise.allSettled(
+        newlyUploadedPaths.map((path) => deleteUploadedPhoto(path, accessToken))
+      );
+      if (cleanupResults.some((result) => result.status === "rejected")) {
+        throw new Error(
+          `${error instanceof Error ? error.message : "초대장을 저장하지 못했습니다."} 업로드한 사진 정리에도 실패했습니다.`
+        );
+      }
+    }
+    throw error;
   }
-
-  return {
-    payload: normalizedPayload,
-    pendingPhotos: [],
-    publicUrl: getPublicInvitationUrl(slug),
-    serverId: data.id as string
-  };
 }
 
 function toSharedInvitationPayload(row: RemoteInvitationRow, ownerId: string): InvitationPayload {
@@ -378,35 +488,46 @@ function toSharedInvitationPayload(row: RemoteInvitationRow, ownerId: string): I
   };
 }
 
-async function createSignedAssetUrl(path: string) {
-  if (!supabase || !path) {
+async function createSignedAssetUrl(path: string, accessToken: string) {
+  if (!path || !accessToken) {
     return "";
   }
-
-  const { data, error } = await supabase.storage
-    .from(STORAGE_BUCKET)
-    .createSignedUrl(path, SIGNED_URL_TTL_SECONDS);
-
-  if (error || !data?.signedUrl) {
+  const response = await fetch(
+    `${getInviteHubBaseUrl()}/api/uploads?path=${encodeURIComponent(path)}`,
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
+  const result = await response.json().catch(() => ({})) as {
+    success?: boolean;
+    signedUrl?: string;
+  };
+  if (!response.ok || !result.success || typeof result.signedUrl !== "string") {
     return "";
   }
-
-  return data.signedUrl;
+  return result.signedUrl;
 }
 
-async function toSharedInvitationDraft(row: RemoteInvitationRow, ownerId: string): Promise<MobileInvitationDraft> {
+async function toSharedInvitationDraft(
+  row: RemoteInvitationRow,
+  ownerId: string,
+  accessToken: string
+): Promise<MobileInvitationDraft> {
   const payload = row.payload ?? {};
   const mainImagePath = typeof payload.mainImagePath === "string" ? payload.mainImagePath : "";
   const backgroundImagePath = typeof payload.backgroundImagePath === "string" ? payload.backgroundImagePath : "";
   const galleryImagePaths = Array.isArray(payload.galleryImagePaths)
-    ? payload.galleryImagePaths.filter((item): item is string => typeof item === "string" && item.length > 0)
+    ? payload.galleryImagePaths
+        .filter((item): item is string => typeof item === "string" && item.length > 0)
+        .slice(0, MAX_SIGNED_ASSET_PATHS_PER_INVITATION - 2)
     : [];
-
-  const [signedMainUrl, signedBackgroundUrl, signedGalleryUrls] = await Promise.all([
-    mainImagePath ? createSignedAssetUrl(mainImagePath) : Promise.resolve(""),
-    backgroundImagePath ? createSignedAssetUrl(backgroundImagePath) : Promise.resolve(""),
-    Promise.all(galleryImagePaths.map((path) => createSignedAssetUrl(path)))
-  ]);
+  const paths = [...new Set([mainImagePath, backgroundImagePath, ...galleryImagePaths].filter(Boolean))]
+    .slice(0, MAX_SIGNED_ASSET_PATHS_PER_INVITATION);
+  const signedByPath = new Map<string, string>();
+  for (const path of paths) {
+    signedByPath.set(path, await createSignedAssetUrl(path, accessToken));
+  }
+  const signedMainUrl = signedByPath.get(mainImagePath) ?? "";
+  const signedBackgroundUrl = signedByPath.get(backgroundImagePath) ?? "";
+  const signedGalleryUrls = galleryImagePaths.map((path) => signedByPath.get(path) ?? "");
 
   const nextPayload = toSharedInvitationPayload(
     {
@@ -438,6 +559,10 @@ export async function listRemoteInvitations(userId: string): Promise<MobileInvit
     return [];
   }
 
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token ?? "";
+  if (sessionError || !accessToken) return [];
+
   const { data, error } = await supabase
     .from("invitations")
     .select("id, slug, title, category, template_id, status, updated_at, payload")
@@ -448,13 +573,21 @@ export async function listRemoteInvitations(userId: string): Promise<MobileInvit
     return [];
   }
 
-  return Promise.all(data.map((row) => toSharedInvitationDraft(row as RemoteInvitationRow, userId)));
+  const drafts: MobileInvitationDraft[] = [];
+  for (const row of data) {
+    drafts.push(await toSharedInvitationDraft(row as RemoteInvitationRow, userId, accessToken));
+  }
+  return drafts;
 }
 
 export async function loadRemoteInvitation(serverId: string, userId: string): Promise<MobileInvitationDraft | null> {
   if (!supabase) {
     return null;
   }
+
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token ?? "";
+  if (sessionError || !accessToken) return null;
 
   const { data, error } = await supabase
     .from("invitations")
@@ -467,7 +600,7 @@ export async function loadRemoteInvitation(serverId: string, userId: string): Pr
     return null;
   }
 
-  return toSharedInvitationDraft(data as RemoteInvitationRow, userId);
+  return toSharedInvitationDraft(data as RemoteInvitationRow, userId, accessToken);
 }
 
 export type RemoteRsvpSummary = {

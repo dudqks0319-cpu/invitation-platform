@@ -1,10 +1,18 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { consumeRateLimit, getClientIdentifier } from "@/lib/rate-limit";
-import { ensureJsonRequest, publicRsvpSchema, readJsonBody } from "@/lib/supabase/public-write";
+import { consumeRateLimits, getClientIdentifier } from "@/lib/rate-limit";
+import {
+  ensureJsonRequest,
+  getIdempotencyKey,
+  hashPublicWrite,
+  publicRsvpSchema,
+  publicSlugSchema,
+  readJsonBody
+} from "@/lib/supabase/public-write";
 
-const WINDOW_MS = 60 * 1000;
-const LIMIT = 5;
+const MINUTE_MS = 60 * 1000;
+const HOUR_MS = 60 * MINUTE_MS;
+const DAY_MS = 24 * HOUR_MS;
 
 export async function POST(
   request: Request,
@@ -17,38 +25,11 @@ export async function POST(
     );
   }
 
-  const admin = createSupabaseAdminClient();
-  if (!admin) {
-    return NextResponse.json(
-      { success: false, message: "서버 설정이 완료되지 않았습니다. 잠시 후 다시 시도해 주세요." },
-      { status: 503 }
-    );
-  }
-
   const { slug } = await context.params;
-  const limitResult = await consumeRateLimit({
-    admin,
-    key: `rsvp:${slug}:${getClientIdentifier(request)}`,
-    limit: LIMIT,
-    windowMs: WINDOW_MS
-  });
-
-  if (!limitResult.ok) {
+  if (!publicSlugSchema.safeParse(slug).success) {
     return NextResponse.json(
-      { success: false, message: "요청 보호 서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요." },
-      { status: 503 }
-    );
-  }
-
-  if (!limitResult.allowed) {
-    return NextResponse.json(
-      { success: false, message: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요." },
-      {
-        status: 429,
-        headers: {
-          "Retry-After": String(Math.ceil((limitResult.resetAt - Date.now()) / 1000))
-        }
-      }
+      { success: false, message: "유효하지 않은 초대장입니다." },
+      { status: 404 }
     );
   }
 
@@ -73,6 +54,22 @@ export async function POST(
     return NextResponse.json({ success: true, message: "RSVP가 저장되었습니다." });
   }
 
+  const idempotencyKey = getIdempotencyKey(request);
+  if (!idempotencyKey) {
+    return NextResponse.json(
+      { success: false, message: "요청 식별자가 올바르지 않습니다." },
+      { status: 400 }
+    );
+  }
+
+  const admin = createSupabaseAdminClient();
+  if (!admin) {
+    return NextResponse.json(
+      { success: false, message: "서버 설정이 완료되지 않았습니다. 잠시 후 다시 시도해 주세요." },
+      { status: 503 }
+    );
+  }
+
   const { data: invitation, error: invitationError } = await admin
     .from("invitations")
     .select("id, status")
@@ -87,6 +84,80 @@ export async function POST(
     );
   }
 
+  const clientIdentifier = getClientIdentifier(request);
+  if (!clientIdentifier) {
+    return NextResponse.json(
+      { success: false, message: "요청 보호 서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요." },
+      { status: 503 }
+    );
+  }
+
+  const idempotencyHash = hashPublicWrite(
+    "rsvp",
+    invitation.id,
+    clientIdentifier,
+    idempotencyKey
+  );
+  const requestHash = hashPublicWrite("rsvp-request", JSON.stringify(parsed.data));
+
+  const limitResult = await consumeRateLimits({
+    admin,
+    policies: [
+      { key: `rsvp:client:${clientIdentifier}:burst`, limit: 5, windowMs: MINUTE_MS },
+      { key: `rsvp:client:${clientIdentifier}:rolling`, limit: 30, windowMs: HOUR_MS },
+      { key: `rsvp:client:${clientIdentifier}:daily`, limit: 100, windowMs: DAY_MS },
+      { key: `rsvp:invitation:${invitation.id}:daily`, limit: 5000, windowMs: DAY_MS },
+      { key: "rsvp:global:daily", limit: 50_000, windowMs: DAY_MS }
+    ]
+  });
+
+  if (!limitResult.ok) {
+    return NextResponse.json(
+      { success: false, message: "요청 보호 서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요." },
+      { status: 503 }
+    );
+  }
+
+  if (!limitResult.allowed) {
+    return NextResponse.json(
+      { success: false, message: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.max(1, Math.ceil((limitResult.resetAt - Date.now()) / 1000)))
+        }
+      }
+    );
+  }
+
+  const verifiedAdmin = admin;
+  const invitationId = invitation.id;
+  async function findExisting() {
+    return verifiedAdmin
+      .from("rsvps")
+      .select("id, request_hash")
+      .eq("invitation_id", invitationId)
+      .eq("idempotency_key_hash", idempotencyHash)
+      .maybeSingle();
+  }
+
+  const existing = await findExisting();
+  if (existing.error) {
+    return NextResponse.json(
+      { success: false, message: "RSVP 저장 상태를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요." },
+      { status: 503 }
+    );
+  }
+  if (existing.data) {
+    if (existing.data.request_hash !== requestHash) {
+      return NextResponse.json(
+        { success: false, message: "같은 요청 식별자를 다른 RSVP 내용에 재사용할 수 없습니다." },
+        { status: 409 }
+      );
+    }
+    return NextResponse.json({ success: true, message: "RSVP가 저장되었습니다." });
+  }
+
   const guestPhone = parsed.data.guestPhone || null;
   const rsvpPayload = {
     guest_phone: guestPhone,
@@ -95,35 +166,21 @@ export async function POST(
     memo: parsed.data.memo || null
   };
 
-  const existingRsvpQuery = admin
-    .from("rsvps")
-    .select("id")
-    .eq("invitation_id", invitation.id)
-    .eq("guest_name", parsed.data.guestName);
-
-  const { data: existingRsvp, error: existingRsvpError } = guestPhone
-    ? await existingRsvpQuery.eq("guest_phone", guestPhone).maybeSingle()
-    : await existingRsvpQuery.is("guest_phone", null).maybeSingle();
-
-  if (existingRsvpError) {
-    return NextResponse.json(
-      { success: false, message: "RSVP 저장에 실패했습니다. 잠시 후 다시 시도해 주세요." },
-      { status: 500 }
-    );
-  }
-
-  const { error } = existingRsvp
-    ? await admin
-      .from("rsvps")
-      .update(rsvpPayload)
-      .eq("id", existingRsvp.id)
-    : await admin.from("rsvps").insert({
-      invitation_id: invitation.id,
-      guest_name: parsed.data.guestName,
-      ...rsvpPayload
-    });
+  const { error } = await admin.from("rsvps").insert({
+    invitation_id: invitation.id,
+    guest_name: parsed.data.guestName,
+    ...rsvpPayload,
+    idempotency_key_hash: idempotencyHash,
+    request_hash: requestHash
+  });
 
   if (error) {
+    if (typeof error === "object" && "code" in error && error.code === "23505") {
+      const replay = await findExisting();
+      if (!replay.error && replay.data?.request_hash === requestHash) {
+        return NextResponse.json({ success: true, message: "RSVP가 저장되었습니다." });
+      }
+    }
     return NextResponse.json(
       { success: false, message: "RSVP 저장에 실패했습니다. 잠시 후 다시 시도해 주세요." },
       { status: 500 }

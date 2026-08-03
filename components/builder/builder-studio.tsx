@@ -665,6 +665,7 @@ export function BuilderStudio({
     const previousBackgroundImagePath = payload.backgroundImagePath;
     const previousGalleryImagePaths = payload.galleryImagePaths;
     const rollbackPaths: string[] = [];
+    let rowPersisted = false;
 
     try {
       let nextPayload = payload;
@@ -939,17 +940,18 @@ export function BuilderStudio({
         return nextMeta;
       }
 
+      const writeStatus = status === "published" ? "draft" : status;
       const invitationInput = {
         user_id: userId,
         slug: nextSlug,
         title: nextPayload.title,
         category: nextPayload.category,
         template_id: nextPayload.templateId,
-        status,
+        status: writeStatus,
         payload: nextPayload,
         repurchase_required: hasRestrictedPaidChanges,
         paid_payload_snapshot: paidSnapshotRef.current,
-        published_at: status === "published" ? new Date().toISOString() : null
+        published_at: null
       };
 
       const query = meta.id
@@ -961,12 +963,40 @@ export function BuilderStudio({
       if (error) {
         throw new Error("초대장을 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.");
       }
+      rowPersisted = true;
 
-      const savedMeta = {
+      let savedMeta = {
         id: data.id,
         slug: data.slug,
         status: data.status as InvitationStatus
       } satisfies DraftMeta;
+
+      if (status === "published") {
+        const response = await fetch("/api/payments/free-publish", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Idempotency-Key": `free-publish:${data.id}`
+          },
+          body: JSON.stringify({ invitationId: data.id })
+        });
+        const result = (await response.json().catch(() => ({}))) as {
+          invitationId?: string;
+          message?: string;
+          slug?: string;
+          success?: boolean;
+        };
+
+        if (!response.ok || !result.success || !result.invitationId || !result.slug) {
+          throw new Error(result.message || "초대장 공개에 실패했습니다.");
+        }
+
+        savedMeta = {
+          id: result.invitationId,
+          slug: result.slug,
+          status: "published"
+        };
+      }
 
       setPayload(nextPayload);
       setMeta(savedMeta);
@@ -1021,7 +1051,7 @@ export function BuilderStudio({
 
       return savedMeta;
     } catch (error) {
-      if (rollbackPaths.length > 0) {
+      if (!rowPersisted && rollbackPaths.length > 0) {
         await Promise.allSettled(rollbackPaths.map((path) => deleteImage(path)));
       }
       setUploadProgress(null);

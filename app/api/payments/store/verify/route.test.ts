@@ -85,6 +85,7 @@ function createAuthClient(userId: string | null) {
 
 function createAdminDouble(options?: {
   existingPayment?: boolean;
+  invitationStatus?: string;
   invitationUserId?: string;
   pricey?: boolean;
 }) {
@@ -95,6 +96,7 @@ function createAdminDouble(options?: {
   };
 
   const invitationUserId = options?.invitationUserId ?? "user-1";
+  const invitationStatus = options?.invitationStatus ?? "draft";
   const pricey = options?.pricey ?? true;
   const existingPayment = options?.existingPayment ?? false;
 
@@ -131,7 +133,7 @@ function createAdminDouble(options?: {
                 payload: pricey
                   ? { mainImageUrl: "https://example.com/main.jpg" }
                   : {},
-                status: "draft"
+                status: invitationStatus
               },
               error: null
             };
@@ -322,6 +324,22 @@ describe("POST /api/payments/store/verify", () => {
 
     expect(response.status).toBe(404);
     expect(payload.message).toContain("초대장");
+  });
+
+  it("does not start provider verification for a tombstoned invitation", async () => {
+    createSupabaseAdminClientMock.mockReturnValue(
+      createAdminDouble({ invitationStatus: "deletion_pending" }).client
+    );
+    isAppleStoreVerificationEnabledMock.mockReturnValue(true);
+
+    const response = await POST(createRequest({
+      invitationId: "invitation-1",
+      provider: "apple_iap",
+      productId: "publish.credit.ios",
+      transactionId: "tx-1"
+    }));
+    expect(response.status).toBe(404);
+    expect(verifyAppleTransactionMock).not.toHaveBeenCalled();
   });
 
   it("blocks store publish when the invitation is already free", async () => {

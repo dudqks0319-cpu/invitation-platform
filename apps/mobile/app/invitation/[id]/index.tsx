@@ -14,6 +14,7 @@ import { deleteDraft, loadDraft, saveDraft } from "@/lib/drafts";
 import { deleteRemoteInvitation, loadRemoteInvitation, saveDraftToSupabase } from "@/lib/invitations";
 import { getPublicInvitationUrl, openInvitationPublicPage, openWebBuilder, shareInvitationLink } from "@/lib/share";
 import { useAuth } from "@/hooks/useAuth";
+import { getDraftOwnerId } from "@/lib/auth-access";
 import { getInvitationMapLinks } from "@/lib/map-links";
 
 async function openMapUrl(url: string, fallbackUrl?: string) {
@@ -37,6 +38,7 @@ export default function InvitationDetailScreen() {
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
   const { configured, status, user } = useAuth();
+  const ownerId = getDraftOwnerId(user);
   const publicUrl = draft?.payload.share.slug ? getPublicInvitationUrl(draft.payload.share.slug) : "";
   const shareSlug = draft?.payload.share.slug ?? "";
   const mapLinks = draft ? getInvitationMapLinks(draft.payload) : null;
@@ -51,7 +53,7 @@ export default function InvitationDetailScreen() {
     setMessage("");
 
     try {
-      await deleteDraft(draft.localId);
+      await deleteDraft(draft.localId, ownerId);
       if (configured && status === "authenticated" && user?.id && draft.serverId) {
         await deleteRemoteInvitation(draft.serverId, user.id);
       }
@@ -111,7 +113,7 @@ export default function InvitationDetailScreen() {
         }
       }
 
-      const local = await loadDraft(id);
+      const local = await loadDraft(id, ownerId);
       if (!mounted) return;
       setDraft(local);
       setRefreshing(false);
@@ -123,7 +125,7 @@ export default function InvitationDetailScreen() {
     return () => {
       mounted = false;
     };
-  }, [configured, id, status, user?.id]);
+  }, [configured, id, ownerId, status, user?.id]);
 
   const title = draft?.payload.title || "제목 없는 초대장";
   const names = `${draft?.payload.eventData.groom.name || "신랑"} ♡ ${draft?.payload.eventData.bride.name || "신부"}`;
@@ -301,7 +303,7 @@ export default function InvitationDetailScreen() {
                       }
 
                       if (id) {
-                        const local = await loadDraft(id);
+                        const local = await loadDraft(id, ownerId);
                         setDraft(local);
                         setMessage("이 기기에 저장된 초대장을 다시 불러왔습니다.");
                       }

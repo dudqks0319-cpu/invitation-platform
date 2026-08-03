@@ -1,9 +1,10 @@
 #!/bin/zsh
 set -euo pipefail
 
-ROOT="/Users/jyb-m3max/Desktop/codex/invitation-platform"
+SCRIPT_DIR="${0:A:h}"
+ROOT="${SCRIPT_DIR:h}"
 IOS_WORKSPACE="$ROOT/apps/mobile/ios"
-IOS_APP="$HOME/Library/Developer/Xcode/DerivedData/InviteHub-hevapvaabsdjcdfsxondvdutghav/Build/Products/Release-iphonesimulator/InviteHub.app"
+IOS_APP="${IOS_APP:-$HOME/Library/Developer/Xcode/DerivedData/InviteHub-hevapvaabsdjcdfsxondvdutghav/Build/Products/Release-iphonesimulator/InviteHub.app}"
 DEVICE_NAME="${DEVICE_NAME:-iPhone 17}"
 OUTPUT_DIR="${1:-$ROOT/output/store-screenshots}"
 BUNDLE_ID="${APP_BUNDLE_ID:-com.invitehub.app}"
@@ -14,6 +15,9 @@ DEV_BUNDLE_IDS=(
   "com.invitehub.app.dev"
   "com.invitehub.app.dev-default"
 )
+
+cd "$ROOT"
+node scripts/verify-release-candidate.mjs install --artifact "$IOS_APP"
 
 mkdir -p "$OUTPUT_DIR"
 

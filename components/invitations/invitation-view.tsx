@@ -182,11 +182,16 @@ export function InvitationView({
     await navigator.clipboard.writeText(value);
   }
 
-  async function submitPublicForm(endpoint: string, payloadBody: object) {
+  async function submitPublicForm(
+    endpoint: string,
+    payloadBody: object,
+    idempotencyKey: string
+  ) {
     const response = await fetch(endpoint, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Idempotency-Key": idempotencyKey
       },
       body: JSON.stringify(payloadBody)
     });
@@ -229,7 +234,7 @@ export function InvitationView({
           guests: nextEntry.guests,
           memo: nextEntry.memo,
           website: String(formData.get("website") || "")
-        });
+        }, nextEntry.id);
         setRsvpMessage("참석 응답이 접수되었습니다. 변경이 필요하면 호스트에게 바로 알려 주세요.");
       } else {
         const current = JSON.parse(window.localStorage.getItem(LOCAL_RSVP_KEY) || "[]") as RsvpEntry[];
@@ -269,7 +274,7 @@ export function InvitationView({
           nickname: nextEntry.nickname,
           message: nextEntry.message,
           website: String(formData.get("website") || "")
-        });
+        }, nextEntry.id);
         setGuestbookMessage("방명록이 접수되었습니다. 호스트 확인 후 공개되며, 승인 전에는 목록에 보이지 않습니다.");
       } else {
         const current = JSON.parse(window.localStorage.getItem(LOCAL_GUESTBOOK_KEY) || "[]") as GuestbookEntry[];

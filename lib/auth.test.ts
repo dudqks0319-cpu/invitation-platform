@@ -5,6 +5,10 @@ describe("auth helpers", () => {
     expect(normalizeNextPath("/checkout")).toBe("/checkout");
     expect(normalizeNextPath("https://example.com")).toBe("/dashboard");
     expect(normalizeNextPath("//evil.example")).toBe("/dashboard");
+    expect(normalizeNextPath("/\\evil.example")).toBe("/dashboard");
+    expect(normalizeNextPath("/%5cevil.example")).toBe("/dashboard");
+    expect(normalizeNextPath("/%2f%2fevil.example")).toBe("/dashboard");
+    expect(normalizeNextPath("/checkout%0d%0aLocation:evil")).toBe("/dashboard");
   });
 
   it("derives display name from metadata or email", () => {

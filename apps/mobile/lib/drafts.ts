@@ -273,9 +273,11 @@ function needsPreviewSampleReset(draft: MobileInvitationDraft) {
   );
 }
 
-export async function listDrafts() {
+export async function listDrafts(ownerId: string) {
   const drafts = await readDraftMap();
-  return Object.values(drafts).sort((a, b) => b.localUpdatedAt.localeCompare(a.localUpdatedAt));
+  return Object.values(drafts)
+    .filter((draft) => draft.payload.ownerId === ownerId)
+    .sort((a, b) => b.localUpdatedAt.localeCompare(a.localUpdatedAt));
 }
 
 export async function inspectDraftsForTemplatePreview(ownerId: string) {
@@ -285,9 +287,10 @@ export async function inspectDraftsForTemplatePreview(ownerId: string) {
     .sort((a, b) => b.localUpdatedAt.localeCompare(a.localUpdatedAt));
 }
 
-export async function loadDraft(localId: string) {
+export async function loadDraft(localId: string, ownerId: string) {
   const drafts = await readDraftMap();
-  return drafts[localId] ?? null;
+  const draft = drafts[localId];
+  return draft?.payload.ownerId === ownerId ? draft : null;
 }
 
 export async function saveDraft(draft: MobileInvitationDraft) {
@@ -299,7 +302,7 @@ export async function saveDraft(draft: MobileInvitationDraft) {
 export async function ensureDraft(ownerId: string, localId?: string) {
   const drafts = await readDraftMap();
 
-  if (localId && drafts[localId]) {
+  if (localId && drafts[localId]?.payload.ownerId === ownerId) {
     return drafts[localId];
   }
 
@@ -394,8 +397,15 @@ export function createOrReuseTemplatePreviewDraft(ownerId: string, input: Templa
   return operation;
 }
 
-export async function deleteDraft(localId: string) {
+export async function deleteDraft(localId: string, ownerId: string) {
   const drafts = await readDraftMap();
+  const draft = drafts[localId];
+  if (!draft) {
+    return;
+  }
+  if (draft.payload.ownerId !== ownerId) {
+    throw new Error("본인 소유의 초안만 삭제할 수 있어요.");
+  }
   delete drafts[localId];
   await writeDraftMap(drafts);
 }

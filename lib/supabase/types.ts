@@ -17,13 +17,12 @@ export type Database = {
           title: string;
           category: string;
           template_id: string;
-          status: "draft" | "payment_pending" | "paid" | "published" | "refund_pending" | "refunded" | "payment_failed";
+          status: "draft" | "payment_pending" | "paid" | "published" | "refund_pending" | "refunded" | "payment_failed" | "deletion_pending";
           payload: Json;
           repurchase_required: boolean;
           paid_payload_snapshot: Json | null;
-          guest_owner_token_hash: string | null;
-          guest_owner_created_at: string | null;
-          guest_owner_last_verified_at: string | null;
+          guest_publish_idempotency_key_hash: string | null;
+          guest_publish_request_hash: string | null;
           published_at: string | null;
           created_at: string;
           updated_at: string;
@@ -35,13 +34,12 @@ export type Database = {
           title: string;
           category: string;
           template_id: string;
-          status?: "draft" | "payment_pending" | "paid" | "published" | "refund_pending" | "refunded" | "payment_failed";
+          status?: "draft" | "payment_pending" | "paid" | "published" | "refund_pending" | "refunded" | "payment_failed" | "deletion_pending";
           payload: Json;
           repurchase_required?: boolean;
           paid_payload_snapshot?: Json | null;
-          guest_owner_token_hash?: string | null;
-          guest_owner_created_at?: string | null;
-          guest_owner_last_verified_at?: string | null;
+          guest_publish_idempotency_key_hash?: string | null;
+          guest_publish_request_hash?: string | null;
           published_at?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -170,6 +168,8 @@ export type Database = {
           attending: boolean;
           guests: number;
           memo: string | null;
+          idempotency_key_hash: string | null;
+          request_hash: string | null;
           created_at: string;
         };
         Insert: {
@@ -180,6 +180,8 @@ export type Database = {
           attending?: boolean;
           guests?: number;
           memo?: string | null;
+          idempotency_key_hash?: string | null;
+          request_hash?: string | null;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["rsvps"]["Insert"]>;
@@ -192,6 +194,8 @@ export type Database = {
           nickname: string;
           message: string;
           approved: boolean;
+          idempotency_key_hash: string | null;
+          request_hash: string | null;
           created_at: string;
         };
         Insert: {
@@ -200,6 +204,8 @@ export type Database = {
           nickname: string;
           message: string;
           approved?: boolean;
+          idempotency_key_hash?: string | null;
+          request_hash?: string | null;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["guestbook_entries"]["Insert"]>;
@@ -228,17 +234,75 @@ export type Database = {
           id: number;
           invitation_id: string;
           visitor_key: string | null;
+          identity_kind: "authenticated" | "anonymous_session" | "ip" | null;
           user_agent: string | null;
+          idempotency_key_hash: string | null;
+          request_hash: string | null;
+          cost_units: number;
+          identity_expires_at: string | null;
+          expires_at: string | null;
           created_at: string;
         };
         Insert: {
           id?: number;
           invitation_id: string;
           visitor_key?: string | null;
+          identity_kind?: "authenticated" | "anonymous_session" | "ip" | null;
           user_agent?: string | null;
+          idempotency_key_hash?: string | null;
+          request_hash?: string | null;
+          cost_units?: number;
+          identity_expires_at?: string | null;
+          expires_at?: string | null;
           created_at?: string;
         };
         Update: Partial<Database["public"]["Tables"]["view_logs"]["Insert"]>;
+        Relationships: [];
+      };
+      account_deletion_requests: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          subject_hash: string;
+          idempotency_key_hash: string | null;
+          reauth_ticket_hash: string | null;
+          request_hash: string | null;
+          export_disposition: "downloaded" | "skipped";
+          status: "pending" | "processing" | "retry_wait" | "blocked" | "completed";
+          stage: "storage" | "provider" | "auth" | "finalize" | "completed";
+          attempt_count: number;
+          lease_hash: string | null;
+          lease_expires_at: string | null;
+          next_retry_at: string;
+          last_error_code: "storage_unavailable" | "provider_unavailable" | "auth_unavailable" | null;
+          created_at: string;
+          updated_at: string;
+          completed_at: string | null;
+          identity_expires_at: string;
+          expires_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          subject_hash: string;
+          idempotency_key_hash?: string | null;
+          reauth_ticket_hash?: string | null;
+          request_hash?: string | null;
+          export_disposition: "downloaded" | "skipped";
+          status?: "pending" | "processing" | "retry_wait" | "blocked" | "completed";
+          stage?: "storage" | "provider" | "auth" | "finalize" | "completed";
+          attempt_count?: number;
+          lease_hash?: string | null;
+          lease_expires_at?: string | null;
+          next_retry_at?: string;
+          last_error_code?: "storage_unavailable" | "provider_unavailable" | "auth_unavailable" | null;
+          created_at?: string;
+          updated_at?: string;
+          completed_at?: string | null;
+          identity_expires_at?: string;
+          expires_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["account_deletion_requests"]["Insert"]>;
         Relationships: [];
       };
     };
@@ -255,6 +319,62 @@ export type Database = {
           remaining: number;
           reset_at: string;
         }[];
+      };
+      record_invitation_view: {
+        Args: {
+          p_invitation_id: string;
+          p_visitor_key: string;
+          p_identity_kind: "authenticated" | "anonymous_session" | "ip";
+          p_idempotency_key_hash: string;
+          p_request_hash: string;
+          p_issued_at: string;
+        };
+        Returns: { outcome: "inserted" | "replayed" | "collision" | "not_found" }[];
+      };
+      cleanup_view_logs: {
+        Args: { batch_size?: number };
+        Returns: { redacted_count: number; deleted_count: number }[];
+      };
+      account_is_active: {
+        Args: { p_user_id: string };
+        Returns: boolean;
+      };
+      is_account_deletion_pending: {
+        Args: { p_user_id: string };
+        Returns: boolean;
+      };
+      begin_account_deletion: {
+        Args: {
+          p_user_id: string;
+          p_subject_hash: string;
+          p_idempotency_key_hash: string;
+          p_reauth_ticket_hash: string;
+          p_request_hash: string;
+          p_export_disposition: "downloaded" | "skipped";
+          p_ticket_issued_at: string;
+        };
+        Returns: {
+          request_id: string | null;
+          outcome: "inserted" | "replayed" | "collision" | "in_progress" | "retention_required";
+          status: string;
+          stage: string | null;
+        }[];
+      };
+      claim_account_deletion: {
+        Args: { p_request_id: string; p_lease_hash: string };
+        Returns: { claimed: boolean; stage: "storage" | "provider" | "auth" | "finalize"; attempt_count: number }[];
+      };
+      advance_account_deletion: {
+        Args: { p_request_id: string; p_lease_hash: string; p_completed_stage: "storage" | "provider" | "auth" | "finalize" };
+        Returns: { advanced: boolean }[];
+      };
+      fail_account_deletion: {
+        Args: { p_request_id: string; p_lease_hash: string; p_error_code: "storage_unavailable" | "provider_unavailable" | "auth_unavailable" };
+        Returns: { recorded: boolean; blocked: boolean }[];
+      };
+      cleanup_account_deletion_requests: {
+        Args: { batch_size?: number };
+        Returns: { redacted_count: number; deleted_count: number }[];
       };
       grant_publish_credit: {
         Args: {

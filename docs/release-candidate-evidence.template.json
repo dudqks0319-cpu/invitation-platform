@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "",
+  "approvalReference": "",
+  "selectedCandidate": {
+    "version": "",
+    "buildNumber": "",
+    "bundleId": "com.invitehub.app",
+    "gitSha": "",
+    "branch": "",
+    "sourceState": "clean_committed"
+  },
+  "sourceEvidence": {
+    "headSha": "",
+    "branch": "",
+    "statusPorcelain": "",
+    "nativeIdentity": {
+      "version": "",
+      "buildNumber": "",
+      "bundleId": "com.invitehub.app"
+    }
+  },
+  "artifact": {
+    "path": "",
+    "sha256": "",
+    "version": "",
+    "buildNumber": "",
+    "bundleId": "com.invitehub.app",
+    "gitSha": ""
+  }
+}

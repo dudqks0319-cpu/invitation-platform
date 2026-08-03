@@ -10,7 +10,13 @@ export function normalizeNextPath(value: string | null | undefined, fallback = D
 
   const trimmed = value.trim();
 
-  if (!trimmed.startsWith("/") || trimmed.startsWith("//")) {
+  if (
+    !trimmed.startsWith("/") ||
+    trimmed.startsWith("//") ||
+    trimmed.includes("\\") ||
+    /[\u0000-\u001f\u007f]/.test(trimmed) ||
+    /%(?:00|0a|0d|2f|5c)/i.test(trimmed)
+  ) {
     return fallback;
   }
 

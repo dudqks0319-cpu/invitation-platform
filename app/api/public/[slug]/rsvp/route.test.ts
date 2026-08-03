@@ -2,11 +2,11 @@ import { vi } from "vitest";
 
 const {
   createSupabaseAdminClientMock,
-  consumeRateLimitMock,
+  consumeRateLimitsMock,
   getClientIdentifierMock
 } = vi.hoisted(() => ({
   createSupabaseAdminClientMock: vi.fn(),
-  consumeRateLimitMock: vi.fn(),
+  consumeRateLimitsMock: vi.fn(),
   getClientIdentifierMock: vi.fn()
 }));
 
@@ -15,18 +15,20 @@ vi.mock("@/lib/supabase/admin", () => ({
 }));
 
 vi.mock("@/lib/rate-limit", () => ({
-  consumeRateLimit: consumeRateLimitMock,
+  consumeRateLimits: consumeRateLimitsMock,
   getClientIdentifier: getClientIdentifierMock
 }));
 
 import { POST } from "@/app/api/public/[slug]/rsvp/route";
+import { hashPublicWrite } from "@/lib/supabase/public-write";
 
-function createRequest(body: object) {
+function createRequest(body: object, idempotencyKey = "rsvp-request:1234567890") {
   return new Request("https://invitehub.test/api/public/demo/rsvp", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-real-ip": "203.0.113.10"
+      "x-real-ip": "203.0.113.10",
+      ...(idempotencyKey ? { "Idempotency-Key": idempotencyKey } : {})
     },
     body: JSON.stringify(body)
   });
@@ -34,7 +36,8 @@ function createRequest(body: object) {
 
 function createAdminDouble(options?: {
   insertError?: { message: string } | null;
-  existingRsvpId?: string | null;
+  existingWrite?: { id: string; request_hash: string } | null;
+  invitation?: { id: string; status: string } | null;
 }) {
   const insertError = options?.insertError ?? null;
   const insertMock = vi.fn(async () => ({ error: insertError }));
@@ -57,10 +60,12 @@ function createAdminDouble(options?: {
             },
             async maybeSingle() {
               return {
-                data: {
-                  id: "invitation-1",
-                  status: "published"
-                },
+                data: options && "invitation" in options
+                  ? options.invitation
+                  : {
+                      id: "invitation-1",
+                      status: "published"
+                    },
                 error: null
               };
             }
@@ -82,11 +87,7 @@ function createAdminDouble(options?: {
             },
             async maybeSingle() {
               return {
-                data: options?.existingRsvpId
-                  ? {
-                      id: options.existingRsvpId
-                    }
-                  : null,
+                data: options?.existingWrite ?? null,
                 error: null
               };
             }
@@ -102,18 +103,52 @@ function createAdminDouble(options?: {
 describe("POST /api/public/[slug]/rsvp", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    consumeRateLimitMock.mockResolvedValue({
+    consumeRateLimitsMock.mockResolvedValue({
       ok: true,
       allowed: true,
       remaining: 4,
       resetAt: Date.now() + 60_000
     });
-    getClientIdentifierMock.mockReturnValue("203.0.113.10");
+    getClientIdentifierMock.mockReturnValue("v1:fingerprint");
+  });
+
+  it("validates the slug and invitation before creating a durable limiter row", async () => {
+    createSupabaseAdminClientMock.mockReturnValue(createAdminDouble().client);
+
+    const response = await POST(createRequest({
+      guestName: "박하객",
+      attending: "yes",
+      guests: 1,
+      website: ""
+    }), {
+      params: Promise.resolve({ slug: "../invalid" })
+    });
+
+    expect(response.status).toBe(404);
+    expect(consumeRateLimitsMock).not.toHaveBeenCalled();
+  });
+
+  it("does not create a limiter row for a missing published invitation", async () => {
+    createSupabaseAdminClientMock.mockReturnValue(
+      createAdminDouble({ invitation: null }).client
+    );
+
+    const response = await POST(createRequest({
+      guestName: "박하객",
+      attending: "yes",
+      guests: 1,
+      website: ""
+    }), {
+      params: Promise.resolve({ slug: "missing-invitation" })
+    });
+
+    expect(response.status).toBe(404);
+    expect(consumeRateLimitsMock).not.toHaveBeenCalled();
   });
 
   it("returns 503 when the persistent rate-limit backend is unavailable", async () => {
     createSupabaseAdminClientMock.mockReturnValue(createAdminDouble().client);
-    consumeRateLimitMock.mockResolvedValue({
+    consumeRateLimitsMock.mockResolvedValue({
       ok: false,
       message: "rate_limit_backend_unavailable"
     });
@@ -157,8 +192,8 @@ describe("POST /api/public/[slug]/rsvp", () => {
     });
   });
 
-  it("updates an existing RSVP when the same guest submits again", async () => {
-    const adminDouble = createAdminDouble({ existingRsvpId: "rsvp-1" });
+  it("never overwrites an existing RSVP based only on public identity fields", async () => {
+    const adminDouble = createAdminDouble();
     createSupabaseAdminClientMock.mockReturnValue(adminDouble.client);
 
     const response = await POST(createRequest({
@@ -174,16 +209,90 @@ describe("POST /api/public/[slug]/rsvp", () => {
     const result = await response.json();
 
     expect(response.status).toBe(200);
-    expect(adminDouble.insertMock).not.toHaveBeenCalled();
-    expect(adminDouble.updateMock).toHaveBeenCalledWith({
+    expect(adminDouble.updateMock).not.toHaveBeenCalled();
+    expect(adminDouble.insertMock).toHaveBeenCalledWith(expect.objectContaining({
+      invitation_id: "invitation-1",
+      guest_name: "박하객",
       guest_phone: "010-1111-2222",
       attending: false,
       guests: 0,
-      memo: "사정이 생겼어요"
-    });
+      memo: "사정이 생겼어요",
+      idempotency_key_hash: expect.stringMatching(/^[a-f0-9]{64}$/),
+      request_hash: expect.stringMatching(/^[a-f0-9]{64}$/)
+    }));
     expect(result).toEqual({
       success: true,
       message: "RSVP가 저장되었습니다."
     });
+  });
+
+  it("returns an idempotent replay without another quota charge or insert", async () => {
+    const body = {
+      guestName: "박하객",
+      guestPhone: "",
+      attending: "yes",
+      guests: 1,
+      memo: "",
+      website: ""
+    };
+    const adminDouble = createAdminDouble({
+      existingWrite: {
+        id: "rsvp-1",
+        request_hash: hashPublicWrite("rsvp-request", JSON.stringify({
+          guestName: "박하객",
+          guestPhone: "",
+          attending: true,
+          guests: 1,
+          memo: "",
+          website: ""
+        }))
+      }
+    });
+    createSupabaseAdminClientMock.mockReturnValue(adminDouble.client);
+
+    const response = await POST(createRequest(body), {
+      params: Promise.resolve({ slug: "demo" })
+    });
+
+    expect(response.status).toBe(200);
+    expect(consumeRateLimitsMock).toHaveBeenCalled();
+    expect(adminDouble.insertMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects an idempotency key reused with different RSVP content", async () => {
+    const adminDouble = createAdminDouble({
+      existingWrite: { id: "rsvp-1", request_hash: "different-request" }
+    });
+    createSupabaseAdminClientMock.mockReturnValue(adminDouble.client);
+
+    const response = await POST(createRequest({
+      guestName: "박하객",
+      attending: "yes",
+      guests: 1,
+      website: ""
+    }), {
+      params: Promise.resolve({ slug: "demo" })
+    });
+
+    expect(response.status).toBe(409);
+    expect(consumeRateLimitsMock).toHaveBeenCalled();
+    expect(adminDouble.insertMock).not.toHaveBeenCalled();
+  });
+
+  it("requires idempotency before database or quota work", async () => {
+    createSupabaseAdminClientMock.mockReturnValue(createAdminDouble().client);
+
+    const response = await POST(createRequest({
+      guestName: "박하객",
+      attending: "yes",
+      guests: 1,
+      website: ""
+    }, ""), {
+      params: Promise.resolve({ slug: "demo" })
+    });
+
+    expect(response.status).toBe(400);
+    expect(createSupabaseAdminClientMock).not.toHaveBeenCalled();
+    expect(consumeRateLimitsMock).not.toHaveBeenCalled();
   });
 });

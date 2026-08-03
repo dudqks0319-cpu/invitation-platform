@@ -103,7 +103,7 @@ export async function POST(request: Request) {
     .eq("user_id", user.id)
     .maybeSingle();
 
-  if (invitationError || !invitation) {
+  if (invitationError || !invitation || invitation.status === "deletion_pending") {
     return NextResponse.json({ success: false, message: "초대장을 찾을 수 없습니다." }, { status: 404 });
   }
 

@@ -4,9 +4,8 @@ import type { Metadata } from "next";
 import GlobalError from "@/app/error";
 import {
   buildPublicInvitationMetadata,
-  createVisitorKey,
+  hasSupabaseAuthSessionCookie,
   loadApprovedGuestbookEntries,
-  logInvitationView,
   resolveRequestOrigin
 } from "@/app/invitations/[slug]/page";
 import Loading from "@/app/loading";
@@ -51,56 +50,19 @@ describe("public invitation page helpers", () => {
     expect(resolveRequestOrigin(headersLike)).toBe("https://invitehub.co.kr");
   });
 
-  it("builds a stable hashed visitor key without storing raw IP addresses", () => {
+  it("detects only Supabase auth-session cookies before verified identity lookup", () => {
     const headersLike = {
       get(name: string) {
         return {
-          "cf-connecting-ip": "203.0.113.10"
+          cookie: "theme=warm; sb-project-auth-token.0=chunk"
         }[name] ?? null;
       }
     };
 
-    const key = createVisitorKey("invitation-1", "test-agent", headersLike);
-
-    expect(key).toMatch(/^[a-f0-9]{64}$/);
-    expect(key).not.toContain("203.0.113.10");
-  });
-
-  it("avoids duplicate view logs for the same invitation and visitor within the cooldown window", async () => {
-    const insert = vi.fn(async () => ({ error: null }));
-    const recentQuery = {
-      eq() {
-        return this;
-      },
-      gte() {
-        return this;
-      },
-      limit() {
-        return Promise.resolve({
-          data: [{ id: 1 }],
-          error: null
-        });
-      }
-    };
-
-    const admin = {
-      from(table: string) {
-        if (table === "view_logs") {
-          return {
-            select() {
-              return recentQuery;
-            },
-            insert
-          };
-        }
-
-        throw new Error(`Unexpected table: ${table}`);
-      }
-    };
-
-    await logInvitationView(admin, "invitation-1", "test-agent", "visitor-key");
-
-    expect(insert).not.toHaveBeenCalled();
+    expect(hasSupabaseAuthSessionCookie(headersLike)).toBe(true);
+    expect(hasSupabaseAuthSessionCookie({
+      get: () => "sb-project-auth-token-code-verifier=value"
+    })).toBe(false);
   });
 
   it("returns an empty guestbook when the admin client is unavailable", async () => {

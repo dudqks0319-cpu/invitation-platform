@@ -22,12 +22,15 @@ export async function GET(request: Request) {
   }
 
   const {
-    data: { user }
+    data: { user },
+    error: userError
   } = await supabase.auth.getUser();
 
-  if (user) {
-    await ensureProfileRow(supabase, user).catch(() => {});
+  if (userError || !user) {
+    return NextResponse.redirect(errorRedirectUrl);
   }
+
+  await ensureProfileRow(supabase, user).catch(() => {});
 
   return NextResponse.redirect(new URL(nextPath, requestUrl.origin));
 }

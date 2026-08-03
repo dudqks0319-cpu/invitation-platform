@@ -29,6 +29,7 @@ run_step() {
   "$@"
 }
 
+run_step "release candidate identity preflight" node scripts/verify-release-candidate.mjs build
 run_step "web lint" npm run lint
 run_step "web typecheck" npm run typecheck
 run_step "web/api tests" npm run test -- --exclude='**/.claude/**'

@@ -12,6 +12,7 @@ import { Screen } from "@/components/ui/Screen";
 import { theme } from "@/components/ui/theme";
 import type { MobileInvitationDraft } from "@/lib/drafts";
 import { deleteDraft, listDrafts } from "@/lib/drafts";
+import { getDraftOwnerId } from "@/lib/auth-access";
 import { listRemoteInvitations } from "@/lib/invitations";
 import { openInvitationPublicPage, openWebBuilder, shareInvitationLink } from "@/lib/share";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,12 +26,13 @@ export default function MyInvitationsScreen() {
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const { configured, status, user } = useAuth();
   const userId = user?.id ?? "";
+  const ownerId = getDraftOwnerId(user);
 
   const load = useCallback(async () => {
     setError("");
 
     try {
-      const localItems = await listDrafts();
+      const localItems = await listDrafts(ownerId);
 
       if (configured && status === "authenticated" && userId) {
         const remoteItems = await listRemoteInvitations(userId);
@@ -50,7 +52,7 @@ export default function MyInvitationsScreen() {
     } finally {
       setLoading(false);
     }
-  }, [configured, status, userId]);
+  }, [configured, ownerId, status, userId]);
 
   useEffect(() => {
     const timer = setTimeout(() => void load(), 0);
@@ -80,7 +82,7 @@ export default function MyInvitationsScreen() {
     setError("");
 
     try {
-      await deleteDraft(draft.localId);
+      await deleteDraft(draft.localId, ownerId);
       setDrafts((current) => current.filter((item) => item.localId !== draft.localId));
       setMessage("이 기기에 저장된 초대장을 삭제했습니다.");
     } catch (caught) {

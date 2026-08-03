@@ -74,6 +74,9 @@ describe("invitehub release gate", () => {
 
     expect(result.status).toBe(2);
     expect(result.stdout).toContain("- Status: blocked");
+    expect(result.commands.split("\n")[0]).toBe(
+      `${root}|node|scripts/verify-release-candidate.mjs build`
+    );
     expect(result.commands).toContain(
       `${root}|npm|audit --omit=dev --offline`
     );
@@ -111,6 +114,19 @@ describe("invitehub release gate", () => {
 
     expect(result.status).toBe(17);
     expect(result.stdout).not.toContain("- Status: pass");
+  });
+
+  it("stops at candidate preflight before lint, build, install, or upload commands", () => {
+    const result = runGate(
+      { ALLOW_ONLINE_AUDIT: "1" },
+      "verify-release-candidate.mjs build"
+    );
+
+    expect(result.status).toBe(17);
+    expect(result.stdout).not.toContain("- Status: pass");
+    expect(result.commands.trim()).toBe(
+      `${root}|node|scripts/verify-release-candidate.mjs build`
+    );
   });
 
   it("rejects evidence-path environment overrides before running commands", () => {

@@ -191,7 +191,8 @@ export function CheckoutFlow({
       const response = await fetch("/api/payments/free-publish", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Idempotency-Key": `free-publish:${invitationId}`
         },
         body: JSON.stringify({ invitationId })
       });

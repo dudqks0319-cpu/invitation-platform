@@ -34,3 +34,4 @@ apps/mobile/package-lock.json
 supabase/.temp/
 docs/app-store-external-evidence.json
 docs/app-store-external-evidence.local.json
+docs/release-candidate-evidence.json

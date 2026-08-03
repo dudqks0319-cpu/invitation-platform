@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { getDraftOwnerId } from "@/lib/auth-access";
 import type { MobileInvitationDraft } from "@/lib/drafts";
 import { ensureDraft, saveDraft, upsertPendingPhoto } from "@/lib/drafts";
 import {
@@ -20,32 +22,48 @@ function withMeta(draft: MobileInvitationDraft) {
 }
 
 export function useInvitationDraft(ownerId: string, localId?: string) {
-  const [draft, setDraft] = useState<MobileInvitationDraft | null>(null);
+  const [storedDraft, setDraft] = useState<MobileInvitationDraft | null>(null);
+  const [loadedRequestKey, setLoadedRequestKey] = useState("");
   const [loading, setLoading] = useState(true);
+  const { status, user } = useAuth();
+  const activeOwnerId = status === "authenticated" ? getDraftOwnerId(user) : ownerId;
+  const requestKey = `${activeOwnerId}\u0000${localId ?? ""}`;
+  const draft =
+    loadedRequestKey === requestKey && storedDraft?.payload.ownerId === activeOwnerId
+      ? storedDraft
+      : null;
+  const isLoading = status === "loading" || loading || !draft;
 
   useEffect(() => {
     let mounted = true;
 
-    void ensureDraft(ownerId, localId).then((nextDraft) => {
+    if (status === "loading") {
+      return () => {
+        mounted = false;
+      };
+    }
+
+    void ensureDraft(activeOwnerId, localId).then((nextDraft) => {
       if (!mounted) return;
       setDraft(nextDraft);
+      setLoadedRequestKey(requestKey);
       setLoading(false);
     });
 
     return () => {
       mounted = false;
     };
-  }, [localId, ownerId]);
+  }, [activeOwnerId, localId, requestKey, status]);
 
   const persist = useCallback((updater: (current: MobileInvitationDraft) => MobileInvitationDraft) => {
     setDraft((current) => {
-      if (!current) return current;
+      if (!current || current.payload.ownerId !== activeOwnerId) return current;
 
       const nextDraft = updater(current);
       void saveDraft(nextDraft);
       return nextDraft;
     });
-  }, []);
+  }, [activeOwnerId]);
 
   const updateBasics = useCallback((patch: Partial<{
     title: string;
@@ -231,6 +249,7 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
       ...draft,
       serverId: result.serverId,
       payload: result.payload,
+      sourcePayload: result.sourcePayload,
       pendingPhotos: result.pendingPhotos,
       syncStatus: "synced",
       isDirty: false,
@@ -279,7 +298,7 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
     applyRemotePublish,
     canShare,
     draft,
-    loading,
+    loading: isLoading,
     publicUrl,
     publishReadiness,
     removeGalleryPhoto,

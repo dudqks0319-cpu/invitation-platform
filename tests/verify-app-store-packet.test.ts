@@ -58,21 +58,21 @@ afterEach(() => {
 });
 
 describe("App Store packet verifier", () => {
-  it("accepts the canonical Build 66 release state", () => {
+  it("accepts source-bound Build 69 while keeping its SHA and upload unbound", () => {
     const result = runVerifier();
 
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("- Status: pass");
-    expect(result.stdout).toContain("- Latest Built Candidate: 1.0.3 (66)");
-    expect(result.stdout).toContain("current App Store Connect and TestFlight-group state is unverified");
-    expect(result.stdout).toContain("metadata is installed");
+    expect(result.stdout).toContain("- Latest Source Identity: 1.0.3 (69) / com.invitehub.app / Git SHA UNBOUND/PENDING");
+    expect(result.stdout).toContain("highest production Build 68 and Build 69 count 0");
+    expect(result.stdout).toContain("Build 69 is source-bound only");
   });
 
   it("rejects RELEASE_STATUS artifact identity drift", () => {
     const path = mutatedCopy(
       "RELEASE_STATUS.md",
-      "b065a732e3c51963bad999c9acd248c34ec1c5b7f43b816d643e588dcace4854",
+      "3ba0f27c4250be1ae794287b951508e0b82ea8efb76fd98d8cf7454619a86324",
       "0".repeat(64)
     );
 
@@ -100,22 +100,22 @@ describe("App Store packet verifier", () => {
   it("rejects release-ledger artifact identity drift", () => {
     const path = mutatedCopy(
       "release-ledger.yaml",
-      'artifact_bytes: 176900378',
-      'artifact_bytes: 176900379'
+      'artifact_bytes: 176918411',
+      'artifact_bytes: 176918412'
     );
 
     const result = runVerifier({ RELEASE_LEDGER_PATH: path });
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain(
-      "release-ledger.yaml: expected to include artifact_bytes: 176900378"
+      "release-ledger.yaml: expected to include artifact_bytes: 176918411"
     );
   });
 
   it("rejects an exact-build-installed claim without artifact provenance", () => {
     const path = mutatedCopy(
       "release-ledger.yaml",
-      "phase: blocked_external_user_action_required",
+      "phase: blocked_pending_clean_candidate_sha",
       "phase: exact_build_installed_device_smoke_blocked"
     );
 
@@ -123,7 +123,7 @@ describe("App Store packet verifier", () => {
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain(
-      "release-ledger.yaml: expected to include phase: blocked_external_user_action_required"
+      "release-ledger.yaml: expected to include phase: blocked_pending_clean_candidate_sha"
     );
   });
 

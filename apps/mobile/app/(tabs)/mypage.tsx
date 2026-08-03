@@ -43,7 +43,7 @@ export default function MyPageScreen() {
   function confirmDeleteAccount() {
     Alert.alert(
       "계정 삭제",
-      "계정을 삭제하면 초대장과 결제 기록이 함께 제거되며 되돌릴 수 없습니다.",
+      "필요한 데이터는 먼저 내보내 주세요. 삭제를 시작하면 초대장이 즉시 비공개 처리되며 되돌릴 수 없습니다.",
       [
         { text: "취소", style: "cancel" },
         {
@@ -59,12 +59,43 @@ export default function MyPageScreen() {
             setMessage("");
             setPendingAction("delete");
 
-            void fetch(`${getInviteHubBaseUrl()}/api/account/delete`, {
+            const baseUrl = getInviteHubBaseUrl();
+            const commonHeaders = {
+              Authorization: `Bearer ${session.access_token}`,
+              "Content-Type": "application/json",
+              "X-Requested-With": "InviteHub-Account-Delete"
+            };
+
+            void fetch(`${baseUrl}/api/account/delete`, {
+              method: "PUT",
+              headers: commonHeaders,
+              body: JSON.stringify({ confirmation: "REQUEST_ACCOUNT_DELETE" })
+            })
+              .then(async (response) => {
+                const result = (await response.json().catch(() => ({}))) as {
+                  message?: string;
+                  requestId?: string;
+                  success?: boolean;
+                  ticket?: string;
+                };
+                if (!response.ok || !result.success || !result.ticket || !result.requestId) {
+                  throw new Error(result.message || "최근 로그인이 필요합니다. 다시 로그인한 뒤 시도해 주세요.");
+                }
+                return result as { ticket: string; requestId: string };
+              })
+              .then(({ requestId, ticket }) => fetch(`${baseUrl}/api/account/delete`, {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${session.access_token}`
-              }
-            })
+                ...commonHeaders,
+                "Idempotency-Key": `account-delete:${requestId}`,
+                "X-Account-Delete-Ticket": ticket
+              },
+              body: JSON.stringify({
+                confirmation: "DELETE_ACCOUNT",
+                exportDisposition: "skipped",
+                restoreAcknowledged: true
+              })
+            }))
               .then(async (response) => {
                 const result = (await response.json().catch(() => ({}))) as { message?: string; success?: boolean };
                 if (!response.ok || !result.success) {

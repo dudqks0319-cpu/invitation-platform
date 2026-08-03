@@ -1,36 +1,45 @@
 # InviteHub App Store Connect Next Build Packet
 
-Date: 2026-05-08
+Date: 2026-08-04
 
-This packet is for the next TestFlight candidate after build `1.0.0 (42)`
-failed real iPhone launch on 2026-05-07 23:43 KST.
+This packet is for the next production candidate, `1.0.3 (69)`. Build 68 is
+processed in App Store Connect but superseded by the confirmed process-screen
+UI mismatch. Read-only EAS and ASC checks show Build 68 as the highest
+production build and Build 69 count zero.
 
-Do not treat build 42 as the App Store version candidate. The next candidate
-must be uploaded, processed in App Store Connect, assigned to internal group
-`Team (Expo)`, installed from TestFlight on the user's iPhone, and smoke-tested
-before it can be selected for the App Store version.
+Build 69 is currently a source identity only. The candidate Git SHA is
+`UNBOUND/PENDING`; no EAS build, IPA/archive, ASC upload, TestFlight install, or
+production-device evidence exists for it. Do not build or upload from the dirty
+worktree. After one approved clean commit passes preflight, build, upload,
+TestFlight installation, and App Review selection remain separate approvals.
 
 ## Source State
 
 | Field | Value |
 | --- | --- |
-| Branch | `codex/testflight-launch-crash-fix` |
-| Source commit | Verify immediately before upload with `git rev-parse --short HEAD` |
+| Branch | `agent/osamosam-uiux-plan-v1` |
+| Candidate Git SHA | `UNBOUND/PENDING`; current dirty base HEAD `0538c5d4dfe56b7a3dd9aa41bbbee484f4a536e7` |
 | App Store Connect app id | `6763630299` |
 | Bundle id | `com.invitehub.app` |
-| App version | `1.0.0` |
-| Expected next build number | EAS remote auto-increment after build 42 |
+| App version | `1.0.3` |
+| Expected next build number | `69`; EAS/ASC read-only highest `68`, Build 69 count `0` |
+| Native Release identity | `com.invitehub.app` / `1.0.3 (69)` |
+| Native Debug identity | `com.invitehub.app.dev` / `1.0.3 (52)`; unchanged and excluded |
 | EAS profile | `production` |
 | EAS submit profile | `production` |
+| Version allocation | local; `autoIncrement: false`; no remote auto-increment |
 
-## Candidate Changes Since Build 42
+## Candidate Changes Since Build 68
 
-- Home screen no longer imports auth, Supabase, or draft storage at module load.
-- Template draft creation is lazy-loaded only after a user taps a template.
-- Startup-safety tests assert the home first render does not import
-  `@/hooks/useAuth`, `@/lib/drafts`, or `@/lib/auth-access`.
-- Goal-completion evidence keys now refer to the current passing build instead
-  of the failed build 42.
+- Home and process-entry routes share the same event-selection component.
+- Release preflight fails closed on dirty/unselected source, missing raw
+  evidence, SHA drift, dev bundle identity, remote auto-increment, and artifact
+  identity/hash drift.
+- Public writes, view logging, account deletion, and signed-asset delivery have
+  local security regression coverage; their migrations and operational gates
+  remain unapplied outside the repository.
+- Production Release source now uses Build 69 without modifying the Debug/dev
+  bundle identity.
 
 ## Local Preflight Already Verified
 
@@ -60,11 +69,15 @@ output/testflight-device-watch/20260508-codex-update/evidence/release-simulator-
 
 ## Upload Command After User Approval
 
-Run only after the user explicitly approves a new externally visible upload:
+Run only after the user explicitly selects the candidate in
+`release-ledger.yaml`, records matching raw evidence in the ignored
+`docs/release-candidate-evidence.json`, and approves the external operation.
+Build and upload are deliberately separate so the resulting IPA can be
+identity/hash checked before submission:
 
 ```bash
-git rev-parse --short HEAD
-EAS_NO_VCS=1 eas build -p ios --profile production --non-interactive --auto-submit
+npm run release:ios:build
+npm run release:ios:upload -- /absolute/path/to/candidate.ipa
 ```
 
 After EAS returns a build id, record:

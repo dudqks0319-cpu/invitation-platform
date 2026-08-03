@@ -1,42 +1,68 @@
-updated_at: "2026-07-28T18:58:00+09:00"
+updated_at: "2026-08-04T00:08:38+09:00"
 platform: ios
 app_store_id: "6763630299"
 bundle_id: "com.invitehub.app"
 project:
   name: osamosam
-  release_workspace: "/Users/jyb-m3max/Desktop/codex/invitation-platform/.worktrees/osamosam-appstore-submit-20260724"
-phase: blocked_external_user_action_required
-goal_status: resumed_blocked_audit_turn_1
+  release_workspace: "/Users/jyb-m3max/Desktop/codex/invitation-platform/.worktrees/osamosam-uiux-plan-v1"
+phase: blocked_pending_clean_candidate_sha
+goal_status: active_release_requested
 version: "1.0.3"
-build_number: "67"
-git_sha: "0196fb4a337e1b894af93d3c9b1374d0cfd30783"
-branch: "agent/osamosam-appstore-submit-20260724"
+build_number: "69"
+git_sha: "UNBOUND/PENDING"
+branch: "agent/osamosam-uiux-plan-v1"
 public:
   version: "1.0.2"
   state: released
+selected_candidate:
+  selected: false
+  version: ""
+  build_number: ""
+  bundle_id: ""
+  git_sha: ""
+  branch: ""
+  source_state: not_selected
+  evidence_path: "docs/release-candidate-evidence.json"
 candidate:
   version: "1.0.3"
-  build_number: "67"
-  git_sha: "0196fb4a337e1b894af93d3c9b1374d0cfd30783"
-  branch: "agent/osamosam-appstore-submit-20260724"
-  eas_build_id: "616d9c95-7189-4a76-8751-9d8ed947c833"
-  eas_build_state: finished
-  eas_submit_id: null
+  build_number: "69"
+  git_sha: "UNBOUND/PENDING"
+  source_base_sha: "0538c5d4dfe56b7a3dd9aa41bbbee484f4a536e7"
+  branch: "agent/osamosam-uiux-plan-v1"
+  source_state: dirty_assembly_build69_identity_bound_sha_unbound
+  eas_build_id: not_created
+  eas_build_state: not_started
+  eas_submit_id: not_created
   eas_submit_state: not_started
-  artifact_bytes: 176900384
-  artifact_sha256: "356de45d57c46bbf31f88a63cc743a193c5dd29490da310d3dce1409f8f0482e"
-  artifact_frameworks: "hermesvm.framework only; RevenueCat/Purchases absent"
-  eas_paid_publish_flag: absent_defaults_false
-  app_store_connect_state: build_67_not_uploaded_build_66_ready_to_submit
-  testflight_state: build_67_not_uploaded_build_66_internal_group
-  real_device_result: developer_build_1_0_3_66_launch_running_artifact_unproven
+  app_store_connect_state: not_uploaded
+  testflight_state: not_available
+  real_device_result: cabled_iphone12pro_dev_bundle_69_installed_launched
   app_review_state: not_submitted
   superseded_builds:
     - 62
     - 63
     - 64
     - 66
+    - 67
+    - 68
   selected_for_review: false
+uploaded_build_68:
+  version: "1.0.3"
+  build_number: "68"
+  git_sha: "0538c5d4dfe56b7a3dd9aa41bbbee484f4a536e7"
+  eas_build_id: "47878231-5f1e-4a7f-b871-07adc9dfaa9e"
+  eas_build_state: finished
+  eas_submit_id: "e9aee1a2-d44a-429f-81b1-e22428fcfcee"
+  eas_submit_state: finished
+  artifact_bytes: 176918411
+  artifact_sha256: "3ba0f27c4250be1ae794287b951508e0b82ea8efb76fd98d8cf7454619a86324"
+  artifact_frameworks: "hermesvm.framework only; RevenueCat/Purchases absent"
+  eas_paid_publish_flag: absent_defaults_false
+  app_store_connect_build_id: "8e051086-11d6-4ee2-bc41-119ad31acfd2"
+  app_store_connect_state: processed_selected_manual_release
+  testflight_state: submission_ready_team_expo
+  release_eligible: false
+  reason: "Superseded after the process-entry screen was found to show the older event-selection UI."
 failed_builds:
   - build_number: 65
     eas_build_id: "945fad1a-f595-4472-9500-8ecc713b3663"
@@ -45,22 +71,23 @@ failed_builds:
     reason: "The EAS archive excluded four curated custom PNG files; the first missing reference was house-warm-v2.png. No IPA was produced or uploaded."
 latest_uploaded_testflight_candidate:
   version: "1.0.3"
-  build_number: 66
-  git_sha: "533aec35178b185b4ab04a76e2c2819b83208056"
-  eas_build_id: "b1a187d7-0776-4dd0-b648-9685edbb7760"
-  eas_submit_id: "90000462-1a28-424d-a496-bef9ad8d7f41"
+  build_number: 68
+  git_sha: "0538c5d4dfe56b7a3dd9aa41bbbee484f4a536e7"
+  eas_build_id: "47878231-5f1e-4a7f-b871-07adc9dfaa9e"
+  eas_submit_id: "e9aee1a2-d44a-429f-81b1-e22428fcfcee"
   app_store_connect_state: processed
   testflight_state: submission_ready
-  selected_for_review: false
-  reason: "Superseded by user-requested production rebuild 67 after the duplicate development App Store record was removed."
+  selected_for_review: true
+  release_eligible: false
+  reason: "Processed and selected, but superseded by the home/process UI mismatch. Do not submit."
 verification:
-  full_tests: "105 files / 485 tests passed on 2026-07-28"
+  full_tests: "110 files / 505 tests passed on 2026-07-29 after the UI unification fix"
   lint: passed
   root_typecheck: passed
   mobile_typecheck: passed
   ios_release_simulator_build: passed
   ios_release_simulator_launch: passed
-  simulator_device: "iPhone 17 Pro / iOS 26.2"
+  simulator_device: "iPhone 16e / iOS 26.2"
   visual_verdict: "94/100 pass"
   typography: "Pretendard app UI/body/date/location; Gowun Batang invitation identity"
   bundled_font_faces: "8 files plus 2 OFL license files"
@@ -71,60 +98,115 @@ verification:
   production_ios_metro_bundle: "1,445 modules / 204 assets / passed"
   store_screenshots: "2 files / 1206x2622 / passed"
   app_store_packet_verifier: "328 checks passed"
-  build66_device_evidence_verifier: "passed for connected physical iPhone 12 Pro / metadata match 1.0.3 (66); artifact identity unproven"
+  build69_source_full_tests: "122 files / 650 tests passed on 2026-08-04"
+  build69_source_focused_contract: "5 files / 32 tests passed; assembly verifier 4/4 passed"
+  build69_source_packet: "334 checks passed"
+  build69_source_static_web: "web/mobile lint and typecheck passed; web production build passed with 27 routes; diff and targeted secret gates passed"
+  home_process_visual_match: "passed; same shared component, four event cards, imagery, typography, spacing, and wedding next-screen copy"
+  local_build69_device_launch: "passed on cabled iPhone 12 Pro as com.invitehub.app.dev"
+  store_build69_device_evidence_verifier: "blocked until EAS Store Build 69 is uploaded and installed from TestFlight"
   runtime_critical_dependency_advisories: 0
-  offline_full_tree_advisories: "0 as of 2026-07-28; fresh online registry audit not authorized"
-  previous_recorded_full_tree_advisories: "18 total including 1 critical; remains open until authorized live registry audit or evidence-backed closure"
+  online_root_advisories: "15 total: 11 moderate, 4 high, 0 critical"
+  online_mobile_advisories: "12 total: 11 moderate, 1 high, 0 critical; high is indirect brace-expansion in Expo/React Native build tooling"
 local_checks:
-  tests: "485/485 passed"
+  tests: "650/650 passed"
   lint: passed
   typecheck: passed
+  release_candidate_preflight: "blocked as designed: no explicitly selected clean candidate and no raw candidate evidence; no native build/install/EAS upload started"
+  release_slice_1_tests: "119 files / 594 tests passed on 2026-08-03; focused candidate and entrypoint suite 3 files / 20 tests; related release harness suite 9 files / 51 tests"
+  app_store_packet_verifier_current: "334 checks passed"
+  web_production_build_current: passed
+  native_release_build_current: "not run; source identity is com.invitehub.app 1.0.3 (69), but clean candidate SHA/raw evidence are unbound"
+  inv_ios_002_candidate_preflight: "BLOCKED-CANDIDATE; selected=false, raw evidence missing, dirty assembly, candidate Git SHA UNBOUND/PENDING, native Release 1.0.3 (69); no build/archive/install/launch"
+  inv_ios_002_build69_source_identity: "com.invitehub.app / 1.0.3 (69); Xcode Release source only; Debug remains com.invitehub.app.dev / 1.0.3 (52)"
+  inv_ios_002_build69_number_binding: "2026-08-04 read-only EAS and user-confirmed ASC UI both show highest production Build 68 and Build 69 count 0"
+  inv_ios_002_build69_candidate_state: "BLOCKED-CANDIDATE; dirty source, selected=false, raw evidence absent, candidate Git SHA UNBOUND/PENDING, EAS/ASC Build 69 upload count 0"
+  inv_ios_002_build69_assembly: "80 included paths (58 tracked, 22 untracked), 22 excluded dirty paths, 200 tracked hunks; exact hashes stored in ignored candidate-assembly-plan.json"
   release_harness_strict: "pass for document shape; shared harness phase output remains unknown"
   repository_release_gate: "blocked as designed when online audit and iOS build are skipped; readonly worktree trust root, canonical evidence override rejection, and behavioral fail-closed tests pass"
+  inv_be_002_view_log_slice_2: "LOCAL PASS only: focused 4 files / 43 tests, related 11 files / 91 tests, full 120 files / 611 tests; web build and web/mobile lint+typecheck passed; migration not applied and VIEW_LOGGING_ENABLED remains false by default"
+  inv_be_002_account_delete_slice_3: "LOCAL PASS only / candidate promotion blocked: focused 9 files / 84 tests; full 121 files / 630 tests; web build and web/mobile typecheck passed; migration 202608030003 not applied, local Supabase DB unavailable, and ACCOUNT_DELETION_ENABLED remains false by default"
+  inv_be_002_signed_asset_slice_4: "LOCAL PASS only / staging+provider gates open: focused 6 files / 54 tests; full 122 files / 650 tests; web build and web/mobile lint+typecheck passed; migration 202608030004 not applied, direct Storage policy removal unobserved, provider egress budgets unobserved, and INVITATION_ASSET_ACCESS_ENABLED remains false by default"
 runtime_checks:
   simulator_release_launch: passed
   real_iphone_device: "iPhone 12 Pro / iOS 26.5.2 / wired"
-  real_iphone_installed_build: 66
+  real_iphone_production_bundle_build: 68
+  real_iphone_development_bundle_build: 69
   real_iphone_installed_version: "1.0.3"
-  real_iphone_install_provenance: developer_app_not_testflight
-  real_iphone_artifact_identity: unproven_developer_install
-  real_iphone_metadata_match: installed_1_0_3_66_launch_verified_developer_app
-  real_iphone_evidence: "output/testflight-device-evidence/20260728-1826-iphone-build66-launch-fixed"
+  real_iphone_install_provenance: "Build 69 locally signed development bundle; Build 68 production-bundle provenance not asserted"
+  real_iphone_artifact_identity: "com.invitehub.app.dev / 1.0.3 (69)"
+  real_iphone_metadata_match: local_development_build_1_0_3_69_present
+  real_iphone_evidence: "output/ios-device-diagnostics/20260729-build68-iphone12pro-escalated"
+  inv_ios_002_read_only_identity: "prod com.invitehub.app 1.0.3 (68); dev com.invitehub.app.dev 1.0.3 (69); runner com.invitehub.deviceqa.xctrunner 1.0 (1)"
+  inv_ios_002_ui_observation: "not run; candidate gate never opened; XCUITest 0 and Computer Use observed flows 0"
+  inv_ios_002_final_process_state: "InviteHub PID 0; OsamosamDeviceQA-Runner PID 0; device occupancy released"
+  inv_ios_002_evidence: "output/real-device-qa/2026-08-03T2204KST-ios-inv-ios-002-candidate-preflight-blocked/summary.md"
 external_checks:
-  eas_build: live_verified_finished_build_67_2026_07_28_1857_kst
-  eas_submission: not_started_for_build_67
-  eas_artifact_identity: "Info.plist 오삼오삼 / com.invitehub.app / 1.0.3 (67)"
+  eas_build: live_verified_finished_build_68_2026_07_29_1822_kst
+  eas_submission: live_verified_finished_build_68_e9aee1a2_d44a_429f_81b1_e22428fcfcee
+  eas_artifact_identity: "Info.plist 오삼오삼 / com.invitehub.app / 1.0.3 (68)"
   eas_free_only_artifact: "paid publish flag absent/default false; RevenueCat/Purchases frameworks absent"
-  app_store_connect_upload: "not_started_for_build_67; completed_for_build_66"
-  apple_processing: live_verified_build_66_ready_to_submit_2026_07_28_1818_kst
-  testflight: live_verified_build_66_team_expo_1_tester_2_installs
+  app_store_connect_upload: live_verified_build_68_complete
+  apple_processing: live_verified_build_68_ready_to_submit_2026_07_29_1831_kst
+  testflight: live_verified_build_68_team_expo_1_tester_0_installs
+  app_store_version: build_68_selected_review_note_updated_manual_release_saved
   app_review: not_submitted
   public_release: "1.0.2"
+  build_number_readonly_observed_at: "2026-08-04"
+  eas_production_highest_build: 68
+  eas_production_build69_count: 0
+  asc_production_highest_build: 68
+  asc_production_build69_count: 0
+  production_build69_upload_state: not_created_not_uploaded
 security:
   repository_credential_files_created: false
   runtime_dependency_vulnerabilities_offline: 0
   full_tree_dependency_vulnerabilities_offline: 0
-  previous_recorded_dev_tool_critical_advisories_open: 1
-  online_registry_audit: blocked_pending_explicit_dependency_graph_transmission_authorization
+  previous_recorded_dev_tool_critical_advisories_open: 0
+  online_registry_audit: completed_2026_07_29
 blockers:
+  - id: candidate-binding
+    severity: P0
+    status: BLOCKED-CANDIDATE
+    owner: release-owner
+    due: "before any native candidate build, install, upload, or device functional QA"
+    evidence: "selected_candidate=false; docs/release-candidate-evidence.json missing; dirty worktree; candidate Git SHA UNBOUND/PENDING; native Release source is com.invitehub.app 1.0.3 (69); EAS/ASC Build 69 upload count 0; no selected IPA/archive hash"
   - id: dependency-advisories
     severity: P1
-    status: blocked_external_authorization
+    status: residual_build_tooling_risk
     owner: engineering-owner
-    due: "2026-07-29"
-    evidence: "offline runtime/full-tree audit 0; online audit not authorized"
+    due: "2026-08-05"
+    evidence: "2026-07-29 online audit: root 15 advisories and mobile 12; no critical. Mobile high is indirect brace-expansion in Expo/React Native build tooling, not the native runtime bundle."
   - id: real-device-smoke
     severity: P1
-    status: blocked_pending_testflight_install_and_surface_qa
+    status: blocked_pending_exact_testflight_build69
     owner: release-owner
-    due: "2026-07-28"
-    evidence: "18:26 live: CoreDevice recovered, phone unlocked, developer-installed 1.0.3 (66) launch and running process verified. Build 67 is not yet uploaded or installed; exact EAS/TestFlight provenance and on-screen scenario QA remain open."
+    due: "2026-07-29"
+    evidence: "Local development Build 69 is installed and launched on the cabled iPhone 12 Pro. Exact Store/TestFlight Build 69 does not exist yet."
   - id: app-review-preflight
     severity: P1
-    status: blocked_pending_exact_build_smoke_and_user_approval
+    status: blocked_pending_build69_upload_and_exact_smoke
     owner: release-owner
-    due: "2026-07-28"
-    evidence: "2026-07-28 18:18 KST authenticated Chrome: 1.0.3 is prepare for submission, no App Review build is selected, review note still says Build 64, and automatic release is selected; no changes or submission performed"
+    due: "2026-07-29"
+    evidence: "Build 68 remains selected with manual release saved but is superseded by the confirmed UI mismatch. Add for Review must remain unpressed until Build 69 replaces it and passes exact TestFlight device smoke."
+  - id: view-log-staging-gate
+    severity: P0
+    status: blocked_pending_staging_migration_and_observation
+    owner: security-operations-owner
+    due: "before Production view logging is enabled"
+    evidence: "Local code/tests only. Apply and verify migration 202608030002 in staging, configure a fresh keyed fingerprint secret, verify trusted ingress headers, quotas, RPC-only grants, cleanup scheduling, retention, alerts, and kill switch before considering Production enablement."
+  - id: account-delete-staging-gate
+    severity: P0
+    status: blocked_pending_staging_migration_and_failure_observation
+    owner: security-privacy-release-owners
+    due: "before clean candidate selection or any Production account deletion enablement"
+    evidence: "Local code/tests only. Migration 202608030003 is unapplied and local DB lint was unavailable. Verify recent-auth and one-time recovery tickets, deny-by-default RLS/grants, guest-upgrade ownership, tombstone visibility, ordered cleanup, partial-failure recovery, lease/backoff/max-five blocking, legal retention, redacted telemetry, and the kill switch with synthetic staging accounts."
+  - id: signed-asset-staging-provider-gate
+    severity: P0
+    status: blocked_pending_storage_migration_and_egress_observation
+    owner: security-operations-release-owners
+    due: "before clean candidate selection or Production asset access enablement"
+    evidence: "Local code/tests only. Apply migration 202608030004 after 001-003 in staging, inventory legacy keys, prove direct authenticated Storage signing/read/delete is denied, observe owner/public TTL and quotas, test traversal/transform/batch/provider-failure paths, and enable provider egress caps/WAF/hot-object alerts before considering Production."
 next_action:
-  summary: "Upload Build 67 to App Store Connect only with explicit user approval. After Apple processing, install it through TestFlight on the cabled iPhone and collect exact-build provenance and on-screen smoke evidence. Do not submit for App Review."
-  command: "eas submit --platform ios --profile production --id 616d9c95-7189-4a76-8751-9d8ed947c833 --non-interactive --wait"
+  summary: "Assemble the exact Build 69 source allowlist into one clean commit, bind the resulting full SHA and raw source evidence, then rerun the fail-closed preflight before any native build, archive, upload, device, staging, or Production action."
+  command: "node scripts/verify-release-candidate.mjs build"

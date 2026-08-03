@@ -2,7 +2,11 @@ import { describe, expect, it } from "vitest";
 import {
   buildPublishedAssetUrl,
   buildPublishedInvitationAssetPayload,
-  getStoredInvitationAssetPaths
+  getStoredInvitationAssetPaths,
+  isOwnedInvitationAssetPath,
+  isSafeSignedAssetUrl,
+  MAX_GALLERY_ASSET_PATHS,
+  withInvitationAssetTimeout
 } from "@/lib/invitation-assets";
 
 describe("invitation assets helpers", () => {
@@ -40,5 +44,34 @@ describe("invitation assets helpers", () => {
         "/api/public/assets?slug=invite-123&path=gallery%2F2.jpg"
       ]
     });
+  });
+
+  it("bounds and deduplicates gallery paths before public or owner signing", () => {
+    const galleryImagePaths = Array.from(
+      { length: MAX_GALLERY_ASSET_PATHS + 10 },
+      (_, index) => `owner/${index}.jpg`
+    );
+    galleryImagePaths[1] = galleryImagePaths[0];
+    expect(getStoredInvitationAssetPaths({ galleryImagePaths })).toHaveLength(MAX_GALLERY_ASSET_PATHS);
+  });
+
+  it("binds canonical object keys to one owner and rejects traversal", () => {
+    const ownerId = "11111111-1111-4111-8111-111111111111";
+    expect(isOwnedInvitationAssetPath(`${ownerId}/${"a".repeat(64)}.webp`, ownerId)).toBe(true);
+    expect(isOwnedInvitationAssetPath(`${ownerId}/../${"a".repeat(64)}.webp`, ownerId)).toBe(false);
+    expect(isOwnedInvitationAssetPath(`22222222-2222-4222-8222-222222222222/${"a".repeat(64)}.webp`, ownerId)).toBe(false);
+  });
+
+  it("allows redirects only to the configured Storage origin", () => {
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
+    expect(isSafeSignedAssetUrl("https://example.supabase.co/storage/v1/object/sign/file")).toBe(true);
+    expect(isSafeSignedAssetUrl("https://evil.example/storage/v1/object/sign/file")).toBe(false);
+    delete process.env.NEXT_PUBLIC_SUPABASE_URL;
+  });
+
+  it("times out a stalled database or Storage signing dependency", async () => {
+    await expect(withInvitationAssetTimeout(new Promise(() => undefined), 5)).rejects.toThrow(
+      "invitation_asset_timeout"
+    );
   });
 });

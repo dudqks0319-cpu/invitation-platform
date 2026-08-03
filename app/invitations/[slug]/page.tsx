@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
@@ -9,29 +8,15 @@ import { getPublicShareUrl } from "@/lib/invitation-presentation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import {
+  createViewLogIssuedAt,
+  recordInvitationView,
+  resolveViewLogIdentity,
+  withViewLogTimeout
+} from "@/lib/view-log";
 
 type HeaderSource = {
   get(name: string): string | null;
-};
-
-type ViewLogsTable = {
-  select(columns: string): {
-    eq(column: string, value: string): {
-      eq(column: string, value: string): {
-        gte(column: string, value: string): {
-          limit(count: number): Promise<{
-            data: Array<{ id: number }> | null;
-            error: { message?: string } | null;
-          }>;
-        };
-      };
-    };
-  };
-  insert(payload: {
-    invitation_id: string;
-    visitor_key: string;
-    user_agent: string;
-  }): Promise<{ error: { message?: string } | null }>;
 };
 
 type GuestbookEntryRow = {
@@ -57,9 +42,8 @@ type GuestbookEntriesTable = {
   };
 };
 
-const VIEW_LOG_COOLDOWN_MS = 30 * 60 * 1000;
 const DEFAULT_OG_IMAGE = "/images/genspark/cncrue0H.jpg";
-const MAX_LOGGED_USER_AGENT_LENGTH = 200;
+const VIEW_AUTH_TIMEOUT_MS = 750;
 
 export function resolveRequestOrigin(headerList: HeaderSource) {
   const forwardedHost = headerList.get("x-forwarded-host");
@@ -107,51 +91,38 @@ export function buildPublicInvitationMetadata({
   };
 }
 
-function getHeaderIp(headerList: HeaderSource) {
-  return (
-    headerList.get("cf-connecting-ip") ||
-    headerList.get("x-vercel-forwarded-for")?.split(",")[0]?.trim() ||
-    headerList.get("x-real-ip") ||
-    "anonymous"
+export function hasSupabaseAuthSessionCookie(headerList: HeaderSource) {
+  return /(?:^|;\s*)sb-[^=;\s]+-auth-token(?:\.\d+)?=/.test(
+    headerList.get("cookie") ?? ""
   );
 }
 
-export function createVisitorKey(invitationId: string, userAgent: string, headerList: HeaderSource) {
-  return createHash("sha256")
-    .update(`${invitationId}:${getHeaderIp(headerList)}:${userAgent.slice(0, MAX_LOGGED_USER_AGENT_LENGTH)}`)
-    .digest("hex");
-}
-
-export async function logInvitationView(
-  admin: {
-    from(table: string): unknown;
-  },
-  invitationId: string,
-  userAgent: string,
-  visitorKey: string
-) {
-  if (!userAgent || !visitorKey) {
-    return;
-  }
-
-  const cutoff = new Date(Date.now() - VIEW_LOG_COOLDOWN_MS).toISOString();
-  const viewLogsTable = admin.from("view_logs") as ViewLogsTable;
-  const { data: recentLogs, error: recentError } = await viewLogsTable
-    .select("id")
-    .eq("invitation_id", invitationId)
-    .eq("visitor_key", visitorKey)
-    .gte("created_at", cutoff)
-    .limit(1);
-
-  if (!recentError && recentLogs?.length) {
-    return;
-  }
-
-  await viewLogsTable.insert({
-    invitation_id: invitationId,
-    visitor_key: visitorKey,
-    user_agent: userAgent.slice(0, MAX_LOGGED_USER_AGENT_LENGTH)
+async function resolvePageViewIdentity(headerList: HeaderSource) {
+  const request = new Request("https://view-log.internal", {
+    headers: {
+      ...(headerList.get("cf-connecting-ip") ? { "cf-connecting-ip": headerList.get("cf-connecting-ip")! } : {}),
+      ...(headerList.get("x-vercel-forwarded-for") ? { "x-vercel-forwarded-for": headerList.get("x-vercel-forwarded-for")! } : {}),
+      ...(headerList.get("x-real-ip") ? { "x-real-ip": headerList.get("x-real-ip")! } : {})
+    }
   });
+
+  if (!hasSupabaseAuthSessionCookie(headerList)) {
+    return resolveViewLogIdentity(request);
+  }
+
+  const supabase = await createServerSupabaseClient();
+  if (!supabase) return null;
+
+  try {
+    const { data, error } = await withViewLogTimeout(
+      supabase.auth.getUser(),
+      VIEW_AUTH_TIMEOUT_MS
+    );
+    if (error || !data.user) return null;
+    return resolveViewLogIdentity(request, data.user);
+  } catch {
+    return null;
+  }
 }
 
 export async function loadApprovedGuestbookEntries(
@@ -267,8 +238,15 @@ export default async function PublicInvitationPage({
       normalizeInvitationPayload(invitation.payload)
     );
     if (admin) {
-      const userAgent = headerList.get("user-agent") || "";
-      await logInvitationView(admin, invitation.id, userAgent, createVisitorKey(invitation.id, userAgent, headerList));
+      const identity = await resolvePageViewIdentity(headerList);
+      if (identity) {
+        await recordInvitationView({
+          admin,
+          invitationId: invitation.id,
+          identity,
+          issuedAt: createViewLogIssuedAt()
+        });
+      }
     }
 
     const guestbookEntries = await loadApprovedGuestbookEntries(admin, invitation.id);

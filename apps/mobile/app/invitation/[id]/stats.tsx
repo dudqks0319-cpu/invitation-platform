@@ -17,6 +17,7 @@ import {
   type RemoteRsvpSummary
 } from "@/lib/invitations";
 import { useAuth } from "@/hooks/useAuth";
+import { getDraftOwnerId } from "@/lib/auth-access";
 
 export default function InvitationStatsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -33,6 +34,7 @@ export default function InvitationStatsScreen() {
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const { configured, status, user } = useAuth();
+  const ownerId = getDraftOwnerId(user);
 
   useEffect(() => {
     let mounted = true;
@@ -45,7 +47,7 @@ export default function InvitationStatsScreen() {
 
       try {
         setError("");
-        const local = await loadDraft(id);
+        const local = await loadDraft(id, ownerId);
         if (!mounted) return;
         const resolvedDraft =
           !local && configured && status === "authenticated" && user?.id
@@ -76,7 +78,7 @@ export default function InvitationStatsScreen() {
     return () => {
       mounted = false;
     };
-  }, [configured, id, status, user?.id]);
+  }, [configured, id, ownerId, status, user?.id]);
 
   async function refresh() {
     if (!id) return;
@@ -85,7 +87,7 @@ export default function InvitationStatsScreen() {
     setError("");
 
     try {
-      const local = await loadDraft(id);
+      const local = await loadDraft(id, ownerId);
       const resolvedDraft =
         !local && configured && status === "authenticated" && user?.id
           ? await loadRemoteInvitation(id, user.id)

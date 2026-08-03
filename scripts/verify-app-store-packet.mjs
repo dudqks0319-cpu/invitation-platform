@@ -92,19 +92,18 @@ const expectedBuild49 = {
 };
 const expectedCurrentCandidate = {
   appVersion: "1.0.3",
-  buildNumber: "67",
-  sourceCommit: "0196fb4a337e1b894af93d3c9b1374d0cfd30783",
-  buildId: "616d9c95-7189-4a76-8751-9d8ed947c833",
-  artifactBytes: "176900384",
-  artifactBytesFormatted: "176,900,384",
-  artifactSha256:
-    "356de45d57c46bbf31f88a63cc743a193c5dd29490da310d3dce1409f8f0482e",
+  buildNumber: "69",
+  sourceBaseCommit: "0538c5d4dfe56b7a3dd9aa41bbbee484f4a536e7",
   displayName: "오삼오삼"
 };
 const expectedUploadedCandidate = {
-  buildNumber: "66",
-  buildId: "b1a187d7-0776-4dd0-b648-9685edbb7760",
-  submissionId: "90000462-1a28-424d-a496-bef9ad8d7f41",
+  buildNumber: "68",
+  buildId: "47878231-5f1e-4a7f-b871-07adc9dfaa9e",
+  submissionId: "e9aee1a2-d44a-429f-81b1-e22428fcfcee",
+  artifactBytes: "176918411",
+  artifactBytesFormatted: "176,918,411",
+  artifactSha256:
+    "3ba0f27c4250be1ae794287b951508e0b82ea8efb76fd98d8cf7454619a86324"
 };
 
 const checks = [];
@@ -319,10 +318,13 @@ includes("docs/app-store-connect-build49-packet.md", build49Packet, "EAS submiss
 includes("docs/app-store-connect-build49-packet.md", build49Packet, "/api/maps/config: present");
 includes("docs/app-store-connect-build49-packet.md", build49Packet, "kakaomap://search: present");
 includes("docs/app-store-connect-build49-packet.md", build49Packet, "naverEnabled: false");
-includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "Source commit | Verify immediately before upload with `git rev-parse --short HEAD`");
-includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "EAS remote auto-increment after build 42");
-includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "git rev-parse --short HEAD");
-includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "EAS_NO_VCS=1 eas build -p ios --profile production --non-interactive --auto-submit");
+includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "Candidate Git SHA | `UNBOUND/PENDING`");
+includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "Expected next build number | `69`");
+includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "no remote auto-increment");
+includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "Native Release identity | `com.invitehub.app` / `1.0.3 (69)`");
+includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "Native Debug identity | `com.invitehub.app.dev` / `1.0.3 (52)`");
+includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "npm run release:ios:build");
+includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "npm run release:ios:upload -- /absolute/path/to/candidate.ipa");
 includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "currentTestFlightBuildProcessed");
 includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "currentReleaseBuildSelectedForVersion");
 includes("docs/app-store-connect-next-build-packet.md", nextBuildPacket, "Final Add for Review and Submit for Review still require separate explicit user");
@@ -408,68 +410,64 @@ includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "사진 포함 유료 발행 및 인앱 결제 기능은 현재 제출 빌드에서 비활성화");
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "TestFlight에서 다음 빌드를 설치");
 includes("docs/app-store-connect-input-packet-build46.md", build46InputPacket, "currentReleaseBuildSelectedForVersion");
-includes("docs/current-release-state.md", currentReleaseState, `Local candidate | \`${expectedCurrentCandidate.appVersion} (${expectedCurrentCandidate.buildNumber})\``);
-includes("docs/current-release-state.md", currentReleaseState, expectedCurrentCandidate.sourceCommit);
-includes("docs/current-release-state.md", currentReleaseState, expectedCurrentCandidate.buildId);
-includes("docs/current-release-state.md", currentReleaseState, expectedCurrentCandidate.artifactBytesFormatted);
-includes("docs/current-release-state.md", currentReleaseState, expectedCurrentCandidate.artifactSha256);
+includes("docs/current-release-state.md", currentReleaseState, `Local source identity | Xcode Release \`com.invitehub.app\` \`${expectedCurrentCandidate.appVersion} (${expectedCurrentCandidate.buildNumber})\``);
+includes("docs/current-release-state.md", currentReleaseState, expectedCurrentCandidate.sourceBaseCommit);
+includes("docs/current-release-state.md", currentReleaseState, "Candidate Git SHA | `UNBOUND/PENDING`");
+includes("docs/current-release-state.md", currentReleaseState, "highest production build `68`, Build `69` count `0`");
+includes("docs/current-release-state.md", currentReleaseState, expectedUploadedCandidate.buildId);
+includes("docs/current-release-state.md", currentReleaseState, expectedUploadedCandidate.artifactBytesFormatted);
+includes("docs/current-release-state.md", currentReleaseState, expectedUploadedCandidate.artifactSha256);
 includes("docs/current-release-state.md", currentReleaseState, expectedUploadedCandidate.submissionId);
-includes("docs/current-release-state.md", currentReleaseState, "Build 67 `FINISHED`");
-includes("docs/current-release-state.md", currentReleaseState, "Build 67은 아직 App Store Connect에 업로드하지 않음");
-includes("docs/current-release-state.md", currentReleaseState, "Chrome authenticated live 확인");
-includes("docs/current-release-state.md", currentReleaseState, "Build 66 `제출 준비 완료`");
-includes("docs/current-release-state.md", currentReleaseState, "`Team (Expo)` 그룹 1개·테스터 1명");
-includes("docs/current-release-state.md", currentReleaseState, "심사 메모는 아직 Build 64로 표기");
-includes("docs/current-release-state.md", currentReleaseState, "`com.invitehub.app` `1.0.3 (66)` 개발자 설치본");
-includes("docs/current-release-state.md", currentReleaseState, "`builtByDeveloper=true`라 TestFlight 설치 증거는 아니며");
-includes("docs/current-release-state.md", currentReleaseState, "EAS IPA와 동일 바이너리라는 증거도 아님");
-includes("docs/current-release-state.md", currentReleaseState, "잠금 해제와 CoreDevice 연결을 확인");
-includes("docs/current-release-state.md", currentReleaseState, "`InviteHub.app/InviteHub` 프로세스가 유지되는 증거 수집 통과");
-includes("docs/current-release-state.md", currentReleaseState, "Do not select Builds 62, 63, or 64");
+includes("docs/current-release-state.md", currentReleaseState, "TestFlight `제출 준비 완료`");
+includes("docs/current-release-state.md", currentReleaseState, "authenticated Chrome live check");
+includes("docs/current-release-state.md", currentReleaseState, "`Team (Expo)` group assigned");
+includes("docs/current-release-state.md", currentReleaseState, "Review note updated from Build 64 to Build 68");
+includes("docs/current-release-state.md", currentReleaseState, "Build 68 is still selected but is now blocked/superseded");
+includes("docs/current-release-state.md", currentReleaseState, "`수동으로 버전 출시` selected and saved");
+includes("docs/current-release-state.md", currentReleaseState, "Cabled iPhone 12 Pro");
+includes("docs/current-release-state.md", currentReleaseState, "`com.invitehub.app.dev` reports `1.0.3 (69)`");
+includes("docs/current-release-state.md", currentReleaseState, "Do not submit Builds 62, 63, 64, 66, 67, or 68");
 includes("docs/current-release-state.md", currentReleaseState, "App Review state | Not submitted");
 includes("docs/current-release-state.md", currentReleaseState, "Public release state | Still `1.0.2`; no 1.0.3 public rollout");
 includes("RELEASE_STATUS.md", releaseStatus, `\`${expectedCurrentCandidate.appVersion} (${expectedCurrentCandidate.buildNumber})\``);
-includes("RELEASE_STATUS.md", releaseStatus, expectedCurrentCandidate.sourceCommit.slice(0, 7));
-includes("RELEASE_STATUS.md", releaseStatus, expectedCurrentCandidate.buildId);
-includes("RELEASE_STATUS.md", releaseStatus, expectedCurrentCandidate.artifactBytesFormatted);
-includes("RELEASE_STATUS.md", releaseStatus, expectedCurrentCandidate.artifactSha256);
+includes("RELEASE_STATUS.md", releaseStatus, expectedCurrentCandidate.sourceBaseCommit.slice(0, 7));
+includes("RELEASE_STATUS.md", releaseStatus, "candidate Git SHA remains `UNBOUND/PENDING`");
+includes("RELEASE_STATUS.md", releaseStatus, "production Build 68 as the highest build and Build 69 count `0`");
+includes("RELEASE_STATUS.md", releaseStatus, expectedUploadedCandidate.buildId);
+includes("RELEASE_STATUS.md", releaseStatus, expectedUploadedCandidate.artifactBytesFormatted);
+includes("RELEASE_STATUS.md", releaseStatus, expectedUploadedCandidate.artifactSha256);
 includes("RELEASE_STATUS.md", releaseStatus, expectedUploadedCandidate.submissionId);
-includes("RELEASE_STATUS.md", releaseStatus, "not proof of the EAS IPA binary");
 includes("RELEASE_STATUS.md", releaseStatus, "App Review: not submitted");
 includes("RELEASE_STATUS.md", releaseStatus, "Public App Store: still `1.0.2`");
-includes("RELEASE_STATUS.md", releaseStatus, "`com.invitehub.app.dev` was moved to deleted apps");
+includes("RELEASE_STATUS.md", releaseStatus, "cabled iPhone 12 Pro");
 includes("release-ledger.yaml", releaseLedger, `version: "${expectedCurrentCandidate.appVersion}"`);
 includes("release-ledger.yaml", releaseLedger, `build_number: "${expectedCurrentCandidate.buildNumber}"`);
-includes("release-ledger.yaml", releaseLedger, expectedCurrentCandidate.sourceCommit);
-includes("release-ledger.yaml", releaseLedger, expectedCurrentCandidate.buildId);
-includes("release-ledger.yaml", releaseLedger, `artifact_bytes: ${expectedCurrentCandidate.artifactBytes}`);
-includes("release-ledger.yaml", releaseLedger, `artifact_sha256: "${expectedCurrentCandidate.artifactSha256}"`);
+includes("release-ledger.yaml", releaseLedger, expectedCurrentCandidate.sourceBaseCommit);
+includes("release-ledger.yaml", releaseLedger, 'git_sha: "UNBOUND/PENDING"');
+includes("release-ledger.yaml", releaseLedger, "eas_production_highest_build: 68");
+includes("release-ledger.yaml", releaseLedger, "eas_production_build69_count: 0");
+includes("release-ledger.yaml", releaseLedger, "asc_production_highest_build: 68");
+includes("release-ledger.yaml", releaseLedger, "asc_production_build69_count: 0");
+includes("release-ledger.yaml", releaseLedger, expectedUploadedCandidate.buildId);
+includes("release-ledger.yaml", releaseLedger, `artifact_bytes: ${expectedUploadedCandidate.artifactBytes}`);
+includes("release-ledger.yaml", releaseLedger, `artifact_sha256: "${expectedUploadedCandidate.artifactSha256}"`);
 includes("release-ledger.yaml", releaseLedger, "eas_build_state: finished");
-includes("release-ledger.yaml", releaseLedger, "eas_submit_state: not_started");
-includes("release-ledger.yaml", releaseLedger, "app_store_connect_state: build_67_not_uploaded_build_66_ready_to_submit");
-includes("release-ledger.yaml", releaseLedger, "testflight_state: build_67_not_uploaded_build_66_internal_group");
+includes("release-ledger.yaml", releaseLedger, "eas_submit_state: finished");
+includes("release-ledger.yaml", releaseLedger, "release_eligible: false");
 includes("release-ledger.yaml", releaseLedger, expectedUploadedCandidate.submissionId);
-includes("release-ledger.yaml", releaseLedger, "eas_submission: not_started_for_build_67");
+includes("release-ledger.yaml", releaseLedger, "eas_submission: live_verified_finished_build_68");
 includes(
   "release-ledger.yaml",
   releaseLedger,
-  "phase: blocked_external_user_action_required"
-);
-includesOneOf(
-  "release-ledger.yaml",
-  releaseLedger,
-  [
-    "goal_status: blocked_external_user_action_required",
-    "goal_status: resumed_blocked_audit_turn_1"
-  ]
+  "phase: blocked_pending_clean_candidate_sha"
 );
 includes(
   "release-ledger.yaml",
   releaseLedger,
-  "real_device_result: developer_build_1_0_3_66_launch_running_artifact_unproven"
+  "real_device_result: cabled_iphone12pro_dev_bundle_69_installed_launched"
 );
-includes("release-ledger.yaml", releaseLedger, "real_iphone_install_provenance: developer_app_not_testflight");
-includes("release-ledger.yaml", releaseLedger, "real_iphone_artifact_identity: unproven_developer_install");
+includes("release-ledger.yaml", releaseLedger, "real_iphone_development_bundle_build: 69");
+includes("release-ledger.yaml", releaseLedger, "real_iphone_artifact_identity: \"com.invitehub.app.dev / 1.0.3 (69)\"");
 includes("release-ledger.yaml", releaseLedger, "app_review_state: not_submitted");
 includes("release-ledger.yaml", releaseLedger, "public_release: \"1.0.2\"");
 notIncludes(
@@ -633,8 +631,9 @@ if (failures.length > 0) {
 console.log("APP STORE PACKET VERIFY RESULT");
 console.log("- Status: pass");
 console.log(`- Checks: ${checks.length}`);
-console.log(`- Latest Built Candidate: ${expectedCurrentCandidate.appVersion} (${expectedCurrentCandidate.buildNumber})`);
-console.log(`- Latest EAS Build: ${expectedCurrentCandidate.buildId}`);
-console.log("- External Verdict: EAS Build 67 is FINISHED and its IPA identity is verified; it has not been uploaded to App Store Connect. Build 66 remains the latest uploaded TestFlight build.");
-console.log("- Device Verdict: the installed developer app is still 1.0.3 (66); Build 67 has not been installed or smoke-tested.");
-console.log("- Required follow-up: submit Build 67 to App Store Connect only with explicit approval, then install it through TestFlight and collect exact-build on-screen smoke evidence. Do not submit for App Review.");
+console.log(`- Latest Source Identity: ${expectedCurrentCandidate.appVersion} (${expectedCurrentCandidate.buildNumber}) / com.invitehub.app / Git SHA UNBOUND/PENDING`);
+console.log(`- Latest Uploaded EAS Build: ${expectedUploadedCandidate.buildId} (Build ${expectedUploadedCandidate.buildNumber})`);
+console.log("- Number Binding: read-only EAS and ASC both show highest production Build 68 and Build 69 count 0.");
+console.log("- External Verdict: Build 69 is source-bound only; EAS/ASC upload count is 0 and Build 68 remains superseded.");
+console.log("- Device Verdict: the installed development Build 69 is not production/TestFlight provenance.");
+console.log("- Required follow-up: create one approved clean Build 69 source commit, bind its full SHA/raw evidence, and rerun preflight before any separately approved build or upload.");

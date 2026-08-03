@@ -3,7 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   createOrReuseTemplatePreviewDraft,
   createLocalDraft,
+  deleteDraft,
+  ensureDraft,
   inspectDraftsForTemplatePreview,
+  loadDraft,
   quarantineAndResetCorruptDraftStorage,
   listDrafts
 } from "./drafts";
@@ -46,7 +49,7 @@ describe("mobile draft storage recovery", () => {
   it("leaves corrupted storage untouched during ordinary reads", async () => {
     storage.getItem.mockResolvedValue("{broken-json");
 
-    await expect(listDrafts()).rejects.toMatchObject({ reason: "corrupt" });
+    await expect(listDrafts("account-a")).rejects.toMatchObject({ reason: "corrupt" });
 
     expect(storage.setItem).not.toHaveBeenCalled();
     expect(storage.removeItem).not.toHaveBeenCalled();
@@ -234,6 +237,49 @@ describe("mobile draft storage recovery", () => {
     expect(second.localId).not.toBe(first.localId);
     expect(second.payload.ownerId).toBe("account-b");
     expect(storage.setItem).toHaveBeenCalledTimes(2);
+  });
+
+  it("scopes ordinary list and load operations to the active owner", async () => {
+    storage.getItem.mockResolvedValue(JSON.stringify({
+      "account-a": validDraft("account-a", "account-a", "2026-07-21T00:00:00.000Z"),
+      "account-b": validDraft("account-b", "account-b", "2026-07-22T00:00:00.000Z")
+    }));
+
+    await expect(listDrafts("account-a")).resolves.toEqual([
+      expect.objectContaining({ localId: "account-a" })
+    ]);
+    await expect(loadDraft("account-b", "account-a")).resolves.toBeNull();
+    await expect(loadDraft("account-a", "account-a")).resolves.toEqual(
+      expect.objectContaining({ localId: "account-a" })
+    );
+  });
+
+  it("does not ensure a draft belonging to another account", async () => {
+    let raw = JSON.stringify({
+      "account-b": validDraft("account-b", "account-b", "2026-07-22T00:00:00.000Z")
+    });
+    storage.getItem.mockImplementation(async () => raw);
+    storage.setItem.mockImplementation(async (_key, value) => {
+      raw = value;
+    });
+
+    const ensured = await ensureDraft("account-a", "account-b");
+
+    expect(ensured.payload.ownerId).toBe("account-a");
+    expect(ensured.localId).not.toBe("account-b");
+    expect(JSON.parse(raw)["account-b"].payload.ownerId).toBe("account-b");
+  });
+
+  it("refuses cross-account deletion without mutating storage", async () => {
+    const raw = JSON.stringify({
+      "account-b": validDraft("account-b", "account-b", "2026-07-22T00:00:00.000Z")
+    });
+    storage.getItem.mockResolvedValue(raw);
+
+    await expect(deleteDraft("account-b", "account-a")).rejects.toThrow(
+      "본인 소유의 초안만 삭제할 수 있어요."
+    );
+    expect(storage.setItem).not.toHaveBeenCalled();
   });
 
   it("survives controller unmount and process-style restart with one draft and eventual navigation", async () => {
