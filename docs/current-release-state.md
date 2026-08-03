@@ -8,13 +8,14 @@ EAS 빌드, App Store Connect 처리, TestFlight, 실기기 검증, 앱 심사�
 
 | Field | Current State |
 | --- | --- |
-| Release workspace | `/Users/jyb-m3max/Desktop/codex/invitation-platform/.worktrees/osamosam-uiux-plan-v1` |
-| Branch | `agent/osamosam-uiux-plan-v1` |
-| Candidate Git SHA | `UNBOUND/PENDING`; current dirty base HEAD is `0538c5d4dfe56b7a3dd9aa41bbbee484f4a536e7` |
+| Release workspace | `/Users/jyb-m3max/Desktop/codex/invitation-platform/.worktrees/osamosam-build69-corrected` |
+| Branch | `agent/osamosam-build69-corrected` |
+| Candidate source Git SHA | `856e7227d92a2ac7ddf5bc6a49726721d17685dd`; corrected 81-path Build 69 commit |
+| Evidence HEAD | Direct child of the source commit; limited to eight ledger/provenance controls and bound by ignored raw evidence |
 | Public App Store version | `1.0.2`; bundle `com.invitehub.app`; App Store id `6763630299` |
 | Local source identity | Xcode Release `com.invitehub.app` `1.0.3 (69)`; Xcode Debug remains `com.invitehub.app.dev` `1.0.3 (52)` |
 | Main visual | 완성된 웨딩 초대장 선택 화면, 최신 애니메이션 웨딩 템플릿, 화면 비율에 맞춘 템플릿 미리보기 |
-| Local checks | Build 69 source: 122/122 test files and 650/650 tests; focused release contract 5/5 files and 32/32 tests; packet 334 checks; web/mobile lint and typecheck plus web production build passed |
+| Local checks | Clean PASS: 120/120 test files and 647/647 tests; focused release contract 5/5 files and 35/35 tests; packet 335 checks; root/mobile lint and typecheck plus web production build passed |
 | Dependency audit | 2026-07-29 online root audit: 15 advisories (11 moderate, 4 high, 0 critical). Mobile: 12 (11 moderate, 1 high, 0 critical). Mobile high is indirect `brace-expansion` in Expo/React Native build tooling |
 | EAS iOS build id | `47878231-5f1e-4a7f-b871-07adc9dfaa9e` |
 | EAS iOS build number | `68` |
@@ -44,16 +45,17 @@ component, and production Release identity is bound locally to
 still `com.invitehub.app.dev` `1.0.3 (69)` and is not production provenance.
 
 This is not yet a Store/TestFlight Build 69 or an App Review submission. The
-candidate Git SHA is `UNBOUND/PENDING`, the worktree is dirty, selection/raw
-evidence are absent, and EAS/ASC Build 69 upload count is zero. App Review
-remains gated until the exact source is committed and approved, production
+corrected 81-path source is committed and selected at
+`856e7227d92a2ac7ddf5bc6a49726721d17685dd`; a direct evidence commit and
+ignored raw packet bind provenance without changing production source. EAS/ASC
+Build 69 upload count remains zero. App Review remains gated until production
 Build 69 is generated and uploaded under separate approval, Build 68 is
 replaced, and exact TestFlight Build 69 smoke checks pass.
 
 ## Remaining release gates
 
-1. Assemble and approve one exact clean Build 69 source commit; bind its full
-   SHA and raw source evidence, then rerun candidate preflight.
+1. Wait for a separate device handoff and approval before any development
+   profile refresh, build, install, launch, or XCTest action.
 2. Under separate approval, generate the production EAS Store Build 69 and bind
    its IPA identity, SHA-256, and profile to the clean source SHA.
 3. Upload and process Build 69 in App Store Connect under separate approval.

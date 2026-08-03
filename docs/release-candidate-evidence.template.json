@@ -12,6 +12,7 @@
   },
   "sourceEvidence": {
     "headSha": "",
+    "evidenceHeadSha": "",
     "branch": "",
     "statusPorcelain": "",
     "nativeIdentity": {

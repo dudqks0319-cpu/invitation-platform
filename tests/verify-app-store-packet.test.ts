@@ -58,15 +58,15 @@ afterEach(() => {
 });
 
 describe("App Store packet verifier", () => {
-  it("accepts source-bound Build 69 while keeping its SHA and upload unbound", () => {
+  it("accepts selected clean source Build 69 while keeping its artifact unbound", () => {
     const result = runVerifier();
 
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);
     expect(result.stdout).toContain("- Status: pass");
-    expect(result.stdout).toContain("- Latest Source Identity: 1.0.3 (69) / com.invitehub.app / Git SHA UNBOUND/PENDING");
+    expect(result.stdout).toContain("- Latest Source Identity: 1.0.3 (69) / com.invitehub.app / source 856e7227d92a2ac7ddf5bc6a49726721d17685dd");
     expect(result.stdout).toContain("highest production Build 68 and Build 69 count 0");
-    expect(result.stdout).toContain("Build 69 is source-bound only");
+    expect(result.stdout).toContain("Candidate Verdict: local clean PASS");
   });
 
   it("rejects RELEASE_STATUS artifact identity drift", () => {
@@ -115,7 +115,7 @@ describe("App Store packet verifier", () => {
   it("rejects an exact-build-installed claim without artifact provenance", () => {
     const path = mutatedCopy(
       "release-ledger.yaml",
-      "phase: blocked_pending_clean_candidate_sha",
+      "phase: candidate_selected_pending_artifact",
       "phase: exact_build_installed_device_smoke_blocked"
     );
 
@@ -123,7 +123,7 @@ describe("App Store packet verifier", () => {
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain(
-      "release-ledger.yaml: expected to include phase: blocked_pending_clean_candidate_sha"
+      "release-ledger.yaml: expected to include phase: candidate_selected_pending_artifact"
     );
   });
 
