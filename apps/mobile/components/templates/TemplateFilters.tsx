@@ -79,7 +79,7 @@ export function TemplateFilters({ filters, categories, onFiltersChange, onReset 
       </View>
 
       <View style={{ gap: 8 }}>
-        <Text style={{ color: theme.colors.ink, fontSize: 16, fontWeight: "800" }}>형식별 디자인</Text>
+        <Text style={{ color: theme.colors.ink, fontSize: 16, fontWeight: "800" }}>분위기별 디자인</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
           {templateDiscoveryMoods.map((mood) => <FilterChip key={mood.key} label={mood.label} active={filters.moods.includes(mood.key)} onPress={() => toggleMood(mood.key)} />)}
         </View>

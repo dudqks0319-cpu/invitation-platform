@@ -50,10 +50,12 @@ describe("template selection flow", () => {
 });
 
 describe("template discovery screen", () => {
-  it("uses one virtualized list with stable IDs and no draft mutation", () => {
+  it("uses one virtualized list and keeps preview navigation separate from explicit draft creation", () => {
     expect(screenSource).toContain("FlatList");
     expect(screenSource).toContain("keyExtractor={(template) => template.id}");
     expect(screenSource).not.toContain("<ScrollView");
+    expect(screenSource).toContain("createTemplatePreviewDestination(template.id)");
+    expect(screenSource).toContain("createOrReuseTemplatePreviewDraft(ownerId");
     expect(screenSource).not.toMatch(/createAndPersistDraft|selectTemplateAndOpenBuilder/);
   });
 
@@ -67,7 +69,7 @@ describe("template discovery screen", () => {
     expect(screenSource).toContain("useDebouncedValue");
     expect(screenSource.match(/announceForAccessibility/g)).toHaveLength(1);
     expect(filtersSource).not.toContain("accessibilityLiveRegion");
-    expect(screenSource.match(/accessibilityLiveRegion/g) ?? []).toHaveLength(1);
+    expect(screenSource.match(/accessibilityLiveRegion/g) ?? []).toHaveLength(2);
   });
 
   it("gives each fresh Home category entry a new non-PII discovery session key", () => {

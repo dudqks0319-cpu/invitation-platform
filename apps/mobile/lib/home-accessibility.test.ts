@@ -9,10 +9,10 @@ const heroSource = readFileSync(
 );
 
 describe("home accessibility contract", () => {
-  it("gives the login control an explicit role, label, and hint", () => {
+  it("gives the invitation-list control an explicit role, label, and hint", () => {
     expect(homeSource).toContain('accessibilityRole="button"');
-    expect(homeSource).toContain('accessibilityLabel="로그인"');
-    expect(homeSource).toContain('accessibilityHint="로그인 화면을 엽니다."');
+    expect(homeSource).toContain('accessibilityLabel="내 초대장"');
+    expect(homeSource).toContain('accessibilityHint="저장한 초대장 목록을 엽니다."');
   });
 
   it("stacks the brand and login control before 200 percent text can overlap them", () => {
@@ -22,15 +22,14 @@ describe("home accessibility contract", () => {
     expect(homeSource).toContain('alignSelf: usesStackedHeader ? "stretch" : "auto"');
   });
 
-  it("offers a wedding invitation entry without removing the existing event entries", () => {
-    expect(heroSource).toContain('key: "wedding" as const');
-    expect(heroSource).toContain('label: "청첩장"');
+  it("offers the three applied event cards and keeps all other events one action away", () => {
+    expect(heroSource).not.toContain('key: "wedding" as const');
     expect(heroSource).toContain('key: "dol" as const');
     expect(heroSource).toContain('key: "hwangap" as const');
     expect(heroSource).toContain('key: "housewarming" as const');
-    expect(heroSource).toContain('>("wedding")');
-    expect(heroSource).toContain('preferredTemplateId: "wedding-barunson-anime-09"');
-    expect(heroSource).toContain("? finishedHeroCompositeSource");
+    expect(heroSource).toContain('>("dol")');
+    expect(heroSource).toContain('accessibilityLabel="다른 행사로 만들기"');
+    expect(heroSource).toContain('onOpenCategory("all")');
     expect(heroSource).toContain("height: 244");
   });
 });

@@ -38,13 +38,13 @@ export default function HomeScreen() {
             justifyContent: "space-between"
           }}
         >
-          <Text style={{ color: theme.colors.accent, fontSize: 20, fontWeight: "800" }}>💌 오삼오삼</Text>
+          <Text style={{ color: theme.colors.accent, fontSize: 22, fontWeight: "800" }}>오삼오삼</Text>
           <Pressable
-            accessibilityHint="로그인 화면을 엽니다."
-            accessibilityLabel="로그인"
+            accessibilityHint="저장한 초대장 목록을 엽니다."
+            accessibilityLabel="내 초대장"
             accessibilityRole="button"
             onPress={() => {
-              router.push("/login");
+              router.push("/my-invitations");
             }}
             style={{
               minHeight: 44,
@@ -59,34 +59,11 @@ export default function HomeScreen() {
               marginTop: usesStackedHeader ? 8 : 0
             }}
           >
-            <Text style={{ color: theme.colors.accent, fontSize: 13, fontWeight: "700" }}>로그인</Text>
+            <Text style={{ color: theme.colors.accent, fontSize: 14, fontWeight: "700" }}>내 초대장</Text>
           </Pressable>
         </View>
 
         <View style={{ paddingHorizontal: 18, paddingTop: 24 }}>
-          <Pressable
-            accessibilityHint="초대장을 고르고 만들고 공유하는 과정을 순서대로 확인합니다."
-            accessibilityLabel="초대장 만들기 과정 둘러보기"
-            accessibilityRole="button"
-            onPress={() => router.push("/uiux-preview")}
-            style={({ pressed }) => ({
-              minHeight: 52,
-              marginBottom: 18,
-              borderRadius: 18,
-              borderWidth: 1,
-              borderColor: theme.colors.primary,
-              backgroundColor: theme.colors.primaryLight,
-              paddingHorizontal: 16,
-              paddingVertical: 12,
-              alignItems: "center",
-              justifyContent: "center",
-              opacity: pressed ? 0.78 : 1
-            })}
-          >
-            <Text style={{ color: theme.colors.primaryDark, fontSize: 15, fontWeight: "800" }}>
-              초대장 만들기 과정 둘러보기
-            </Text>
-          </Pressable>
           <HeroSection
             onOpenCategory={(category) => {
               const entryKey = createTemplateDiscoveryEntryKey();

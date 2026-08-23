@@ -16,10 +16,20 @@ import { theme } from "@/components/ui/theme";
 type TemplateCardProps = {
   template: MobileTemplateGalleryItem;
   onOpenPreview: (template: MobileTemplateGalleryItem) => void;
+  onStart?: (template: MobileTemplateGalleryItem) => void;
+  startDisabled?: boolean;
+  starting?: boolean;
   width?: number;
 };
 
-export const TemplateCard = memo(function TemplateCard({ template, onOpenPreview, width }: TemplateCardProps) {
+export const TemplateCard = memo(function TemplateCard({
+  template,
+  onOpenPreview,
+  onStart,
+  startDisabled = false,
+  starting = false,
+  width
+}: TemplateCardProps) {
   const metadata = getTemplateCardExternalMetadata(template);
   const resolvedSource = getTemplatePreviewSource(template);
   const [imageState, setImageState] = useState(() => createTemplateImageRecoveryState(resolvedSource));
@@ -35,23 +45,19 @@ export const TemplateCard = memo(function TemplateCard({ template, onOpenPreview
   const previewHeight = width ? Math.max(220, Math.min(420, Math.round(width * 1.3))) : 220;
 
   return (
-    <Pressable
-      accessibilityLabel={`예시, ${template.name}, ${template.badge}, ${template.desc}${imageFailed ? ", 이미지 표시 실패" : ""}, 미리보기 열기`}
-      accessibilityHint="선택한 디자인의 가상 행사 예시를 엽니다."
-      accessibilityRole="button"
-      onPress={() => onOpenPreview(template)}
-      style={({ pressed }) => ({
+    <View
+      accessibilityLabel={`예시, ${template.name}, ${template.badge}, ${template.desc}${imageFailed ? ", 이미지 표시 실패" : ""}`}
+      style={{
         width,
         minWidth: 44,
         minHeight: 44,
         backgroundColor: theme.colors.surface,
         borderRadius: theme.radius.lg,
         borderWidth: 1,
-        borderColor: pressed ? theme.colors.primary : theme.colors.border,
+        borderColor: theme.colors.border,
         overflow: "hidden",
-        opacity: pressed ? 0.88 : 1,
         ...theme.shadow.card
-      })}
+      }}
     >
       <View
         accessible={false}
@@ -91,7 +97,7 @@ export const TemplateCard = memo(function TemplateCard({ template, onOpenPreview
         )}
       </View>
 
-      <View accessible={false} style={{ padding: 14, gap: 8 }}>
+      <View style={{ padding: 14, gap: 10 }}>
         <Text style={{ color: theme.colors.ink, fontSize: 12, fontWeight: "800" }}>{template.badge}</Text>
         <Text style={{ color: theme.colors.ink, fontSize: 17, fontWeight: "800", lineHeight: 23 }}>
           {metadata.name}
@@ -106,7 +112,47 @@ export const TemplateCard = memo(function TemplateCard({ template, onOpenPreview
             </View>
           ))}
         </View>
+        <Pressable
+          accessibilityHint="가상 행사 정보가 적용된 전체 디자인 미리보기를 엽니다. 초안은 만들지 않습니다."
+          accessibilityLabel={`${template.name} 전체 보기`}
+          accessibilityRole="button"
+          onPress={() => onOpenPreview(template)}
+          style={({ pressed }) => ({
+            minHeight: 44,
+            borderRadius: theme.radius.pill,
+            borderWidth: 1,
+            borderColor: theme.colors.primaryDark,
+            backgroundColor: theme.colors.surface,
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: pressed ? 0.72 : 1
+          })}
+        >
+          <Text style={{ color: theme.colors.primaryDark, fontSize: 15, fontWeight: "800" }}>전체 보기</Text>
+        </Pressable>
+        {onStart ? (
+          <Pressable
+            accessibilityHint="이 디자인으로 편집 가능한 초안을 한 번 만들고 편집 화면을 엽니다."
+            accessibilityLabel={starting ? `${template.name} 초대장을 만드는 중` : `${template.name} 이 디자인으로 시작`}
+            accessibilityRole="button"
+            accessibilityState={{ busy: starting, disabled: startDisabled }}
+            disabled={startDisabled}
+            onPress={() => onStart(template)}
+            style={({ pressed }) => ({
+              minHeight: 48,
+              borderRadius: theme.radius.pill,
+              backgroundColor: theme.colors.primary,
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: startDisabled ? 0.58 : pressed ? 0.76 : 1
+            })}
+          >
+            <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "800" }}>
+              {starting ? "초대장을 만드는 중" : "이 디자인으로 시작"}
+            </Text>
+          </Pressable>
+        ) : null}
       </View>
-    </Pressable>
+    </View>
   );
 });

@@ -1,6 +1,16 @@
 import { useEffect, useState } from "react";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { AccessibilityInfo, ActivityIndicator, Alert, Image, Platform, Pressable, ScrollView, View } from "react-native";
+import {
+  AccessibilityInfo,
+  ActivityIndicator,
+  Alert,
+  Image,
+  Platform,
+  Pressable,
+  ScrollView,
+  Switch,
+  View
+} from "react-native";
 import { AppText as Text } from "@/components/ui/AppText";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
@@ -41,8 +51,10 @@ import { retainFirstValidatedTemplateSelection, type TemplatePreviewSelection } 
 import { getUniqueTemplateTags } from "@/lib/template-tags";
 
 type CreationStatus = "idle" | "creating" | "failed" | "success";
+const previewWidths = [360, 390, 430] as const;
+type PreviewWidth = (typeof previewWidths)[number];
 
-function TemplatePreviewImage({ template }: { template: MobileTemplateGalleryItem }) {
+function TemplatePreviewImage({ maxWidth, template }: { maxWidth: PreviewWidth; template: MobileTemplateGalleryItem }) {
   const resolvedSource = getTemplatePreviewSource(template);
   const [imageState, setImageState] = useState(() => createTemplateImageRecoveryState(resolvedSource));
   const synchronizedImageState = synchronizeTemplateImageRecoveryState(imageState, resolvedSource);
@@ -63,7 +75,7 @@ function TemplatePreviewImage({ template }: { template: MobileTemplateGalleryIte
       style={{
         alignSelf: "center",
         width: "100%",
-        maxWidth: 420,
+        maxWidth,
         aspectRatio: 941 / 1672,
         borderRadius: theme.radius.lg,
         overflow: "hidden",
@@ -201,14 +213,14 @@ function TemplatePreviewActions({
       ) : (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={isCreating ? "초대장을 만드는 중" : "이 디자인으로 시작하기"}
+          accessibilityLabel={isCreating ? "초대장을 만드는 중" : "이 디자인으로 시작"}
           accessibilityHint="선택한 디자인으로 편집 가능한 새 초안을 만듭니다."
           accessibilityState={actionAccessibility.accessibilityState}
           disabled={isActionDisabled}
           onPress={() => void runAction(() => controller.start(template))}
           style={{ minHeight: 54, borderRadius: theme.radius.pill, backgroundColor: theme.colors.ink, alignItems: "center", justifyContent: "center", opacity: isActionDisabled ? 0.64 : 1, ...theme.shadow.heroButton }}
         >
-          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "900" }}>{isCreating ? "초대장을 만드는 중" : "이 디자인으로 시작하기"}</Text>
+          <Text style={{ color: "#fff", fontSize: 16, fontWeight: "900" }}>{isCreating ? "초대장을 만드는 중" : "이 디자인으로 시작"}</Text>
         </Pressable>
       )}
 
@@ -268,6 +280,10 @@ export default function TemplatePreviewScreen() {
   const [canRecoverDraftStorage, setCanRecoverDraftStorage] = useState(false);
   const [recoveryStatus, setRecoveryStatus] = useState<"idle" | "recovering" | "failed">("idle");
   const [recoveryError, setRecoveryError] = useState<string | null>(null);
+  const [previewWidth, setPreviewWidth] = useState<PreviewWidth>(390);
+  const [largeText, setLargeText] = useState(true);
+  const [slowMode, setSlowMode] = useState(reduceMotionEnabled);
+  const effectiveReducedMotion = reduceMotionEnabled || slowMode;
   const gate = getTemplatePreviewGate({
     authStatus,
     ownerId,
@@ -364,7 +380,7 @@ export default function TemplatePreviewScreen() {
   if (!template && catalogSource === "loading" && hasValidIntent) {
     return (
       <SafeAreaView accessibilityLabel="디자인을 불러오는 중입니다" accessibilityRole="progressbar" accessibilityState={{ busy: true }} style={{ flex: 1, backgroundColor: theme.colors.background, padding: 24, alignItems: "center", justifyContent: "center", gap: 14 }}>
-        {reduceMotionEnabled ? null : <ActivityIndicator color={theme.colors.primaryDark} size="small" />}
+        {effectiveReducedMotion ? null : <ActivityIndicator color={theme.colors.primaryDark} size="small" />}
         <Text style={{ color: theme.colors.muted, fontSize: 15 }}>디자인을 불러오는 중이에요.</Text>
       </SafeAreaView>
     );
@@ -409,7 +425,7 @@ export default function TemplatePreviewScreen() {
             <Text style={{ color: theme.colors.ink, fontSize: 19, fontWeight: "800" }}>‹</Text>
           </Pressable>
           <Text accessibilityRole="header" style={{ flex: 1, color: theme.colors.ink, fontSize: 21, fontWeight: "800", textAlign: "center" }}>
-            디자인 미리보기
+            실시간 미리보기
           </Text>
           <View style={{ width: 44 }} />
         </View>
@@ -427,11 +443,102 @@ export default function TemplatePreviewScreen() {
           </View>
         </View>
 
-        <TemplatePreviewImage key={template.id} template={template} />
+        <View
+          accessibilityLabel="미리보기 너비 선택"
+          style={{
+            minHeight: 52,
+            flexDirection: "row",
+            borderRadius: theme.radius.pill,
+            borderWidth: 1,
+            borderColor: theme.colors.border,
+            backgroundColor: theme.colors.surface,
+            padding: 4
+          }}
+        >
+          {previewWidths.map((width) => {
+            const selected = previewWidth === width;
+            return (
+              <Pressable
+                accessibilityHint={`${width}포인트 너비로 초대장을 확인합니다.`}
+                accessibilityLabel={`미리보기 너비 ${width}`}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                key={width}
+                onPress={() => setPreviewWidth(width)}
+                style={({ pressed }) => ({
+                  flex: 1,
+                  minHeight: 44,
+                  borderRadius: theme.radius.pill,
+                  backgroundColor: selected ? theme.colors.primary : "transparent",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  opacity: pressed ? 0.74 : 1
+                })}
+              >
+                <Text style={{ color: selected ? "#FFFFFF" : theme.colors.ink, fontSize: 16, fontWeight: "800" }}>
+                  {selected ? `✓ ${width}` : width}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        {[
+          {
+            label: "글자 크게 보기",
+            hint: "예시 행사 정보의 본문을 크게 표시합니다.",
+            disabled: false,
+            value: largeText,
+            onValueChange: setLargeText
+          },
+          {
+            label: "저속 모드 미리보기",
+            hint: reduceMotionEnabled
+              ? "기기의 동작 줄이기 설정에 따라 항상 켜져 있습니다."
+              : "미리보기의 진행 표시와 전환 효과를 줄입니다.",
+            disabled: reduceMotionEnabled,
+            value: effectiveReducedMotion,
+            onValueChange: setSlowMode
+          }
+        ].map((control) => (
+          <View
+            key={control.label}
+            style={{
+              minHeight: 64,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              borderRadius: theme.radius.lg,
+              borderWidth: 1,
+              borderColor: theme.colors.border,
+              backgroundColor: theme.colors.surface,
+              paddingHorizontal: 16,
+              paddingVertical: 10,
+              ...theme.shadow.card
+            }}
+          >
+            <Text style={{ flex: 1, color: theme.colors.ink, fontSize: 16, fontWeight: "800" }}>
+              {control.label}
+            </Text>
+            <Switch
+              accessibilityHint={control.hint}
+              accessibilityLabel={control.label}
+              accessibilityState={{ checked: control.value, disabled: control.disabled }}
+              disabled={control.disabled}
+              onValueChange={control.onValueChange}
+              thumbColor="#FFFFFF"
+              trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
+              value={control.value}
+            />
+          </View>
+        ))}
+
+        <TemplatePreviewImage key={template.id} maxWidth={previewWidth} template={template} />
 
         <View style={{ borderRadius: theme.radius.lg, borderWidth: 1, borderColor: theme.colors.border, backgroundColor: theme.colors.surface, padding: 18, gap: 12 }}>
           <Text style={{ color: theme.colors.ink, fontSize: 18, fontWeight: "800" }}>예시 행사 정보</Text>
-          <Text style={{ color: theme.colors.ink, fontSize: 12, lineHeight: 18 }}>
+          <Text style={{ color: theme.colors.ink, fontSize: largeText ? 16 : 14, lineHeight: largeText ? 24 : 21 }}>
             아래 이름, 일정, 장소, 설명은 모두 디자인 확인용 가상 예시이며 저장되지 않습니다.
           </Text>
           {[
@@ -443,14 +550,14 @@ export default function TemplatePreviewScreen() {
           ].map(([label, value]) => (
             <View key={label} style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
               <Text style={{ minWidth: 48, color: theme.colors.ink, fontSize: 13, fontWeight: "800", lineHeight: 21 }}>{label}</Text>
-              <Text style={{ flex: 1, minWidth: 190, color: theme.colors.ink, fontSize: 14, lineHeight: 22 }}>{value}</Text>
+              <Text style={{ flex: 1, minWidth: 190, color: theme.colors.ink, fontSize: largeText ? 17 : 15, lineHeight: largeText ? 26 : 23 }}>{value}</Text>
             </View>
           ))}
         </View>
 
         {gate.status === "auth-loading" || gate.status === "checking" ? (
           <View accessibilityLabel={gate.message} accessibilityLiveRegion="polite" accessibilityRole="progressbar" accessibilityState={{ busy: true }} style={{ minHeight: 52, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 9 }}>
-            {reduceMotionEnabled ? null : <ActivityIndicator color={theme.colors.primaryDark} size="small" />}
+            {effectiveReducedMotion ? null : <ActivityIndicator color={theme.colors.primaryDark} size="small" />}
             <Text style={{ color: theme.colors.muted, fontSize: 14 }}>{gate.message}</Text>
           </View>
         ) : gate.status === "load-error" ? (

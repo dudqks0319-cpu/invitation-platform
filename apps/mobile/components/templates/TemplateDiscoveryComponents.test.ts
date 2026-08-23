@@ -10,9 +10,12 @@ const sampleOverlaySource = readFileSync(
 );
 
 describe("template discovery components", () => {
-  it("makes the whole card one accessible 44pt preview button without router or draft ownership", () => {
+  it("exposes separate accessible preview and start actions without owning routing or storage", () => {
     expect(cardSource).toContain('accessibilityRole="button"');
-    expect(cardSource).toContain("미리보기 열기");
+    expect(cardSource).toContain("전체 보기");
+    expect(cardSource).toContain("이 디자인으로 시작");
+    expect(cardSource).toContain("onOpenPreview(template)");
+    expect(cardSource).toContain("onStart(template)");
     expect(cardSource).toMatch(/minHeight:\s*44/);
     expect(cardSource).toContain("accessible={false}");
     expect(cardSource).not.toMatch(/useRouter|router\.|draft|createAndPersistDraft/);
@@ -41,7 +44,7 @@ describe("template discovery components", () => {
     expect(filtersSource).toContain("maxLength={TEMPLATE_DISCOVERY_QUERY_MAX_LENGTH}");
     expect(filtersSource).toMatch(/<Text[^>]*>디자인 검색<\/Text>\s*<TextInput/);
     expect(filtersSource).toContain("행사별 디자인");
-    expect(filtersSource).toContain("형식별 디자인");
+    expect(filtersSource).toContain("분위기별 디자인");
     expect(filtersSource).toContain("오삼오삼 셀렉션");
     expect(filtersSource).toContain("이 디자인으로 시작하기");
     expect(filtersSource).toContain("accessibilityState={{ selected: active }}");

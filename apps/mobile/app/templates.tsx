@@ -16,9 +16,12 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { TemplateCard } from "@/components/templates/TemplateCard";
 import { TemplateFilters } from "@/components/templates/TemplateFilters";
 import { theme } from "@/components/ui/theme";
+import { useAuth } from "@/hooks/useAuth";
 import { useTemplateCatalog } from "@/hooks/useTemplateCatalog";
 import { useTemplateDiscoveryState } from "@/hooks/useTemplateDiscoveryState";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { getDraftOwnerId } from "@/lib/auth-access";
+import { createOrReuseTemplatePreviewDraft } from "@/lib/drafts";
 import {
   emptyTemplateDiscoveryFilters,
   filterTemplateDiscoveryItems,
@@ -31,7 +34,10 @@ import {
   TEMPLATE_DISCOVERY_COLUMN_GAP,
   TEMPLATE_DISCOVERY_HORIZONTAL_INSET
 } from "@/lib/template-discovery-layout";
-import { createTemplatePreviewDestination } from "@/lib/template-discovery-navigation";
+import {
+  createTemplatePreviewDestination,
+  createTemplatePreviewIntentKey
+} from "@/lib/template-discovery-navigation";
 import { normalizeTemplateDiscoveryEntryKey } from "@/lib/template-discovery-state";
 import {
   mobileTemplateCategories,
@@ -133,6 +139,7 @@ function CatalogStatus({
 
 export default function TemplatesScreen() {
   const router = useRouter();
+  const { status: authStatus, user } = useAuth();
   const { category: initialCategoryParam, entryKey: entryKeyParam } = useLocalSearchParams<{
     category?: string | string[];
     entryKey?: string | string[];
@@ -150,8 +157,14 @@ export default function TemplatesScreen() {
   const reduceMotionEnabled = useReducedMotion();
   const [listWidth, setListWidth] = useState(width);
   const [recentTemplates, setRecentTemplates] = useState<MobileTemplateGalleryItem[]>([]);
+  const [startingTemplateId, setStartingTemplateId] = useState<string | null>(null);
+  const [startError, setStartError] = useState<string | null>(null);
   const listRef = useRef<FlatList<MobileTemplateGalleryItem>>(null);
   const currentScrollOffsetRef = useRef(scrollOffset);
+  const startInFlightRef = useRef<Promise<void> | null>(null);
+  const lastStartTemplateRef = useRef<MobileTemplateGalleryItem | null>(null);
+  const startIntentKeysRef = useRef(new Map<string, string>());
+  const mountedRef = useRef(true);
   const announcedOnceRef = useRef(false);
   const announceAccessibility = useCallback((message: string) => {
     AccessibilityInfo.announceForAccessibility(message);
@@ -175,13 +188,31 @@ export default function TemplatesScreen() {
   );
   const activeFilterSummary = getTemplateDiscoveryActiveFilterSummary(committedFilters, mobileTemplateCategories);
   const activeCategory = mobileTemplateCategories.find((category) => category.key === committedFilters.category);
-  const discoveryTitle = activeCategory ? `${activeCategory.label} 디자인` : "디자인 둘러보기";
+  const appliedCategoryLabels: Record<string, string> = {
+    dol: "돌잔치",
+    hwangap: "환갑·칠순",
+    housewarming: "집들이"
+  };
+  const activeCategoryLabel = activeCategory
+    ? appliedCategoryLabels[activeCategory.key] ?? activeCategory.label
+    : null;
+  const discoveryTitle = activeCategoryLabel ? `${activeCategoryLabel} 디자인` : "디자인 둘러보기";
   const discoveryDescription = activeCategory
-    ? `${activeCategory.label}에 어울리는 기존 템플릿을 먼저 미리보고 시작하세요.`
+    ? `${activeCategoryLabel}에 어울리는 디자인을 먼저 미리보고 시작하세요.`
     : "행사와 분위기에 맞는 예시 디자인을 찾고, 카드를 눌러 먼저 미리보세요.";
-  const columnCount = getTemplateDiscoveryColumnCount(fontScale);
-  const cardWidth = getTemplateDiscoveryCardWidth(listWidth, fontScale);
+  const columnCount = activeCategory ? 1 : getTemplateDiscoveryColumnCount(fontScale);
+  const cardWidth = activeCategory
+    ? Math.max(0, Math.floor(listWidth - TEMPLATE_DISCOVERY_HORIZONTAL_INSET * 2))
+    : getTemplateDiscoveryCardWidth(listWidth, fontScale);
   const resultsAreReady = source !== "loading";
+  const ownerId = getDraftOwnerId(user);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     enterDiscovery({ entryKey, category: initialCategory }, allowedCategoryKeys);
@@ -246,6 +277,39 @@ export default function TemplatesScreen() {
     router.push(destination);
   }, [router, setScrollOffset]);
 
+  const handleStart = useCallback((template: MobileTemplateGalleryItem) => {
+    if (startInFlightRef.current || authStatus === "loading") return;
+
+    lastStartTemplateRef.current = template;
+    setStartError(null);
+    setStartingTemplateId(template.id);
+
+    const intentMapKey = `${ownerId}:${template.id}`;
+    const previewIntentKey = startIntentKeysRef.current.get(intentMapKey) ?? createTemplatePreviewIntentKey();
+    startIntentKeysRef.current.set(intentMapKey, previewIntentKey);
+
+    const operation = createOrReuseTemplatePreviewDraft(ownerId, {
+      eventType: template.category,
+      templateId: template.id,
+      title: `${template.badge} 초대장`,
+      previewIntentKey
+    })
+      .then((draft) => {
+        router.push({ pathname: "/builder/step1-basic", params: { localId: draft.localId } });
+      })
+      .catch(() => {
+        if (mountedRef.current) {
+          setStartError("초대장을 만들지 못했어요. 저장 공간을 확인한 뒤 다시 시도해 주세요.");
+        }
+      })
+      .finally(() => {
+        startInFlightRef.current = null;
+        if (mountedRef.current) setStartingTemplateId(null);
+      });
+
+    startInFlightRef.current = operation;
+  }, [authStatus, ownerId, router]);
+
   function handleScroll(event: NativeSyntheticEvent<NativeScrollEvent>) {
     currentScrollOffsetRef.current = Math.max(0, event.nativeEvent.contentOffset.y);
   }
@@ -306,12 +370,38 @@ export default function TemplatesScreen() {
         onRetry={retry}
       />
 
+      {startError ? (
+        <View accessibilityLiveRegion="assertive" style={{ gap: 8, borderRadius: theme.radius.md, borderWidth: 1, borderColor: theme.colors.primary, backgroundColor: theme.colors.primaryLight, padding: 14 }}>
+          <Text style={{ color: theme.colors.ink, fontSize: 15, lineHeight: 22, fontWeight: "700" }}>{startError}</Text>
+          <Pressable
+            accessibilityHint="같은 디자인과 시작 정보로 초안 저장을 다시 시도합니다."
+            accessibilityLabel="초대장 만들기 다시 시도"
+            accessibilityRole="button"
+            onPress={() => {
+              const template = lastStartTemplateRef.current;
+              if (template) handleStart(template);
+            }}
+            style={({ pressed }) => ({ alignSelf: "flex-start", minHeight: 44, justifyContent: "center", paddingHorizontal: 8, opacity: pressed ? 0.72 : 1 })}
+          >
+            <Text style={{ color: theme.colors.primaryDark, fontSize: 15, fontWeight: "800" }}>다시 시도</Text>
+          </Pressable>
+        </View>
+      ) : null}
+
       {recentTemplates.length > 0 ? (
         <View accessibilityLabel={`최근 본 디자인 ${recentTemplates.length}개`} style={{ gap: 12 }}>
           <Text style={{ color: theme.colors.ink, fontSize: 18, fontWeight: "800" }}>최근 본 디자인</Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: TEMPLATE_DISCOVERY_COLUMN_GAP }}>
             {recentTemplates.map((template) => (
-              <TemplateCard key={`recent-${template.id}`} template={template} onOpenPreview={handleOpenPreview} width={cardWidth} />
+              <TemplateCard
+                key={`recent-${template.id}`}
+                template={template}
+                onOpenPreview={handleOpenPreview}
+                onStart={handleStart}
+                startDisabled={authStatus === "loading" || startingTemplateId !== null}
+                starting={startingTemplateId === template.id}
+                width={cardWidth}
+              />
             ))}
           </View>
         </View>
@@ -393,7 +483,14 @@ export default function TemplatesScreen() {
         onScrollEndDrag={commitScrollOffset}
         removeClippedSubviews={false}
         renderItem={({ item }) => (
-          <TemplateCard template={item} onOpenPreview={handleOpenPreview} width={cardWidth} />
+          <TemplateCard
+            template={item}
+            onOpenPreview={handleOpenPreview}
+            onStart={handleStart}
+            startDisabled={authStatus === "loading" || startingTemplateId !== null}
+            starting={startingTemplateId === item.id}
+            width={cardWidth}
+          />
         )}
         scrollEventThrottle={100}
         showsVerticalScrollIndicator={false}

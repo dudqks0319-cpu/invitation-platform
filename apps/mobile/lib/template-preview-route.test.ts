@@ -23,7 +23,7 @@ describe("template preview route", () => {
   });
 
   it("shows the intentional CTA, busy state, failure retry, list return, and explicit existing-draft choices", () => {
-    expect(routeSource).toContain("이 디자인으로 시작하기");
+    expect(routeSource).toContain("이 디자인으로 시작");
     expect(routeSource).toContain("초대장을 만드는 중");
     expect(routeSource).toContain("accessibilityState={actionAccessibility.accessibilityState}");
     expect(routeSource).toContain("다시 시도");
@@ -72,11 +72,20 @@ describe("template preview route", () => {
     expect(routeSource).toContain('accessibilityRole="progressbar"');
     expect(routeSource).toContain("accessibilityState={{ busy: true }}");
     expect(routeSource).toContain('accessibilityLiveRegion="assertive"');
-    expect(routeSource).toContain("reduceMotionEnabled ? null : <ActivityIndicator");
+    expect(routeSource).toContain("effectiveReducedMotion ? null : <ActivityIndicator");
     expect(routeSource).not.toContain("theme.colors.textLight");
     expect(invitationPreviewSource).toContain("minHeight: 44");
     expect(invitationPreviewSource).toContain("accessibilityState={{ disabled:");
     expect(routeSource).toContain("createTemplatePreviewAnnouncementController");
+  });
+
+  it("applies the live-preview viewport and readability controls without weakening the preview gate", () => {
+    expect(routeSource).toContain("실시간 미리보기");
+    expect(routeSource).toContain("previewWidths");
+    expect(routeSource).toContain("글자 크게 보기");
+    expect(routeSource).toContain("저속 모드 미리보기");
+    expect(routeSource).toContain("effectiveReducedMotion");
+    expect(routeSource).toContain("getTemplatePreviewGate({");
   });
 
   it("does not wrap the interactive invitation preview in an accessible ancestor", () => {

@@ -251,8 +251,8 @@ export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps)
   const { width } = useWindowDimensions();
   const { templates } = useTemplateCatalog();
   const [selectedEventKey, setSelectedEventKey] = useState<
-    "wedding" | "dol" | "hwangap" | "housewarming"
-  >("wedding");
+    "dol" | "hwangap" | "housewarming"
+  >("dol");
   const [finishedHeroCompositeFailed, setFinishedHeroCompositeFailed] = useState(false);
   const carouselViewportWidth = Math.max(280, width - 36);
   const cardWidth = Math.min(188, Math.max(134, (carouselViewportWidth - 12) / 2));
@@ -263,12 +263,6 @@ export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps)
   const finishedHeroCompositeSource = getFinishedHomeHeroCompositeSource();
   const sections = getHomeTemplateSections(templates);
   const eventEntries = [
-    {
-      key: "wedding" as const,
-      label: "청첩장",
-      description: "두 사람의 사진과 예식 정보를 담는 디자인",
-      preferredTemplateId: "wedding-barunson-anime-09"
-    },
     {
       key: "dol" as const,
       label: "돌잔치",
@@ -296,12 +290,7 @@ export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps)
     return {
       ...entry,
       template,
-      previewSource:
-      entry.key === "wedding"
-        ? finishedHeroCompositeSource
-        : template
-          ? getTemplatePreviewSource(template)
-          : null
+      previewSource: template ? getTemplatePreviewSource(template) : null
     };
   });
 
@@ -313,7 +302,7 @@ export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps)
     >
       <View style={{ gap: 12 }}>
         <Text style={{ color: theme.colors.gold, fontSize: 13, fontWeight: "800", letterSpacing: 0 }}>
-          초대장 플랫폼
+          오삼오삼
         </Text>
         <Text
           style={{
@@ -329,7 +318,7 @@ export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps)
           만드시나요?
         </Text>
         <Text style={{ color: theme.colors.muted, fontSize: 16, lineHeight: 26 }}>
-          행사를 고르면 문구와 기존 디자인을 추천해드려요.
+          행사를 고르면 문구와 디자인을 추천해드려요.
         </Text>
       </View>
 
@@ -358,6 +347,11 @@ export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps)
               })}
             >
               <View style={{ flex: 1.15, padding: 18, gap: 7, justifyContent: "center" }}>
+                {selected ? (
+                  <Text style={{ color: theme.colors.primaryDark, fontSize: 12, fontWeight: "800" }}>
+                    선택됨
+                  </Text>
+                ) : null}
                 <Text style={{ color: theme.colors.ink, fontSize: 22, fontWeight: "800" }}>{entry.label}</Text>
                 <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 19 }}>
                   {entry.description}
@@ -369,24 +363,38 @@ export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps)
                     accessibilityIgnoresInvertColors
                     resizeMode="cover"
                     source={entry.previewSource}
-                    style={
-                      entry.key === "wedding"
-                        ? { width: "100%", height: "100%" }
-                        : {
-                            position: "absolute",
-                            right: 0,
-                            bottom: 0,
-                            left: 0,
-                            width: "100%",
-                            height: 244
-                          }
-                    }
+                    style={{
+                      position: "absolute",
+                      right: 0,
+                      bottom: 0,
+                      left: 0,
+                      width: "100%",
+                      height: 244
+                    }}
                   />
                 ) : null}
               </View>
             </Pressable>
           );
         })}
+        <Pressable
+          accessibilityHint="결혼식, 생일, 졸업 등 다른 행사 디자인을 모두 둘러봅니다."
+          accessibilityLabel="다른 행사로 만들기"
+          accessibilityRole="button"
+          onPress={() => onOpenCategory("all")}
+          style={({ pressed }) => ({
+            alignSelf: "center",
+            minHeight: 44,
+            paddingHorizontal: 14,
+            alignItems: "center",
+            justifyContent: "center",
+            opacity: pressed ? 0.72 : 1
+          })}
+        >
+          <Text style={{ color: theme.colors.primaryDark, fontSize: 16, fontWeight: "700", textDecorationLine: "underline" }}>
+            다른 행사로 만들기 〉
+          </Text>
+        </Pressable>
         <Pressable
           accessibilityHint="선택한 행사에 맞는 전체 디자인 목록을 엽니다."
           accessibilityLabel="추천 디자인 보기"
