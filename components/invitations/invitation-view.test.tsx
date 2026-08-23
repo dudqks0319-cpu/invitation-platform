@@ -213,6 +213,100 @@ describe("InvitationView", () => {
     expect(document.body.innerHTML).toContain("/images/custom/wedding/wedding-02.jpeg");
   });
 
+  it("places the main image inside a published template photo slot", () => {
+    const payload = normalizeDraft({
+      mainImageUrl: "https://example.com/main.jpg",
+      templateId: "wedding-classic",
+      templateSnapshot: {
+        templateAssetId: "published-template",
+        templateAssetVersion: 4,
+        backgroundImageUrl: "/images/custom/wedding/wedding-02.jpeg",
+        canvas: { width: 1080, height: 1920 },
+        safeAreas: {},
+        photoSlots: [
+          {
+            key: "main",
+            shape: "roundedRect",
+            x: 0.18,
+            y: 0.08,
+            w: 0.64,
+            h: 0.24,
+            radius: 0.04,
+            zIndex: 1,
+            required: false
+          }
+        ],
+        palette: {},
+        typography: {}
+      }
+    });
+
+    document.body.innerHTML = renderToStaticMarkup(
+      <InvitationView
+        mode="public"
+        payload={payload}
+        shareUrl="/invitations/demo"
+        slug="demo"
+      />
+    );
+
+    const slotImage = document.querySelector(".template-photo-slot img");
+    expect(slotImage?.getAttribute("src")).toBe("https://example.com/main.jpg");
+    expect(slotImage?.getAttribute("alt")).toBe("초대장 사진 슬롯 main");
+    expect(document.querySelector(".invitation-hero.has-photo-slots")).not.toBeNull();
+    expect(document.querySelector(".invitation-main-image-wrap")).toBeNull();
+  });
+
+  it("resolves stored slot asset paths through the public asset proxy", () => {
+    const payload = normalizeDraft({
+      mainImageUrl: "https://example.com/main.jpg",
+      photoPlacements: [
+        {
+          slotKey: "main",
+          assetPath: "user-1/slot.webp",
+          crop: { x: 0.25, y: 0.4, scale: 1.1 },
+          fit: "cover"
+        }
+      ],
+      templateId: "wedding-classic",
+      templateSnapshot: {
+        templateAssetId: "published-template",
+        templateAssetVersion: 4,
+        backgroundImageUrl: "/images/custom/wedding/wedding-02.jpeg",
+        canvas: { width: 1080, height: 1920 },
+        safeAreas: {},
+        photoSlots: [
+          {
+            key: "main",
+            shape: "roundedRect",
+            x: 0.18,
+            y: 0.08,
+            w: 0.64,
+            h: 0.24,
+            radius: 0.04,
+            zIndex: 1,
+            required: false
+          }
+        ],
+        palette: {},
+        typography: {}
+      }
+    });
+
+    document.body.innerHTML = renderToStaticMarkup(
+      <InvitationView
+        mode="public"
+        payload={payload}
+        shareUrl="/invitations/demo"
+        slug="demo"
+      />
+    );
+
+    expect(document.querySelector(".template-photo-slot img")?.getAttribute("src")).toBe(
+      "/api/public/assets?slug=demo&path=user-1%2Fslot.webp"
+    );
+  });
+
   it("prefers a server-provided Kakao platform key over client env lookup", () => {
     const config = resolveInvitationPlatformConfig({
       draftKakaoJsKey: "",

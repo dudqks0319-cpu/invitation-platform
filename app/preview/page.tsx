@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { InvitationView } from "@/components/invitations/invitation-view";
 import { SiteHeader } from "@/components/shared/site-header";
 import { LOCAL_DRAFT_KEY, defaultInvitationDraft, normalizeDraft, type InvitationDraftPayload } from "@/lib/invitation-payload";
@@ -13,33 +13,45 @@ type StoredDraft = {
   };
 };
 
+function subscribeStoredDraft(onStoreChange: () => void) {
+  window.addEventListener("storage", onStoreChange);
+  return () => window.removeEventListener("storage", onStoreChange);
+}
+
+function getStoredDraftSnapshot() {
+  return window.localStorage.getItem(LOCAL_DRAFT_KEY) ?? "";
+}
+
+function getServerStoredDraftSnapshot() {
+  return "";
+}
+
+function parseStoredDraft(raw: string): StoredDraft {
+  if (!raw) {
+    return { payload: defaultInvitationDraft };
+  }
+
+  try {
+    const parsed = JSON.parse(raw) as StoredDraft;
+    return {
+      payload: normalizeDraft(parsed.payload),
+      meta: parsed.meta
+    };
+  } catch {
+    return { payload: defaultInvitationDraft };
+  }
+}
+
 export default function PreviewPage() {
-  const [draft] = useState<StoredDraft>(() => {
-    if (typeof window === "undefined") {
-      return { payload: defaultInvitationDraft };
-    }
-
-    const raw = window.localStorage.getItem(LOCAL_DRAFT_KEY);
-    if (!raw) {
-      return { payload: defaultInvitationDraft };
-    }
-
-    try {
-      const parsed = JSON.parse(raw) as StoredDraft;
-      return {
-        payload: normalizeDraft(parsed.payload),
-        meta: parsed.meta
-      };
-    } catch {
-      return { payload: defaultInvitationDraft };
-    }
-  });
-  const shareUrl = useMemo(() => {
-    const nextPath = draft.meta?.slug ? `/invitations/${draft.meta.slug}` : "/preview";
-    const origin = typeof window === "undefined" ? process.env.NEXT_PUBLIC_SITE_URL : window.location.origin;
-
-    return getPublicShareUrl(nextPath, origin);
-  }, [draft.meta?.slug]);
+  const draftSnapshot = useSyncExternalStore(
+    subscribeStoredDraft,
+    getStoredDraftSnapshot,
+    getServerStoredDraftSnapshot
+  );
+  const draft = parseStoredDraft(draftSnapshot);
+  const nextPath = draft.meta?.slug ? `/invitations/${draft.meta.slug}` : "/preview";
+  const origin = typeof window === "undefined" ? process.env.NEXT_PUBLIC_SITE_URL : window.location.origin;
+  const shareUrl = getPublicShareUrl(nextPath, origin);
 
   return (
     <>

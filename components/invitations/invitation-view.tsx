@@ -5,6 +5,7 @@
 import { type ReactNode, useState } from "react";
 import { TemplateMarkup } from "@/components/landing/template-markup";
 import { InvitationMapEmbed } from "@/components/invitations/invitation-map-embed";
+import { TemplatePhotoSlotLayer } from "@/components/invitations/template-photo-slot-layer";
 import { buildGoogleCalendarUrl } from "@/lib/calendar-invite";
 import {
   LOCAL_GUESTBOOK_KEY,
@@ -33,7 +34,7 @@ import {
   buildPublicQrImagePath,
   buildPublicShareImagePath
 } from "@/lib/public-share-assets";
-import { createTemplatePresetFromSnapshot, templates } from "@/lib/templates";
+import { buildPublishedTemplateSnapshot, createTemplatePresetFromSnapshot, templates } from "@/lib/templates";
 
 type KakaoShareApi = {
   isInitialized(): boolean;
@@ -143,9 +144,11 @@ export function InvitationView({
   const [accountCopyMessage, setAccountCopyMessage] = useState("");
   const [pending, setPending] = useState(false);
   const baseTemplate = templates.find((template) => template.id === payload.templateId) ?? templates[0];
+  const templateSnapshot = payload.templateSnapshot ?? buildPublishedTemplateSnapshot(payload.templateId);
   const selectedTemplate = payload.templateSnapshot?.backgroundImageUrl
     ? createTemplatePresetFromSnapshot(payload.templateSnapshot, baseTemplate)
     : baseTemplate;
+  const hasPhotoSlots = Boolean(templateSnapshot?.photoSlots.length);
   const categoryMeta = getInvitationCategoryMeta(payload);
   const showPeople = isInvitationSectionAllowed(payload, "people", "view");
   const showContact = isInvitationSectionAllowed(payload, "contact", "view");
@@ -552,7 +555,7 @@ export function InvitationView({
   return (
     <main className="invitation-main">
       <section
-        className="invitation-hero"
+        className={`invitation-hero ${hasPhotoSlots ? "has-photo-slots" : ""}`}
         style={payload.backgroundImageUrl ? { backgroundImage: `url(${payload.backgroundImageUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
       >
         {!payload.backgroundImageUrl ? (
@@ -560,9 +563,16 @@ export function InvitationView({
             <TemplateMarkup template={selectedTemplate} />
           </div>
         ) : null}
+        <TemplatePhotoSlotLayer
+          altPrefix="초대장"
+          fallbackImageUrl={payload.mainImageUrl}
+          placements={payload.photoPlacements}
+          slug={slug}
+          snapshot={templateSnapshot}
+        />
         <div className="invitation-hero-overlay" />
         <div className="invitation-hero-inner">
-          {payload.mainImageUrl ? (
+          {payload.mainImageUrl && !hasPhotoSlots ? (
             <div className="invitation-main-image-wrap">
               <img alt="초대장 메인 이미지" src={payload.mainImageUrl} style={{ display: "block" }} />
             </div>

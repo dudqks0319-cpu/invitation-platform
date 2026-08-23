@@ -14,8 +14,9 @@ import {
   type InvitationStatus,
   type InvitationDraftPayload
 } from "@/lib/invitation-payload";
-import { templates } from "@/lib/templates";
+import { buildPublishedTemplateSnapshot, templates } from "@/lib/templates";
 import { TemplateMarkup } from "@/components/landing/template-markup";
+import { TemplatePhotoSlotLayer } from "@/components/invitations/template-photo-slot-layer";
 import { BUILDER_STEPS, clampBuilderStep, getBuilderStep } from "@/components/builder/builder-steps";
 import {
   countUploadTargets,
@@ -88,21 +89,19 @@ export function BuilderStudio({
   const checkoutIntentHandledRef = useRef(false);
   const loadedInvitationIdRef = useRef<string | null>(null);
   const [payload, setPayload] = useState<InvitationDraftPayload>(() => {
-    const stored = readStoredDraft();
-    const base = stored?.payload ?? defaultInvitationDraft;
     const matched = initialTemplateId
       ? templates.find((template) => template.id === initialTemplateId)
       : null;
 
     return matched
       ? normalizeDraft({
-          ...base,
+          ...defaultInvitationDraft,
           templateId: matched.id,
           category: matched.category
         })
-      : normalizeDraft(base);
+      : defaultInvitationDraft;
   });
-  const [meta, setMeta] = useState<DraftMeta>(() => readStoredDraft()?.meta ?? {});
+  const [meta, setMeta] = useState<DraftMeta>({});
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState<"error" | "success" | "">("");
   const [pending, setPending] = useState(false);
@@ -120,7 +119,42 @@ export function BuilderStudio({
     () => templates.find((template) => template.id === payload.templateId) ?? templates[0],
     [payload.templateId]
   );
+  const builderTemplateSnapshot = useMemo(
+    () => buildPublishedTemplateSnapshot(payload.templateId),
+    [payload.templateId]
+  );
+  const builderHasPhotoSlots = Boolean(builderTemplateSnapshot?.photoSlots.length);
   const paidSnapshotRef = useRef<InvitationDraftPayload | null>(meta.status === "published" ? payload : null);
+
+  useEffect(() => {
+    if (initialInvitationId) {
+      return;
+    }
+
+    const stored = readStoredDraft();
+    if (!stored) {
+      return;
+    }
+
+    const matched = initialTemplateId
+      ? templates.find((template) => template.id === initialTemplateId)
+      : null;
+    const nextPayload = matched
+      ? normalizeDraft({
+          ...stored.payload,
+          templateId: matched.id,
+          category: matched.category
+        })
+      : stored.payload;
+
+    setPayload(nextPayload);
+    setMeta(stored.meta);
+    setMainImagePreviewUrl(nextPayload.mainImageUrl);
+    setBackgroundImagePreviewUrl(nextPayload.backgroundImageUrl);
+    setPendingGalleryFiles([]);
+    setPendingGalleryPreviewUrls([]);
+    paidSnapshotRef.current = stored.meta.status === "published" ? nextPayload : null;
+  }, [initialInvitationId, initialTemplateId]);
 
   useEffect(() => {
     if (!supabase) {
@@ -1086,10 +1120,19 @@ export function BuilderStudio({
             ) : (
               <div className="builder-background-layer" />
             )}
+            <TemplatePhotoSlotLayer
+              altPrefix="미리보기"
+              fallbackImageUrl={mainImagePreviewUrl}
+              placements={payload.photoPlacements}
+              showEmptySlots
+              snapshot={builderTemplateSnapshot}
+            />
             <div className="builder-preview-content">
-              <div className="builder-preview-main-photo-wrap">
-                {mainImagePreviewUrl ? <img alt="메인 사진 미리보기" className="builder-preview-main-photo has-image" src={mainImagePreviewUrl} /> : <div className="builder-preview-main-photo" />}
-              </div>
+              {!builderHasPhotoSlots ? (
+                <div className="builder-preview-main-photo-wrap">
+                  {mainImagePreviewUrl ? <img alt="메인 사진 미리보기" className="builder-preview-main-photo has-image" src={mainImagePreviewUrl} /> : <div className="builder-preview-main-photo" />}
+                </div>
+              ) : null}
               <div className="builder-preview-copy-card">
                 <p className="builder-preview-label">{selectedTemplate.badge.toUpperCase()} INVITATION</p>
                 <h2 className="builder-preview-names">
