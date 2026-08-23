@@ -1,4 +1,5 @@
 import type { InvitationPayload } from "../invitation-shared";
+import { isPaidPublishingEnabled } from "../release-flags";
 
 export const PHOTO_PUBLISH_PASS_PRICE_KRW = 3300;
 
@@ -13,7 +14,10 @@ export function getMobileInvitationPricing(payload: InvitationPayload): MobileIn
     { label: "기본 템플릿", amount: 0 }
   ];
 
-  if (payload.photos.mainUri.trim() || payload.photos.backgroundUri.trim() || payload.photos.gallery.length > 0) {
+  if (
+    isPaidPublishingEnabled() &&
+    (payload.photos.mainUri.trim() || payload.photos.backgroundUri.trim() || payload.photos.gallery.length > 0)
+  ) {
     breakdown.push({
       label: "사진 포함 발행권",
       amount: PHOTO_PUBLISH_PASS_PRICE_KRW

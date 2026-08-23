@@ -6,6 +6,7 @@ import { getHomeTemplateSections, type MobileTemplateGalleryItem } from "@/lib/t
 import { getBundledTemplatePreviewSource } from "@/lib/template-preview-source";
 
 type HeroSectionProps = {
+  onOpenCategory: (categoryKey: string) => void;
   onUseTemplate: (template: MobileTemplateGalleryItem) => void;
 };
 
@@ -111,7 +112,7 @@ function TemplateCard({
   );
 }
 
-export function HeroSection({ onUseTemplate }: HeroSectionProps) {
+export function HeroSection({ onOpenCategory, onUseTemplate }: HeroSectionProps) {
   const { width } = useWindowDimensions();
   const cardWidth = Math.min(224, Math.max(176, width * 0.52));
   const sections = getHomeTemplateSections();
@@ -146,11 +147,45 @@ export function HeroSection({ onUseTemplate }: HeroSectionProps) {
 
       {sections.map((section) => (
         <View key={section.key} style={{ gap: 12 }}>
-          <View style={{ gap: 3 }}>
-            <Text style={{ color: theme.colors.ink, fontSize: 22, fontWeight: "800", lineHeight: 29 }}>
-              {section.title}
+          <View style={{ gap: 6 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 12
+              }}
+            >
+              <Pressable
+                accessibilityLabel={`${section.title} 전체 보기`}
+                accessibilityRole="button"
+                onPress={() => onOpenCategory(section.categoryKeys[0])}
+                style={{ flex: 1, minHeight: 44, justifyContent: "center" }}
+              >
+                <Text style={{ color: theme.colors.ink, fontSize: 22, fontWeight: "800", lineHeight: 29 }}>
+                  {section.title}
+                </Text>
+              </Pressable>
+              <Pressable
+                accessibilityLabel={`${section.title} 전체 보기`}
+                accessibilityRole="button"
+                onPress={() => onOpenCategory(section.categoryKeys[0])}
+                style={{
+                  minHeight: 44,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: "rgba(139,115,85,0.22)",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  paddingHorizontal: 14
+                }}
+              >
+                <Text style={{ color: theme.colors.accent, fontSize: 13, fontWeight: "800" }}>전체 보기</Text>
+              </Pressable>
+            </View>
+            <Text style={{ color: theme.colors.muted, fontSize: 14, lineHeight: 21 }}>
+              {section.subtitle} · {section.templates.length}개
             </Text>
-            <Text style={{ color: theme.colors.muted, fontSize: 14, lineHeight: 21 }}>{section.subtitle}</Text>
           </View>
 
           <ScrollView

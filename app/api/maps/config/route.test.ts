@@ -8,6 +8,8 @@ describe("GET /api/maps/config", () => {
       ...originalEnv,
       NEXT_PUBLIC_KAKAO_JS_KEY: "kakao-js-key",
       NEXT_PUBLIC_KAKAO_MAPS_ENABLED: "true",
+      KAKAO_REST_API_KEY: "server-only-kakao-rest-key",
+      KAKAO_MAPS_REST_ENABLED: "true",
       NEXT_PUBLIC_NAVER_MAPS_ENABLED: "true",
       NEXT_PUBLIC_NAVER_MAP_CLIENT_ID: "naver-client-id"
     };
@@ -25,6 +27,7 @@ describe("GET /api/maps/config", () => {
       kakao: {
         configured: true,
         enabled: true,
+        addressPreviewEnabled: true,
         jsKey: "kakao-js-key",
         status: "enabled"
       },
@@ -35,10 +38,12 @@ describe("GET /api/maps/config", () => {
         status: "enabled"
       }
     });
+    expect(JSON.stringify(payload)).not.toContain("server-only-kakao-rest-key");
   });
 
   it("does not treat configured keys as runtime-ready without explicit enable flags", async () => {
     process.env.NEXT_PUBLIC_KAKAO_MAPS_ENABLED = "";
+    process.env.KAKAO_MAPS_REST_ENABLED = "";
     process.env.NEXT_PUBLIC_NAVER_MAPS_ENABLED = "";
 
     const response = await GET();
@@ -47,6 +52,7 @@ describe("GET /api/maps/config", () => {
     expect(payload.kakao).toMatchObject({
       configured: true,
       enabled: false,
+      addressPreviewEnabled: false,
       status: "key_configured_disabled"
     });
     expect(payload.naver).toMatchObject({
@@ -58,12 +64,14 @@ describe("GET /api/maps/config", () => {
 
   it("marks providers disabled when keys are absent", async () => {
     process.env.NEXT_PUBLIC_KAKAO_JS_KEY = "";
+    process.env.KAKAO_REST_API_KEY = "";
     process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID = "";
 
     const response = await GET();
     const payload = await response.json();
 
     expect(payload.kakao.enabled).toBe(false);
+    expect(payload.kakao.addressPreviewEnabled).toBe(false);
     expect(payload.naver.enabled).toBe(false);
     expect(payload.kakao.status).toBe("missing_key");
     expect(payload.naver.status).toBe("missing_key");

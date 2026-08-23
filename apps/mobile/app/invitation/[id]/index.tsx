@@ -10,11 +10,18 @@ import { Pill } from "@/components/ui/Pill";
 import { Screen } from "@/components/ui/Screen";
 import type { MobileInvitationDraft } from "@/lib/drafts";
 import { deleteDraft, loadDraft, saveDraft } from "@/lib/drafts";
-import { deleteRemoteInvitation, loadRemoteInvitation, saveDraftToSupabase } from "@/lib/invitations";
+import {
+  deleteGuestInvitation,
+  deleteRemoteInvitation,
+  loadRemoteInvitation,
+  saveDraftToSupabase
+} from "@/lib/invitations";
 import { getPublicInvitationUrl, openInvitationPublicPage, openWebBuilder, shareInvitationLink } from "@/lib/share";
 import { useAuth } from "@/hooks/useAuth";
 import { useMapApiConfig } from "@/hooks/useMapApiConfig";
 import { getInvitationMapLinks } from "@/lib/map-links";
+import { hasFullAccount } from "@/lib/auth-access";
+import { getInvitationDeleteMode } from "@/lib/invitation-delete-policy";
 
 async function openMapUrl(url: string, fallbackUrl?: string) {
   if (!url) return;
@@ -36,7 +43,7 @@ export default function InvitationDetailScreen() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
-  const { configMessage, configured, status, user } = useAuth();
+  const { configMessage, configured, session, status, user } = useAuth();
   const mapApi = useMapApiConfig();
   const publicUrl = draft?.payload.share.slug ? getPublicInvitationUrl(draft.payload.share.slug) : "";
   const shareSlug = draft?.payload.share.slug ?? "";
@@ -52,10 +59,25 @@ export default function InvitationDetailScreen() {
     setMessage("");
 
     try {
-      await deleteDraft(draft.localId);
-      if (configured && status === "authenticated" && user?.id && draft.serverId) {
+      const guestOwnerToken = draft.sourcePayload?.guestOwnerToken;
+      const deleteMode = getInvitationDeleteMode({
+        guestOwnerToken,
+        hasFullAccount: configured && status === "authenticated" && hasFullAccount(user),
+        isPublished: draft.payload.isPublished,
+        serverId: draft.serverId
+      });
+
+      if (deleteMode === "guest-owner") {
+        await deleteGuestInvitation(
+          draft.payload.share.slug,
+          typeof guestOwnerToken === "string" ? guestOwnerToken : ""
+        );
+      } else if (deleteMode === "account-remote" && draft.serverId && user?.id) {
         await deleteRemoteInvitation(draft.serverId, user.id);
+      } else if (deleteMode === "blocked-server") {
+        throw new Error("서버 초대장 삭제 권한을 확인하지 못했습니다. 로그인 상태를 확인한 뒤 다시 시도해 주세요.");
       }
+      await deleteDraft(draft.localId);
       setDraft(null);
       setMessage("초대장을 삭제했습니다.");
     } catch (caught) {
@@ -140,7 +162,7 @@ export default function InvitationDetailScreen() {
       ) : null}
       {draft ? (
         <Card eyebrow="공유 전 검수" title="하객에게 보이는 초대장">
-          <InvitationPreviewCard compact payload={draft.payload} />
+          <InvitationPreviewCard fitToViewport payload={draft.payload} />
         </Card>
       ) : null}
       <Card eyebrow={draft?.syncStatus || "draft"} title={title}>
@@ -232,7 +254,7 @@ export default function InvitationDetailScreen() {
               onPress={() => {
                 setError("");
                 setMessage("");
-                void shareInvitationLink(draft.payload.share.slug, draft.payload.title || "InviteHub 초대장")
+                void shareInvitationLink(draft.payload.share.slug, draft.payload.title || "오삼오삼 초대장")
                   .then(() => setMessage("공유 시트를 열었습니다."))
                   .catch((caught) => setError(caught instanceof Error ? caught.message : "공유에 실패했습니다."));
               }}
@@ -338,11 +360,16 @@ export default function InvitationDetailScreen() {
           <Button
             accessibilityLabel="운영 화면에서 서버 저장"
             onPress={
-              configured && status === "authenticated" && user?.id && draft
+              configured && status === "authenticated" && user?.id && session?.access_token && draft
                 ? () => {
                     setError("");
                     setMessage("");
-                    void saveDraftToSupabase(draft, user.id, draft.payload.isPublished ? "published" : "draft")
+                    void saveDraftToSupabase(
+                      draft,
+                      user.id,
+                      draft.payload.isPublished ? "published" : "draft",
+                      { accessToken: session.access_token, userId: user.id }
+                    )
                       .then(async (result) => {
                         const nextDraft: MobileInvitationDraft = {
                           ...draft,
@@ -368,7 +395,7 @@ export default function InvitationDetailScreen() {
             {!configured
               ? "Supabase 설정 필요"
               : configured && status === "authenticated"
-                ? "서버 저장"
+                ? session?.access_token ? "서버 저장" : "세션 확인 필요"
                 : "로그인 후 서버 저장"}
           </Button>
           <View style={{ flexDirection: "row", gap: 10 }}>

@@ -10,6 +10,7 @@ const eslintConfig = defineConfig([
     ".next/**",
     ".artifacts/**",
     ".claude/**",
+    ".worktrees/**",
     "apps/mobile/**",
     "out/**",
     "build/**",

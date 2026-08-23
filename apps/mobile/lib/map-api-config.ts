@@ -2,6 +2,7 @@ import { getInviteHubBaseUrl } from "./web-links";
 
 export type MapApiConfig = {
   kakao: {
+    addressPreviewEnabled: boolean;
     enabled: boolean;
   };
   naver: {
@@ -11,6 +12,7 @@ export type MapApiConfig = {
 
 const DISABLED_MAP_API_CONFIG: MapApiConfig = {
   kakao: {
+    addressPreviewEnabled: false,
     enabled: false
   },
   naver: {
@@ -28,6 +30,11 @@ function parseEnabled(value: unknown) {
   return typeof value === "object" && value !== null && "enabled" in value && value.enabled === true;
 }
 
+function parseAddressPreviewEnabled(value: unknown) {
+  return typeof value === "object" && value !== null &&
+    "addressPreviewEnabled" in value && value.addressPreviewEnabled === true;
+}
+
 export function normalizeMapApiConfig(value: unknown): MapApiConfig {
   if (typeof value !== "object" || value === null) {
     return DISABLED_MAP_API_CONFIG;
@@ -37,6 +44,7 @@ export function normalizeMapApiConfig(value: unknown): MapApiConfig {
 
   return {
     kakao: {
+      addressPreviewEnabled: parseAddressPreviewEnabled(candidate.kakao),
       enabled: parseEnabled(candidate.kakao)
     },
     naver: {
@@ -52,6 +60,7 @@ export function getMapApiConfigUrl(baseUrl?: string) {
 export function getLocalMapApiConfig(): MapApiConfig {
   return {
     kakao: {
+      addressPreviewEnabled: false,
       enabled: hasPublicValue(process.env.EXPO_PUBLIC_KAKAO_NATIVE_APP_KEY)
     },
     naver: {
@@ -63,6 +72,7 @@ export function getLocalMapApiConfig(): MapApiConfig {
 export function mergeMapApiConfig(remoteConfig: MapApiConfig, localConfig = getLocalMapApiConfig()): MapApiConfig {
   return {
     kakao: {
+      addressPreviewEnabled: remoteConfig.kakao.addressPreviewEnabled,
       enabled: remoteConfig.kakao.enabled || localConfig.kakao.enabled
     },
     naver: {
@@ -90,12 +100,18 @@ export function getMapApiStatusLabel(config: MapApiConfig | null) {
     return "지도 API 상태 확인 중";
   }
 
+  if (config.kakao.addressPreviewEnabled) {
+    return config.naver.enabled
+      ? "카카오 도로명주소 지도 · 네이버 지도 링크 연동됨"
+      : "카카오 도로명주소 지도 연동됨 · 네이버 지도는 외부 링크로 열림";
+  }
+
   if (config.kakao.enabled && config.naver.enabled) {
     return "카카오 · 네이버 지도 API 연동됨";
   }
 
   if (config.kakao.enabled) {
-    return "카카오 지도 API 연동됨 · 네이버 지도 API 키 필요";
+    return "카카오 지도 API 연동됨 · 네이버 지도는 외부 링크로 열림";
   }
 
   if (config.naver.enabled) {

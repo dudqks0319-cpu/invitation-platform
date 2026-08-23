@@ -6,6 +6,7 @@ import { InvitationView } from "@/components/invitations/invitation-view";
 import { findDemoInvitationBySlug } from "@/lib/demo-data";
 import { buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
 import { getPublicShareUrl } from "@/lib/invitation-presentation";
+import { getClientFingerprint } from "@/lib/rate-limit";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -107,18 +108,14 @@ export function buildPublicInvitationMetadata({
   };
 }
 
-function getHeaderIp(headerList: HeaderSource) {
-  return (
-    headerList.get("cf-connecting-ip") ||
-    headerList.get("x-vercel-forwarded-for")?.split(",")[0]?.trim() ||
-    headerList.get("x-real-ip") ||
-    "anonymous"
-  );
-}
-
 export function createVisitorKey(invitationId: string, userAgent: string, headerList: HeaderSource) {
+  const client = getClientFingerprint({ headers: headerList });
+  if (!client.ok) {
+    return null;
+  }
+
   return createHash("sha256")
-    .update(`${invitationId}:${getHeaderIp(headerList)}:${userAgent.slice(0, MAX_LOGGED_USER_AGENT_LENGTH)}`)
+    .update(`${invitationId}:${client.fingerprint}:${userAgent.slice(0, MAX_LOGGED_USER_AGENT_LENGTH)}`)
     .digest("hex");
 }
 
@@ -128,7 +125,7 @@ export async function logInvitationView(
   },
   invitationId: string,
   userAgent: string,
-  visitorKey: string
+  visitorKey: string | null
 ) {
   if (!userAgent || !visitorKey) {
     return;

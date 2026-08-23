@@ -5,6 +5,7 @@ const {
   createSupabaseAdminClientMock,
   isAppleStoreVerificationEnabledMock,
   isGooglePlayVerificationEnabledMock,
+  isLegacyStoreVerificationEnabledMock,
   verifyAppleTransactionMock,
   verifyGooglePlayPurchaseMock
 } = vi.hoisted(() => ({
@@ -12,6 +13,7 @@ const {
   createSupabaseAdminClientMock: vi.fn(),
   isAppleStoreVerificationEnabledMock: vi.fn(),
   isGooglePlayVerificationEnabledMock: vi.fn(),
+  isLegacyStoreVerificationEnabledMock: vi.fn(),
   verifyAppleTransactionMock: vi.fn(),
   verifyGooglePlayPurchaseMock: vi.fn()
 }));
@@ -26,7 +28,8 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 vi.mock("@/lib/env", () => ({
   isAppleStoreVerificationEnabled: isAppleStoreVerificationEnabledMock,
-  isGooglePlayVerificationEnabled: isGooglePlayVerificationEnabledMock
+  isGooglePlayVerificationEnabled: isGooglePlayVerificationEnabledMock,
+  isLegacyStoreVerificationEnabled: isLegacyStoreVerificationEnabledMock
 }));
 
 vi.mock("@/lib/payments/apple-store", () => ({
@@ -218,12 +221,14 @@ function createAdminDouble(options?: {
 describe("POST /api/payments/store/verify", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    process.env.NEXT_PUBLIC_ENABLE_PAID_PUBLISH = "true";
     createClientMock.mockReturnValue(createAuthClient("user-1"));
+    isLegacyStoreVerificationEnabledMock.mockReturnValue(true);
     isAppleStoreVerificationEnabledMock.mockReturnValue(false);
     isGooglePlayVerificationEnabledMock.mockReturnValue(false);
     verifyAppleTransactionMock.mockResolvedValue({
       transactionId: "tx-1",
-      productId: "publish.credit.ios"
+      productId: "com.invitehub.publish.credit"
     });
     verifyGooglePlayPurchaseMock.mockResolvedValue({
       orderId: "order-1",
@@ -231,6 +236,10 @@ describe("POST /api/payments/store/verify", () => {
       productId: "publish.credit.android",
       purchaseState: 0
     });
+  });
+
+  afterEach(() => {
+    delete process.env.NEXT_PUBLIC_ENABLE_PAID_PUBLISH;
   });
 
   it("requires an access token", async () => {
@@ -241,7 +250,7 @@ describe("POST /api/payments/store/verify", () => {
         {
           invitationId: "invitation-1",
           provider: "apple_iap",
-          productId: "publish.credit.ios",
+          productId: "com.invitehub.publish.credit",
           transactionId: "tx-1"
         },
         ""
@@ -249,6 +258,31 @@ describe("POST /api/payments/store/verify", () => {
     );
 
     expect(response.status).toBe(401);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(response.headers.get("Vary")).toBe("Authorization");
+    expect(createSupabaseAdminClientMock).not.toHaveBeenCalled();
+  });
+
+  it("keeps the legacy direct store verification route disabled by default", async () => {
+    isLegacyStoreVerificationEnabledMock.mockReturnValue(false);
+    createSupabaseAdminClientMock.mockReturnValue(createAdminDouble().client);
+
+    const response = await POST(
+      createRequest({
+        invitationId: "invitation-1",
+        provider: "apple_iap",
+        productId: "com.invitehub.publish.credit",
+        transactionId: "tx-1"
+      })
+    );
+    const payload = await response.json();
+
+    expect(response.status).toBe(410);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(response.headers.get("Vary")).toBe("Authorization");
+    expect(payload.message).toContain("RevenueCat");
+    expect(createSupabaseAdminClientMock).not.toHaveBeenCalled();
+    expect(verifyAppleTransactionMock).not.toHaveBeenCalled();
   });
 
   it("publishes the invitation after a verified apple purchase", async () => {
@@ -260,7 +294,7 @@ describe("POST /api/payments/store/verify", () => {
       createRequest({
         invitationId: "invitation-1",
         provider: "apple_iap",
-        productId: "publish.credit.ios",
+        productId: "com.invitehub.publish.credit",
         transactionId: "tx-1",
         environment: "sandbox"
       })
@@ -268,9 +302,11 @@ describe("POST /api/payments/store/verify", () => {
     const payload = await response.json();
 
     expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(response.headers.get("Vary")).toBe("Authorization");
     expect(verifyAppleTransactionMock).toHaveBeenCalledWith({
       transactionId: "tx-1",
-      productId: "publish.credit.ios",
+      productId: "com.invitehub.publish.credit",
       environment: "sandbox"
     });
     expect(admin.state.paymentInserts).toHaveLength(1);
@@ -279,14 +315,14 @@ describe("POST /api/payments/store/verify", () => {
       bundleId: null,
       environment: null,
       originalTransactionId: null,
-      productId: "publish.credit.ios",
+      productId: "com.invitehub.publish.credit",
       transactionId: "tx-1"
     });
     expect(admin.state.auditInserts[0]?.response_payload).toEqual({
       bundleId: null,
       environment: null,
       originalTransactionId: null,
-      productId: "publish.credit.ios",
+      productId: "com.invitehub.publish.credit",
       transactionId: "tx-1"
     });
     expect(admin.state.invitationUpdates).toContainEqual(
@@ -397,7 +433,7 @@ describe("POST /api/payments/store/verify", () => {
       createRequest({
         invitationId: "invitation-1",
         provider: "apple_iap",
-        productId: "publish.credit.ios",
+        productId: "com.invitehub.publish.credit",
         transactionId: "tx-1",
         environment: "sandbox"
       })

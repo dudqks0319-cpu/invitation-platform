@@ -12,7 +12,7 @@ const pricingCards = [
     items: [
       "현재 공개 템플릿 전부 무료",
       "링크 공유 · 참석 여부 · 방명록 포함",
-      "사진 없이 바로 발행 가능"
+      "대표·배경·갤러리 사진 최대 10장 포함"
     ]
   },
   {
@@ -63,12 +63,12 @@ export function PricingCards() {
       <Text style={{ color: theme.colors.ink, fontSize: 24, fontWeight: "800", lineHeight: 34, textAlign: "center" }}>
         먼저 만들고,
         {"\n"}
-        사진이 필요할 때만 선택
+        사진까지 무료로 완성
       </Text>
       <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24, textAlign: "center" }}>
         {paidPublishingEnabled
           ? "가격 안내는 짧게 유지하고, 사용자가 완성 화면을 먼저 판단할 수 있게 했습니다."
-          : "첫 제출 버전은 사진 없는 무료 발행에 집중합니다."}
+          : "현재 무료 버전은 대표·배경·갤러리 사진 최대 10장을 포함합니다."}
       </Text>
       <View style={{ gap: 12 }}>
         {visiblePricingCards.map((item, index) => (
@@ -117,7 +117,7 @@ export function PricingCards() {
       </View>
       {!paidPublishingEnabled ? (
         <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 21, textAlign: "center" }}>
-          사진 포함 발행권은 App Store 상품 준비 후 다시 활성화합니다.
+          유료 결제 기능은 비활성화되어 있으며 사진 포함 공개 링크도 무료입니다.
         </Text>
       ) : null}
     </View>

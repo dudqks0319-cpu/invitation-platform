@@ -15,11 +15,13 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 import { POST } from "@/app/api/payments/free-publish/route";
 
-function createRequest(invitationId = "invitation-1") {
+const invitationId = "00000000-0000-4000-8000-000000000010";
+
+function createRequest(invitationIdValue = invitationId) {
   return new Request("https://invitehub.test/api/payments/free-publish", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ invitationId })
+    body: JSON.stringify({ invitationId: invitationIdValue })
   });
 }
 
@@ -42,38 +44,44 @@ function createServerClient(userId: string | null) {
 }
 
 function createAdminClient(pricey = false) {
+  const updateQuery = {
+    eq: vi.fn(() => updateQuery),
+    then(resolve: (value: { error: null }) => void) {
+      return Promise.resolve({ error: null }).then(resolve);
+    }
+  };
+  const selectQuery = {
+    eq: vi.fn(() => selectQuery),
+    async maybeSingle() {
+      return {
+        data: {
+          id: invitationId,
+          slug: "invite-123",
+          title: "초대장",
+          user_id: "user-1",
+          payload: pricey
+            ? { mainImageUrl: "https://example.com/a.jpg" }
+            : {},
+          status: "draft"
+        },
+        error: null
+      };
+    }
+  };
+  const update = vi.fn(() => ({
+    eq: updateQuery.eq
+  }));
+
   return {
+    update,
+    updateEq: updateQuery.eq,
     from(table: string) {
       if (table === "invitations") {
         return {
           select() {
-            return this;
+            return selectQuery;
           },
-          eq() {
-            return this;
-          },
-          async maybeSingle() {
-            return {
-              data: {
-                id: "invitation-1",
-                slug: "invite-123",
-                title: "초대장",
-                user_id: "user-1",
-                payload: pricey
-                  ? { mainImageUrl: "https://example.com/a.jpg" }
-                  : {},
-                status: "draft"
-              },
-              error: null
-            };
-          },
-          update() {
-            return {
-              eq() {
-                return Promise.resolve({ error: null });
-              }
-            };
-          }
+          update,
         };
       }
 
@@ -85,11 +93,17 @@ function createAdminClient(pricey = false) {
 describe("POST /api/payments/free-publish", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    delete process.env.NEXT_PUBLIC_ENABLE_PAID_PUBLISH;
+  });
+
+  afterEach(() => {
+    delete process.env.NEXT_PUBLIC_ENABLE_PAID_PUBLISH;
   });
 
   it("publishes when the current draft is free", async () => {
     createServerSupabaseClientMock.mockResolvedValue(createServerClient("user-1"));
-    createSupabaseAdminClientMock.mockReturnValue(createAdminClient(false));
+    const admin = createAdminClient(false);
+    createSupabaseAdminClientMock.mockReturnValue(admin);
 
     const response = await POST(createRequest());
     const payload = await response.json();
@@ -97,9 +111,12 @@ describe("POST /api/payments/free-publish", () => {
     expect(response.status).toBe(200);
     expect(payload.success).toBe(true);
     expect(payload.slug).toBe("invite-123");
+    expect(admin.updateEq).toHaveBeenCalledWith("id", invitationId);
+    expect(admin.updateEq).toHaveBeenCalledWith("user_id", "user-1");
   });
 
   it("blocks free publish when paid add-ons exist", async () => {
+    process.env.NEXT_PUBLIC_ENABLE_PAID_PUBLISH = "true";
     createServerSupabaseClientMock.mockResolvedValue(createServerClient("user-1"));
     createSupabaseAdminClientMock.mockReturnValue(createAdminClient(true));
 
@@ -119,5 +136,18 @@ describe("POST /api/payments/free-publish", () => {
 
     expect(response.status).toBe(415);
     expect(payload.message).toContain("JSON");
+  });
+
+  it("rejects malformed invitation ids before querying", async () => {
+    createServerSupabaseClientMock.mockResolvedValue(createServerClient("user-1"));
+    const admin = createAdminClient(false);
+    createSupabaseAdminClientMock.mockReturnValue(admin);
+
+    const response = await POST(createRequest("invitation-1"));
+    const payload = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(payload.message).toContain("초대장");
+    expect(admin.update).not.toHaveBeenCalled();
   });
 });

@@ -59,6 +59,20 @@ const SAMPLE_IMAGE_URL = "/images/custom/wedding/wedding-05.jpeg";
 const initialCalendarDate = "2026-06-27";
 const initialCalendarTime = "13:00";
 
+function createGuestPublishIdempotencyKey() {
+  const cryptoApi = globalThis.crypto;
+  if (!cryptoApi) {
+    throw new Error("브라우저 요청 보호 기능을 사용할 수 없습니다.");
+  }
+  if (cryptoApi.randomUUID) {
+    return `guest-publish-${cryptoApi.randomUUID()}`;
+  }
+
+  const bytes = new Uint8Array(16);
+  cryptoApi.getRandomValues(bytes);
+  return `guest-publish-${Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+}
+
 const initialInfo: ImageInvitationInfo = {
   groomName: "강우",
   brideName: "빛나",
@@ -518,6 +532,7 @@ export function ImageInvitationStudio() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const objectUrlRef = useRef("");
   const textDragRef = useRef<TextDragState | null>(null);
+  const publishIdempotencyKeyRef = useRef("");
   const [isDraggingText, setIsDraggingText] = useState(false);
 
   useEffect(
@@ -783,13 +798,17 @@ export function ImageInvitationStudio() {
         quality: 0.86,
         width: 720
       });
+      if (!publishIdempotencyKeyRef.current) {
+        publishIdempotencyKeyRef.current = createGuestPublishIdempotencyKey();
+      }
       const response = await fetch("/api/public/guest-publish", {
         body: JSON.stringify({
           payload: createPublishPayload(publishImageUrl),
           website: ""
         }),
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Idempotency-Key": publishIdempotencyKeyRef.current
         },
         method: "POST"
       });
@@ -800,6 +819,7 @@ export function ImageInvitationStudio() {
       }
 
       const nextPublicUrl = `${window.location.origin}/i/${payload.slug}`;
+      publishIdempotencyKeyRef.current = "";
       setPublicUrl(nextPublicUrl);
       setStatus("공개 초대장 링크를 만들었습니다. 아래 버튼으로 바로 확인할 수 있어요.");
     } catch (error) {

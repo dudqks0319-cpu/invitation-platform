@@ -11,7 +11,8 @@ import { Card } from "@/components/ui/Card";
 import { Screen } from "@/components/ui/Screen";
 import { theme } from "@/components/ui/theme";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
-import { isPaidPublishingEnabled, PAID_PUBLISH_DISABLED_MESSAGE } from "@/lib/release-flags";
+
+export const MAX_FREE_GALLERY_PHOTOS = 8;
 
 async function pickPreparedImage() {
   const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -32,7 +33,7 @@ async function pickPreparedImage() {
   const manipulated = await manipulateAsync(
     result.assets[0].uri,
     [{ resize: { width: 1600 } }],
-    { compress: 0.8, format: SaveFormat.JPEG }
+    { compress: 0.72, format: SaveFormat.JPEG }
   );
 
   return manipulated.uri;
@@ -85,17 +86,17 @@ export default function BuilderStep3PhotosScreen() {
   const { addGalleryPhoto, draft, removeGalleryPhoto, removePhoto, updatePhoto } = useInvitationDraft("local-preview-owner", localId);
   const [pendingSlot, setPendingSlot] = useState<"" | "main" | "background" | "gallery">("");
   const [error, setError] = useState("");
-  const paidPublishingEnabled = isPaidPublishingEnabled();
-  const hasMainPhoto = Boolean(draft?.payload.photos.mainUri);
-  const hasBackgroundPhoto = Boolean(draft?.payload.photos.backgroundUri);
   const galleryPhotos = draft?.payload.photos.gallery ?? [];
-  const hasGalleryPhotos = galleryPhotos.length > 0;
 
   async function handlePick(slot: "main" | "background" | "gallery") {
     setError("");
 
-    if (!paidPublishingEnabled) {
-      setError(PAID_PUBLISH_DISABLED_MESSAGE);
+    if (pendingSlot) {
+      return;
+    }
+
+    if (slot === "gallery" && galleryPhotos.length >= MAX_FREE_GALLERY_PHOTOS) {
+      setError(`갤러리 사진은 최대 ${MAX_FREE_GALLERY_PHOTOS}장까지 추가할 수 있습니다.`);
       return;
     }
 
@@ -120,26 +121,24 @@ export default function BuilderStep3PhotosScreen() {
 
   return (
     <Screen
-      subtitle={
-        paidPublishingEnabled
-          ? "메인, 배경, 갤러리 사진을 로컬 초안에 연결합니다."
-          : "현재 제출 버전에서는 사진 없는 무료 발행을 먼저 제공합니다."
-      }
+      subtitle="대표·배경 사진과 갤러리 8장까지 무료 공개 링크에 넣을 수 있습니다."
       title="초대장 만들기"
     >
       <StepIndicator current={3} title="사진 설정" />
-      {!paidPublishingEnabled ? (
-        <Card eyebrow="출시 설정" title="사진 포함 발행 준비 중">
-          <Text style={{ color: theme.colors.primaryDark, lineHeight: 22 }}>
-            {PAID_PUBLISH_DISABLED_MESSAGE}
-          </Text>
-          <Text style={{ color: theme.colors.muted, lineHeight: 22, marginTop: 8 }}>
-            이미 선택한 사진은 삭제할 수 있고, 사진을 모두 제거하면 무료 공개 링크 발행으로 이어집니다.
-          </Text>
-        </Card>
+      {error ? (
+        <View
+          accessibilityLiveRegion="polite"
+          style={{
+            borderRadius: 14,
+            backgroundColor: "rgba(201,147,90,0.12)",
+            paddingHorizontal: 16,
+            paddingVertical: 12
+          }}
+        >
+          <Text style={{ color: theme.colors.primaryDark, lineHeight: 22 }}>{error}</Text>
+        </View>
       ) : null}
-      {paidPublishingEnabled || hasMainPhoto ? (
-        <Card eyebrow="메인 사진" title="대표 사진">
+      <Card eyebrow="무료 사진" title="대표 사진">
           {draft?.payload.photos.mainUri ? (
             <UploadedPhotoPreview
               height={180}
@@ -148,9 +147,11 @@ export default function BuilderStep3PhotosScreen() {
               uri={draft.payload.photos.mainUri}
             />
           ) : null}
-          {paidPublishingEnabled ? (
-            <Pressable
+          <Pressable
               accessibilityLabel="메인 사진 선택"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: Boolean(pendingSlot) }}
+              disabled={Boolean(pendingSlot)}
               onPress={() => void handlePick("main")}
               style={{
                 borderWidth: 1,
@@ -179,12 +180,9 @@ export default function BuilderStep3PhotosScreen() {
                   {pendingSlot === "main" ? "처리 중" : "업로드"}
                 </Text>
               </View>
-            </Pressable>
-          ) : null}
-        </Card>
-      ) : null}
-      {paidPublishingEnabled || hasBackgroundPhoto ? (
-        <Card eyebrow="배경 사진" title="커버 배경">
+          </Pressable>
+      </Card>
+      <Card eyebrow="무료 사진" title="커버 배경">
           {draft?.payload.photos.backgroundUri ? (
             <UploadedPhotoPreview
               height={140}
@@ -193,9 +191,11 @@ export default function BuilderStep3PhotosScreen() {
               uri={draft.payload.photos.backgroundUri}
             />
           ) : null}
-          {paidPublishingEnabled ? (
-            <Pressable
+          <Pressable
               accessibilityLabel="배경 사진 선택"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: Boolean(pendingSlot) }}
+              disabled={Boolean(pendingSlot)}
               onPress={() => void handlePick("background")}
               style={{
                 borderWidth: 1,
@@ -224,20 +224,12 @@ export default function BuilderStep3PhotosScreen() {
                   {pendingSlot === "background" ? "처리 중" : "업로드"}
                 </Text>
               </View>
-            </Pressable>
-          ) : null}
-        </Card>
-      ) : null}
-      {paidPublishingEnabled || hasGalleryPhotos ? (
-        <Card eyebrow="갤러리" title={`현재 ${galleryPhotos.length}장`}>
+          </Pressable>
+      </Card>
+      <Card eyebrow="갤러리" title={`현재 ${galleryPhotos.length}/${MAX_FREE_GALLERY_PHOTOS}장`}>
           <Text style={{ color: theme.colors.muted, lineHeight: 22, marginBottom: 12 }}>
-            v1에서는 한 장씩 추가하는 방식으로 먼저 연결합니다.
+            한 장씩 추가할 수 있고, 공개 링크에는 선택한 순서대로 표시됩니다.
           </Text>
-          {error ? (
-            <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginBottom: 12 }}>
-              {error}
-            </Text>
-          ) : null}
           <Text style={{ color: theme.colors.primaryDark, lineHeight: 22, marginBottom: 12 }}>
             업로드 대기: {draft?.pendingPhotos.length ?? 0}개
           </Text>
@@ -250,6 +242,7 @@ export default function BuilderStep3PhotosScreen() {
                 />
                 <Pressable
                   accessibilityLabel="갤러리 사진 삭제"
+                  accessibilityRole="button"
                   onPress={() => removeGalleryPhoto(photo.order)}
                   style={{
                     position: "absolute",
@@ -268,16 +261,18 @@ export default function BuilderStep3PhotosScreen() {
               </View>
             ))}
           </View>
-          {paidPublishingEnabled ? (
-            <Pressable
+          <Pressable
               accessibilityLabel="갤러리 사진 추가"
+              accessibilityRole="button"
+              accessibilityState={{ disabled: Boolean(pendingSlot) || galleryPhotos.length >= MAX_FREE_GALLERY_PHOTOS }}
+              disabled={Boolean(pendingSlot) || galleryPhotos.length >= MAX_FREE_GALLERY_PHOTOS}
               onPress={() => void handlePick("gallery")}
               style={{
                 borderWidth: 1,
                 borderColor: pendingSlot === "gallery" ? theme.colors.primary : "rgba(143,111,82,0.18)",
                 borderRadius: 14,
                 padding: 12,
-                backgroundColor: "#fff",
+                backgroundColor: galleryPhotos.length >= MAX_FREE_GALLERY_PHOTOS ? theme.colors.surfaceSoft : "#fff",
                 flexDirection: "row",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -285,7 +280,11 @@ export default function BuilderStep3PhotosScreen() {
               }}
             >
               <Text style={{ color: theme.colors.text, fontSize: 15, fontWeight: "600" }}>
-                {pendingSlot === "gallery" ? "갤러리 사진 처리 중..." : "갤러리 사진 추가"}
+                {pendingSlot === "gallery"
+                  ? "갤러리 사진 처리 중..."
+                  : galleryPhotos.length >= MAX_FREE_GALLERY_PHOTOS
+                    ? "최대 8장을 모두 추가했습니다"
+                    : "갤러리 사진 추가"}
               </Text>
               <View
                 style={{
@@ -299,10 +298,8 @@ export default function BuilderStep3PhotosScreen() {
                   {pendingSlot === "gallery" ? "처리 중" : "추가"}
                 </Text>
               </View>
-            </Pressable>
-          ) : null}
-        </Card>
-      ) : null}
+          </Pressable>
+      </Card>
       <View style={{ gap: 12, flexDirection: "row" }}>
         <View style={{ flex: 1 }}>
           <Link asChild href={{ pathname: "/builder/step2-people", params: localId ? { localId } : {} }}>

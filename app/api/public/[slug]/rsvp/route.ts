@@ -5,6 +5,7 @@ import { ensureJsonRequest, publicRsvpSchema, readJsonBody } from "@/lib/supabas
 
 const WINDOW_MS = 60 * 1000;
 const LIMIT = 5;
+const PUBLIC_SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{2,30}[a-z0-9]$/i;
 
 export async function POST(
   request: Request,
@@ -26,29 +27,10 @@ export async function POST(
   }
 
   const { slug } = await context.params;
-  const limitResult = await consumeRateLimit({
-    admin,
-    key: `rsvp:${slug}:${getClientIdentifier(request)}`,
-    limit: LIMIT,
-    windowMs: WINDOW_MS
-  });
-
-  if (!limitResult.ok) {
+  if (!PUBLIC_SLUG_PATTERN.test(slug)) {
     return NextResponse.json(
-      { success: false, message: "요청 보호 서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요." },
-      { status: 503 }
-    );
-  }
-
-  if (!limitResult.allowed) {
-    return NextResponse.json(
-      { success: false, message: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요." },
-      {
-        status: 429,
-        headers: {
-          "Retry-After": String(Math.ceil((limitResult.resetAt - Date.now()) / 1000))
-        }
-      }
+      { success: false, message: "유효하지 않은 초대장입니다." },
+      { status: 404 }
     );
   }
 
@@ -84,6 +66,40 @@ export async function POST(
     return NextResponse.json(
       { success: false, message: "유효하지 않은 초대장입니다." },
       { status: 404 }
+    );
+  }
+
+  const clientIdentifier = getClientIdentifier(request);
+  if (!clientIdentifier) {
+    return NextResponse.json(
+      { success: false, message: "요청 보호 서비스 설정을 확인할 수 없습니다. 잠시 후 다시 시도해 주세요." },
+      { status: 503 }
+    );
+  }
+
+  const limitResult = await consumeRateLimit({
+    admin,
+    key: `rsvp:${slug}:${clientIdentifier}`,
+    limit: LIMIT,
+    windowMs: WINDOW_MS
+  });
+
+  if (!limitResult.ok) {
+    return NextResponse.json(
+      { success: false, message: "요청 보호 서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요." },
+      { status: 503 }
+    );
+  }
+
+  if (!limitResult.allowed) {
+    return NextResponse.json(
+      { success: false, message: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.ceil((limitResult.resetAt - Date.now()) / 1000))
+        }
+      }
     );
   }
 

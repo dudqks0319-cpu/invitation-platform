@@ -1,5 +1,8 @@
+/* eslint-disable jsx-a11y/alt-text */
+
 import { Link, useLocalSearchParams } from "expo-router";
-import { Linking, Pressable, Text, View } from "react-native";
+import { useState } from "react";
+import { Image, Linking, Pressable, Text, View } from "react-native";
 import { StepIndicator } from "@/components/builder/StepIndicator";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -8,6 +11,10 @@ import { Screen } from "@/components/ui/Screen";
 import { theme } from "@/components/ui/theme";
 import { useInvitationDraft } from "@/hooks/useInvitationDraft";
 import { useMapApiConfig } from "@/hooks/useMapApiConfig";
+import {
+  fetchKakaoAddressPreview,
+  type KakaoAddressPreview
+} from "@/lib/kakao-address-preview";
 import { getInvitationMapLinks } from "@/lib/map-links";
 
 const inputStyle = {
@@ -39,8 +46,43 @@ export default function BuilderStep5LocationScreen() {
   const { localId } = useLocalSearchParams<{ localId?: string }>();
   const { draft, updateBasics, updateLocation } = useInvitationDraft("local-preview-owner", localId);
   const mapApi = useMapApiConfig();
+  const [mapPreview, setMapPreview] = useState<KakaoAddressPreview | null>(null);
+  const [mapPending, setMapPending] = useState(false);
+  const [mapError, setMapError] = useState("");
+  const [mapMessage, setMapMessage] = useState("");
   const mapLinks = draft ? getInvitationMapLinks(draft.payload) : null;
   const canPreviewMap = Boolean(mapLinks?.query || mapLinks?.naverUrl || mapLinks?.kakaoUrl);
+
+  function handleAddressChange(venueAddress: string) {
+    updateBasics({ venueAddress });
+    if (mapPreview && venueAddress.trim() !== mapPreview.canonicalAddress) {
+      setMapPreview(null);
+      setMapMessage("");
+    }
+    setMapError("");
+  }
+
+  async function handleAddressLookup() {
+    if (mapPending) return;
+
+    setMapPending(true);
+    setMapError("");
+    setMapMessage("카카오에서 도로명주소를 확인하는 중입니다.");
+
+    try {
+      const result = await fetchKakaoAddressPreview(draft?.payload.venueAddress ?? "");
+      setMapPreview(result);
+      updateBasics({ venueAddress: result.canonicalAddress });
+      updateLocation({ kakaoMapUrl: result.kakaoUrl });
+      setMapMessage("도로명주소를 확인했고 실제 카카오 지도를 표시했습니다.");
+    } catch (caught) {
+      setMapPreview(null);
+      setMapMessage("");
+      setMapError(caught instanceof Error ? caught.message : "카카오 지도를 확인하지 못했습니다.");
+    } finally {
+      setMapPending(false);
+    }
+  }
 
   return (
     <Screen subtitle="지도 링크와 교통 안내를 마지막으로 점검합니다." title="초대장 만들기">
@@ -49,11 +91,34 @@ export default function BuilderStep5LocationScreen() {
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>예식장 주소</Text>
           <FocusInput
-            onChangeText={(venueAddress) => updateBasics({ venueAddress })}
+            accessibilityLabel="예식장 도로명주소"
+            onChangeText={handleAddressChange}
             placeholder="예: 서울 강남구 테헤란로 123"
             style={inputStyle}
             value={draft?.payload.venueAddress ?? ""}
           />
+          <Button
+            accessibilityLabel="카카오에서 도로명주소 확인"
+            onPress={mapPending ? undefined : () => void handleAddressLookup()}
+            variant="outline"
+          >
+            {mapPending ? "주소 확인 중..." : "카카오에서 주소 확인"}
+          </Button>
+          {mapMessage || mapError ? (
+            <View
+              accessibilityLiveRegion="polite"
+              style={{
+                borderRadius: 12,
+                backgroundColor: mapError ? "rgba(201,147,90,0.12)" : "rgba(84,122,97,0.1)",
+                paddingHorizontal: 14,
+                paddingVertical: 10
+              }}
+            >
+              <Text style={{ color: mapError ? theme.colors.primaryDark : theme.colors.success, lineHeight: 21 }}>
+                {mapError || mapMessage}
+              </Text>
+            </View>
+          ) : null}
         </View>
         <View style={{ gap: 14 }}>
           <Text style={labelStyle}>카카오 지도 링크</Text>
@@ -91,15 +156,15 @@ export default function BuilderStep5LocationScreen() {
               style={{
                 borderRadius: 999,
                 overflow: "hidden",
-                backgroundColor: mapApi.config?.kakao.enabled ? "#FEE500" : theme.colors.surfaceSoft,
-                color: mapApi.config?.kakao.enabled ? "#332800" : theme.colors.textLight,
+                backgroundColor: mapApi.config?.kakao.addressPreviewEnabled ? "#FEE500" : theme.colors.surfaceSoft,
+                color: mapApi.config?.kakao.addressPreviewEnabled ? "#332800" : theme.colors.textLight,
                 fontSize: 12,
                 fontWeight: "800",
                 paddingHorizontal: 10,
                 paddingVertical: 6
               }}
             >
-              카카오 API {mapApi.config?.kakao.enabled ? "연동" : "대기"}
+              카카오 주소 지도 {mapApi.config?.kakao.addressPreviewEnabled ? "연동" : "대기"}
             </Text>
             <Text
               style={{
@@ -116,50 +181,42 @@ export default function BuilderStep5LocationScreen() {
               네이버 API {mapApi.config?.naver.enabled ? "연동" : "대기"}
             </Text>
           </View>
-          <View
-            style={{
-              minHeight: 120,
-              borderRadius: 18,
-              overflow: "hidden",
-              backgroundColor: "#edf3ea",
-              borderWidth: 1,
-              borderColor: "rgba(84,122,97,0.16)",
-              justifyContent: "center",
-              padding: 18
-            }}
-          >
+          {mapPreview ? (
+            <View style={{ gap: 10 }}>
+              <Image
+                accessibilityIgnoresInvertColors
+                accessibilityLabel={`${mapPreview.canonicalAddress} 카카오 지도`}
+                source={{ uri: mapPreview.imageDataUrl }}
+                style={{ width: "100%", height: 210, borderRadius: 18, backgroundColor: "#edf3ea" }}
+              />
+              <Text style={{ color: theme.colors.text, fontSize: 14, fontWeight: "700", lineHeight: 21 }}>
+                {mapPreview.canonicalAddress}
+              </Text>
+            </View>
+          ) : (
             <View
-              pointerEvents="none"
               style={{
-                position: "absolute",
-                top: 22,
-                left: -24,
-                width: "120%",
-                height: 1,
-                backgroundColor: "rgba(84,122,97,0.14)",
-                transform: [{ rotate: "-12deg" }]
+                minHeight: 140,
+                borderRadius: 18,
+                overflow: "hidden",
+                backgroundColor: "#edf3ea",
+                borderWidth: 1,
+                borderColor: "rgba(84,122,97,0.16)",
+                justifyContent: "center",
+                padding: 18
               }}
-            />
-            <View
-              pointerEvents="none"
-              style={{
-                position: "absolute",
-                top: 70,
-                left: -24,
-                width: "120%",
-                height: 1,
-                backgroundColor: "rgba(84,122,97,0.14)",
-                transform: [{ rotate: "10deg" }]
-              }}
-            />
-            <Text style={{ color: theme.colors.primaryDark, fontSize: 30, textAlign: "center" }}>⌖</Text>
-            <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: "800", marginTop: 4, textAlign: "center" }}>
-              {draft?.payload.venueName || "예식장 이름"}
-            </Text>
-            <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 20, marginTop: 4, textAlign: "center" }}>
-              {draft?.payload.venueAddress || "주소를 입력하면 지도 검색 링크가 자동 생성됩니다."}
-            </Text>
-          </View>
+            >
+              <Text style={{ color: theme.colors.primaryDark, fontSize: 30, textAlign: "center" }}>⌖</Text>
+              <Text style={{ color: theme.colors.text, fontSize: 16, fontWeight: "800", marginTop: 4, textAlign: "center" }}>
+                {draft?.payload.venueName || "예식장 이름"}
+              </Text>
+              <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 20, marginTop: 4, textAlign: "center" }}>
+                {draft?.payload.venueAddress
+                  ? "위의 주소 확인 버튼을 누르면 실제 카카오 지도가 표시됩니다."
+                  : "도로명주소를 입력하면 실제 카카오 지도를 확인할 수 있습니다."}
+              </Text>
+            </View>
+          )}
           <View style={{ flexDirection: "row", gap: 10 }}>
             <Pressable
               accessibilityLabel="카카오 지도 열기"
@@ -207,7 +264,7 @@ export default function BuilderStep5LocationScreen() {
             </Pressable>
           </View>
           <Text style={{ color: theme.colors.muted, fontSize: 12, lineHeight: 18 }}>
-            {mapApi.label}. 링크를 붙여 넣으면 해당 장소 링크를 우선 사용하고, 없으면 예식장 이름과 주소로 검색합니다.
+            {mapApi.label}. 서버 설정이 없을 때도 아래 카카오·네이버 외부 지도 링크는 주소 검색으로 열립니다.
           </Text>
         </View>
         <View style={{ gap: 14 }}>

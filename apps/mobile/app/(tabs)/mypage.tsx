@@ -122,11 +122,11 @@ export default function MyPageScreen() {
         ) : null}
       </Card>
 
-      <Card eyebrow="요금제" title={paidPublishingEnabled ? "무료로 시작 · 사진 포함은 스토어 결제" : "첫 제출 버전 · 무료 발행"}>
+      <Card eyebrow="요금제" title={paidPublishingEnabled ? "무료로 시작 · 사진 포함은 스토어 결제" : "사진 포함 · 무료 발행"}>
         <Text style={{ color: theme.colors.muted, lineHeight: 22 }}>
           {paidPublishingEnabled
             ? "무료 초대장은 로그인 없이 시작할 수 있고, 사진이 포함된 유료 발행은 iOS IAP 또는 Google Play Billing으로 진행합니다."
-            : "첫 제출 버전은 사진 없는 무료 초대장 발행을 제공합니다. 사진 포함 발행은 스토어 상품 준비 후 다시 활성화합니다."}
+            : "현재 무료 버전은 대표·배경 사진과 갤러리 8장까지 포함해 공개 링크를 발행할 수 있습니다."}
         </Text>
       </Card>
 

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -6,9 +7,9 @@ import { normalizeInvitationPayload } from "@/lib/supabase/invitation-payload";
 import { getInvitationPricing } from "@/lib/payments/pricing";
 import { ensureJsonRequest, readJsonBody } from "@/lib/supabase/public-write";
 
-type FreePublishRequest = {
-  invitationId?: string;
-};
+const freePublishSchema = z.object({
+  invitationId: z.string().uuid()
+});
 
 export async function POST(request: Request) {
   const supabase = await createServerSupabaseClient();
@@ -30,21 +31,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: "JSON 요청만 허용됩니다." }, { status: 415 });
   }
 
-  const json = await readJsonBody(request);
+  const json = await readJsonBody(request, 16 * 1024);
   if (!json.ok) {
     return NextResponse.json({ success: false, message: json.message }, { status: 400 });
   }
 
-  const body = json.body as FreePublishRequest | null;
-
-  if (!body?.invitationId) {
+  const parsed = freePublishSchema.safeParse(json.body);
+  if (!parsed.success) {
     return NextResponse.json({ success: false, message: "초대장 정보가 누락되었습니다." }, { status: 400 });
   }
 
   const { data: invitation, error } = await admin
     .from("invitations")
     .select("*")
-    .eq("id", body.invitationId)
+    .eq("id", parsed.data.invitationId)
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -69,7 +69,8 @@ export async function POST(request: Request) {
       repurchase_required: false,
       paid_payload_snapshot: payload
     })
-    .eq("id", invitation.id);
+    .eq("id", invitation.id)
+    .eq("user_id", user.id);
 
   if (updateError) {
     return NextResponse.json({ success: false, message: "무료 발행 처리에 실패했습니다." }, { status: 500 });

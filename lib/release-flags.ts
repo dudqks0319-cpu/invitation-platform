@@ -1,5 +1,5 @@
 export const PAID_PUBLISH_DISABLED_MESSAGE =
-  "사진 포함 발행은 현재 제출 버전에서 준비 중입니다. 사진 없는 무료 발행을 먼저 제공합니다.";
+  "유료 발행권은 비활성화되어 있습니다. 현재 무료 버전에서는 사진을 포함해 공개 링크를 발행할 수 있습니다.";
 
 export function parsePublicBooleanFlag(value: string | undefined, defaultValue = false) {
   if (value === undefined) {

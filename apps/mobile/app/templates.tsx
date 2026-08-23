@@ -1,7 +1,7 @@
 /* eslint-disable jsx-a11y/alt-text */
 
 import { useMemo, useState } from "react";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { Image, Pressable, ScrollView, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Pill } from "@/components/ui/Pill";
@@ -29,12 +29,97 @@ function getTemplatePreviewSource(template: MobileTemplateGalleryItem) {
   return imageUrl ? { uri: imageUrl } : null;
 }
 
+function TemplateSampleTextOverlay() {
+  return (
+    <View
+      pointerEvents="none"
+      style={{
+        position: "absolute",
+        left: 10,
+        right: 10,
+        top: 0,
+        bottom: 0,
+        alignItems: "center",
+        justifyContent: "center"
+      }}
+    >
+      <Text
+        style={{
+          color: "rgba(126,91,65,0.76)",
+          fontSize: 9,
+          fontStyle: "italic",
+          fontWeight: "600",
+          letterSpacing: 0,
+          textAlign: "center"
+        }}
+      >
+        We are getting married
+      </Text>
+      <Text
+        style={{
+          color: "rgba(198,144,114,0.9)",
+          fontSize: 9,
+          fontWeight: "800",
+          letterSpacing: 0,
+          marginTop: 5,
+          textAlign: "center"
+        }}
+      >
+        결혼식
+      </Text>
+      <Text
+        style={{
+          color: "#2B2B2B",
+          fontSize: 23,
+          fontWeight: "900",
+          letterSpacing: 0,
+          lineHeight: 29,
+          marginTop: 4,
+          textAlign: "center"
+        }}
+      >
+        이준서  ♥  김은재
+      </Text>
+      <View style={{ width: 44, height: 1, backgroundColor: "rgba(198,144,114,0.42)", marginVertical: 8 }} />
+      <Text
+        style={{
+          color: "#2B2B2B",
+          fontSize: 10,
+          fontWeight: "900",
+          letterSpacing: 0,
+          textAlign: "center"
+        }}
+      >
+        2026.09.20 SUN 12:30
+      </Text>
+      <Text
+        style={{
+          color: "rgba(55,55,55,0.78)",
+          fontSize: 10,
+          fontWeight: "800",
+          letterSpacing: 0,
+          marginTop: 4,
+          textAlign: "center"
+        }}
+      >
+        라비에벨 가든홀
+      </Text>
+    </View>
+  );
+}
+
 export default function TemplatesScreen() {
   const router = useRouter();
+  const { category: initialCategory } = useLocalSearchParams<{ category?: string }>();
   const { status, user } = useAuth();
   const { width } = useWindowDimensions();
   const draftOwnerId = getDraftOwnerId(status === "authenticated" ? user : null);
-  const [category, setCategory] = useState<string>(mobileTemplateCategories[0].key);
+  const [category, setCategory] = useState<string>(() => {
+    const categoryParam = Array.isArray(initialCategory) ? initialCategory[0] : initialCategory;
+    return mobileTemplateCategories.some((item) => item.key === categoryParam)
+      ? categoryParam
+      : mobileTemplateCategories[0].key;
+  });
   const cardWidth = Math.max(148, Math.floor((width - 54) / 2));
 
   const filteredTemplates = useMemo(
@@ -51,6 +136,15 @@ export default function TemplatesScreen() {
     router.push({ pathname: "/builder/step1-basic", params: { localId: draft.localId } });
   }
 
+  function handleBack() {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/");
+  }
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView contentContainerStyle={{ padding: 18, gap: 20, paddingBottom: 36 }}>
@@ -64,7 +158,7 @@ export default function TemplatesScreen() {
         >
           <Pressable
             accessibilityLabel="뒤로가기"
-            onPress={() => router.back()}
+            onPress={handleBack}
             style={{
               width: 44,
               height: 44,
@@ -83,7 +177,8 @@ export default function TemplatesScreen() {
         </View>
 
         <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24 }}>
-          분위기에 맞는 디자인을 고르면 편집 화면에서 이름, 날짜, 장소만 바꾸면 됩니다.
+          {mobileTemplateCategories.find((item) => item.key === category)?.label ?? "초대장"} 디자인 {filteredTemplates.length}개를 볼 수 있습니다.
+          고르면 편집 화면에서 이름, 날짜, 장소만 바꾸면 됩니다.
         </Text>
 
         <ScrollView
@@ -137,13 +232,16 @@ export default function TemplatesScreen() {
                   }}
                 >
                   {previewSource ? (
-                    <Image
-                      accessibilityIgnoresInvertColors
-                      accessibilityLabel={`${template.name} 템플릿 미리보기`}
-                      source={previewSource}
-                      style={{ width: "100%", height: "100%", borderRadius: 18 }}
-                      resizeMode="contain"
-                    />
+                    <View style={{ width: "100%", height: "100%", borderRadius: 18, overflow: "hidden" }}>
+                      <Image
+                        accessibilityIgnoresInvertColors
+                        accessibilityLabel={`${template.name} 템플릿 미리보기`}
+                        source={previewSource}
+                        style={{ width: "100%", height: "100%" }}
+                        resizeMode="contain"
+                      />
+                      {template.sampleTextOverlay ? <TemplateSampleTextOverlay /> : null}
+                    </View>
                   ) : (
                     <View
                       style={{

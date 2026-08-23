@@ -163,7 +163,7 @@ export default function MyInvitationsScreen() {
             <Pill active={Boolean(draft.payload.isPublished)} label={draft.payload.isPublished ? "공개 중" : "비공개"} />
           </View>
           <View style={{ marginTop: 12, gap: 10 }}>
-            <Link asChild href={{ pathname: "/invitation/[id]/index", params: { id: draft.serverId ?? draft.localId } }}>
+            <Link asChild href={{ pathname: "/invitation/[id]", params: { id: draft.serverId ?? draft.localId } }}>
               <Button accessibilityLabel="초대장 운영 화면으로 이동">
                 운영 화면 열기
               </Button>
@@ -176,7 +176,7 @@ export default function MyInvitationsScreen() {
                     onPress={() => {
                       setMessage("");
                       setError("");
-                      void shareInvitationLink(draft.payload.share.slug, draft.payload.title || "InviteHub 초대장")
+                      void shareInvitationLink(draft.payload.share.slug, draft.payload.title || "오삼오삼 초대장")
                         .then(() => setMessage("공유 시트를 열었습니다."))
                         .catch((caught) =>
                           setError(caught instanceof Error ? caught.message : "공유 시트를 열지 못했습니다.")

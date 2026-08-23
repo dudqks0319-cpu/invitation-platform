@@ -15,7 +15,7 @@ function getAllowedStoreProductIds(provider: StoreProvider) {
       process.env.STORE_PUBLISH_PRODUCT_IDS_IOS ??
         process.env.EXPO_PUBLIC_IAP_PRODUCT_IDS_IOS ??
         process.env.EXPO_PUBLIC_IAP_PRODUCT_ID_IOS,
-      "publish.credit.ios"
+      "com.invitehub.publish.credit"
     );
   }
 
@@ -29,6 +29,10 @@ function getAllowedStoreProductIds(provider: StoreProvider) {
 
 export function isAllowedStoreProductId(provider: StoreProvider, productId: string) {
   return getAllowedStoreProductIds(provider).includes(productId);
+}
+
+export function isAllowedAnyStoreProductId(productId: string) {
+  return isAllowedStoreProductId("apple_iap", productId) || isAllowedStoreProductId("google_play", productId);
 }
 
 export function sanitizeStoreVerification(provider: StoreProvider, verification: Record<string, unknown>) {

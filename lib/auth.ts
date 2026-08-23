@@ -36,7 +36,7 @@ export function deriveDisplayName(user: UserLike) {
     return user.email.split("@")[0];
   }
 
-  return "InviteHub 사용자";
+  return "오삼오삼 사용자";
 }
 
 export const authDestination = {

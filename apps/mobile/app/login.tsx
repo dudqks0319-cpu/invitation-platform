@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link } from "expo-router";
+import { useEffect, useState } from "react";
+import { Link, useRouter } from "expo-router";
 import { Pressable, Text, TextInput, View } from "react-native";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -9,6 +9,7 @@ import { Screen } from "@/components/ui/Screen";
 import { SocialSignInButton } from "@/components/ui/SocialSignInButton";
 import { theme } from "@/components/ui/theme";
 import { useAuth } from "@/hooks/useAuth";
+import { POST_LOGIN_ROUTE, shouldLeaveLoginScreen } from "@/lib/auth-completion";
 
 const inputStyle = {
   minHeight: 48,
@@ -27,6 +28,7 @@ type AuthActionResult = {
 };
 
 export default function LoginScreen() {
+  const router = useRouter();
   const {
     configMessage,
     configMissingKeys,
@@ -35,6 +37,7 @@ export default function LoginScreen() {
     isAnonymousSession,
     nativeGoogleConfigured,
     nativeKakaoConfigured,
+    session,
     signInWithGoogle,
     signInWithApple,
     signInWithKakao,
@@ -51,6 +54,14 @@ export default function LoginScreen() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const hasEmailCredentials = email.trim().length > 0 && password.trim().length > 0;
   const showDebugInfo = __DEV__;
+
+  useEffect(() => {
+    if (!shouldLeaveLoginScreen({ hasSession: Boolean(session), status, user })) {
+      return;
+    }
+
+    router.replace(POST_LOGIN_ROUTE);
+  }, [router, session, status, user]);
 
   async function runAction(actionKey: ActionKey, action: () => Promise<AuthActionResult>) {
     if ((actionKey === "email-sign-in" || actionKey === "email-sign-up") && !hasEmailCredentials) {
@@ -85,9 +96,9 @@ export default function LoginScreen() {
         } else if (actionKey === "kakao") {
           setMessage("Kakao 인증 창을 열었습니다. 인증을 마치고 앱으로 돌아오면 연결됩니다.");
         } else if (actionKey === "apple") {
-          setMessage("Apple 로그인을 처리했습니다. 세션이 연결되면 내 초대장 화면으로 이동할 수 있습니다.");
+          setMessage("Apple 로그인을 처리했습니다. 내 초대장 화면으로 이동합니다.");
         } else {
-          setMessage("로그인 요청을 처리했습니다.");
+          setMessage("로그인 요청을 처리했습니다. 내 초대장 화면으로 이동합니다.");
         }
       }
     } catch (caught) {
@@ -143,7 +154,7 @@ export default function LoginScreen() {
             로그인 세션이 연결되었습니다. 내 초대장 화면에서 저장본과 RSVP, 방명록, 통계를 확인할 수 있습니다.
           </Text>
           <View style={{ marginTop: 12 }}>
-            <Link asChild href="/(tabs)/my-invitations">
+            <Link asChild href={POST_LOGIN_ROUTE}>
               <Pressable
                 accessibilityLabel="내 초대장으로 이동"
                 style={{

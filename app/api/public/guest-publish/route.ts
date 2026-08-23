@@ -1,10 +1,18 @@
 import { randomUUID } from "node:crypto";
 import { NextResponse } from "next/server";
-import { buildPublishedInvitationAssetPayload } from "@/lib/invitation-assets";
+import {
+  buildPublishedInvitationAssetPayload,
+  getStoredInvitationAssetPaths
+} from "@/lib/invitation-assets";
 import { createInvitationSlug, normalizeDraft } from "@/lib/invitation-payload";
+import { createGuestOwnerToken, hashGuestOwnerToken } from "@/lib/guest-owner-token";
 import { getInvitationPricing } from "@/lib/payments/pricing";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { consumeRateLimit, getClientIdentifier } from "@/lib/rate-limit";
+import {
+  consumeRateLimitPolicies,
+  getClientFingerprint,
+  hashRateLimitIdempotencyKey
+} from "@/lib/rate-limit";
 import { ensureJsonRequest, readJsonBody } from "@/lib/supabase/public-write";
 
 type GuestPublishRequest = {
@@ -13,10 +21,72 @@ type GuestPublishRequest = {
 };
 
 const GUEST_PUBLISHER_EMAIL = "guest-publisher@invitehub.app";
-const GUEST_PUBLISH_LIMIT = 10;
-const GUEST_PUBLISH_WINDOW_MS = 60 * 60 * 1000;
-const guestPublishBuckets = new Map<string, { count: number; resetAt: number }>();
+const GUEST_PUBLISH_MAX_JSON_BODY_BYTES = 2 * 1024 * 1024;
+const MINUTE_MS = 60 * 1000;
+const HOUR_MS = 60 * MINUTE_MS;
+const DAY_MS = 24 * HOUR_MS;
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const PUBLIC_SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{2,30}[a-z0-9]$/i;
+const MAX_FREE_GALLERY_PHOTOS = 8;
+
+function getBearerToken(request: Request) {
+  const authorization = request.headers.get("authorization") ?? "";
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+  return match?.[1]?.trim() ?? "";
+}
+
+function hasUnboundExternalPhotos(payload: ReturnType<typeof normalizeDraft>) {
+  const inlineOverlay = payload.templateId === "image-text-overlay";
+  const mainUnbound = Boolean(
+    payload.mainImageUrl &&
+    !payload.mainImagePath &&
+    !(inlineOverlay && payload.mainImageUrl.startsWith("data:image/"))
+  );
+  const backgroundUnbound = Boolean(
+    payload.backgroundImageUrl &&
+    !payload.backgroundImagePath &&
+    !(inlineOverlay && payload.backgroundImageUrl.startsWith("data:image/"))
+  );
+  const galleryUnbound = payload.galleryImages.some((url, index) => Boolean(url && !payload.galleryImagePaths[index]));
+  return mainUnbound || backgroundUnbound || galleryUnbound;
+}
+
+async function validateGuestAssetOwnership(request: Request, payload: ReturnType<typeof normalizeDraft>) {
+  const paths = getStoredInvitationAssetPaths(payload);
+  if (payload.galleryImagePaths.length > MAX_FREE_GALLERY_PHOTOS || payload.galleryImages.length > MAX_FREE_GALLERY_PHOTOS) {
+    return { ok: false as const, status: 400, message: `갤러리 사진은 최대 ${MAX_FREE_GALLERY_PHOTOS}장까지 발행할 수 있습니다.` };
+  }
+  if (hasUnboundExternalPhotos(payload)) {
+    return { ok: false as const, status: 400, message: "서버에서 확인된 사진만 게스트 초대장에 넣을 수 있습니다." };
+  }
+  if (paths.length === 0) return { ok: true as const };
+
+  const token = getBearerToken(request);
+  if (!token) {
+    return { ok: false as const, status: 401, message: "사진 발행을 위한 게스트 세션이 필요합니다." };
+  }
+  const admin = createSupabaseAdminClient();
+  if (!admin) {
+    return { ok: false as const, status: 503, message: "사진 소유권 확인 서버가 준비되지 않았습니다." };
+  }
+  const {
+    data: { user },
+    error
+  } = await admin.auth.getUser(token);
+  if (error || !user?.id) {
+    return { ok: false as const, status: 401, message: "게스트 세션을 확인할 수 없습니다." };
+  }
+
+  const expectedPrefix = `${user.id}/guest/`;
+  const ownsEveryPath = paths.every((path) =>
+    path.startsWith(expectedPrefix) && /^[a-f0-9]{64}\.jpg$/.test(path.slice(expectedPrefix.length))
+  );
+  if (!ownsEveryPath) {
+    return { ok: false as const, status: 403, message: "본인이 업로드한 사진만 발행할 수 있습니다." };
+  }
+
+  return { ok: true as const };
+}
 
 function getMissingFields(payload: ReturnType<typeof normalizeDraft>) {
   return [
@@ -100,35 +170,14 @@ async function ensureGuestPublisherId() {
   };
 }
 
-function consumeGuestPublishFallback(key: string) {
-  const now = Date.now();
-  const current = guestPublishBuckets.get(key);
+function getSafeRequestedSlug(value: string) {
+  const slug = value.trim().toLowerCase();
 
-  if (!current || current.resetAt <= now) {
-    const next = {
-      count: 1,
-      resetAt: now + GUEST_PUBLISH_WINDOW_MS
-    };
-    guestPublishBuckets.set(key, next);
-    return {
-      allowed: true
-    };
+  if (!slug || slug.startsWith("-") || slug.endsWith("-") || !PUBLIC_SLUG_PATTERN.test(slug)) {
+    return "";
   }
 
-  if (current.count >= GUEST_PUBLISH_LIMIT) {
-    return {
-      allowed: false
-    };
-  }
-
-  guestPublishBuckets.set(key, {
-    ...current,
-    count: current.count + 1
-  });
-
-  return {
-    allowed: true
-  };
+  return slug;
 }
 
 export async function POST(request: Request) {
@@ -136,34 +185,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, message: "JSON 요청만 처리할 수 있습니다." }, { status: 415 });
   }
 
-  const bodyResult = await readJsonBody(request);
+  const bodyResult = await readJsonBody(request, GUEST_PUBLISH_MAX_JSON_BODY_BYTES);
   if (!bodyResult.ok) {
     return NextResponse.json({ success: false, message: bodyResult.message }, { status: 400 });
   }
 
   const body = bodyResult.body as GuestPublishRequest;
+  if (!body || typeof body !== "object" || Array.isArray(body)) {
+    return NextResponse.json({ success: false, message: "입력값이 올바르지 않습니다." }, { status: 400 });
+  }
   if ((body.website ?? "").trim().length > 0) {
     return NextResponse.json({ success: false, message: "잘못된 요청입니다." }, { status: 400 });
-  }
-
-  const guestPublisher = await ensureGuestPublisherId();
-  if (!guestPublisher.ok) {
-    return NextResponse.json({ success: false, message: guestPublisher.message }, { status: 503 });
-  }
-
-  const rateLimit = await consumeRateLimit({
-    admin: guestPublisher.admin,
-    key: `guest_publish:${getClientIdentifier(request)}`,
-    limit: GUEST_PUBLISH_LIMIT,
-    windowMs: GUEST_PUBLISH_WINDOW_MS
-  });
-
-  const rateLimitAllowed = rateLimit.ok
-    ? rateLimit.allowed
-    : consumeGuestPublishFallback(`guest_publish_fallback:${getClientIdentifier(request)}`).allowed;
-
-  if (!rateLimitAllowed) {
-    return NextResponse.json({ success: false, message: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요." }, { status: 429 });
   }
 
   const payload = normalizeDraft(body.payload ?? {});
@@ -183,11 +215,89 @@ export async function POST(request: Request) {
     );
   }
 
-  const slug = payload.shareUrl || createInvitationSlug(payload);
+  const assetOwnership = await validateGuestAssetOwnership(request, payload);
+  if (!assetOwnership.ok) {
+    return NextResponse.json(
+      { success: false, message: assetOwnership.message },
+      { status: assetOwnership.status }
+    );
+  }
+
+  const idempotency = hashRateLimitIdempotencyKey(request.headers.get("idempotency-key"));
+  if (!idempotency.ok) {
+    const status = idempotency.message === "rate_limit_idempotency_invalid" ? 400 : 503;
+    const message = status === 400
+      ? "요청 식별자가 올바르지 않습니다."
+      : "요청 보호 서비스 설정을 확인할 수 없습니다. 잠시 후 다시 시도해 주세요.";
+    return NextResponse.json({ success: false, message }, { status });
+  }
+
+  const client = getClientFingerprint(request);
+  if (!client.ok) {
+    return NextResponse.json(
+      { success: false, message: "요청 보호 서비스 설정을 확인할 수 없습니다. 잠시 후 다시 시도해 주세요." },
+      { status: 503 }
+    );
+  }
+
+  const slug = getSafeRequestedSlug(payload.shareUrl) || createInvitationSlug(payload);
   const publishedPayload = buildPublishedInvitationAssetPayload(slug, {
     ...payload,
     shareUrl: slug
   });
+  const ownerToken = createGuestOwnerToken();
+
+  const guestPublisher = await ensureGuestPublisherId();
+  if (!guestPublisher.ok) {
+    return NextResponse.json({ success: false, message: guestPublisher.message }, { status: 503 });
+  }
+
+  const quota = await consumeRateLimitPolicies({
+    admin: guestPublisher.admin,
+    policies: [
+      { name: "burst", key: `guest_publish:burst:${client.fingerprint}`, limit: 3, windowMs: MINUTE_MS },
+      {
+        name: "rolling_hour",
+        key: `guest_publish:rolling_hour:${client.fingerprint}`,
+        limit: 10,
+        windowMs: HOUR_MS
+      },
+      { name: "daily", key: `guest_publish:daily:${client.fingerprint}`, limit: 25, windowMs: DAY_MS },
+      { name: "global_burst", key: "guest_publish:global:burst", limit: 100, windowMs: MINUTE_MS },
+      { name: "global_daily", key: "guest_publish:global:daily", limit: 1000, windowMs: DAY_MS },
+      {
+        name: "idempotency",
+        key: `guest_publish:idempotency:${idempotency.digest}`,
+        limit: 1,
+        windowMs: DAY_MS
+      }
+    ]
+  });
+
+  if (!quota.ok) {
+    return NextResponse.json(
+      { success: false, message: "요청 보호 서비스를 일시적으로 사용할 수 없습니다. 잠시 후 다시 시도해 주세요." },
+      { status: 503 }
+    );
+  }
+  if (!quota.allowed) {
+    if (quota.policy === "idempotency") {
+      return NextResponse.json(
+        { success: false, message: "이미 처리된 발행 요청입니다." },
+        { status: 409 }
+      );
+    }
+
+    return NextResponse.json(
+      { success: false, message: "요청이 너무 많습니다. 잠시 후 다시 시도해 주세요." },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(Math.max(1, Math.ceil((quota.resetAt - Date.now()) / 1000)))
+        }
+      }
+    );
+  }
 
   const { data, error } = await guestPublisher.admin
     .from("invitations")
@@ -200,7 +310,9 @@ export async function POST(request: Request) {
       status: "published",
       payload: publishedPayload,
       repurchase_required: false,
-      paid_payload_snapshot: payload,
+      paid_payload_snapshot: null,
+      guest_owner_token_hash: hashGuestOwnerToken(ownerToken),
+      guest_owner_created_at: new Date().toISOString(),
       published_at: new Date().toISOString()
     })
     .select()
@@ -213,6 +325,7 @@ export async function POST(request: Request) {
   return NextResponse.json({
     success: true,
     invitationId: data.id,
-    slug
+    slug,
+    ownerToken
   });
 }

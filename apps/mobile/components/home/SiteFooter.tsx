@@ -14,7 +14,7 @@ export function SiteFooter() {
         marginTop: 8
       }}
     >
-      <Text style={{ color: "#fff", fontSize: 20, fontWeight: "700", marginBottom: 12 }}>💌 InviteHub</Text>
+      <Text style={{ color: "#fff", fontSize: 20, fontWeight: "700", marginBottom: 12 }}>💌 오삼오삼</Text>
       <View style={{ flexDirection: "row", gap: 24, marginVertical: 20 }}>
         {[
           { label: "이용약관", url: getTermsUrl() },
@@ -31,7 +31,7 @@ export function SiteFooter() {
           </Pressable>
         ))}
       </View>
-      <Text style={{ color: "#666", fontSize: 12, marginTop: 20 }}>© 2026 InviteHub. All rights reserved.</Text>
+      <Text style={{ color: "#666", fontSize: 12, marginTop: 20 }}>© 2026 오삼오삼. All rights reserved.</Text>
     </View>
   );
 }

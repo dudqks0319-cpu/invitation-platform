@@ -54,7 +54,7 @@ describe("mobile entry", () => {
     const infoPlist = readFileSync(join(mobileRoot, "ios/InviteHub/Info.plist"), "utf8");
 
     expect(infoPlist).toContain("<key>CFBundleDisplayName</key>");
-    expect(infoPlist).toContain("<string>초대장허브</string>");
+    expect(infoPlist).toContain("<string>오삼오삼</string>");
     expect(infoPlist).toContain("<key>CFBundleName</key>");
     expect(infoPlist).not.toContain("<string>$(PRODUCT_NAME)</string>");
   });
@@ -72,15 +72,17 @@ describe("mobile entry", () => {
 
     expect(buildGradle).toContain("namespace 'com.invitehub.app'");
     expect(buildGradle).toContain("applicationId 'com.invitehub.app'");
-    expect(buildGradle).toContain("versionCode 49");
-    expect(buildGradle).toContain('versionName "1.0.1"');
+    expect(buildGradle).toContain("versionCode 69");
+    expect(buildGradle).toContain('versionName "1.0.3"');
     expect(buildGradle).toContain('file("./eas-build.gradle")');
     expect(buildGradle).toContain("apply from: easBuildGradle");
     expect(mainActivity).toContain("package com.invitehub.app");
     expect(mainApplication).toContain("package com.invitehub.app");
     expect(mainActivity).not.toContain("com.invitehub.app.dev");
     expect(mainApplication).not.toContain("com.invitehub.app.dev");
-    expect(strings).toContain("<string name=\"app_name\">초대장허브</string>");
+    expect(strings).toContain("<string name=\"app_name\">오삼오삼</string>");
+    expect(manifest).toContain('android:allowBackup="false"');
+    expect(manifest).not.toContain('android:allowBackup="true"');
     expect(manifest).not.toContain("com.android.vending.BILLING");
     expect(manifest).not.toContain("android.permission.SYSTEM_ALERT_WINDOW");
     expect(manifest).toContain('android:scheme="kakaomap"');

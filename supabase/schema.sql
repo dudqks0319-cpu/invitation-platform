@@ -18,10 +18,18 @@ create table if not exists public.invitations (
   payload jsonb not null default '{}'::jsonb,
   repurchase_required boolean not null default false,
   paid_payload_snapshot jsonb,
+  guest_owner_token_hash text,
+  guest_owner_created_at timestamptz,
+  guest_owner_last_verified_at timestamptz,
   published_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.invitations
+  add column if not exists guest_owner_token_hash text,
+  add column if not exists guest_owner_created_at timestamptz,
+  add column if not exists guest_owner_last_verified_at timestamptz;
 
 create table if not exists public.payments (
   id uuid primary key default gen_random_uuid(),
@@ -61,6 +69,29 @@ create table if not exists public.payment_audit_logs (
   created_at timestamptz not null default now()
 );
 
+create table if not exists public.user_entitlements (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  platform text not null check (platform in ('ios', 'android')),
+  product_id text not null,
+  transaction_id text not null unique,
+  entitlement text not null,
+  quantity integer not null default 1 check (quantity > 0),
+  consumed_quantity integer not null default 0 check (consumed_quantity >= 0),
+  raw_event jsonb,
+  purchased_at timestamptz not null default now(),
+  revoked_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  check (consumed_quantity <= quantity)
+);
+
+create table if not exists public.publish_credits (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  credits integer not null default 0 check (credits >= 0),
+  updated_at timestamptz not null default now()
+);
+
 create table if not exists public.rsvps (
   id uuid primary key default gen_random_uuid(),
   invitation_id uuid not null references public.invitations(id) on delete cascade,
@@ -84,9 +115,13 @@ create table if not exists public.guestbook_entries (
 create table if not exists public.view_logs (
   id bigint generated always as identity primary key,
   invitation_id uuid not null references public.invitations(id) on delete cascade,
+  visitor_key text,
   user_agent text,
   created_at timestamptz not null default now()
 );
+
+alter table public.view_logs
+  add column if not exists visitor_key text;
 
 create table if not exists public.rate_limits (
   bucket_key text primary key,
@@ -183,6 +218,255 @@ begin
 end;
 $$;
 
+create or replace function public.grant_publish_credit(
+  p_user_id uuid,
+  p_platform text,
+  p_product_id text,
+  p_transaction_id text,
+  p_entitlement text,
+  p_quantity integer,
+  p_purchased_at timestamptz,
+  p_raw_event jsonb
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  inserted_count integer := 0;
+begin
+  if p_user_id is null then
+    raise exception 'user_id is required';
+  end if;
+
+  if p_quantity < 1 then
+    raise exception 'quantity must be positive';
+  end if;
+
+  if p_entitlement <> 'publish_credit' then
+    raise exception 'unsupported entitlement';
+  end if;
+
+  if p_platform not in ('ios', 'android') then
+    raise exception 'unsupported platform';
+  end if;
+
+  if nullif(btrim(p_transaction_id), '') is null then
+    raise exception 'transaction_id is required';
+  end if;
+
+  if (
+    p_platform = 'ios' and p_product_id <> 'com.invitehub.publish.credit'
+  ) or (
+    p_platform = 'android' and p_product_id <> 'publish.credit.android'
+  ) then
+    raise exception 'unsupported product_id';
+  end if;
+
+  insert into public.user_entitlements (
+    user_id,
+    platform,
+    product_id,
+    transaction_id,
+    entitlement,
+    quantity,
+    raw_event,
+    purchased_at
+  )
+  values (
+    p_user_id,
+    p_platform,
+    p_product_id,
+    p_transaction_id,
+    p_entitlement,
+    p_quantity,
+    p_raw_event,
+    coalesce(p_purchased_at, now())
+  )
+  on conflict (transaction_id) do nothing;
+
+  get diagnostics inserted_count = row_count;
+
+  if inserted_count = 0 then
+    return false;
+  end if;
+
+  insert into public.publish_credits (user_id, credits, updated_at)
+  values (p_user_id, p_quantity, now())
+  on conflict (user_id)
+  do update
+    set credits = public.publish_credits.credits + excluded.credits,
+        updated_at = now();
+
+  return true;
+end;
+$$;
+
+create or replace function public.revoke_publish_credit(
+  p_transaction_id text,
+  p_revoked_at timestamptz,
+  p_raw_event jsonb
+)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  entitlement_row public.user_entitlements%rowtype;
+  unused_quantity integer := 0;
+begin
+  select *
+  into entitlement_row
+  from public.user_entitlements
+  where transaction_id = p_transaction_id
+  for update;
+
+  if not found or entitlement_row.revoked_at is not null then
+    return 0;
+  end if;
+
+  unused_quantity := greatest(entitlement_row.quantity - entitlement_row.consumed_quantity, 0);
+
+  update public.user_entitlements
+  set revoked_at = coalesce(p_revoked_at, now()),
+      raw_event = coalesce(p_raw_event, raw_event),
+      updated_at = now()
+  where id = entitlement_row.id;
+
+  if unused_quantity > 0 then
+    update public.publish_credits
+    set credits = greatest(credits - unused_quantity, 0),
+        updated_at = now()
+    where user_id = entitlement_row.user_id;
+  end if;
+
+  return unused_quantity;
+end;
+$$;
+
+create or replace function public.publish_invitation_with_credit(
+  p_user_id uuid,
+  p_invitation_id uuid,
+  p_published_payload jsonb,
+  p_paid_payload_snapshot jsonb
+)
+returns table (
+  success boolean,
+  remaining_credits integer
+)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  selected_entitlement_id uuid;
+  remaining integer := 0;
+begin
+  perform 1
+  from public.invitations
+  where id = p_invitation_id
+    and user_id = p_user_id
+  for update;
+
+  if not found then
+    raise exception 'invitation not found';
+  end if;
+
+  select id
+  into selected_entitlement_id
+  from public.user_entitlements
+  where user_id = p_user_id
+    and entitlement = 'publish_credit'
+    and revoked_at is null
+    and consumed_quantity < quantity
+  order by purchased_at asc
+  for update skip locked
+  limit 1;
+
+  if selected_entitlement_id is null then
+    select coalesce(credits, 0)
+    into remaining
+    from public.publish_credits
+    where user_id = p_user_id;
+
+    return query select false, coalesce(remaining, 0);
+    return;
+  end if;
+
+  update public.user_entitlements
+  set consumed_quantity = consumed_quantity + 1,
+      updated_at = now()
+  where id = selected_entitlement_id;
+
+  insert into public.publish_credits (user_id, credits, updated_at)
+  values (p_user_id, 0, now())
+  on conflict (user_id)
+  do update
+    set credits = greatest(public.publish_credits.credits - 1, 0),
+        updated_at = now()
+  returning credits into remaining;
+
+  update public.invitations
+  set payload = p_published_payload,
+      status = 'published',
+      published_at = now(),
+      repurchase_required = false,
+      paid_payload_snapshot = p_paid_payload_snapshot,
+      updated_at = now()
+  where id = p_invitation_id
+    and user_id = p_user_id;
+
+  return query select true, coalesce(remaining, 0);
+end;
+$$;
+
+revoke all on function public.grant_publish_credit(
+  uuid,
+  text,
+  text,
+  text,
+  text,
+  integer,
+  timestamptz,
+  jsonb
+) from public, anon, authenticated;
+grant execute on function public.grant_publish_credit(
+  uuid,
+  text,
+  text,
+  text,
+  text,
+  integer,
+  timestamptz,
+  jsonb
+) to service_role;
+
+revoke all on function public.revoke_publish_credit(
+  text,
+  timestamptz,
+  jsonb
+) from public, anon, authenticated;
+grant execute on function public.revoke_publish_credit(
+  text,
+  timestamptz,
+  jsonb
+) to service_role;
+
+revoke all on function public.publish_invitation_with_credit(
+  uuid,
+  uuid,
+  jsonb,
+  jsonb
+) from public, anon, authenticated;
+grant execute on function public.publish_invitation_with_credit(
+  uuid,
+  uuid,
+  jsonb,
+  jsonb
+) to service_role;
+
 drop trigger if exists profiles_set_timestamp on public.profiles;
 create trigger profiles_set_timestamp
 before update on public.profiles
@@ -201,10 +485,18 @@ before update on public.invitation_templates
 for each row
 execute procedure public.set_timestamp();
 
+drop trigger if exists user_entitlements_set_timestamp on public.user_entitlements;
+create trigger user_entitlements_set_timestamp
+before update on public.user_entitlements
+for each row
+execute procedure public.set_timestamp();
+
 alter table public.profiles enable row level security;
 alter table public.invitations enable row level security;
 alter table public.payments enable row level security;
 alter table public.payment_audit_logs enable row level security;
+alter table public.user_entitlements enable row level security;
+alter table public.publish_credits enable row level security;
 alter table public.rsvps enable row level security;
 alter table public.guestbook_entries enable row level security;
 alter table public.view_logs enable row level security;
@@ -228,11 +520,6 @@ using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
 
 drop policy if exists "public can read published invitations" on public.invitations;
-create policy "public can read published invitations"
-on public.invitations
-for select
-to anon, authenticated
-using (status = 'published');
 
 drop policy if exists "owners can read payments" on public.payments;
 create policy "owners can read payments"
@@ -254,6 +541,20 @@ using (
       and payments.user_id = auth.uid()
   )
 );
+
+drop policy if exists "owners can read user entitlements" on public.user_entitlements;
+create policy "owners can read user entitlements"
+on public.user_entitlements
+for select
+to authenticated
+using (auth.uid() = user_id);
+
+drop policy if exists "owners can read publish credits" on public.publish_credits;
+create policy "owners can read publish credits"
+on public.publish_credits
+for select
+to authenticated
+using (auth.uid() = user_id);
 
 drop policy if exists "public can create rsvps for published invitations" on public.rsvps;
 drop policy if exists "service role writes rsvps" on public.rsvps;
@@ -364,6 +665,9 @@ using (
 create index if not exists idx_invitations_user_id on public.invitations(user_id);
 create index if not exists idx_invitations_slug on public.invitations(slug);
 create index if not exists idx_invitations_status on public.invitations(status);
+create index if not exists idx_invitations_guest_owner_token_hash
+  on public.invitations(guest_owner_token_hash)
+  where guest_owner_token_hash is not null;
 create index if not exists idx_payments_invitation_id on public.payments(invitation_id);
 create index if not exists idx_payments_user_id on public.payments(user_id);
 create index if not exists idx_payments_status on public.payments(status);
@@ -374,6 +678,9 @@ create index if not exists idx_payment_audit_logs_payment_id on public.payment_a
 create index if not exists idx_rsvps_invitation_id on public.rsvps(invitation_id);
 create index if not exists idx_guestbook_invitation_id on public.guestbook_entries(invitation_id);
 create index if not exists idx_view_logs_invitation_id on public.view_logs(invitation_id);
+create index if not exists idx_view_logs_visitor_key_created_at
+  on public.view_logs(invitation_id, visitor_key, created_at)
+  where visitor_key is not null;
 create index if not exists idx_invitation_templates_category_active
   on public.invitation_templates(category, is_active);
 
@@ -381,7 +688,7 @@ insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_typ
 values (
   'invitation-assets',
   'invitation-assets',
-  true,
+  false,
   5242880,
   array['image/jpeg', 'image/png', 'image/webp']
 )

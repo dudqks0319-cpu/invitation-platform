@@ -59,5 +59,15 @@ target 'InviteHub' do
       :mac_catalyst_enabled => false,
       :ccache_enabled => ccache_enabled?(podfile_properties),
     )
+
+    # Xcode 26.6 rejects fmt 11.0.2's C++20 consteval format checks.
+    # Keep the workaround scoped to fmt so React Native can continue using C++20.
+    installer.pods_project.targets.each do |target|
+      next unless target.name == 'fmt'
+
+      target.build_configurations.each do |build_configuration|
+        build_configuration.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
+      end
+    end
   end
 end

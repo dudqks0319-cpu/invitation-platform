@@ -81,7 +81,7 @@ function LiveMapPanel({
         <Pressable
           accessibilityLabel="초대장에서 카카오 지도 열기"
           accessibilityRole="button"
-          onPress={hasMapTarget && links.kakaoUrl ? () => void openMapUrl(links.kakaoUrl) : undefined}
+          onPress={hasMapTarget && links.kakaoUrl ? () => void openMapUrl(links.kakaoUrl, links.kakaoFallbackUrl) : undefined}
           style={{
             flex: 1,
             minHeight: 40,

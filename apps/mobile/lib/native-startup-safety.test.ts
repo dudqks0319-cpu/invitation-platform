@@ -14,6 +14,8 @@ describe("native startup safety", () => {
     expect(useAuth).not.toContain('import * as WebBrowser from "expo-web-browser"');
     expect(useAuth).not.toContain("WebBrowser.maybeCompleteAuthSession");
     expect(useAuth).toContain('await import("expo-apple-authentication")');
+    expect(useAuth).toContain('await import("expo-crypto")');
+    expect(useAuth).toContain('"SHA-256"');
 
     expect(share).not.toContain('import * as WebBrowser from "expo-web-browser"');
     expect(share).toContain('await import("expo-web-browser")');
@@ -30,5 +32,13 @@ describe("native startup safety", () => {
     ) as Record<string, string>;
 
     expect(podfileProperties["ios.buildReactNativeFromSource"]).toBe("true");
+  });
+
+  it("limits the Xcode 26.6 fmt workaround to the fmt pod", () => {
+    const podfile = readFileSync(join(mobileRoot, "ios/Podfile"), "utf8");
+
+    expect(podfile).toContain("next unless target.name == 'fmt'");
+    expect(podfile).toContain("build_configuration.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'");
+    expect(podfile).not.toContain("installer.pods_project.build_configurations.each");
   });
 });

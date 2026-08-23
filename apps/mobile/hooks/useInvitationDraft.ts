@@ -150,6 +150,10 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
   const removePhoto = useCallback((slot: "main" | "background") => {
     persist((current) => withMeta({
       ...current,
+      sourcePayload: {
+        ...(current.sourcePayload ?? {}),
+        ...(slot === "main" ? { mainImagePath: "" } : { backgroundImagePath: "" })
+      },
       pendingPhotos: current.pendingPhotos.filter((photo) => photo.slot !== slot),
       payload: {
         ...current.payload,
@@ -194,6 +198,12 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
   const removeGalleryPhoto = useCallback((order: number) => {
     persist((current) => withMeta({
       ...current,
+      sourcePayload: {
+        ...(current.sourcePayload ?? {}),
+        galleryImagePaths: Array.isArray(current.sourcePayload?.galleryImagePaths)
+          ? current.sourcePayload.galleryImagePaths.filter((_item, index) => index !== order)
+          : []
+      },
       pendingPhotos: current.pendingPhotos
         .filter((photo) => !(photo.slot === "gallery" && photo.order === order))
         .map((photo) => {
@@ -221,12 +231,16 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
     }));
   }, [persist]);
 
-  const saveToCloud = useCallback(async (userId: string, status: "draft" | "published" = "draft") => {
+  const saveToCloud = useCallback(async (
+    userId: string,
+    status: "draft" | "published" = "draft",
+    accessToken = ""
+  ) => {
     if (!draft) {
       throw new Error("저장할 초안이 없습니다.");
     }
 
-    const result = await saveDraftToSupabase(draft, userId, status);
+    const result = await saveDraftToSupabase(draft, userId, status, { accessToken, userId });
     const nextDraft: MobileInvitationDraft = {
       ...draft,
       serverId: result.serverId,
@@ -242,15 +256,21 @@ export function useInvitationDraft(ownerId: string, localId?: string) {
     return nextDraft;
   }, [draft]);
 
-  const applyRemotePublish = useCallback((serverId: string, slug: string) => {
+  const applyRemotePublish = useCallback((
+    serverId: string,
+    slug: string,
+    remoteState?: Pick<MobileInvitationDraft, "payload" | "sourcePayload">
+  ) => {
     persist((current) => ({
       ...current,
       serverId,
+      pendingPhotos: remoteState ? [] : current.pendingPhotos,
+      sourcePayload: remoteState?.sourcePayload ?? current.sourcePayload,
       syncStatus: "synced",
       isDirty: false,
       localUpdatedAt: new Date().toISOString(),
       payload: {
-        ...current.payload,
+        ...(remoteState?.payload ?? current.payload),
         isPublished: true,
         share: {
           ...current.payload.share,

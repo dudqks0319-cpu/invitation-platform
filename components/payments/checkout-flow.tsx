@@ -29,30 +29,11 @@ export function CheckoutFlow({
   const [invitationId, setInvitationId] = useState(initialInvitationId ?? "");
   const [invitationTitle, setInvitationTitle] = useState("초대장 결제");
   const [publicSlug, setPublicSlug] = useState("");
-  const [buyerName, setBuyerName] = useState("");
-  const [buyerPhone, setBuyerPhone] = useState("");
-  const [buyerEmail, setBuyerEmail] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [termsChecked, setTermsChecked] = useState(false);
   const [pricing, setPricing] = useState(() => getInvitationPricing(normalizeDraft({})));
-
-  useEffect(() => {
-    if (!supabase) {
-      return;
-    }
-
-    void (async () => {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
-
-      if (user) {
-        setBuyerEmail((current) => current || user.email || "");
-      }
-    })();
-  }, [supabase]);
 
   useEffect(() => {
     if (!supabase) {
@@ -168,11 +149,6 @@ export function CheckoutFlow({
       return;
     }
 
-    if (!buyerName || !buyerPhone || !buyerEmail) {
-      setError("이름, 연락처, 이메일을 모두 입력해 주세요.");
-      return;
-    }
-
     if (!invitationId) {
       setError("결제할 초대장을 찾지 못했습니다.");
       return;
@@ -222,7 +198,7 @@ export function CheckoutFlow({
             초대장이 정상적으로 공개 링크로 발행되었습니다.
           </p>
           <div className="header-actions" style={{ marginTop: "20px" }}>
-            <Link className="btn-primary" href={publicSlug ? `/invitations/${publicSlug}` : authDestination.dashboard}>
+            <Link className="btn-primary" href={publicSlug ? `/i/${publicSlug}` : authDestination.dashboard}>
               공개 링크 확인
             </Link>
             <Link className="btn-outline" href={authDestination.dashboard}>
@@ -237,18 +213,9 @@ export function CheckoutFlow({
           </p>
           <div className="form-grid" style={{ marginTop: "24px" }}>
             <div className="data-form">
-              <label>
-                발행 전 이름
-                <input className="modal-input" value={buyerName} onChange={(event) => setBuyerName(event.target.value)} placeholder="예: 홍길동" />
-              </label>
-              <label>
-                연락처
-                <input className="modal-input" value={buyerPhone} onChange={(event) => setBuyerPhone(event.target.value)} placeholder="010-0000-0000" />
-              </label>
-              <label>
-                이메일
-                <input className="modal-input" value={buyerEmail} onChange={(event) => setBuyerEmail(event.target.value)} placeholder="name@example.com" />
-              </label>
+              <p className="ops-note">
+                결제 정보 입력 없이 무료 공개 링크를 만듭니다. 공개 후에는 대시보드에서 초대장과 응답을 관리할 수 있습니다.
+              </p>
               <label style={{ display: "flex", gap: "10px", alignItems: "center", marginTop: "12px" }}>
                 <input checked={termsChecked} onChange={(event) => setTermsChecked(event.target.checked)} type="checkbox" />
                 발행 정책에 동의합니다.
@@ -287,7 +254,7 @@ export function CheckoutFlow({
               </p>
               {publicSlug ? (
                 <p className="ops-note" style={{ marginTop: "16px" }}>
-                  예정 공개 링크: `/invitations/{publicSlug}`
+                  예정 공개 링크: /i/{publicSlug}
                 </p>
               ) : null}
             </div>

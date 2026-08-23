@@ -66,6 +66,28 @@ describe("public invitation page helpers", () => {
     expect(key).not.toContain("203.0.113.10");
   });
 
+  it("does not create a visitor log key in production-like environments without a fingerprint secret", () => {
+    const previousSecret = process.env.RATE_LIMIT_FINGERPRINT_SECRET;
+    const previousVercelEnv = process.env.VERCEL_ENV;
+    delete process.env.RATE_LIMIT_FINGERPRINT_SECRET;
+    process.env.VERCEL_ENV = "preview";
+
+    try {
+      const key = createVisitorKey("invitation-1", "test-agent", {
+        get(name: string) {
+          return name === "x-real-ip" ? "203.0.113.10" : null;
+        }
+      });
+
+      expect(key).toBeNull();
+    } finally {
+      if (previousSecret === undefined) delete process.env.RATE_LIMIT_FINGERPRINT_SECRET;
+      else process.env.RATE_LIMIT_FINGERPRINT_SECRET = previousSecret;
+      if (previousVercelEnv === undefined) delete process.env.VERCEL_ENV;
+      else process.env.VERCEL_ENV = previousVercelEnv;
+    }
+  });
+
   it("avoids duplicate view logs for the same invitation and visitor within the cooldown window", async () => {
     const insert = vi.fn(async () => ({ error: null }));
     const recentQuery = {

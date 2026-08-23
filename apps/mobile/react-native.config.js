@@ -9,13 +9,7 @@ const nativeSocialAuthEnabled = enabledValues.has(
 const disabledDependencies = {};
 
 if (!paidPublishingEnabled) {
-  disabledDependencies["react-native-iap"] = {
-    platforms: {
-      android: null,
-      ios: null
-    }
-  };
-  disabledDependencies["react-native-nitro-modules"] = {
+  disabledDependencies["react-native-purchases"] = {
     platforms: {
       android: null,
       ios: null

@@ -18,11 +18,11 @@ describe("mobile map API config", () => {
   it("normalizes public provider enabled flags without exposing keys", () => {
     expect(
       normalizeMapApiConfig({
-        kakao: { enabled: true, jsKey: "public-kakao-key" },
+        kakao: { enabled: true, addressPreviewEnabled: true, jsKey: "public-kakao-key" },
         naver: { enabled: false, clientId: "" }
       })
     ).toEqual({
-      kakao: { enabled: true },
+      kakao: { enabled: true, addressPreviewEnabled: true },
       naver: { enabled: false }
     });
   });
@@ -31,13 +31,13 @@ describe("mobile map API config", () => {
     const fetcher = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
-        kakao: { enabled: true, jsKey: "public-kakao-key" },
+        kakao: { enabled: true, addressPreviewEnabled: true, jsKey: "public-kakao-key" },
         naver: { enabled: true, clientId: "public-naver-client-id" }
       })
     });
 
     await expect(fetchMapApiConfig("https://invitehub.test/", fetcher)).resolves.toEqual({
-      kakao: { enabled: true },
+      kakao: { enabled: true, addressPreviewEnabled: true },
       naver: { enabled: true }
     });
     expect(fetcher).toHaveBeenCalledWith("https://invitehub.test/api/maps/config", {
@@ -55,16 +55,16 @@ describe("mobile map API config", () => {
 
     try {
       expect(getLocalMapApiConfig()).toEqual({
-        kakao: { enabled: true },
+        kakao: { enabled: true, addressPreviewEnabled: false },
         naver: { enabled: true }
       });
       expect(
         mergeMapApiConfig({
-          kakao: { enabled: false },
+          kakao: { enabled: false, addressPreviewEnabled: false },
           naver: { enabled: false }
         })
       ).toEqual({
-        kakao: { enabled: true },
+        kakao: { enabled: true, addressPreviewEnabled: false },
         naver: { enabled: true }
       });
     } finally {
@@ -75,11 +75,14 @@ describe("mobile map API config", () => {
 
   it("summarizes the provider connection state", () => {
     expect(getMapApiStatusLabel(null)).toBe("지도 API 상태 확인 중");
-    expect(getMapApiStatusLabel({ kakao: { enabled: true }, naver: { enabled: false } })).toBe(
-      "카카오 지도 API 연동됨 · 네이버 지도 API 키 필요"
+    expect(getMapApiStatusLabel({ kakao: { enabled: true, addressPreviewEnabled: false }, naver: { enabled: false } })).toBe(
+      "카카오 지도 API 연동됨 · 네이버 지도는 외부 링크로 열림"
     );
-    expect(getMapApiStatusLabel({ kakao: { enabled: true }, naver: { enabled: true } })).toBe(
+    expect(getMapApiStatusLabel({ kakao: { enabled: true, addressPreviewEnabled: false }, naver: { enabled: true } })).toBe(
       "카카오 · 네이버 지도 API 연동됨"
+    );
+    expect(getMapApiStatusLabel({ kakao: { enabled: true, addressPreviewEnabled: true }, naver: { enabled: false } })).toBe(
+      "카카오 도로명주소 지도 연동됨 · 네이버 지도는 외부 링크로 열림"
     );
   });
 });

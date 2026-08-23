@@ -10,6 +10,7 @@ export function ErrorView({
 }) {
   return (
     <View
+      accessibilityLiveRegion="assertive"
       style={{
         borderRadius: theme.radius.lg,
         borderWidth: 1,

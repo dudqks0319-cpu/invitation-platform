@@ -1,5 +1,6 @@
 import { PropsWithChildren } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, Text, View } from "react-native";
+import { type Href, usePathname, useRouter } from "expo-router";
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { OfflineBanner } from "./OfflineBanner";
 import { theme } from "./theme";
@@ -8,9 +9,31 @@ type ScreenProps = PropsWithChildren<{
   title: string;
   subtitle?: string;
   footer?: string;
+  showBackButton?: boolean;
+  backFallbackHref?: Href;
 }>;
 
-export function Screen({ children, footer, subtitle, title }: ScreenProps) {
+export function Screen({
+  backFallbackHref = "/",
+  children,
+  footer,
+  showBackButton = true,
+  subtitle,
+  title
+}: ScreenProps) {
+  const pathname = usePathname();
+  const router = useRouter();
+  const shouldShowBackButton = showBackButton && pathname !== "/";
+
+  function handleBack() {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace(backFallbackHref);
+  }
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <KeyboardAvoidingView
@@ -53,13 +76,47 @@ export function Screen({ children, footer, subtitle, title }: ScreenProps) {
           }}
         >
           <OfflineBanner />
-          <View style={{ gap: theme.spacing.xs }}>
-            <Text
-              accessibilityRole="header"
-              style={{ color: theme.colors.text, fontSize: 32, fontWeight: "700", lineHeight: 40 }}
+          <View style={{ gap: theme.spacing.sm }}>
+            <View
+              style={{
+                minHeight: 44,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 12
+              }}
             >
-              {title}
-            </Text>
+              {shouldShowBackButton ? (
+                <Pressable
+                  accessibilityLabel="이전 화면으로 돌아가기"
+                  accessibilityRole="button"
+                  onPress={handleBack}
+                  style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 22,
+                    backgroundColor: "rgba(255,255,255,0.92)",
+                    borderWidth: 1,
+                    borderColor: theme.colors.border,
+                    alignItems: "center",
+                    justifyContent: "center"
+                  }}
+                >
+                  <Text style={{ color: theme.colors.text, fontSize: 22, fontWeight: "800", lineHeight: 26 }}>‹</Text>
+                </Pressable>
+              ) : null}
+              <Text
+                accessibilityRole="header"
+                style={{
+                  color: theme.colors.text,
+                  flex: 1,
+                  fontSize: 32,
+                  fontWeight: "700",
+                  lineHeight: 40
+                }}
+              >
+                {title}
+              </Text>
+            </View>
             {subtitle ? (
               <Text style={{ color: theme.colors.muted, fontSize: 15, lineHeight: 24 }}>
                 {subtitle}

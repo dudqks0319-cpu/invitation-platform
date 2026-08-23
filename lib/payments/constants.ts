@@ -1,6 +1,6 @@
 export const INVITATION_PRICE_KRW = 0;
 export const INVITATION_CURRENCY = "KRW";
-export const INVITATION_ITEM_NAME = "InviteHub 발행 옵션";
+export const INVITATION_ITEM_NAME = "오삼오삼 발행 옵션";
 export const MAIN_PHOTO_ADDON_KRW = 500;
 export const BACKGROUND_PHOTO_ADDON_KRW = 500;
 export const GALLERY_BLOCK_SIZE = 10;

@@ -5,6 +5,7 @@ import { supabase } from "./supabase";
 import type { MobileInvitationDraft } from "./drafts";
 import { getPublicInvitationUrl } from "./share";
 import { getInviteHubBaseUrl } from "./web-links";
+import { fetchWithTimeout } from "./network";
 
 type RemoteInvitationRow = {
   id: string;
@@ -19,6 +20,23 @@ type RemoteInvitationRow = {
 
 const STORAGE_BUCKET = "invitation-assets";
 const SIGNED_URL_TTL_SECONDS = 60 * 60 * 24 * 7;
+const PUBLIC_SLUG_PATTERN = /^[a-z0-9][a-z0-9-]{2,30}[a-z0-9]$/i;
+const GUEST_OWNER_TOKEN_PATTERN = /^[A-Za-z0-9_-]{32,160}$/;
+const SHORT_SLUG_ALPHABET = "abcdefghijklmnopqrstuvwxyz0123456789";
+const SHORT_SLUG_TOKEN_LENGTH = 10;
+const MAX_FREE_GALLERY_PHOTOS = 8;
+const MAX_GUEST_PHOTO_BYTES = 2 * 1024 * 1024;
+
+type GuestPublishAuth = {
+  accessToken?: string;
+  userId?: string;
+};
+
+type InvitationAssetPaths = {
+  mainImagePath: string;
+  backgroundImagePath: string;
+  galleryImagePaths: string[];
+};
 
 export type PublishReadiness = {
   canPublish: boolean;
@@ -29,18 +47,29 @@ export function requiresPaymentBeforePublish(payload: InvitationPayload) {
   return !getMobileInvitationPricing(payload).isFree;
 }
 
-function slugify(input: string) {
-  return input
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9가-힣\s-]/g, "")
-    .replace(/\s+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+function createShortInvitationSlug() {
+  const bytes = new Uint8Array(SHORT_SLUG_TOKEN_LENGTH);
+
+  if (globalThis.crypto?.getRandomValues) {
+    globalThis.crypto.getRandomValues(bytes);
+  } else {
+    for (let index = 0; index < bytes.length; index += 1) {
+      bytes[index] = Math.floor(Math.random() * 256);
+    }
+  }
+
+  const token = Array.from(bytes, (byte) => SHORT_SLUG_ALPHABET[byte % SHORT_SLUG_ALPHABET.length]).join("");
+  return `iv-${token}`;
 }
 
 function ensureSlug(payload: InvitationPayload) {
-  return payload.share.slug || `${slugify(payload.title || "invitehub")}-${Math.random().toString(36).slice(2, 8)}`;
+  const existingSlug = payload.share.slug.trim().toLowerCase();
+
+  if (PUBLIC_SLUG_PATTERN.test(existingSlug)) {
+    return existingSlug;
+  }
+
+  return createShortInvitationSlug();
 }
 
 export function getPublishReadiness(payload: InvitationPayload): PublishReadiness {
@@ -59,7 +88,10 @@ export function getPublishReadiness(payload: InvitationPayload): PublishReadines
   };
 }
 
-export function toLegacyInvitationPayload(payload: InvitationPayload) {
+export function toLegacyInvitationPayload(
+  payload: InvitationPayload,
+  assetPaths?: Partial<InvitationAssetPaths>
+) {
   return {
     schemaVersion: payload.schemaVersion,
     templateId: payload.templateId,
@@ -90,29 +122,138 @@ export function toLegacyInvitationPayload(payload: InvitationPayload) {
     kakaoMapLink: payload.location.kakaoMapUrl || "",
     transportNote: payload.location.transportNote || "",
     mainImageUrl: payload.photos.mainUri || "",
-    backgroundImageUrl: payload.photos.backgroundUri || ""
-    ,
+    mainImagePath: assetPaths?.mainImagePath || "",
+    backgroundImageUrl: payload.photos.backgroundUri || "",
+    backgroundImagePath: assetPaths?.backgroundImagePath || "",
     galleryImages: payload.photos.gallery
       .map((item) => item.uri)
-      .filter(Boolean)
+      .filter(Boolean),
+    galleryImagePaths: assetPaths?.galleryImagePaths ?? []
   };
 }
 
-export async function publishGuestInvitation(draft: MobileInvitationDraft) {
+function readAssetPaths(draft: MobileInvitationDraft): InvitationAssetPaths {
+  return {
+    mainImagePath: typeof draft.sourcePayload?.mainImagePath === "string" ? draft.sourcePayload.mainImagePath : "",
+    backgroundImagePath:
+      typeof draft.sourcePayload?.backgroundImagePath === "string" ? draft.sourcePayload.backgroundImagePath : "",
+    galleryImagePaths: Array.isArray(draft.sourcePayload?.galleryImagePaths)
+      ? draft.sourcePayload.galleryImagePaths
+          .filter((item): item is string => typeof item === "string" && item.length > 0)
+          .slice(0, MAX_FREE_GALLERY_PHOTOS)
+      : []
+  };
+}
+
+function getGuestAssetUrl(slug: string, path: string) {
+  const url = new URL("/api/public/assets", `${getInviteHubBaseUrl()}/`);
+  url.searchParams.set("slug", slug);
+  url.searchParams.set("path", path);
+  return url.toString();
+}
+
+async function uploadGuestPhoto(
+  photo: PendingPhotoUpload,
+  draft: MobileInvitationDraft,
+  auth: Required<GuestPublishAuth>
+) {
+  const localFile = await fetchWithTimeout(photo.localUri, {}, { timeoutMs: 10_000 });
+  if (!localFile.ok) {
+    throw new Error(`선택한 ${photo.slot} 사진을 읽지 못했습니다.`);
+  }
+  const bytes = await localFile.arrayBuffer();
+  if (bytes.byteLength > MAX_GUEST_PHOTO_BYTES) {
+    throw new Error("사진을 2MB 이하로 줄인 뒤 다시 선택해 주세요.");
+  }
+
+  const formData = new FormData();
+  formData.append("file", new Blob([bytes], { type: "image/jpeg" }), "prepared.jpg");
+  const idempotencyKey = [
+    "guest-upload",
+    draft.localId,
+    photo.slot,
+    photo.order ?? "single",
+    draft.localUpdatedAt
+  ].join(":");
+  const response = await fetchWithTimeout(`${getInviteHubBaseUrl()}/api/public/guest-upload`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${auth.accessToken}`,
+      "Idempotency-Key": idempotencyKey
+    },
+    body: formData
+  });
+  const result = (await response.json().catch(() => ({}))) as {
+    success?: boolean;
+    message?: string;
+    path?: string;
+  };
+
+  if (!response.ok || !result.success || !result.path) {
+    throw new Error(result.message || "사진 업로드에 실패했습니다.");
+  }
+  if (!result.path.startsWith(`${auth.userId}/guest/`)) {
+    throw new Error("업로드한 사진의 소유권을 확인하지 못했습니다.");
+  }
+
+  return result.path;
+}
+
+async function prepareGuestAssetPaths(
+  draft: MobileInvitationDraft,
+  auth: GuestPublishAuth
+) {
+  if (draft.payload.photos.gallery.length > MAX_FREE_GALLERY_PHOTOS) {
+    throw new Error(`갤러리 사진은 최대 ${MAX_FREE_GALLERY_PHOTOS}장까지 발행할 수 있습니다.`);
+  }
+
+  const paths = readAssetPaths(draft);
+  if (draft.pendingPhotos.length === 0) return paths;
+  if (!auth.accessToken || !auth.userId) {
+    throw new Error("사진 발행을 위한 게스트 세션이 필요합니다.");
+  }
+
+  const requiredAuth = { accessToken: auth.accessToken, userId: auth.userId };
+  for (const photo of draft.pendingPhotos) {
+    const uploadedPath = await uploadGuestPhoto(photo, draft, requiredAuth);
+    if (photo.slot === "main") {
+      paths.mainImagePath = uploadedPath;
+    } else if (photo.slot === "background") {
+      paths.backgroundImagePath = uploadedPath;
+    } else if (typeof photo.order === "number" && photo.order < MAX_FREE_GALLERY_PHOTOS) {
+      paths.galleryImagePaths[photo.order] = uploadedPath;
+    }
+  }
+
+  return paths;
+}
+
+export async function publishGuestInvitation(draft: MobileInvitationDraft, auth: GuestPublishAuth = {}) {
   const slug = ensureSlug(draft.payload);
-  const payload = toLegacyInvitationPayload({
+  const assetPaths = await prepareGuestAssetPaths(draft, auth);
+  const hasStoredAssets = Boolean(
+    assetPaths.mainImagePath || assetPaths.backgroundImagePath || assetPaths.galleryImagePaths.some(Boolean)
+  );
+  if (hasStoredAssets && (!auth.accessToken || !auth.userId)) {
+    throw new Error("사진 발행을 위한 게스트 세션을 확인하지 못했습니다.");
+  }
+
+  const publishedPayload: InvitationPayload = {
     ...draft.payload,
     share: {
       ...draft.payload.share,
       slug
     },
     isPublished: true
-  });
+  };
+  const payload = toLegacyInvitationPayload(publishedPayload, assetPaths);
 
-  const response = await fetch(`${getInviteHubBaseUrl()}/api/public/guest-publish`, {
+  const response = await fetchWithTimeout(`${getInviteHubBaseUrl()}/api/public/guest-publish`, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      "Idempotency-Key": `guest-publish:${draft.localId}:${draft.localUpdatedAt}`,
+      ...(auth.accessToken ? { Authorization: `Bearer ${auth.accessToken}` } : {})
     },
     body: JSON.stringify({
       payload,
@@ -125,56 +266,101 @@ export async function publishGuestInvitation(draft: MobileInvitationDraft) {
     message?: string;
     invitationId?: string;
     slug?: string;
+    ownerToken?: string;
   };
 
-  if (!response.ok || !result.success || !result.invitationId || !result.slug) {
+  if (
+    !response.ok ||
+    !result.success ||
+    !result.invitationId ||
+    !result.slug ||
+    !GUEST_OWNER_TOKEN_PATTERN.test(result.ownerToken ?? "")
+  ) {
     throw new Error(result.message || "무료 게스트 발행에 실패했습니다.");
   }
+  const publishedSlug = result.slug;
 
   return {
     invitationId: result.invitationId,
-    slug: result.slug
+    slug: publishedSlug,
+    payload: {
+      ...publishedPayload,
+      photos: {
+        mainUri: assetPaths.mainImagePath
+          ? getGuestAssetUrl(publishedSlug, assetPaths.mainImagePath)
+          : publishedPayload.photos.mainUri,
+        backgroundUri: assetPaths.backgroundImagePath
+          ? getGuestAssetUrl(publishedSlug, assetPaths.backgroundImagePath)
+          : publishedPayload.photos.backgroundUri,
+        gallery: publishedPayload.photos.gallery.map((item) => {
+          const galleryPath = assetPaths.galleryImagePaths[item.order];
+          return {
+            ...item,
+            uri: galleryPath ? getGuestAssetUrl(publishedSlug, galleryPath) : item.uri
+          };
+        })
+      },
+      share: {
+        ...publishedPayload.share,
+        slug: publishedSlug
+      }
+    },
+    sourcePayload: {
+      ...(draft.sourcePayload ?? {}),
+      mainImagePath: assetPaths.mainImagePath,
+      backgroundImagePath: assetPaths.backgroundImagePath,
+      galleryImagePaths: assetPaths.galleryImagePaths.filter(Boolean),
+      guestOwnerToken: result.ownerToken
+    }
   };
+}
+
+export async function deleteGuestInvitation(slug: string, ownerToken: string) {
+  if (!PUBLIC_SLUG_PATTERN.test(slug) || !GUEST_OWNER_TOKEN_PATTERN.test(ownerToken)) {
+    throw new Error("게스트 초대장 삭제 권한을 확인하지 못했습니다.");
+  }
+
+  const response = await fetchWithTimeout(
+    `${getInviteHubBaseUrl()}/api/public/${encodeURIComponent(slug)}/owner`,
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ ownerToken, website: "" })
+    }
+  );
+  const result = (await response.json().catch(() => ({}))) as {
+    success?: boolean;
+    message?: string;
+  };
+
+  if (!response.ok || !result.success) {
+    throw new Error(result.message || "게스트 초대장을 삭제하지 못했습니다.");
+  }
 }
 
 async function uploadPendingPhoto(
   photo: PendingPhotoUpload,
-  userId: string,
-  localId: string
+  draft: MobileInvitationDraft,
+  auth: Required<GuestPublishAuth>
 ) {
   if (!supabase) {
     throw new Error("Supabase 환경 변수가 없어 사진 업로드를 할 수 없습니다.");
   }
 
-  const response = await fetch(photo.localUri);
-  if (!response.ok) {
-    throw new Error(`선택한 ${photo.slot} 사진을 읽지 못했습니다.`);
-  }
-  const arrayBuffer = await response.arrayBuffer();
-  const extension = photo.localUri.toLowerCase().includes(".png") ? "png" : "jpg";
-  const path = `${userId}/${localId}/${photo.slot}-${photo.order ?? "single"}-${Date.now()}.${extension}`;
-
-  const { data, error } = await supabase.storage
-    .from(STORAGE_BUCKET)
-    .upload(path, arrayBuffer, {
-      contentType: extension === "png" ? "image/png" : "image/jpeg",
-      upsert: false
-    });
-
-  if (error || !data) {
-    throw new Error(error?.message || `${photo.slot} 사진 업로드에 실패했습니다.`);
-  }
+  const path = await uploadGuestPhoto(photo, draft, auth);
 
   const { data: signedUrlData, error: signedUrlError } = await supabase.storage
     .from(STORAGE_BUCKET)
-    .createSignedUrl(data.path, 60 * 60 * 24 * 7);
+    .createSignedUrl(path, SIGNED_URL_TTL_SECONDS);
 
   if (signedUrlError || !signedUrlData?.signedUrl) {
     throw new Error("업로드한 사진의 미리보기 URL을 생성하지 못했습니다.");
   }
 
   return {
-    path: data.path,
+    path,
     signedUrl: signedUrlData.signedUrl
   };
 }
@@ -182,7 +368,8 @@ async function uploadPendingPhoto(
 export async function saveDraftToSupabase(
   draft: MobileInvitationDraft,
   userId: string,
-  status: "draft" | "published" = "draft"
+  status: "draft" | "published" = "draft",
+  auth: GuestPublishAuth = {}
 ) {
   if (!supabase) {
     throw new Error("Supabase 환경 변수가 없어 서버 저장을 할 수 없습니다.");
@@ -198,8 +385,13 @@ export async function saveDraftToSupabase(
     : [];
 
   if (draft.pendingPhotos.length > 0) {
+    if (!auth.accessToken || auth.userId !== userId) {
+      throw new Error("사진 저장을 위한 로그인 세션을 확인하지 못했습니다.");
+    }
+
+    const requiredAuth = { accessToken: auth.accessToken, userId };
     for (const photo of draft.pendingPhotos) {
-      const uploaded = await uploadPendingPhoto(photo, userId, draft.localId);
+      const uploaded = await uploadPendingPhoto(photo, draft, requiredAuth);
 
       if (photo.slot === "main") {
         mainImagePath = uploaded.path;
