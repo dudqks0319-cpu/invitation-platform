@@ -1,6 +1,6 @@
 # 오삼오삼 iOS 현재 릴리스 상태
 
-Last updated: 2026-08-04 KST
+Last updated: 2026-08-09 KST
 
 이 문서는 iOS App Store 릴리스의 단일 현재 상태 원장이다. 로컬 코드,
 EAS 빌드, App Store Connect 처리, TestFlight, 실기기 검증, 앱 심사를
@@ -15,7 +15,8 @@ EAS 빌드, App Store Connect 처리, TestFlight, 실기기 검증, 앱 심사�
 | Public App Store version | `1.0.2`; bundle `com.invitehub.app`; App Store id `6763630299` |
 | Local source identity | Xcode Release `com.invitehub.app` `1.0.3 (69)`; Xcode Debug remains `com.invitehub.app.dev` `1.0.3 (52)` |
 | Main visual | 완성된 웨딩 초대장 선택 화면, 최신 애니메이션 웨딩 템플릿, 화면 비율에 맞춘 템플릿 미리보기 |
-| Local checks | Clean PASS: 120/120 test files and 647/647 tests; focused release contract 5/5 files and 35/35 tests; packet 335 checks; root/mobile lint and typecheck plus web production build passed |
+| Local checks | Current working tree PASS: 122/122 test files and 654/654 tests; root lint and typecheck passed; CocoaPods deployment install passed twice and the fmt hook was idempotent; Apple clang 21 iOS Simulator syntax probe passed |
+| Uncommitted local follow-up | System-font fallback, category-tab accessibility/contrast, and a fail-closed Xcode 26.4+ compatibility hook for pinned fmt 11.0.2 are locally verified but are not yet a clean source/evidence candidate |
 | Dependency audit | 2026-07-29 online root audit: 15 advisories (11 moderate, 4 high, 0 critical). Mobile: 12 (11 moderate, 1 high, 0 critical). Mobile high is indirect `brace-expansion` in Expo/React Native build tooling |
 | EAS iOS build id | `47878231-5f1e-4a7f-b871-07adc9dfaa9e` |
 | EAS iOS build number | `68` |
@@ -52,10 +53,18 @@ Build 69 upload count remains zero. App Review remains gated until production
 Build 69 is generated and uploaded under separate approval, Build 68 is
 replaced, and exact TestFlight Build 69 smoke checks pass.
 
+The 2026-08-09 follow-up working tree is not promoted as that Store candidate.
+Its web and CocoaPods checks pass locally, while `xcodebuild` itself currently
+stalls in the Xcode build service's compiler-macro discovery step before source
+compilation. The same Apple clang 21 probe succeeds when invoked directly, and
+the patched fmt header compiles against the iOS 26.5 Simulator SDK. This is
+useful compatibility evidence, but not a successful full app build.
+
 ## Remaining release gates
 
-1. Wait for a separate device handoff and approval before any development
-   profile refresh, build, install, launch, or XCTest action.
+1. Create a clean source commit and direct evidence commit for the verified
+   2026-08-09 follow-up, then rebind candidate identity without reusing the
+   older development-device result as same-SHA evidence.
 2. Under separate approval, generate the production EAS Store Build 69 and bind
    its IPA identity, SHA-256, and profile to the clean source SHA.
 3. Upload and process Build 69 in App Store Connect under separate approval.
@@ -64,6 +73,31 @@ replaced, and exact TestFlight Build 69 smoke checks pass.
    login, the home-to-process UI match, template ordering, invitation preview,
    free link/share entry point, relaunch, and basic recovery.
 6. Only then add version 1.0.3 to App Review; keep release mode manual.
+
+## 2026-08-09 local Xcode compatibility follow-up
+
+This checkpoint is local-only. It did not build or upload an EAS artifact,
+write App Store Connect/TestFlight/Production state, install an app, or reuse
+the earlier development Build 69 launch as proof for the changed source.
+
+- `pod install --deployment --no-repo-update` passed twice with 101 declared
+  dependencies and 103 installed pods. The first run reported
+  `InviteHub fmt compatibility: patched`; the second reported
+  `already_patched`.
+- The hook applies only to pinned fmt `11.0.2` on Xcode `26.4+`, changes one
+  exact Apple-clang guard, is idempotent, and fails closed if the expected
+  header shape drifts. Its five regression tests passed.
+- `Podfile.lock` and `Pods/Manifest.lock` match, and the lockfile's Podfile
+  checksum matches the current Podfile.
+- `npm test` passed 122/122 files and 654/654 tests; `npm run lint` and
+  `npm run typecheck` passed. No dependency audit was run in this approved
+  cache/install lane.
+- Patched fmt compiled successfully with Apple clang `21.0.0` against the iOS
+  `26.5` Simulator SDK using a direct C++20 syntax probe.
+- Full app and isolated fmt-target `xcodebuild` attempts both stalled before
+  source compilation in `ExecuteExternalTool clang -v -E -dM`. Directly
+  running the same clang macro probe completed successfully. This leaves a
+  local Xcode build-service blocker to resolve before a new candidate claim.
 
 ## Stop conditions
 
@@ -673,3 +707,53 @@ one inseparable set; do not promote the current dirty tree:
 
 Next proposed single Slice 5: **export generation and download lifecycle**, if
 required for account deletion. Keep it separate from signed image delivery.
+
+## 2026-08-05 development Build 69 physical-device evidence
+
+Scope: non-destructive development-bundle build/install/launch evidence only.
+This does not promote or replace the Store candidate, TestFlight build, App
+Review build, or Production runtime.
+
+### Bound identity and build result
+
+| Evidence | Verified value |
+| --- | --- |
+| Candidate source Git SHA | `856e7227d92a2ac7ddf5bc6a49726721d17685dd` |
+| Device | cabled iPhone 12 Pro; UDID `00008101-000525241EE3003A`; iOS `26.5.2` |
+| Development identity | `com.invitehub.app.dev` `1.0.3 (69)` |
+| Production identity before and after | `com.invitehub.app` `1.0.3 (68)`; unchanged |
+| Xcode result | succeeded; error count `0`; warning count `651` |
+| Built Info.plist SHA-256 | `de1010d8e23747ecaa5611749d1c7919f1b5092ae68ef6ee1f4b9e35f38e0358` |
+| Built executable SHA-256 | `bda0d3b525507e9c4195a63225f9033fd3dfb9db95373ac41f3a3218113558c` |
+| Signature | `codesign --verify --deep --strict` passed; Apple Development team `3FG9QJC8WC`; CDHash `9792d7a50e802365136d5848a9987708e0a5e06a` |
+| Provisioning | profile `iOS Team Provisioning Profile: com.invitehub.app.dev`; exact device UDID present; expires `2027-06-28 01:34:34 UTC` |
+| Install | `devicectl device install app` reported installed bundle `com.invitehub.app.dev` without uninstalling either bundle |
+| Launch | `devicectl device process launch --terminate-existing com.invitehub.app.dev` succeeded; installed-path process remained alive as PID `4337` at the recorded post-launch check |
+| 2026-08-05 recheck | `devicectl device info apps` still reports Production Build `68` and development Build `69` side by side |
+
+The native build encountered two toolchain/dependency incidents. The local
+Xcode 26.6 build service stalled while probing compiler macros; a temporary
+compiler-probe filter was used only for this build and was not persisted. The
+vendored `fmt 11.0.2` header also required a temporary generated-Pods
+`FMT_USE_CONSTEVAL` workaround. That header was restored byte-for-byte from the
+CocoaPods cache after the successful build (SHA-256
+`895fd797b2c203e3661cdbeb7ee4f60a637c927be1b4a4728b9aa6400e238d90`).
+Temporary Xcode project, scheme, Info.plist, and generated-Pods edits were
+removed after device verification. The only retained checkout change from the
+native dependency operation is the Hermes checksum correction in
+`apps/mobile/ios/Podfile.lock`; it matches `Pods/Manifest.lock`. The root
+`package-lock.json` remained unchanged.
+
+### Remaining decisions and release gates
+
+| Priority | Decision or evidence still required | Owner | Due |
+| --- | --- | --- | --- |
+| P0 | Choose a permanent clean-build response for the `fmt`/Apple Clang issue: pinned compatible dependency or a narrowly tested Podfile hook. The one-off generated-Pods edit is not a durable fix. | iOS dependency owner | before the next clean candidate build |
+| P0 | Run real-device functional QA for login/session recovery, home-to-process parity, template ordering, invitation preview, free link/share, relaunch, offline/slow/failure recovery, and data preservation. Process survival alone is only launch smoke. | device QA owner | before Store Build 69 selection |
+| P0 | Produce, hash-bind, upload, process, and TestFlight-install the exact Production `com.invitehub.app` Build 69 only after separate approval. Development Build 69 is not Store provenance. | release owner | before App Review |
+| P0 | Observe the Supabase/Vercel quota, idempotency, RLS, WAF, storage-budget, provider-kill-switch, and negative paths in the target staging environment. Local tests are not deployed protection. | backend/security and operations owners | before Production enablement |
+| P1 | Triage the 651 dependency/toolchain warnings and record which are app-owned, upgrade-owned, or accepted with rationale. Zero build errors does not waive warning review. | iOS maintainer | before App Store submission |
+| P1 | Reproduce or retire the temporary Xcode compiler-probe filter on a clean Xcode invocation; do not persist it as a production build dependency without a bounded test. | build/toolchain owner | before the next archive |
+
+Current phase verdict: **internal test ready for the development bundle only**.
+Store submission readiness remains **HOLD**.

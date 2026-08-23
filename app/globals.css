@@ -3,6 +3,9 @@
 
 :root {
   color-scheme: light;
+  --font-body: "Noto Sans KR", Pretendard, "Apple SD Gothic Neo", sans-serif;
+  --font-serif: "Noto Serif KR", AppleMyungjo, "Nanum Myeongjo", serif;
+  --font-display: "Playfair Display", Georgia, "Times New Roman", serif;
 }
 
 html,

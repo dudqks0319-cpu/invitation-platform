@@ -639,7 +639,7 @@ ul { list-style: none; }
 .home-page .templates-section {
   background: #fbfbfd;
 }
-.home-page .cat-tab,
+.home-page .cat-tab:not(:hover):not(.active),
 .home-page .templates-heading-link {
   border-color: rgba(43, 36, 29, 0.1);
   background: #fff;

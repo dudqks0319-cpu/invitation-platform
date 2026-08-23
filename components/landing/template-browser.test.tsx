@@ -32,11 +32,13 @@ describe("TemplateBrowser", () => {
       button.textContent?.includes("돌잔치")
     );
     expect(dolTab).not.toBeUndefined();
+    expect(dolTab?.getAttribute("aria-pressed")).toBe("false");
 
     await act(async () => {
       dolTab?.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     });
 
+    expect(dolTab?.getAttribute("aria-pressed")).toBe("true");
     const firstCard = container.querySelector(".template-card");
     expect(firstCard?.getAttribute("aria-label")).toBe("달토끼 첫별 템플릿 선택");
 

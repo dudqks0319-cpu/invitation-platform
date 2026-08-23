@@ -43,6 +43,7 @@ export function TemplateBrowser() {
           <div className="cat-tabs">
             {templateCategories.map((category) => (
               <button
+                aria-pressed={category.key === activeCategory}
                 className={`cat-tab ${category.key === activeCategory ? "active" : ""}`}
                 key={category.key}
                 onClick={() => setActiveCategory(category.key)}
