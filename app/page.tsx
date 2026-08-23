@@ -60,9 +60,9 @@ const featuredTemplates = featuredTemplateIds
   .map((id) => templates.find((template) => template.id === id))
   .filter((template): template is NonNullable<typeof template> => Boolean(template));
 const heroTemplateIds = [
-  "wedding-barunson-anime-20",
-  "wedding-barunson-anime-21",
-  "wedding-barunson-anime-23"
+  "wedding-barunson-anime-04",
+  "wedding-barunson-anime-09",
+  "wedding-barunson-anime-10"
 ];
 const heroTemplates = heroTemplateIds
   .map((id) => templates.find((template) => template.id === id))
@@ -175,7 +175,7 @@ export default async function HomePage({ searchParams }: HomePageProps) {
             </ul>
           </div>
 
-          <div aria-label="오삼오삼 애니 일러스트 추천 디자인" className="os-release-hero-art">
+          <div aria-label="오삼오삼 웨딩 추천 디자인" className="os-release-hero-art">
             <div className="os-release-hero-art-label">
               <Sparkles aria-hidden="true" size={16} />
               오삼오삼 셀렉션

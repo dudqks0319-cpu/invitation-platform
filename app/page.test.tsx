@@ -33,6 +33,7 @@ describe("HomePage", () => {
       'aria-labelledby="final-cta-title"'
     ];
     const positions = sectionMarkers.map((marker) => html.indexOf(marker));
+    const heroHtml = html.slice(html.indexOf('id="hero"'), html.indexOf('id="quick-events"'));
 
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((first, second) => first - second));
@@ -40,6 +41,12 @@ describe("HomePage", () => {
     expect(text).toContain("소중한 날의 첫인사,");
     expect(html).toContain('href="#featured-templates">디자인 먼저 보기');
     expect(html).toContain('href="/image-text">내 이미지로 만들기');
+    expect(heroHtml).toContain("플로럴 세레모니 04");
+    expect(heroHtml).toContain("웨딩 포토 콘셉트 01");
+    expect(heroHtml).toContain("웨딩 포토 콘셉트 02");
+    expect(heroHtml).not.toContain("한복의 품격");
+    expect(heroHtml).not.toContain("다정한 첫걸음");
+    expect(heroHtml).not.toContain("노란 꽃길");
     ["플로럴 세레모니 04", "플로럴 세레모니 05", "플로럴 세레모니 06", "플로럴 세레모니 07", "플로럴 세레모니 08"].forEach((name) => {
       expect(text).toContain(name);
     });
