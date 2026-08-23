@@ -1,6 +1,7 @@
 import { getTemplateDefaultTextPlacement, type TemplatePreset } from "./templates";
+import { templateCatalogContract } from "../apps/mobile/lib/template-catalog-contract";
 
-export const MOBILE_TEMPLATE_CATALOG_SCHEMA_VERSION = 1 as const;
+export const MOBILE_TEMPLATE_CATALOG_SCHEMA_VERSION = templateCatalogContract.remoteCatalog.schemaVersion;
 export const MOBILE_TEMPLATE_CATALOG_MAX_ITEMS = 250;
 export const MOBILE_TEMPLATE_CATALOG_MAX_BYTES = 192 * 1024;
 export const MOBILE_TEMPLATE_CATALOG_ORIGIN = "https://invitation-platform-plum.vercel.app";

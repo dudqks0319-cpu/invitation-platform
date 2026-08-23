@@ -15,19 +15,28 @@ export type UiuxPreviewStepId = (typeof uiuxPreviewSteps)[number]["id"];
 
 export const uiuxEventOptions = [
   {
+    key: "wedding",
+    label: "청첩장",
+    description: "두 사람의 사진과 예식 정보를 담는 디자인",
+    preferredTemplateId: "wedding-barunson-anime-09"
+  },
+  {
     key: "dol",
     label: "돌잔치",
-    description: "아이 사진과 첫돌 문구에 맞는 디자인"
+    description: "아이 사진과 첫돌 문구에 맞는 디자인",
+    preferredTemplateId: "dol-cute"
   },
   {
     key: "hwangap",
     label: "환갑·칠순",
-    description: "가족 호칭과 큰 글자가 편안한 디자인"
+    description: "가족 호칭과 큰 글자가 편안한 디자인",
+    preferredTemplateId: "hwangap-anime-2026"
   },
   {
     key: "housewarming",
     label: "집들이",
-    description: "주소와 일정이 또렷한 따뜻한 디자인"
+    description: "주소와 일정이 또렷한 따뜻한 디자인",
+    preferredTemplateId: "house-warm"
   }
 ] as const;
 

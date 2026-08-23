@@ -1,6 +1,10 @@
+import {
+  templateCatalogContract,
+  type TemplateCatalogSource
+} from "./template-catalog-contract";
 import type { MobileTemplateGalleryItem } from "./template-gallery";
 
-export type TemplateCatalogSource = "loading" | "remote" | "cache" | "bundled-fallback";
+export type { TemplateCatalogSource } from "./template-catalog-contract";
 
 export type TemplateCatalogState = {
   templates: MobileTemplateGalleryItem[];
@@ -17,8 +21,8 @@ export type TemplateCatalogAction =
   | { type: "remote-failed" }
   | { type: "manual-retry" };
 
-export const TEMPLATE_CATALOG_MAX_MANUAL_RETRIES = 2;
-export const TEMPLATE_CATALOG_SAFE_ERROR = "새 디자인을 불러오지 못했어요.";
+export const TEMPLATE_CATALOG_MAX_MANUAL_RETRIES = templateCatalogContract.recovery.maxManualRetries;
+export const TEMPLATE_CATALOG_SAFE_ERROR = templateCatalogContract.recovery.safeError;
 
 export function createInitialTemplateCatalogState(
   bundledTemplates: MobileTemplateGalleryItem[]

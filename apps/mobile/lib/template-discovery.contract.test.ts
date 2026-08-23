@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { buildPublicMobileTemplateCatalog } from "../../../lib/mobile-template-catalog";
 import { templates as canonicalTemplates } from "../../../lib/templates";
-import { templateCatalogContract } from "./template-catalog.contract.fixture";
+import { templateCatalogContract } from "./template-catalog-contract";
 import { filterTemplateDiscoveryItems } from "./template-discovery";
 import { mobileTemplateCategories, mobileTemplateGallery, type MobileTemplateGalleryItem } from "./template-gallery";
 
@@ -47,16 +47,16 @@ describe("template discovery catalog contracts", () => {
       { query: "", category: "all", moods: [] },
       mobileTemplateCategories
     );
-    expect(results).toHaveLength(templateCatalogContract.bundledTemplateCount);
-    expect(new Set(results.map((item) => item.id)).size).toBe(templateCatalogContract.bundledTemplateCount);
+    expect(results).toHaveLength(templateCatalogContract.bundledFallback.count);
+    expect(new Set(results.map((item) => item.id)).size).toBe(templateCatalogContract.bundledFallback.count);
   });
 
-  it("uses the canonical public remote catalog with exactly 180 unique complete records", () => {
-    expect(remoteTemplates).toHaveLength(templateCatalogContract.remoteTemplateCount);
-    expect(new Set(remoteTemplates.map((item) => item.id)).size).toBe(templateCatalogContract.remoteTemplateCount);
+  it("uses the canonical public remote catalog with the contracted unique complete records", () => {
+    expect(remoteTemplates).toHaveLength(templateCatalogContract.remoteCatalog.count);
+    expect(new Set(remoteTemplates.map((item) => item.id)).size).toBe(templateCatalogContract.remoteCatalog.count);
     expect(
       remoteTemplates.filter((template) =>
-        templateCatalogContract.remoteRequiredMetadata.some((field) => {
+        templateCatalogContract.remoteCatalog.requiredMetadata.some((field) => {
           const value = template[field as keyof typeof template];
           return value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0);
         })

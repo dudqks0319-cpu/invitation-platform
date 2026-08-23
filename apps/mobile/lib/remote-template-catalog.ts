@@ -1,13 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetch as expoFetch } from "expo/fetch";
 import { resolveTemplateTextSafeArea } from "@invitehub/shared";
+import { templateCatalogContract } from "./template-catalog-contract";
 import { mobileTemplateGallery, type MobileTemplateGalleryItem } from "./template-gallery";
 
 export const MOBILE_TEMPLATE_CATALOG_URL =
   "https://invitation-platform-plum.vercel.app/api/mobile/v1/templates";
 export const MOBILE_TEMPLATE_CATALOG_CACHE_KEY = "invitehub.mobile-template-catalog.v1";
 export const MOBILE_TEMPLATE_CATALOG_MAX_ITEMS = 250;
-export const MOBILE_TEMPLATE_CATALOG_EXPECTED_ITEMS = 180;
+export const MOBILE_TEMPLATE_CATALOG_EXPECTED_ITEMS = templateCatalogContract.remoteCatalog.count;
 export const MOBILE_TEMPLATE_CATALOG_MAX_BYTES = 192 * 1024;
 export const MOBILE_TEMPLATE_CATALOG_TIMEOUT_MS = 4_000;
 export const MOBILE_TEMPLATE_CATALOG_STORAGE_TIMEOUT_MS = 750;
@@ -24,6 +25,7 @@ const allowedCategories = new Set([
   "business"
 ]);
 const canonicalAssetOrigin = new URL(MOBILE_TEMPLATE_CATALOG_URL).origin;
+const remoteCatalogVersionPattern = new RegExp(templateCatalogContract.remoteCatalog.catalogVersionPattern);
 const requiredBundledTemplateIds = new Set(mobileTemplateGallery.map((template) => template.id));
 
 type Storage = Pick<typeof AsyncStorage, "getItem" | "setItem">;
@@ -45,7 +47,7 @@ async function settleStorageWithin<T>(operation: Promise<T>, fallback: T) {
 }
 
 export type RemoteMobileTemplateCatalog = {
-  schemaVersion: 1;
+  schemaVersion: typeof templateCatalogContract.remoteCatalog.schemaVersion;
   catalogVersion: string;
   templates: MobileTemplateGalleryItem[];
   meta: {
@@ -145,9 +147,9 @@ function normalizeTemplate(value: unknown): MobileTemplateGalleryItem | null {
 export function parseRemoteTemplateCatalog(value: unknown): RemoteMobileTemplateCatalog {
   if (
     !isRecord(value) ||
-    value.schemaVersion !== 1 ||
+    value.schemaVersion !== templateCatalogContract.remoteCatalog.schemaVersion ||
     !isBoundedString(value.catalogVersion, 80, 3) ||
-    !/^v1-[a-f0-9]{8}$/.test(value.catalogVersion) ||
+    !remoteCatalogVersionPattern.test(value.catalogVersion) ||
     !Array.isArray(value.templates) ||
     value.templates.length !== MOBILE_TEMPLATE_CATALOG_EXPECTED_ITEMS ||
     !isRecord(value.meta) ||
@@ -183,7 +185,7 @@ export function parseRemoteTemplateCatalog(value: unknown): RemoteMobileTemplate
   }
 
   return {
-    schemaVersion: 1,
+    schemaVersion: templateCatalogContract.remoteCatalog.schemaVersion,
     catalogVersion: value.catalogVersion,
     templates: templates as MobileTemplateGalleryItem[],
     meta: { count: MOBILE_TEMPLATE_CATALOG_EXPECTED_ITEMS }

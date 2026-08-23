@@ -16,7 +16,7 @@ import {
   writeCachedTemplateCatalog
 } from "./remote-template-catalog";
 import { mobileTemplateGallery } from "./template-gallery";
-import { templateCatalogContract } from "./template-catalog.contract.fixture";
+import { templateCatalogContract } from "./template-catalog-contract";
 import { buildPublicMobileTemplateCatalog } from "../../../lib/mobile-template-catalog";
 import { templates as canonicalTemplates } from "../../../lib/templates";
 
@@ -45,7 +45,7 @@ describe("remote mobile template catalog", () => {
 
     expect(parsed.templates[0]).toMatchObject({ id: validCatalog().templates[0].id, remote: true });
     expect(parsed.templates[0].textSafeArea).toBeDefined();
-    expect(parsed.meta.count).toBe(templateCatalogContract.remoteTemplateCount);
+    expect(parsed.meta.count).toBe(templateCatalogContract.remoteCatalog.count);
   });
 
   it("always resolves safe areas locally instead of trusting a remote API field", () => {
@@ -296,7 +296,7 @@ describe("remote mobile template catalog", () => {
       tags: ["#원격"],
       remote: true
     });
-    expect(merged).toHaveLength(templateCatalogContract.remoteTemplateCount);
+    expect(merged).toHaveLength(templateCatalogContract.remoteCatalog.count);
     expect(merged.some((template) => template.id === mobileTemplateGallery[0].id)).toBe(
       templateCatalogContract.merge.bundledTemplatesRemainAvailableOffline
     );

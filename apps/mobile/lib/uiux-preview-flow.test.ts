@@ -28,8 +28,8 @@ describe("오삼오삼 UI/UX 미리보기 흐름", () => {
     ]);
   });
 
-  it("대표 가족행사 세 종류를 중복 없이 제공한다", () => {
-    expect(uiuxEventOptions.map((event) => event.key)).toEqual(["dol", "hwangap", "housewarming"]);
+  it("홈과 과정 화면에 같은 네 종류 행사를 중복 없이 제공한다", () => {
+    expect(uiuxEventOptions.map((event) => event.key)).toEqual(["wedding", "dol", "hwangap", "housewarming"]);
     expect(new Set(uiuxEventOptions.map((event) => event.key)).size).toBe(uiuxEventOptions.length);
   });
 

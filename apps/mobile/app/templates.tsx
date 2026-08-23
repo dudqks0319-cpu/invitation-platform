@@ -38,6 +38,11 @@ import {
   sortMobileTemplatesForDisplay,
   type MobileTemplateGalleryItem
 } from "@/lib/template-gallery";
+import {
+  getTemplateCatalogSourceCopy,
+  templateCatalogContract,
+  type TemplateCatalogSource
+} from "@/lib/template-catalog-contract";
 import { loadRecentlyViewedTemplates } from "@/lib/template-preview-recent";
 import {
   createTemplateResultAnnouncer,
@@ -59,13 +64,15 @@ function useDebouncedValue<T>(value: T, delayMs: number) {
 
 function CatalogStatus({
   source,
+  visibleTemplateCount,
   refreshing,
   error,
   canRetry,
   reduceMotionEnabled,
   onRetry
 }: {
-  source: "loading" | "remote" | "cache" | "bundled-fallback";
+  source: TemplateCatalogSource;
+  visibleTemplateCount: number;
   refreshing: boolean;
   error: string | null;
   canRetry: boolean;
@@ -74,11 +81,7 @@ function CatalogStatus({
 }) {
   if (source === "loading") return null;
 
-  const sourceCopy = source === "cache"
-    ? "저장된 디자인을 보여드려요"
-    : source === "bundled-fallback"
-      ? "기본 디자인 150개를 보여드려요"
-      : null;
+  const sourceCopy = getTemplateCatalogSourceCopy(source, visibleTemplateCount);
 
   if (!sourceCopy && !refreshing && !error) return null;
 
@@ -100,7 +103,9 @@ function CatalogStatus({
       {refreshing ? (
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
           {reduceMotionEnabled ? null : <ActivityIndicator color={theme.colors.primaryDark} size="small" />}
-          <Text style={{ color: theme.colors.muted, fontSize: 13 }}>최신 디자인을 확인하고 있어요</Text>
+          <Text style={{ color: theme.colors.muted, fontSize: 13 }}>
+            {templateCatalogContract.statusCopy.refreshing}
+          </Text>
         </View>
       ) : null}
       {error ? (
@@ -223,7 +228,7 @@ export default function TemplatesScreen() {
     if (Platform.OS !== "ios") return;
     const message = source === "loading"
       ? "디자인을 불러오고 있어요"
-      : error ?? (refreshing ? "최신 디자인을 확인하고 있어요" : null);
+      : error ?? (refreshing ? templateCatalogContract.statusCopy.refreshing : null);
     if (!message) return;
 
     statusAnnouncer.schedule(message);
@@ -299,6 +304,7 @@ export default function TemplatesScreen() {
 
       <CatalogStatus
         source={source}
+        visibleTemplateCount={templates.length}
         refreshing={refreshing}
         error={error}
         canRetry={canRetry}

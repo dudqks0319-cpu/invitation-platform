@@ -3,6 +3,10 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const source = readFileSync(join(process.cwd(), "apps/mobile/app/uiux-preview.tsx"), "utf8");
+const startSource = readFileSync(
+  join(process.cwd(), "apps/mobile/components/home/InvitationStartSection.tsx"),
+  "utf8"
+);
 
 describe("오삼오삼 UI/UX 미리보기 화면", () => {
   it("실제 템플릿 카탈로그와 이미지 소스를 재사용한다", () => {
@@ -15,8 +19,9 @@ describe("오삼오삼 UI/UX 미리보기 화면", () => {
 
   it("계획서의 핵심 화면과 개인정보 보호 문구를 보여준다", () => {
     for (const copy of [
-      "어떤 초대를\\n만드시나요?",
-      "돌잔치 디자인",
+      "어떤 초대를",
+      "만드시나요?",
+      "${event.label} 디자인",
       "초대장 만들기",
       "실시간 미리보기",
       "게시 전 안심 점검",
@@ -26,7 +31,7 @@ describe("오삼오삼 UI/UX 미리보기 화면", () => {
       "검색 비공개",
       "행사 후 30일 만료"
     ]) {
-      expect(source).toContain(copy);
+      expect(`${startSource}\n${source}`).toContain(copy);
     }
   });
 

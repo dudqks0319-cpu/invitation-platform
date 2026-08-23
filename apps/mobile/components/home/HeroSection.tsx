@@ -12,6 +12,7 @@ import {
 import { AppText as Text } from "@/components/ui/AppText";
 import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
 import { theme } from "@/components/ui/theme";
+import { InvitationStartSection } from "@/components/home/InvitationStartSection";
 import { useTemplateCatalog } from "@/hooks/useTemplateCatalog";
 import {
   getFinishedHomeHeroCompositeSource,
@@ -28,6 +29,7 @@ import {
   synchronizeTemplateImageRecoveryState
 } from "@/lib/template-image-recovery";
 import { getTemplatePreviewSource } from "@/lib/template-image-source";
+import type { UiuxEventKey } from "@/lib/uiux-preview-flow";
 
 type HeroSectionProps = {
   onOpenCategory: (categoryKey: string) => void;
@@ -250,9 +252,7 @@ function HeroStackCard({
 export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps) {
   const { width } = useWindowDimensions();
   const { templates } = useTemplateCatalog();
-  const [selectedEventKey, setSelectedEventKey] = useState<
-    "wedding" | "dol" | "hwangap" | "housewarming"
-  >("wedding");
+  const [selectedEventKey, setSelectedEventKey] = useState<UiuxEventKey>("wedding");
   const [finishedHeroCompositeFailed, setFinishedHeroCompositeFailed] = useState(false);
   const carouselViewportWidth = Math.max(280, width - 36);
   const cardWidth = Math.min(188, Math.max(134, (carouselViewportWidth - 12) / 2));
@@ -262,149 +262,17 @@ export function HeroSection({ onOpenCategory, onOpenPreview }: HeroSectionProps)
   const heroFeaturedTemplate = heroTemplates[1] ?? heroTemplates[0];
   const finishedHeroCompositeSource = getFinishedHomeHeroCompositeSource();
   const sections = getHomeTemplateSections(templates);
-  const eventEntries = [
-    {
-      key: "wedding" as const,
-      label: "청첩장",
-      description: "두 사람의 사진과 예식 정보를 담는 디자인",
-      preferredTemplateId: "wedding-barunson-anime-09"
-    },
-    {
-      key: "dol" as const,
-      label: "돌잔치",
-      description: "아이 사진과 첫돌 문구에 맞는 디자인",
-      preferredTemplateId: "dol-cute"
-    },
-    {
-      key: "hwangap" as const,
-      label: "환갑·칠순",
-      description: "가족 호칭과 큰 글자가 편안한 디자인",
-      preferredTemplateId: "hwangap-anime-2026"
-    },
-    {
-      key: "housewarming" as const,
-      label: "집들이",
-      description: "주소와 일정이 또렷한 따뜻한 디자인",
-      preferredTemplateId: "house-warm"
-    }
-  ].map((entry) => {
-    const template =
-      templates.find((template) => template.id === entry.preferredTemplateId) ??
-      templates.find((template) => template.category === entry.key) ??
-      null;
-
-    return {
-      ...entry,
-      template,
-      previewSource:
-      entry.key === "wedding"
-        ? finishedHeroCompositeSource
-        : template
-          ? getTemplatePreviewSource(template)
-          : null
-    };
-  });
-
   return (
     <View
       style={{
         gap: 24
       }}
     >
-      <View style={{ gap: 12 }}>
-        <Text style={{ color: theme.colors.gold, fontSize: 13, fontWeight: "800", letterSpacing: 0 }}>
-          초대장 플랫폼
-        </Text>
-        <Text
-          style={{
-            color: theme.colors.ink,
-            fontSize: 33,
-            fontWeight: "800",
-            lineHeight: 41,
-            letterSpacing: 0
-          }}
-        >
-          어떤 초대를
-          {"\n"}
-          만드시나요?
-        </Text>
-        <Text style={{ color: theme.colors.muted, fontSize: 16, lineHeight: 26 }}>
-          행사를 고르면 문구와 기존 디자인을 추천해드려요.
-        </Text>
-      </View>
-
-      <View style={{ gap: 12 }}>
-        {eventEntries.map((entry) => {
-          const selected = selectedEventKey === entry.key;
-
-          return (
-            <Pressable
-              accessibilityHint="선택한 행사에 맞는 추천 디자인을 준비합니다."
-              accessibilityLabel={`${entry.label} 선택`}
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
-              key={entry.key}
-              onPress={() => setSelectedEventKey(entry.key)}
-              style={({ pressed }) => ({
-                height: 132,
-                flexDirection: "row",
-                borderRadius: 20,
-                borderWidth: selected ? 2 : 1,
-                borderColor: selected ? theme.colors.primary : theme.colors.border,
-                backgroundColor: theme.colors.surface,
-                overflow: "hidden",
-                opacity: pressed ? 0.8 : 1,
-                ...theme.shadow.card
-              })}
-            >
-              <View style={{ flex: 1.15, padding: 18, gap: 7, justifyContent: "center" }}>
-                <Text style={{ color: theme.colors.ink, fontSize: 22, fontWeight: "800" }}>{entry.label}</Text>
-                <Text style={{ color: theme.colors.muted, fontSize: 13, lineHeight: 19 }}>
-                  {entry.description}
-                </Text>
-              </View>
-              <View style={{ flex: 0.85, backgroundColor: theme.colors.surfaceSoft }}>
-                {entry.previewSource ? (
-                  <Image
-                    accessibilityIgnoresInvertColors
-                    resizeMode="cover"
-                    source={entry.previewSource}
-                    style={
-                      entry.key === "wedding"
-                        ? { width: "100%", height: "100%" }
-                        : {
-                            position: "absolute",
-                            right: 0,
-                            bottom: 0,
-                            left: 0,
-                            width: "100%",
-                            height: 244
-                          }
-                    }
-                  />
-                ) : null}
-              </View>
-            </Pressable>
-          );
-        })}
-        <Pressable
-          accessibilityHint="선택한 행사에 맞는 전체 디자인 목록을 엽니다."
-          accessibilityLabel="추천 디자인 보기"
-          accessibilityRole="button"
-          onPress={() => onOpenCategory(selectedEventKey)}
-          style={({ pressed }) => ({
-            minHeight: 52,
-            borderRadius: 16,
-            backgroundColor: theme.colors.primary,
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: pressed ? 0.8 : 1,
-            ...theme.shadow.heroButton
-          })}
-        >
-          <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "800" }}>추천 디자인 보기</Text>
-        </Pressable>
-      </View>
+      <InvitationStartSection
+        onContinue={onOpenCategory}
+        onSelectEvent={setSelectedEventKey}
+        selectedEventKey={selectedEventKey}
+      />
 
       <View
         accessibilityLabel="오삼오삼 웨딩 디자인 셀렉션"

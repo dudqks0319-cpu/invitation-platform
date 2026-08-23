@@ -7,27 +7,27 @@ import {
   toPublicMobileTemplate
 } from "@/lib/mobile-template-catalog";
 import { GET } from "@/app/api/mobile/v1/templates/route";
-import { templateCatalogContract } from "@/apps/mobile/lib/template-catalog.contract.fixture";
+import { templateCatalogContract } from "@/apps/mobile/lib/template-catalog-contract";
 
 describe("GET /api/mobile/v1/templates", () => {
   it("returns the canonical root catalog with versioned HTTPS assets", async () => {
     const response = await GET();
     const payload = await response.json();
 
-    expect(payload.schemaVersion).toBe(1);
-    expect(payload.catalogVersion).toMatch(/^v1-[a-f0-9]{8}$/);
+    expect(payload.schemaVersion).toBe(templateCatalogContract.remoteCatalog.schemaVersion);
+    expect(payload.catalogVersion).toMatch(new RegExp(templateCatalogContract.remoteCatalog.catalogVersionPattern));
     expect(payload.meta).toEqual({ count: payload.templates.length, maxItems: MOBILE_TEMPLATE_CATALOG_MAX_ITEMS });
     expect(payload.templates[0].previewUrl).toMatch(
       /^https:\/\/invitation-platform-plum\.vercel\.app\/images\/.+\?v=v1-[a-f0-9]{8}$/
     );
-    expect(payload.templates).toHaveLength(templateCatalogContract.remoteTemplateCount);
+    expect(payload.templates).toHaveLength(templateCatalogContract.remoteCatalog.count);
     expect(payload.templates.every((template: Record<string, unknown>) => !("textSafeArea" in template))).toBe(true);
     expect(new Set(payload.templates.map((template: { id: string }) => template.id)).size).toBe(
-      templateCatalogContract.remoteTemplateCount
+      templateCatalogContract.remoteCatalog.count
     );
     expect(
       payload.templates.filter((template: Record<string, unknown>) =>
-        templateCatalogContract.remoteRequiredMetadata.some((field) => {
+        templateCatalogContract.remoteCatalog.requiredMetadata.some((field) => {
           const value = template[field];
           return value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0);
         })

@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { TemplateSampleTextOverlay } from "@/components/templates/TemplateSampleTextOverlay";
+import { InvitationStartSection } from "@/components/home/InvitationStartSection";
 import { AppText as Text } from "@/components/ui/AppText";
 import { theme } from "@/components/ui/theme";
 import { useTemplateCatalog } from "@/hooks/useTemplateCatalog";
@@ -35,12 +36,6 @@ const invitationFixture = {
   venue: "라비에벨 가든홀"
 } as const;
 const invitationFixtureSlug = "kim-lee-demo";
-
-const eventIcons: Record<UiuxEventKey, keyof typeof Ionicons.glyphMap> = {
-  dol: "balloon-outline",
-  hwangap: "gift-outline",
-  housewarming: "home-outline"
-};
 
 function ActionButton({
   children,
@@ -143,87 +138,39 @@ function ScreenHeading({
 
 function EventScreen({
   category,
-  eventTemplates,
   onSelectCategory,
   onContinue
 }: {
   category: UiuxEventKey;
-  eventTemplates: Record<UiuxEventKey, MobileTemplateGalleryItem | null>;
   onSelectCategory: (category: UiuxEventKey) => void;
   onContinue: () => void;
 }) {
   return (
-    <View style={styles.screenBody}>
-      <ScreenHeading
-        description="행사를 고르면 문구와 디자인을 추천해드려요"
-        eyebrow="오삼오삼"
-        title={"어떤 초대를\n만드시나요?"}
-      />
-      <View style={styles.eventList}>
-        {uiuxEventOptions.map((event) => {
-          const selected = event.key === category;
-          const template = eventTemplates[event.key];
-          const previewSource = template ? getTemplatePreviewSource(template) : null;
-
-          return (
-            <Pressable
-              accessibilityHint="이 행사에 맞는 디자인 추천을 준비합니다."
-              accessibilityLabel={`${event.label} 선택`}
-              accessibilityRole="button"
-              accessibilityState={{ selected }}
-              key={event.key}
-              onPress={() => onSelectCategory(event.key)}
-              style={({ pressed }) => [
-                styles.eventCard,
-                selected ? styles.eventCardSelected : null,
-                pressed ? styles.pressed : null
-              ]}
-            >
-              <View style={styles.eventCopy}>
-                <View style={[styles.eventIcon, selected ? styles.eventIconSelected : null]}>
-                  <Ionicons
-                    color={selected ? "#FFFFFF" : theme.colors.primaryDark}
-                    name={eventIcons[event.key]}
-                    size={24}
-                  />
-                </View>
-                <Text style={styles.eventTitle}>{event.label}</Text>
-                <Text style={styles.eventDescription}>{event.description}</Text>
-              </View>
-              <View style={styles.eventArtwork}>
-                {previewSource ? (
-                  <Image
-                    accessibilityIgnoresInvertColors
-                    resizeMode="cover"
-                    source={previewSource}
-                    style={StyleSheet.absoluteFill}
-                  />
-                ) : null}
-              </View>
-            </Pressable>
-          );
-        })}
-      </View>
-      <ActionButton icon="sparkles-outline" onPress={onContinue}>
-        추천 디자인 보기
-      </ActionButton>
-    </View>
+    <InvitationStartSection
+      onContinue={onContinue}
+      onSelectEvent={onSelectCategory}
+      selectedEventKey={category}
+    />
   );
 }
 
 function TemplatesScreen({
+  category,
   templates,
   onContinue
 }: {
+  category: UiuxEventKey;
   templates: MobileTemplateGalleryItem[];
   onContinue: () => void;
 }) {
+  const event = uiuxEventOptions.find((option) => option.key === category) ?? uiuxEventOptions[0];
+
   return (
     <View style={styles.screenBody}>
       <ScreenHeading
-        description="서윤이의 첫돌에 어울리는 기존 디자인이에요"
+        description={`${event.label}에 어울리는 기존 디자인이에요`}
         eyebrow="행사별 디자인"
-        title="돌잔치 디자인"
+        title={`${event.label} 디자인`}
       />
       <ScrollView
         horizontal
@@ -666,9 +613,10 @@ export default function UiuxPreviewScreen() {
   const router = useRouter();
   const { templates } = useTemplateCatalog();
   const [stepIndex, setStepIndex] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState<UiuxEventKey>("dol");
+  const [selectedCategory, setSelectedCategory] = useState<UiuxEventKey>("wedding");
   const eventTemplates = useMemo(
     () => ({
+      wedding: getUiuxEventTemplates(templates, "wedding", 1)[0] ?? null,
       dol: getUiuxEventTemplates(templates, "dol", 1)[0] ?? null,
       hwangap: getUiuxEventTemplates(templates, "hwangap", 1)[0] ?? null,
       housewarming: getUiuxEventTemplates(templates, "housewarming", 1)[0] ?? null
@@ -679,7 +627,7 @@ export default function UiuxPreviewScreen() {
     () => getUiuxEventTemplates(templates, selectedCategory, 2),
     [selectedCategory, templates]
   );
-  const selectedTemplate = selectedTemplates[0] ?? eventTemplates.dol ?? templates[0] ?? null;
+  const selectedTemplate = selectedTemplates[0] ?? eventTemplates[selectedCategory] ?? templates[0] ?? null;
   const selectedSource = selectedTemplate ? getTemplatePreviewSource(selectedTemplate) : null;
   const step = uiuxPreviewSteps[stepIndex];
 
@@ -693,13 +641,18 @@ export default function UiuxPreviewScreen() {
         return (
           <EventScreen
             category={selectedCategory}
-            eventTemplates={eventTemplates}
             onContinue={() => goToStep(1)}
             onSelectCategory={setSelectedCategory}
           />
         );
       case "templates":
-        return <TemplatesScreen onContinue={() => goToStep(2)} templates={selectedTemplates} />;
+        return (
+          <TemplatesScreen
+            category={selectedCategory}
+            onContinue={() => goToStep(2)}
+            templates={selectedTemplates}
+          />
+        );
       case "builder":
         return (
           <BuilderScreen
@@ -883,54 +836,6 @@ const styles = StyleSheet.create({
     color: theme.colors.muted,
     fontSize: 16,
     lineHeight: 25
-  },
-  eventList: {
-    gap: 12
-  },
-  eventCard: {
-    minHeight: 140,
-    flexDirection: "row",
-    borderRadius: theme.radius.lg,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    backgroundColor: theme.colors.surface,
-    overflow: "hidden",
-    ...theme.shadow.card
-  },
-  eventCardSelected: {
-    borderColor: theme.colors.primary,
-    borderWidth: 2
-  },
-  eventCopy: {
-    flex: 1.1,
-    padding: 18,
-    gap: 7,
-    justifyContent: "center"
-  },
-  eventIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: theme.colors.primaryLight,
-    alignItems: "center",
-    justifyContent: "center"
-  },
-  eventIconSelected: {
-    backgroundColor: theme.colors.primary
-  },
-  eventTitle: {
-    color: theme.colors.ink,
-    fontSize: 22,
-    fontWeight: "800"
-  },
-  eventDescription: {
-    color: theme.colors.muted,
-    fontSize: 13,
-    lineHeight: 19
-  },
-  eventArtwork: {
-    flex: 0.9,
-    backgroundColor: theme.colors.surfaceSoft
   },
   actionButton: {
     minHeight: 48,

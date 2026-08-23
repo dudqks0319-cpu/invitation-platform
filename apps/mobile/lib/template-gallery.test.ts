@@ -13,7 +13,7 @@ import {
   mobileTemplateGallery,
   sortMobileTemplatesForDisplay
 } from "./template-gallery";
-import { templateCatalogContract } from "./template-catalog.contract.fixture";
+import { templateCatalogContract } from "./template-catalog-contract";
 
 const barunsonCategoryAnimeCategories = [
   "wedding",
@@ -86,7 +86,7 @@ describe("mobile template gallery", () => {
   });
 
   it("assigns valid audited safe areas to every bundled template", () => {
-    expect(mobileTemplateGallery).toHaveLength(templateCatalogContract.bundledTemplateCount);
+    expect(mobileTemplateGallery).toHaveLength(templateCatalogContract.bundledFallback.count);
     expect(mobileTemplateGallery.every((template) => isTemplateTextSafeArea(template.textSafeArea))).toBe(true);
     expect(getMobileTemplateById("dol-barunson-anime-16")?.textSafeArea).toMatchObject({ topPct: 22, bottomPct: 57 });
     expect(getMobileTemplateById("dol-blue")?.textSafeArea).toMatchObject({ topPct: 62, bottomPct: 86, backdrop: "light" });
@@ -95,10 +95,10 @@ describe("mobile template gallery", () => {
   it("has no duplicate IDs or missing required metadata in the bundled catalog", () => {
     const ids = new Set(mobileTemplateGallery.map((template) => template.id));
 
-    expect(ids.size).toBe(templateCatalogContract.bundledTemplateCount);
+    expect(ids.size).toBe(templateCatalogContract.bundledFallback.count);
     expect(
       mobileTemplateGallery.filter((template) =>
-        templateCatalogContract.bundledRequiredMetadata.some((field) => {
+        templateCatalogContract.bundledFallback.requiredMetadata.some((field) => {
           const value = template[field as keyof typeof template];
           return value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0);
         })

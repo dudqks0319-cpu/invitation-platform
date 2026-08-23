@@ -2,6 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { selectTemplateAndOpenBuilder } from "./template-selection";
+import {
+  getTemplateCatalogSourceCopy,
+  templateCatalogContract
+} from "./template-catalog-contract";
 
 const screenSource = readFileSync(join(process.cwd(), "apps/mobile/app/templates.tsx"), "utf8");
 const filtersSource = readFileSync(
@@ -58,12 +62,16 @@ describe("template discovery screen", () => {
   });
 
   it("wires truthful recovery states, no-results reset, and debounced result announcements", () => {
-    expect(screenSource).toContain("저장된 디자인을 보여드려요");
-    expect(screenSource).toContain("기본 디자인 150개를 보여드려요");
+    expect(screenSource).toContain("getTemplateCatalogSourceCopy");
+    expect(screenSource).toContain("visibleTemplateCount={templates.length}");
+    expect(getTemplateCatalogSourceCopy("cache", 0)).toBe(templateCatalogContract.statusCopy.cache);
+    expect(
+      getTemplateCatalogSourceCopy("bundled-fallback", templateCatalogContract.bundledFallback.count)
+    ).toBe(`기본 디자인 ${templateCatalogContract.bundledFallback.count}개를 보여드려요`);
     expect(screenSource).toContain("필터 초기화");
     expect(screenSource).toContain("announceForAccessibility");
     expect(screenSource).toContain('Platform.OS !== "ios"');
-    expect(screenSource).toContain("최신 디자인을 확인하고 있어요");
+    expect(screenSource).toContain("templateCatalogContract.statusCopy.refreshing");
     expect(screenSource).toContain("useDebouncedValue");
     expect(screenSource.match(/announceForAccessibility/g)).toHaveLength(1);
     expect(filtersSource).not.toContain("accessibilityLiveRegion");
