@@ -1,3 +1,5 @@
+import { resolveTemplateTextSafeArea, type TemplateTextSafeArea } from "@invitehub/shared";
+
 export type MobileTemplateCategory = {
   key: string;
   label: string;
@@ -15,6 +17,7 @@ export type MobileTemplateGalleryItem = {
   previewUrl?: string;
   sampleTextOverlay?: boolean;
   textPlacement?: "top" | "center" | "bottom";
+  textSafeArea?: TemplateTextSafeArea;
   remote?: boolean;
 };
 
@@ -134,7 +137,7 @@ const barunsonCategoryAnimeTemplates: MobileTemplateGalleryItem[] = [
   { id: "business-barunson-anime-03", category: "business", name: "컨퍼런스 라이트 03", badge: "비즈니스", desc: "브랜드 행사 안내를 깔끔하게 담을 수 있는 세로형 초대장.", tags: ["#브랜드", "#행사안내", "#세로형"], sampleTextOverlay: true }
 ];
 
-export const mobileTemplateGallery: MobileTemplateGalleryItem[] = [
+const mobileTemplateGallerySource: MobileTemplateGalleryItem[] = [
   ...latestGeneratedInvitationTemplates,
   { id: "wedding-classic", category: "wedding", name: "로즈 프레임", badge: "결혼식", desc: "로즈 가득한 보더 프레임 위에 정갈하게 올리는 클래식 웨딩 카드.", tags: ["#로즈", "#프레임", "#클래식"], previewPath: "/images/custom/wedding/wedding-01.jpeg" },
   { id: "wedding-modern", category: "wedding", name: "유칼립투스 아치", badge: "결혼식", desc: "은은한 보태니컬 아치가 둘러주는 산뜻하고 차분한 웨딩 카드.", tags: ["#보태니컬", "#그린", "#아치"], previewPath: "/images/custom/wedding/wedding-02.jpeg" },
@@ -198,6 +201,15 @@ export const mobileTemplateGallery: MobileTemplateGalleryItem[] = [
   { id: "business-anime-2026", category: "business", name: "라이트 컨퍼런스", badge: "비즈니스", desc: "건축적인 빛과 네이비 라인으로 정리한 애니 비즈니스 행사 카드.", tags: ["#애니", "#컨퍼런스", "#프리미엄"], sampleTextOverlay: true },
   ...barunsonCategoryAnimeTemplates
 ];
+
+export const mobileTemplateGallery: MobileTemplateGalleryItem[] = mobileTemplateGallerySource.map((template) => ({
+  ...template,
+  textSafeArea: resolveTemplateTextSafeArea({
+    templateId: template.id,
+    category: template.category,
+    textPlacement: template.textPlacement
+  })
+}));
 
 export const featuredMobileTemplateIds = [
   "wedding-barunson-anime-25",

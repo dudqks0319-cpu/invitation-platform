@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { isTemplateTextSafeArea } from "@invitehub/shared";
 import {
   featuredMobileTemplateIds,
   getFeaturedMobileTemplates,
@@ -67,6 +68,13 @@ describe("mobile template gallery", () => {
     expect(mobileTemplateGallery.every((template) => template.id.length > 0)).toBe(true);
   });
 
+  it("assigns valid audited safe areas to every bundled template", () => {
+    expect(mobileTemplateGallery).toHaveLength(150);
+    expect(mobileTemplateGallery.every((template) => isTemplateTextSafeArea(template.textSafeArea))).toBe(true);
+    expect(getMobileTemplateById("dol-barunson-anime-16")?.textSafeArea).toMatchObject({ topPct: 22, bottomPct: 57 });
+    expect(getMobileTemplateById("dol-blue")?.textSafeArea).toMatchObject({ topPct: 62, bottomPct: 86, backdrop: "light" });
+  });
+
   it("marks textless uploaded wedding images for list-only sample text overlay", () => {
     expect(getMobileTemplateById("wedding-envelope-photo")?.sampleTextOverlay).toBe(true);
     expect(getMobileTemplateById("wedding-anime-textspace-10")?.sampleTextOverlay).toBe(true);
@@ -110,7 +118,9 @@ describe("mobile template gallery", () => {
 
   it("places all 60 newly generated templates first in their categories", () => {
     expect(latestGeneratedInvitationTemplates).toHaveLength(60);
-    expect(mobileTemplateGallery.slice(0, 60)).toEqual(latestGeneratedInvitationTemplates);
+    expect(mobileTemplateGallery.slice(0, 60).map((template) => template.id)).toEqual(
+      latestGeneratedInvitationTemplates.map((template) => template.id)
+    );
 
     for (const [category, [start, end]] of Object.entries(latestGeneratedCategoryRanges)) {
       const expectedIds = Array.from({ length: end - start + 1 }, (_, index) =>
@@ -120,6 +130,7 @@ describe("mobile template gallery", () => {
       expect(getMobileTemplatesByCategory(category).slice(0, 10).map((template) => template.id)).toEqual(expectedIds);
     }
 
-    expect(getFeaturedMobileTemplates().every((template) => latestGeneratedInvitationTemplates.includes(template))).toBe(true);
+    const latestIds = new Set(latestGeneratedInvitationTemplates.map((template) => template.id));
+    expect(getFeaturedMobileTemplates().every((template) => latestIds.has(template.id))).toBe(true);
   });
 });

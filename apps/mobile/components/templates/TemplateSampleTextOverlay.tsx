@@ -1,4 +1,6 @@
 import { Text, View } from "react-native";
+import { resolveTemplateTextSafeArea } from "@invitehub/shared";
+import type { MobileTemplateGalleryItem } from "@/lib/template-gallery";
 
 const templateSampleCopy = {
   wedding: {
@@ -66,44 +68,34 @@ const templateSampleCopy = {
   }
 } as const;
 
-const templateSampleSafeZones = {
-  wedding: { top: "25%", bottom: "40%" },
-  dol: { top: "22%", bottom: "43%" },
-  hwangap: { top: "16%", bottom: "54%" },
-  bridal: { top: "24%", bottom: "41%" },
-  birthday: { top: "20%", bottom: "45%" },
-  housewarming: { top: "15%", bottom: "50%" },
-  baby: { top: "25%", bottom: "40%" },
-  graduation: { top: "22%", bottom: "43%" },
-  business: { top: "22%", bottom: "43%" }
-} as const;
-
 export function TemplateSampleTextOverlay({
-  category,
-  textPlacement
+  template
 }: {
-  category: string;
-  textPlacement?: "top" | "center" | "bottom";
+  template: MobileTemplateGalleryItem;
 }) {
-  const copy = templateSampleCopy[category as keyof typeof templateSampleCopy] ?? templateSampleCopy.wedding;
-  const categorySafeZone = templateSampleSafeZones[category as keyof typeof templateSampleSafeZones] ?? templateSampleSafeZones.wedding;
-  const safeZone = textPlacement === "top"
-    ? ({ top: "8%", bottom: "57%" } as const)
-    : textPlacement === "bottom"
-      ? ({ top: "57%", bottom: "8%" } as const)
-      : categorySafeZone;
+  const copy = templateSampleCopy[template.category as keyof typeof templateSampleCopy] ?? templateSampleCopy.wedding;
+  const safeArea = template.textSafeArea ?? resolveTemplateTextSafeArea({
+    templateId: template.id,
+    category: template.category,
+    textPlacement: template.textPlacement
+  });
+  const compressed = safeArea.bottomPct - safeArea.topPct <= 22;
 
   return (
     <View
       pointerEvents="none"
       style={{
         position: "absolute",
-        left: 8,
-        right: 8,
-        top: safeZone.top,
-        bottom: safeZone.bottom,
+        left: `${safeArea.leftPct}%`,
+        right: `${100 - safeArea.rightPct}%`,
+        top: `${safeArea.topPct}%`,
+        bottom: `${100 - safeArea.bottomPct}%`,
         alignItems: "center",
-        justifyContent: "center"
+        justifyContent: "center",
+        backgroundColor: safeArea.backdrop === "light" ? "rgba(255,252,244,0.82)" : "transparent",
+        borderRadius: safeArea.backdrop === "light" ? 8 : 0,
+        paddingHorizontal: safeArea.backdrop === "light" ? 5 : 0,
+        paddingVertical: safeArea.backdrop === "light" ? 3 : 0
       }}
     >
       <Text
@@ -112,7 +104,7 @@ export function TemplateSampleTextOverlay({
         minimumFontScale={0.56}
         style={{
           color: "rgba(126,91,65,0.76)",
-          fontSize: 8,
+          fontSize: compressed ? 7 : 8,
           fontStyle: "italic",
           fontWeight: "600",
           textAlign: "center",
@@ -127,9 +119,9 @@ export function TemplateSampleTextOverlay({
         minimumFontScale={0.56}
         style={{
           color: "rgba(198,144,114,0.9)",
-          fontSize: 8,
+          fontSize: compressed ? 7 : 8,
           fontWeight: "800",
-          marginTop: 2,
+          marginTop: compressed ? 1 : 2,
           textAlign: "center",
           width: "100%"
         }}
@@ -142,24 +134,24 @@ export function TemplateSampleTextOverlay({
         minimumFontScale={0.56}
         style={{
           color: "#2B2B2B",
-          fontSize: 16,
+          fontSize: compressed ? 13 : 16,
           fontWeight: "900",
-          lineHeight: 18,
-          marginTop: 2,
+          lineHeight: compressed ? 14 : 18,
+          marginTop: compressed ? 1 : 2,
           textAlign: "center",
           width: "100%"
         }}
       >
         {copy.title}
       </Text>
-      <View style={{ width: 36, height: 1, backgroundColor: "rgba(198,144,114,0.42)", marginVertical: 3 }} />
+      <View style={{ width: 36, height: 1, backgroundColor: "rgba(198,144,114,0.42)", marginVertical: compressed ? 1 : 3 }} />
       <Text
         numberOfLines={1}
         adjustsFontSizeToFit
         minimumFontScale={0.56}
         style={{
           color: "#2B2B2B",
-          fontSize: 8,
+          fontSize: compressed ? 7 : 8,
           fontWeight: "900",
           textAlign: "center",
           width: "100%"
@@ -173,9 +165,9 @@ export function TemplateSampleTextOverlay({
         minimumFontScale={0.56}
         style={{
           color: "rgba(55,55,55,0.78)",
-          fontSize: 8,
+          fontSize: compressed ? 7 : 8,
           fontWeight: "800",
-          marginTop: 2,
+          marginTop: compressed ? 1 : 2,
           textAlign: "center",
           width: "100%"
         }}

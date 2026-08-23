@@ -12,6 +12,15 @@ export type {
   PendingPhotoUpload
 } from "./types/invitation";
 
+export {
+  isTemplateTextSafeArea,
+  resolveTemplateTextSafeArea
+} from "./template-text-safe-area";
+export type {
+  TemplateTextPlacement,
+  TemplateTextSafeArea
+} from "./template-text-safe-area";
+
 import type {
   InvitationDraft,
   InvitationPayload

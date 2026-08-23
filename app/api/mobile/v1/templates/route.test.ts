@@ -7,6 +7,7 @@ import {
   toPublicMobileTemplate
 } from "@/lib/mobile-template-catalog";
 import { GET } from "@/app/api/mobile/v1/templates/route";
+import { isTemplateTextSafeArea } from "@invitehub/shared";
 
 describe("GET /api/mobile/v1/templates", () => {
   it("returns the canonical root catalog with versioned HTTPS assets", async () => {
@@ -19,6 +20,8 @@ describe("GET /api/mobile/v1/templates", () => {
     expect(payload.templates[0].previewUrl).toMatch(
       /^https:\/\/invitation-platform-plum\.vercel\.app\/images\/.+\?v=v1-[a-f0-9]{8}$/
     );
+    expect(payload.templates).toHaveLength(180);
+    expect(payload.templates.every((template: { textSafeArea: unknown }) => isTemplateTextSafeArea(template.textSafeArea))).toBe(true);
     expect(response.headers.get("Cache-Control")).toContain("stale-while-revalidate");
     expect(Number(response.headers.get("Content-Length"))).toBeLessThanOrEqual(MOBILE_TEMPLATE_CATALOG_MAX_BYTES);
   });
